@@ -1,34 +1,110 @@
 <!DOCTYPE html>
-<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout">
-
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
 <head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title th:text="#{cas.login.pagetitle}"></title>
+    <link rel="stylesheet" th:href="@{${#themes.code('standard.custom.css.file')}}"/>
+    <link rel="icon" th:href="@{/favicon.ico}" type="image/x-icon"/>
 </head>
 
-<body id="cas" class="login">
-<div layout:fragment="content">
-    <div class="row">
+<body>
 
-        <div class="alert alert-success">
-            <strong th:text="#{ria.mid.control.code}"></strong> <span th:text="${mobileChallenge}"></span>
-        </div>
-
-        <form id="mIDCheckForm" method="post">
-            <input type="hidden" name="lt" th:value="${loginTicket}"/>
-            <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
-            <input type="hidden" id="_eventId" name="_eventId" value="check"/>
-        </form>
-
-        <script type="text/javascript">
-            window.onload = function () {
-                setTimeout(function () {
-                    var form = document.getElementById("mIDCheckForm");
-                    form.submit();
-                }, 5000);
-
-            };
-        </script>
+<!-- PAGE ALERTS -->
+<div class="page-alerts">
+    <div class="alert alert--error alert--ie">
+        <p class="title" th:text="#{label.page.alert.title}"></p>
+        <p class="danger" th:text="#{label.page.alert.danger}"></p>
+        <p th:text="#{label.page.alert.text}">
+        </p>
     </div>
 </div>
+<!-- PAGE BAR -->
+<div class="page-bar">
+    <div class="container clear">
+        <h1 th:text="#{label.title}"></h1>
+        <ul>
+            <li><a th:href="#{label.lang1.href}" hreflang="ru" lang="ru"
+                   th:text="#{label.lang1.name}"></a></li>
+            <li><a th:href="#{label.lang2.href}" hreflang="ru" lang="en"
+                   th:text="#{label.lang2.name}"></a></li>
+        </ul>
+    </div>
+</div>
+<!-- //PAGE BAR -->
+<!-- PAGE WRAPPER -->
+
+<div class="page-wrapper">
+    <!-- MAIN -->
+    <div class="main">
+        <noscript>
+            <div class="alert alert--error alert--js">
+                <p>
+                    <strong th:text="#{label.page.alert.js.strong}"></strong>
+                <p th:text="#{label.page.alert.js.text}" th:remove="tag">
+                </p>
+                </p>
+            </div>
+        </noscript>
+        <!-- ROW -->
+        <div class="row col-2 clear">
+            <div class="block fields">
+                <div class="wrapper">
+                    <form id="mIDCheckForm" method="post">
+                        <h2 th:text="#{label.mobileid.check.title}"></h2><span
+                            th:text="${mobileChallenge}"></span>
+
+                        <div th:class="${moberrordiv}">
+                            <h3 class="title" th:text="#{label.mobileid.info.title}"></h3>
+                            <p th:text="${moberrortext}"></p>
+                        </div>
+                        <input type="hidden" id="moblang" name="moblang" th:value="${lang}">
+                        <input type="hidden" name="lt" th:value="${loginTicket}"/>
+                        <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
+                        <input type="hidden" id="_eventId" name="_eventId" value="check"/>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+        <!--<div class="funding">
+            <p><img src="/images/logo-europe.svg" alt=""><span th:text="#{label.footer.eu1}"
+                                                               th:remove="tag"></span><br><span
+                    th:text="#{label.footer.eu2}" th:remove="tag"></span></p>
+        </div>-->
+        <div class="ria">
+            <p><span th:text="#{label.footer.ria}" th:remove="tag"></span> <span id="e65842083" th:text="#{label.footer.spanid}"></span>, <a href="http://www.ria.ee" target="_blank">www.ria.ee</a></p>
+        </div>
+    </div>
+
+    <!-- HIDING EMAIL -->
+    <script type="text/javascript">/*<![CDATA[*/
+    eval("var a=\"0JDYPFi93v7fsXZoc8ha-.NbMIqln2A_U1GtERdVrex5k6Op@+LzBSQuHgywWjKTC4m\";var b=a.split(\"\").sort().join(\"\");var c=\"@6BHXy+eD66\";var d=\"\";for(var e=0;e<c.length;e++)d+=b.charAt(a.indexOf(c.charAt(e)));document.getElementById(\"e65842083\").innerHTML=\"<a href=\\\"mailto:\"+d+\"\\\">\"+d+\"</a>\"")
+    /*]]>*/</script>
+
+</div>
+
+
+<script type="text/javascript">
+    window.onload = function () {
+        setTimeout(function () {
+            var form = document.getElementById("mIDCheckForm");
+            form.submit();
+        }, 5000);
+
+    };
+</script>
+
 </body>
 </html>
+
+
+
+
+
+
+

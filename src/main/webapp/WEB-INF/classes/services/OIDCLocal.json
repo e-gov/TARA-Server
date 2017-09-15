@@ -9,8 +9,8 @@
 	"evaluationOrder": 100,
 	"bypassApprovalPrompt": true,
 	"jsonFormat": true,
-	"ssoEnabled": true,
-	"generateRefreshToken": true,
+	"ssoEnabled": false,
+	"generateRefreshToken": false,
 	"description": "openIdDemo",
 	"scopes": [
 		"java.util.HashSet", [ "openid",  "profile" ]
