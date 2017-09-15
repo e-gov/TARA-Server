@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout">
+
+<head>
+    <title th:text="#{cas.login.pagetitle}"></title>
+</head>
+
+<body id="cas" class="login">
+<div layout:fragment="content">
+    <div class="row">
+
+        <div class="alert alert-success">
+            <strong th:text="#{ria.mid.control.code}"></strong> <span th:text="${mobileChallenge}"></span>
+        </div>
+
+        <form id="mIDCheckForm" method="post">
+            <input type="hidden" name="lt" th:value="${loginTicket}"/>
+            <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
+            <input type="hidden" id="_eventId" name="_eventId" value="check"/>
+        </form>
+
+        <script type="text/javascript">
+            window.onload = function () {
+                setTimeout(function () {
+                    var form = document.getElementById("mIDCheckForm");
+                    form.submit();
+                }, 5000);
+
+            };
+        </script>
+    </div>
+</div>
+</body>
+</html>

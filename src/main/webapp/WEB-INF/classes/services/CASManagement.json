@@ -1,0 +1,11 @@
+{
+	"@class": "org.apereo.cas.services.RegexRegisteredService",
+	"serviceId": "http://sso-be1.arendus.kit:8081/cas-management/callback?client_name=CasClient",
+	"name": "CasManagement",
+	"id": 44,
+	"description": "This service definition authorizes all application urls that support HTTPS and IMAPS protocols.",
+	"evaluationOrder": 44,
+	"attributeReleasePolicy": {
+		"@class": "org.apereo.cas.services.ReturnAllAttributeReleasePolicy"
+	}
+}
