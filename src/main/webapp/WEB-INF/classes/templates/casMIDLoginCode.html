@@ -51,13 +51,13 @@
             <div class="block fields">
                 <div class="wrapper">
                     <form id="mIDCheckForm" method="post">
-                        <h2 th:text="#{label.mobileid.check.title}"></h2><span
-                            th:text="${mobileChallenge}"></span>
+                        <h2 th:text="#{label.mobileid.check.title}"></h2>
 
-                        <div th:class="${moberrordiv}">
-                            <h3 class="title" th:text="#{label.mobileid.info.title}"></h3>
-                            <p th:text="${moberrortext}"></p>
+                        <div class="row row">
+                            <span th:text="${mobileChallenge}"></span>
                         </div>
+
+
                         <input type="hidden" id="moblang" name="moblang" th:value="${lang}">
                         <input type="hidden" name="lt" th:value="${loginTicket}"/>
                         <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
