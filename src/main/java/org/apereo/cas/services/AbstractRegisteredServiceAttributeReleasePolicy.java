@@ -1,14 +1,5 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by Fernflower decompiler)
-//
-
 package org.apereo.cas.services;
 
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.function.Consumer;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -18,32 +9,41 @@ import org.apereo.cas.authentication.principal.Principal;
 import org.apereo.cas.authentication.principal.PrincipalAttributesRepository;
 import org.apereo.cas.authentication.principal.Service;
 import org.apereo.cas.configuration.CasConfigurationProperties;
-import org.apereo.cas.services.RegisteredService;
-import org.apereo.cas.services.RegisteredServiceAttributeFilter;
-import org.apereo.cas.services.RegisteredServiceAttributeReleasePolicy;
 import org.apereo.cas.util.spring.ApplicationContextProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+
+/**
+ * Abstract release policy for attributes, provides common shared settings such as loggers and attribute filter config.
+ * Subclasses are to provide the behavior for attribute retrieval.
+ *
+ * @author Misagh Moayyed
+ * @since 4.1.0
+ */
 public abstract class AbstractRegisteredServiceAttributeReleasePolicy implements RegisteredServiceAttributeReleasePolicy {
 	private static final long serialVersionUID = 5325460875620586503L;
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(AbstractRegisteredServiceAttributeReleasePolicy.class);
+
 	private RegisteredServiceAttributeFilter registeredServiceAttributeFilter;
 	private PrincipalAttributesRepository principalAttributesRepository = new DefaultPrincipalAttributesRepository();
+
 	private boolean authorizedToReleaseCredentialPassword;
 	private boolean authorizedToReleaseProxyGrantingTicket;
 	private boolean excludeDefaultAttributes;
 	private String principalIdAttribute;
 
-	public AbstractRegisteredServiceAttributeReleasePolicy() {
-	}
-
-	public void setAttributeFilter(RegisteredServiceAttributeFilter filter) {
+	@Override
+	public void setAttributeFilter(final RegisteredServiceAttributeFilter filter) {
 		this.registeredServiceAttributeFilter = filter;
 	}
 
-	public void setPrincipalAttributesRepository(PrincipalAttributesRepository repository) {
+	public void setPrincipalAttributesRepository(final PrincipalAttributesRepository repository) {
 		this.principalAttributesRepository = repository;
 	}
 
@@ -56,126 +56,204 @@ public abstract class AbstractRegisteredServiceAttributeReleasePolicy implements
 	}
 
 	public String getPrincipalIdAttribute() {
-		return this.principalIdAttribute;
+		return principalIdAttribute;
 	}
 
-	public void setPrincipalIdAttribute(String principalIdAttribute) {
+	public void setPrincipalIdAttribute(final String principalIdAttribute) {
 		this.principalIdAttribute = principalIdAttribute;
 	}
 
+	@Override
 	public boolean isAuthorizedToReleaseCredentialPassword() {
 		return this.authorizedToReleaseCredentialPassword;
 	}
 
+	@Override
 	public boolean isAuthorizedToReleaseProxyGrantingTicket() {
 		return this.authorizedToReleaseProxyGrantingTicket;
 	}
 
-	public void setAuthorizedToReleaseCredentialPassword(boolean authorizedToReleaseCredentialPassword) {
+	public void setAuthorizedToReleaseCredentialPassword(final boolean authorizedToReleaseCredentialPassword) {
 		this.authorizedToReleaseCredentialPassword = authorizedToReleaseCredentialPassword;
 	}
 
-	public void setAuthorizedToReleaseProxyGrantingTicket(boolean authorizedToReleaseProxyGrantingTicket) {
+	public void setAuthorizedToReleaseProxyGrantingTicket(final boolean authorizedToReleaseProxyGrantingTicket) {
 		this.authorizedToReleaseProxyGrantingTicket = authorizedToReleaseProxyGrantingTicket;
 	}
 
 	public boolean isExcludeDefaultAttributes() {
-		return this.excludeDefaultAttributes;
+		//TODO check
+		return false;
 	}
 
-	public void setExcludeDefaultAttributes(boolean excludeDefaultAttributes) {
+	public void setExcludeDefaultAttributes(final boolean excludeDefaultAttributes) {
 		this.excludeDefaultAttributes = excludeDefaultAttributes;
 	}
 
-	public Map<String, Object> getAttributes(Principal principal, Service selectedService, RegisteredService registeredService) {
+	@Override
+	public Map<String, Object> getAttributes(final Principal principal, final Service selectedService,
+			final RegisteredService registeredService) {
 		LOGGER.debug("Locating principal attributes for [{}]", principal.getId());
-		Map principalAttributes = this.getPrincipalAttributesRepository() == null?principal.getAttributes():this.getPrincipalAttributesRepository().getAttributes(principal);
+		final Map<String, Object> principalAttributes = getPrincipalAttributesRepository() == null
+				? principal.getAttributes() : getPrincipalAttributesRepository().getAttributes(principal);
 		LOGGER.debug("Found principal attributes [{}] for [{}]", principalAttributes, principal.getId());
-		LOGGER.debug("Calling attribute policy [{}] to process attributes for [{}]", this.getClass().getSimpleName(), principal.getId());
-		Map policyAttributes = this.getAttributesInternal(principal, principalAttributes, registeredService);
-		LOGGER.debug("Attribute policy [{}] allows release of [{}] for [{}]", new Object[]{this.getClass().getSimpleName(), policyAttributes, principal.getId()});
-		LOGGER.debug("Attempting to merge policy attributes and default attributes");
-		TreeMap attributesToRelease = new TreeMap(String.CASE_INSENSITIVE_ORDER);
 
-		/*if(this.isExcludeDefaultAttributes()) {
+		LOGGER.debug("Calling attribute policy [{}] to process attributes for [{}]", getClass().getSimpleName(), principal.getId());
+		final Map<String, Object> policyAttributes = getAttributesInternal(principal, principalAttributes, registeredService);
+		LOGGER.debug("Attribute policy [{}] allows release of [{}] for [{}]", getClass().getSimpleName(), policyAttributes, principal.getId());
+
+		LOGGER.debug("Attempting to merge policy attributes and default attributes");
+		final Map<String, Object> attributesToRelease = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+
+		if (isExcludeDefaultAttributes()) {
 			LOGGER.debug("Ignoring default attribute policy attributes");
 		} else {
 			LOGGER.debug("Checking default attribute policy attributes");
-			Map defaultAttributes = this.getReleasedByDefaultAttributes(principal, principalAttributes);
+			final Map<String, Object> defaultAttributes = getReleasedByDefaultAttributes(principal, principalAttributes);
 			LOGGER.debug("Default attributes found to be released are [{}]", defaultAttributes);
+
 			LOGGER.debug("Adding default attributes first to the released set of attributes");
 			attributesToRelease.putAll(defaultAttributes);
-		}*/
-
+		}
 		LOGGER.debug("Adding policy attributes to the released set of attributes");
 		attributesToRelease.putAll(policyAttributes);
 		attributesToRelease.putAll(principalAttributes);
-		this.insertPrincipalIdAsAttributeIfNeeded(principal, attributesToRelease, selectedService, registeredService);
-		if(this.getAttributeFilter() != null) {
-			LOGGER.debug("Invoking attribute filter [{}] on the final set of attributes", this.getAttributeFilter());
-			return this.getAttributeFilter().filter(attributesToRelease);
-		} else {
-			return this.returnFinalAttributesCollection(attributesToRelease, registeredService);
-		}
+
+		insertPrincipalIdAsAttributeIfNeeded(principal, attributesToRelease, selectedService, registeredService);
+
+		//if (getAttributeFilter() != null) {
+		//	LOGGER.debug("Invoking attribute filter [{}] on the final set of attributes", getAttributeFilter());
+		//	return getAttributeFilter().filter(attributesToRelease);
+		//}
+
+		return returnFinalAttributesCollection(attributesToRelease, registeredService);
 	}
 
-	protected void insertPrincipalIdAsAttributeIfNeeded(Principal principal, Map<String, Object> attributesToRelease, Service service, RegisteredService registeredService) {
-		if(StringUtils.isNotBlank(this.getPrincipalIdAttribute())) {
+	/**
+	 * Release principal id as attribute if needed.
+	 *
+	 * @param principal           the principal
+	 * @param attributesToRelease the attributes to release
+	 * @param service             the service
+	 * @param registeredService   the registered service
+	 */
+	protected void insertPrincipalIdAsAttributeIfNeeded(final Principal principal,
+			final Map<String, Object> attributesToRelease,
+			final Service service,
+			final RegisteredService registeredService) {
+		if (StringUtils.isNotBlank(getPrincipalIdAttribute())) {
 			LOGGER.debug("Attempting to resolve the principal id for service [{}]", registeredService.getServiceId());
-			String id = registeredService.getUsernameAttributeProvider().resolveUsername(principal, service, registeredService);
-			LOGGER.debug("Releasing resolved principal id [{}] as attribute [{}]", id, this.getPrincipalIdAttribute());
-			attributesToRelease.put(this.getPrincipalIdAttribute(), principal.getId());
+			final String id = registeredService.getUsernameAttributeProvider().resolveUsername(principal, service, registeredService);
+			LOGGER.debug("Releasing resolved principal id [{}] as attribute [{}]", id, getPrincipalIdAttribute());
+			attributesToRelease.put(getPrincipalIdAttribute(), principal.getId());
 		}
-
 	}
 
-	protected Map<String, Object> returnFinalAttributesCollection(Map<String, Object> attributesToRelease, RegisteredService service) {
+	/**
+	 * Return the final attributes collection.
+	 * Subclasses may override this minute to impose last minute rules.
+	 *
+	 * @param attributesToRelease the attributes to release
+	 * @param service             the service
+	 * @return the map
+	 */
+	protected Map<String, Object> returnFinalAttributesCollection(final Map<String, Object> attributesToRelease,
+			final RegisteredService service) {
 		LOGGER.debug("Final collection of attributes allowed are: [{}]", attributesToRelease);
 		return attributesToRelease;
 	}
 
-	protected Map<String, Object> getReleasedByDefaultAttributes(Principal p, Map<String, Object> attributes) {
-		ApplicationContext ctx = ApplicationContextProvider.getApplicationContext();
-		if(ctx != null) {
+	/**
+	 * Determines a default bundle of attributes that may be released to all services
+	 * without the explicit mapping for each service.
+	 *
+	 * @param p          the principal
+	 * @param attributes the attributes
+	 * @return the released by default attributes
+	 */
+	protected Map<String, Object> getReleasedByDefaultAttributes(final Principal p, final Map<String, Object> attributes) {
+		final ApplicationContext ctx = ApplicationContextProvider.getApplicationContext();
+		if (ctx != null) {
 			LOGGER.debug("Located application context. Retrieving default attributes for release, if any");
-			CasConfigurationProperties props = (CasConfigurationProperties)ctx.getAutowireCapableBeanFactory().getBean(CasConfigurationProperties.class);
-			Set defaultAttrs = props.getAuthn().getAttributeRepository().getDefaultAttributesToRelease();
+			final CasConfigurationProperties props = ctx.getAutowireCapableBeanFactory().getBean(CasConfigurationProperties.class);
+			final Set<String> defaultAttrs = props.getAuthn().getAttributeRepository().getDefaultAttributesToRelease();
 			LOGGER.debug("Default attributes for release are: [{}]", defaultAttrs);
-			TreeMap defaultAttributesToRelease = new TreeMap(String.CASE_INSENSITIVE_ORDER);
-			defaultAttrs.stream().forEach((key) -> {
-				if(attributes.containsKey(key)) {
+
+			final Map<String, Object> defaultAttributesToRelease = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+			defaultAttrs.stream().forEach(key -> {
+				if (attributes.containsKey(key)) {
 					LOGGER.debug("Found and added default attribute for release: [{}]", key);
 					defaultAttributesToRelease.put(key, attributes.get(key));
 				}
-
 			});
 			return defaultAttributesToRelease;
-		} else {
-			return new TreeMap();
 		}
+
+		return new TreeMap<>();
 	}
 
-	protected abstract Map<String, Object> getAttributesInternal(Principal var1, Map<String, Object> var2, RegisteredService var3);
+	/**
+	 * Gets the attributes internally from the implementation.
+	 *
+	 * @param principal  the principal
+	 * @param attributes the principal attributes
+	 * @param service    the service
+	 * @return the attributes allowed for release
+	 */
+	protected abstract Map<String, Object> getAttributesInternal(Principal principal,
+			Map<String, Object> attributes,
+			RegisteredService service);
 
+	@Override
 	public int hashCode() {
-		return (new HashCodeBuilder(13, 133)).append(this.getAttributeFilter()).append(this.isAuthorizedToReleaseCredentialPassword()).append(this.isAuthorizedToReleaseProxyGrantingTicket()).append(this.getPrincipalAttributesRepository()).append(this.isExcludeDefaultAttributes()).append(this.getPrincipalIdAttribute()).toHashCode();
+		return new HashCodeBuilder(13, 133)
+				.append(getAttributeFilter())
+				.append(isAuthorizedToReleaseCredentialPassword())
+				.append(isAuthorizedToReleaseProxyGrantingTicket())
+				.append(getPrincipalAttributesRepository())
+				.append(isExcludeDefaultAttributes())
+				.append(getPrincipalIdAttribute())
+				.toHashCode();
 	}
 
-	public boolean equals(Object o) {
-		if(o == null) {
+	@Override
+	public boolean equals(final Object o) {
+		if (o == null) {
 			return false;
-		} else if(this == o) {
-			return true;
-		} else if(!(o instanceof AbstractRegisteredServiceAttributeReleasePolicy)) {
-			return false;
-		} else {
-			AbstractRegisteredServiceAttributeReleasePolicy that = (AbstractRegisteredServiceAttributeReleasePolicy)o;
-			EqualsBuilder builder = new EqualsBuilder();
-			return builder.append(this.getAttributeFilter(), that.getAttributeFilter()).append(this.isAuthorizedToReleaseCredentialPassword(), that.isAuthorizedToReleaseCredentialPassword()).append(this.isAuthorizedToReleaseProxyGrantingTicket(), that.isAuthorizedToReleaseProxyGrantingTicket()).append(this.getPrincipalAttributesRepository(), that.getPrincipalAttributesRepository()).append(this.isExcludeDefaultAttributes(), that.isExcludeDefaultAttributes()).append(this.getPrincipalIdAttribute(), that.getPrincipalIdAttribute()).isEquals();
 		}
+
+		if (this == o) {
+			return true;
+		}
+
+		if (!(o instanceof AbstractRegisteredServiceAttributeReleasePolicy)) {
+			return false;
+		}
+
+		final AbstractRegisteredServiceAttributeReleasePolicy that = (AbstractRegisteredServiceAttributeReleasePolicy) o;
+		final EqualsBuilder builder = new EqualsBuilder();
+		return builder
+				.append(getAttributeFilter(), that.getAttributeFilter())
+				.append(isAuthorizedToReleaseCredentialPassword(), that.isAuthorizedToReleaseCredentialPassword())
+				.append(isAuthorizedToReleaseProxyGrantingTicket(), that.isAuthorizedToReleaseProxyGrantingTicket())
+				.append(getPrincipalAttributesRepository(), that.getPrincipalAttributesRepository())
+				.append(isExcludeDefaultAttributes(), that.isExcludeDefaultAttributes())
+				.append(getPrincipalIdAttribute(), that.getPrincipalIdAttribute())
+				.isEquals();
 	}
 
+
+	@Override
 	public String toString() {
-		return (new ToStringBuilder(this)).append("attributeFilter", this.getAttributeFilter()).append("principalAttributesRepository", this.getPrincipalAttributesRepository()).append("authorizedToReleaseCredentialPassword", this.isAuthorizedToReleaseCredentialPassword()).append("authorizedToReleaseProxyGrantingTicket", this.isAuthorizedToReleaseProxyGrantingTicket()).append("excludeDefaultAttributes", this.isExcludeDefaultAttributes()).append("principalIdAttribute", this.getPrincipalIdAttribute()).toString();
+		return new ToStringBuilder(this)
+				.append("attributeFilter", getAttributeFilter())
+				.append("principalAttributesRepository", getPrincipalAttributesRepository())
+				.append("authorizedToReleaseCredentialPassword", isAuthorizedToReleaseCredentialPassword())
+				.append("authorizedToReleaseProxyGrantingTicket", isAuthorizedToReleaseProxyGrantingTicket())
+				.append("excludeDefaultAttributes", isExcludeDefaultAttributes())
+				.append("principalIdAttribute", getPrincipalIdAttribute())
+				.toString();
 	}
 }
+
+

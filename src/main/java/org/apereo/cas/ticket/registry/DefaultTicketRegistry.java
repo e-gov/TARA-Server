@@ -10,12 +10,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Implementation of the TicketRegistry that is backed by a ConcurrentHashMap.
- *
- * @author Scott Battaglia
- * @since 3.0.0
- */
 public class DefaultTicketRegistry extends AbstractTicketRegistry {
 	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultTicketRegistry.class);
 

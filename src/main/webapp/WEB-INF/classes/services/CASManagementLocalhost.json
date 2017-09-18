@@ -1,10 +1,10 @@
 {
 	"@class": "org.apereo.cas.services.RegexRegisteredService",
-	"serviceId": "http://sso-be1.arendus.kit:8081/cas-management/manage.html",
+	"serviceId": "http://localhost:8080/cas-management/manage.html",
 	"name": "CasManagement",
-	"id": 44,
+	"id": 45,
 	"description": "Cas Management service",
-	"evaluationOrder": 44,
+	"evaluationOrder": 45,
 	"attributeReleasePolicy": {
 		"@class": "org.apereo.cas.services.ReturnAllAttributeReleasePolicy"
 	}
