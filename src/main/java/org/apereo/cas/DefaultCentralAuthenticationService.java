@@ -57,16 +57,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Concrete implementation of a {@link CentralAuthenticationService}, and also the
- * central, organizing component of CAS' internal implementation.
- * This class is threadsafe.
  *
- * @author William G. Thompson, Jr.
- * @author Scott Battaglia
- * @author Dmitry Kopylenko
- * @author Misagh Moayyed
- * @since 3.0.0
+ * @author Priit Serk: priit.serk@gmail.com
+ * @since 5.1.4
  */
+
 @Transactional(transactionManager = "ticketTransactionManager")
 public class DefaultCentralAuthenticationService extends AbstractCentralAuthenticationService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultCentralAuthenticationService.class);

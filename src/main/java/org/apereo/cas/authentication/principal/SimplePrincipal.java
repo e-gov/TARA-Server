@@ -16,6 +16,12 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apereo.cas.authentication.principal.Principal;
 import org.springframework.util.Assert;
 
+/**
+ *
+ * @author Priit Serk: priit.serk@gmail.com
+ * @since 5.1.4
+ */
+
 @JsonIgnoreProperties(
 		ignoreUnknown = true
 )

@@ -10,6 +10,12 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ *
+ * @author Priit Serk: priit.serk@gmail.com
+ * @since 5.1.4
+ */
+
 public class DefaultTicketRegistry extends AbstractTicketRegistry {
 	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultTicketRegistry.class);
 

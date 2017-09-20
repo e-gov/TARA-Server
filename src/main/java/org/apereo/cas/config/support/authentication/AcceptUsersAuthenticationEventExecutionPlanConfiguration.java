@@ -16,8 +16,11 @@ import org.springframework.context.annotation.Configuration;
 import ee.ria.sso.EchoingPrincipalResolver;
 
 /**
- * Created by serkp on 8.09.2017.
+ *
+ * @author Priit Serk: priit.serk@gmail.com
+ * @since 5.1.4
  */
+
 @Configuration("acceptUsersAuthenticationEventExecutionPlanConfiguration")
 @EnableConfigurationProperties(CasConfigurationProperties.class)
 public class AcceptUsersAuthenticationEventExecutionPlanConfiguration implements AuthenticationEventExecutionPlanConfigurer {

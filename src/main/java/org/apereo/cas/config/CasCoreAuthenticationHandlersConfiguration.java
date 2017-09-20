@@ -34,6 +34,12 @@ import org.springframework.context.annotation.Configuration;
 
 import ee.ria.sso.EchoingPrincipalResolver;
 
+/**
+ *
+ * @author Priit Serk: priit.serk@gmail.com
+ * @since 5.1.4
+ */
+
 @Configuration("casCoreAuthenticationHandlersConfiguration")
 @EnableConfigurationProperties(CasConfigurationProperties.class)
 public class CasCoreAuthenticationHandlersConfiguration {

@@ -19,12 +19,11 @@ import java.util.Set;
 import java.util.TreeMap;
 
 /**
- * Abstract release policy for attributes, provides common shared settings such as loggers and attribute filter config.
- * Subclasses are to provide the behavior for attribute retrieval.
  *
- * @author Misagh Moayyed
- * @since 4.1.0
+ * @author Priit Serk: priit.serk@gmail.com
+ * @since 5.1.4
  */
+
 public abstract class AbstractRegisteredServiceAttributeReleasePolicy implements RegisteredServiceAttributeReleasePolicy {
 	private static final long serialVersionUID = 5325460875620586503L;
 

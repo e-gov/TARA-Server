@@ -16,8 +16,11 @@ import ee.ria.sso.AttributeConstant;
 import ee.ria.sso.AttributesService;
 
 /**
- * Created by serkp on 8.09.2017.
+ *
+ * @author Priit Serk: priit.serk@gmail.com
+ * @since 5.1.4
  */
+
 public class AcceptUsersAuthenticationHandler extends AbstractPreAndPostProcessingAuthenticationHandler {
 
 	public AcceptUsersAuthenticationHandler(final String name, final ServicesManager servicesManager, final PrincipalFactory principalFactory,

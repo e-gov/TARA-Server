@@ -22,6 +22,12 @@ import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ *
+ * @author Priit Serk: priit.serk@gmail.com
+ * @since 5.1.4
+ */
+
 @Configuration("casCookieConfiguration")
 @EnableConfigurationProperties(CasConfigurationProperties.class)
 public class CasCookieConfiguration {

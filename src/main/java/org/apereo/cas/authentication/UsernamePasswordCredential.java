@@ -10,6 +10,12 @@ import org.springframework.webflow.core.collection.AttributeMap;
 
 import com.codeborne.security.mobileid.MobileIDSession;
 
+/**
+ *
+ * @author Priit Serk: priit.serk@gmail.com
+ * @since 5.1.4
+ */
+
 public class UsernamePasswordCredential implements Credential, Serializable {
 	public static final String AUTHENTICATION_ATTRIBUTE_PASSWORD = "credential";
 	private static final long serialVersionUID = -700605081472810939L;

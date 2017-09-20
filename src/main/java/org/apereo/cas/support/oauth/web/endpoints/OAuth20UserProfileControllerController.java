@@ -32,6 +32,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
 
+/**
+ *
+ * @author Priit Serk: priit.serk@gmail.com
+ * @since 5.1.4
+ */
+
 public class OAuth20UserProfileControllerController extends BaseOAuth20Controller {
 	private static final Logger LOGGER =
 			LoggerFactory.getLogger(OAuth20UserProfileControllerController.class);
