@@ -5,11 +5,12 @@
 
 package org.apereo.cas.oidc.web.controllers;
 
-import com.google.common.base.Throwables;
 import java.util.ArrayList;
 import java.util.Collection;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
 import org.apache.http.message.BasicNameValuePair;
 import org.apereo.cas.authentication.Authentication;
 import org.apereo.cas.authentication.principal.PrincipalFactory;
@@ -40,6 +41,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.servlet.ModelAndView;
+
+import com.google.common.base.Throwables;
 
 public class OidcAuthorizeEndpointController extends OAuth20AuthorizeEndpointController {
 	private static final Logger LOGGER = LoggerFactory.getLogger(OidcAuthorizeEndpointController.class);

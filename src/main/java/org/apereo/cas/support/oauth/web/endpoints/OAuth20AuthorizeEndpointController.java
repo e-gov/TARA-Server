@@ -8,11 +8,12 @@ package org.apereo.cas.support.oauth.web.endpoints;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
+
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
@@ -32,7 +33,6 @@ import org.apereo.cas.support.oauth.profile.OAuth20ProfileScopeToAttributesFilte
 import org.apereo.cas.support.oauth.services.OAuthRegisteredService;
 import org.apereo.cas.support.oauth.util.OAuth20Utils;
 import org.apereo.cas.support.oauth.validator.OAuth20Validator;
-import org.apereo.cas.support.oauth.web.endpoints.BaseOAuth20Controller;
 import org.apereo.cas.support.oauth.web.response.accesstoken.ext.AccessTokenRequestDataHolder;
 import org.apereo.cas.support.oauth.web.views.ConsentApprovalViewResolver;
 import org.apereo.cas.ticket.TicketGrantingTicket;
@@ -132,11 +132,21 @@ public class OAuth20AuthorizeEndpointController extends BaseOAuth20Controller {
 
 			LOGGER.debug("Callback URL to redirect: [{}]", callbackUrl);
 			context.getRequest().getSession().invalidate();
+			removeCookie(context);
 			return StringUtils.isBlank(callbackUrl)?OAuth20Utils.produceUnauthorizedErrorView():OAuth20Utils.redirectTo(callbackUrl);
 		} else {
 			LOGGER.error("Unexpected null profile from profile manager. Request is not fully authenticated.");
 			return OAuth20Utils.produceUnauthorizedErrorView();
 		}
+	}
+
+	private void removeCookie(J2EContext context) {
+		Cookie cookie = new Cookie(ticketGrantingTicketCookieGenerator.getCookieName(), null); // Not necessary, but saves bandwidth.
+		cookie.setPath(ticketGrantingTicketCookieGenerator.getCookiePath());
+		cookie.setHttpOnly(true);
+		cookie.setSecure(true);
+		cookie.setMaxAge(0);
+		context.getResponse().addCookie(cookie);
 	}
 
 	protected String buildCallbackUrlForTokenResponseType(J2EContext context, Authentication authentication, Service service, String redirectUri, String responseType, String clientId) {

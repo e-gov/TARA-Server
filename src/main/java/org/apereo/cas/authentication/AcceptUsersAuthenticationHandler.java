@@ -6,14 +6,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apereo.cas.authentication.handler.support.AbstractPreAndPostProcessingAuthenticationHandler;
 import org.apereo.cas.authentication.principal.PrincipalFactory;
 import org.apereo.cas.services.ServicesManager;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import ee.ria.sso.AttributeConstant;
-import ee.ria.sso.AttributesService;
 
 /**
  *
