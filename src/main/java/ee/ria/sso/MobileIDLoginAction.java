@@ -1,8 +1,5 @@
 package ee.ria.sso;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import javax.annotation.PostConstruct;
 
 import org.apereo.cas.authentication.UsernamePasswordCredential;
@@ -12,13 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.webflow.core.collection.AttributeMap;
-import org.springframework.webflow.core.collection.LocalAttributeMap;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
 
 import com.codeborne.security.AuthenticationException;
-import com.codeborne.security.mobileid.MobileIDAuthenticator;
 import com.codeborne.security.mobileid.MobileIDSession;
 
 /**
@@ -35,8 +29,8 @@ public class MobileIDLoginAction {
 	public static final String AUTH_COUNT = "authCount";
 
 	@Autowired
-	@Qualifier("mobileIDAuthenticator")
-	private MobileIDAuthenticator mIDAuthenticator;
+	@Qualifier("MIDAuthenticator")
+	private MIDAuthenticator mIDAuthenticator;
 
 	@Value("${mobileID.countryCode:EE}")
 	private String countryCode;
@@ -54,14 +48,18 @@ public class MobileIDLoginAction {
 	private String serviceUrl;
 
 	public Event submit(RequestContext context) {
-		String mobileNumber =
+		final String mobileNumber =
 				context.getExternalContext().getRequestParameterMap().get("mobileNumber");
 
+		final String personalCode =
+				context.getExternalContext().getRequestParameterMap().get("personalCode");
+
 		context.getFlowScope().remove("ERROR_CODE");
-		log.info("Starting mobile ID login with number {}", mobileNumber);
+		log.info("Starting mobile ID login with numbers {} {}", mobileNumber, personalCode);
 
 		try {
-			MobileIDSession mIDSession = mIDAuthenticator.startLogin(mobileNumber);
+			MobileIDSession mIDSession =
+					mIDAuthenticator.startLogin(personalCode, countryCode, mobileNumber);
 			log.info("Login response: {}", mIDSession);
 
 			context.getFlowScope().put(MOBILE_CHALLENGE, mIDSession.challenge);
@@ -72,9 +70,7 @@ public class MobileIDLoginAction {
 		} catch (AuthenticationException ex) {
 			log.error("Mid Login start failed. Msg={}", ex.getMessage());
 			clearSession(context);
-			context.getFlowScope().put("ERROR_CODE", "mid." + ex.getCode());
-
-			return new Event(this, "error");
+			throw new RuntimeException("MID_ERRROR");
 		}
 
 		return new Event(this, "success");
@@ -92,16 +88,11 @@ public class MobileIDLoginAction {
 			boolean isLoginComplete = mIDAuthenticator.isLoginComplete(session);
 
 			if (isLoginComplete) {
-
-				Map<String, String> map = new HashMap<String, String>();
-				map.put("testAttribute", "test");
-				AttributeMap attributeMap = new LocalAttributeMap(map);
 				context.getFlowExecutionContext()
 						.getActiveSession()
 						.getScope()
 						.put("credential", new UsernamePasswordCredential(mobileNumber, session));
-				//context.getFlowScope().put("credential", new UsernamePasswordCredential(mobileNumber, session));
-				return new Event(this, "success", attributeMap);
+				return new Event(this, "success");
 			} else {
 				context.getFlowScope().put(AUTH_COUNT, ++checkCount);
 				return new Event(this, "outstanding");
@@ -109,8 +100,7 @@ public class MobileIDLoginAction {
 		} catch (AuthenticationException ex) {
 			log.error("Mid Login check failed. Msg={}", ex.getMessage());
 			clearSession(context);
-			context.getFlowScope().put("ERROR_CODE", "mid." + ex.getCode());
-			return new Event(this, "error");
+			throw new RuntimeException("MID_ERRROR");
 		}
 	}
 
