@@ -54,6 +54,13 @@ public class MobileIDLoginAction {
 		final String personalCode =
 				context.getExternalContext().getRequestParameterMap().get("personalCode");
 
+		if (mobileNumber == null || personalCode == null || mobileNumber.trim().length() == 0
+				|| personalCode.trim().length() == 0) {
+			log.warn(
+					"Authentication attemp with empty personalCode or mobileNumber. Forbidden");
+			throw new RuntimeException("MID_ERRROR");
+		}
+
 		context.getFlowScope().remove("ERROR_CODE");
 		log.info("Starting mobile ID login with numbers {} {}", mobileNumber, personalCode);
 
