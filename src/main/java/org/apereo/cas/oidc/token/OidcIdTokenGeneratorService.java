@@ -2,7 +2,9 @@ package org.apereo.cas.oidc.token;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
@@ -123,8 +125,8 @@ public class OidcIdTokenGeneratorService {
 		//claims.setExpirationTime(NumericDate.fromSeconds(15));
 		claims.setIssuedAtToNow();
 		claims.setNotBeforeMinutesInThePast(this.skew);
-		claims.setSubject(principal.getId());
-		claims.setClaim("profile_attributes",principal.getAttributes());
+		claims.setSubject("EE"+principal.getId());
+		claims.setClaim("profile_attributes", filterMobileIDAttributes(principal.getAttributes()));
 
 		if (authentication.getAttributes().containsKey(casProperties.getAuthn().getMfa().getAuthenticationContextAttribute())) {
 			final Collection<Object> val = CollectionUtils.toCollection(
@@ -141,9 +143,10 @@ public class OidcIdTokenGeneratorService {
 		claims.setClaim(OAuth20Constants.NONCE, authentication.getAttributes().get(OAuth20Constants.NONCE));
 		claims.setClaim(OidcConstants.CLAIM_AT_HASH, generateAccessTokenHash(accessTokenId, service));
 
-		principal.getAttributes().entrySet().stream()
+		/*principal.getAttributes().entrySet().stream()
 				.filter(entry -> casProperties.getAuthn().getOidc().getClaims().contains(entry.getKey()))
-				.forEach(entry -> claims.setClaim(entry.getKey(), entry.getValue()));
+				.forEach(entry -> claims.setClaim(entry.getKey(), entry.getValue
+				()));*/
 
 		if (!claims.hasClaim(OidcConstants.CLAIM_PREFERRED_USERNAME)) {
 			claims.setClaim(OidcConstants.CLAIM_PREFERRED_USERNAME, profile.getId());
@@ -151,6 +154,14 @@ public class OidcIdTokenGeneratorService {
 
 		return claims;
 	}
+
+        private Map<String, Object> filterMobileIDAttributes(Map<String, Object> inputAttributes) {
+            Map<String, Object>  attrs = new TreeMap(String.CASE_INSENSITIVE_ORDER);
+            attrs.put("mobileNumber", inputAttributes.get("mobileNumber"));
+            attrs.put("familyName", inputAttributes.get("lastName"));
+            attrs.put("givenName", inputAttributes.get("firstName"));
+            return attrs;
+        }
 
 	private String generateAccessTokenHash(final AccessToken accessTokenId,
 			final OidcRegisteredService service) {

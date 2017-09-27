@@ -25,8 +25,8 @@ public class UsernamePasswordCredential implements Credential, Serializable {
 	private String username;
 	private String password;
 
-	private String firstName;
-	private String lastName;
+	private String givenName;
+	private String familyName;
 	private String mobileNumber;
 	private String personalCode;
 
@@ -38,26 +38,26 @@ public class UsernamePasswordCredential implements Credential, Serializable {
 	public UsernamePasswordCredential(String username, MobileIDSession session) {
 		this.username = username;
 
-		setFirstName(session.firstName);
-		setLastName(session.lastName);
+		setGivenName(session.firstName);
+		setFamilyName(session.lastName);
 		setMobileNumber(username);
 		setPersonalCode(session.personalCode);
 	}
 
-	public String getFirstName() {
-		return firstName;
+	public String getGivenName() {
+		return givenName;
 	}
 
-	public void setFirstName(String firstName) {
-		this.firstName = firstName;
+	public void setGivenName(String givenName) {
+		this.givenName = givenName;
 	}
 
-	public String getLastName() {
-		return lastName;
+	public String getFamilyName() {
+		return familyName;
 	}
 
-	public void setLastName(String lastName) {
-		this.lastName = lastName;
+	public void setFamilyName(String familyName) {
+		this.familyName = familyName;
 	}
 
 	public String getMobileNumber() {

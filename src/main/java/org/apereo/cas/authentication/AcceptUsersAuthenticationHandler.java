@@ -34,8 +34,8 @@ public class AcceptUsersAuthenticationHandler extends AbstractPreAndPostProcessi
 
 		final Map<String, Object> attributeMap = new LinkedHashMap<>();
 
-		attributeMap.put("firstName", usernamePasswordCredential.getFirstName());
-		attributeMap.put("lastName", usernamePasswordCredential.getLastName());
+		attributeMap.put("firstName", usernamePasswordCredential.getGivenName());
+		attributeMap.put("lastName", usernamePasswordCredential.getFamilyName());
 		attributeMap.put("mobileNumber", usernamePasswordCredential.getMobileNumber());
 		attributeMap.put("personalCode", usernamePasswordCredential.getPersonalCode());
 
