@@ -23,6 +23,7 @@ import org.apereo.cas.logout.LogoutRequest;
 import org.apereo.cas.services.RegisteredService;
 import org.apereo.cas.services.RegisteredServiceAccessStrategyUtils;
 import org.apereo.cas.services.RegisteredServiceAttributeReleasePolicy;
+import org.apereo.cas.services.ReturnAllAttributeReleasePolicy;
 import org.apereo.cas.services.ServiceContext;
 import org.apereo.cas.services.ServicesManager;
 import org.apereo.cas.services.UnauthorizedProxyingException;
@@ -306,11 +307,11 @@ public class DefaultCentralAuthenticationService extends AbstractCentralAuthenti
 					root.getAuthentication(), new ServiceContext(selectedService, registeredService));
 			final Principal principal = authentication.getPrincipal();
 
-			final RegisteredServiceAttributeReleasePolicy attributePolicy = registeredService.getAttributeReleasePolicy();
-			LOGGER.debug("Attribute policy [{}] is associated with service [{}]", attributePolicy, registeredService);
+			final RegisteredServiceAttributeReleasePolicy attributePolicy = new
+					ReturnAllAttributeReleasePolicy();
 
-			final Map<String, Object> attributesToRelease = attributePolicy != null
-					? attributePolicy.getAttributes(principal, selectedService, registeredService) : new HashMap<>();
+			final Map<String, Object> attributesToRelease =
+					attributePolicy.getAttributes(principal, selectedService, registeredService);
 
 			final String principalId = registeredService.getUsernameAttributeProvider().resolveUsername(principal, selectedService, registeredService);
 			final Principal modifiedPrincipal = this.principalFactory.createPrincipal(principalId, attributesToRelease);
