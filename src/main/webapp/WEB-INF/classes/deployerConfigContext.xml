@@ -27,7 +27,4 @@
 
 	<bean id="mobileIDLoginAction" class="ee.ria.sso.MobileIDLoginAction" init-method="init"/>
 
-	<bean id="starmanAttributesService" class="ee.ria.sso.AttributesService"/>
-
-
 </beans>

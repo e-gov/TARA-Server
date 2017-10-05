@@ -30,7 +30,16 @@
 
 	<view-state id="viewLoginForm" view="casLoginView" model="credential">
 		<transition on="submit" bind="true" validate="true" to="mIDLoginStart" history="invalidate"/>
+		<transition on="idsubmit" bind="true" validate="true" to="IDLoginStart"
+					history="invalidate"/>
 	</view-state>
+
+	<action-state id="IDLoginStart">
+		<evaluate expression="mobileIDLoginAction.idsubmit(flowRequestContext)"/>
+		<transition on="success" to="realSubmit"/>
+		<transition on="error" to="initializeLoginForm"/>
+	</action-state>
+
 
 	<action-state id="mIDLoginStart">
 		<evaluate expression="mobileIDLoginAction.submit(flowRequestContext)"/>

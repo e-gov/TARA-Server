@@ -4,45 +4,54 @@ package org.apereo.cas.authentication;
  * Created by serkp on 8.09.2017.
  */
 
+
 import java.io.Serializable;
 
+import com.codeborne.security.mobileid.MobileIDSession;
 import org.springframework.webflow.core.collection.AttributeMap;
 
-import com.codeborne.security.mobileid.MobileIDSession;
+import ee.ria.sso.model.IDModel;
+
 
 /**
- *
  * @author Priit Serk: priit.serk@gmail.com
  * @since 5.1.4
  */
 
 public class UsernamePasswordCredential implements Credential, Serializable {
-	public static final String AUTHENTICATION_ATTRIBUTE_PASSWORD = "credential";
 	private static final long serialVersionUID = -700605081472810939L;
 
-	AttributeMap attributeMap;
+	private AttributeMap attributeMap;
 
 	private String username;
 	private String password;
 
 	private String givenName;
 	private String familyName;
+	private String principalCode;
+	private String authenticationType;
 	private String mobileNumber;
-	private String personalCode;
-
 
 	public UsernamePasswordCredential() {
 	}
 
-
 	public UsernamePasswordCredential(String username, MobileIDSession session) {
 		this.username = username;
-
 		setGivenName(session.firstName);
 		setFamilyName(session.lastName);
+		setPrincipalCode(session.personalCode);
 		setMobileNumber(username);
-		setPersonalCode(session.personalCode);
+		setAuthenticationType("MID");
 	}
+
+	public UsernamePasswordCredential(String username, IDModel session) {
+		this.username = username;
+		setGivenName(session.getGivenName());
+		setFamilyName(session.getSurname());
+		setPrincipalCode(session.getSerialNumber());
+		setAuthenticationType("ID");
+	}
+
 
 	public String getGivenName() {
 		return givenName;
@@ -60,23 +69,6 @@ public class UsernamePasswordCredential implements Credential, Serializable {
 		this.familyName = familyName;
 	}
 
-	public String getMobileNumber() {
-		return mobileNumber;
-	}
-
-	public void setMobileNumber(String mobileNumber) {
-		this.mobileNumber = mobileNumber;
-	}
-
-	public String getPersonalCode() {
-		return personalCode;
-	}
-
-	public void setPersonalCode(String personalCode) {
-		this.personalCode = personalCode;
-	}
-
-
 	public String getPassword() {
 		return this.password;
 	}
@@ -93,33 +85,48 @@ public class UsernamePasswordCredential implements Credential, Serializable {
 		this.username = userName;
 	}
 
+	public String getPrincipalCode() {
+		return principalCode;
+	}
+
+	public void setPrincipalCode(String principalCode) {
+		this.principalCode = principalCode;
+	}
+
 	public String getId() {
-		return this.mobileNumber;
+		return this.principalCode;
 	}
 
 	public String toString() {
-		return this.mobileNumber;
+		return this.principalCode;
 	}
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o)
+		if (this == o) {
 			return true;
-		if (o == null || getClass() != o.getClass())
+		}
+		if (o == null || getClass() != o.getClass()) {
 			return false;
+		}
 
 		UsernamePasswordCredential that = (UsernamePasswordCredential) o;
 
-		if (!mobileNumber.equals(that.mobileNumber))
-			return false;
-		return personalCode.equals(that.personalCode);
+		return principalCode != null ? principalCode.equals(that.principalCode)
+				: that.principalCode == null;
 	}
 
 	@Override
 	public int hashCode() {
-		int result = mobileNumber.hashCode();
-		result = 31 * result + personalCode.hashCode();
-		return result;
+		return principalCode != null ? principalCode.hashCode() : 0;
+	}
+
+	public String getAuthenticationType() {
+		return authenticationType;
+	}
+
+	public void setAuthenticationType(String authenticationType) {
+		this.authenticationType = authenticationType;
 	}
 
 	public AttributeMap getAttributeMap() {
@@ -128,5 +135,13 @@ public class UsernamePasswordCredential implements Credential, Serializable {
 
 	public void setAttributeMap(AttributeMap attributeMap) {
 		this.attributeMap = attributeMap;
+	}
+
+	public String getMobileNumber() {
+		return mobileNumber;
+	}
+
+	public void setMobileNumber(String mobileNumber) {
+		this.mobileNumber = mobileNumber;
 	}
 }
