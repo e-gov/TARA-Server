@@ -2,10 +2,16 @@ package ee.ria.sso;
 
 
 import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.security.Principal;
+import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
@@ -34,21 +40,20 @@ import ee.ria.sso.model.IDModel;
  */
 @Component("mobileIDLoginAction")
 public class MobileIDLoginAction {
+    private static final Logger log = LoggerFactory.getLogger(MobileIDLoginAction.class);
 
     private static final String SSL_CLIENT_CERT = "SSL_CLIENT_CERT";
     private static final String BEGIN_CERT = "-----BEGIN CERTIFICATE-----";
     private static final String END_CERT = "-----END CERTIFICATE-----";
 
-    private static final Logger log = LoggerFactory.getLogger(MobileIDLoginAction.class);
+    private static final String MOBILE_CHALLENGE = "mobileChallenge";
+    private static final String MOBILE_SESSION = "mobileSession";
+    private static final String MOBILE_NUMBER = "mobileNumber";
+    private static final String AUTH_COUNT = "authCount";
 
-    public static final String MOBILE_CHALLENGE = "mobileChallenge";
-    public static final String MOBILE_SESSION = "mobileSession";
-    public static final String MOBILE_NUMBER = "mobileNumber";
-    public static final String AUTH_COUNT = "authCount";
-
-    @Autowired
-    @Qualifier("MIDAuthenticator")
-    private MIDAuthenticator mIDAuthenticator;
+    private final MIDAuthenticator mIDAuthenticator;
+    private final Map<String, X509Certificate> isseurCertificates = new HashMap<>();
+    private final OCSPValidator ocspValidator;
 
     @Value("${mobileID.countryCode:EE}")
     private String countryCode;
@@ -65,6 +70,62 @@ public class MobileIDLoginAction {
     @Value("${mobileID.serviceUrl:https://tsp.demo.sk.ee}")
     private String serviceUrl;
 
+    @Value("${ocsp.url:http://demo.sk.ee/ocsp}")
+    private String ocspUrl;
+
+    @Value("${ocsp.certificateDirectory:}")
+    private String certDirectory;
+
+    @Value("${ocsp.certificates:}")
+    private String certificates;
+
+    @Value("${ocsp.enabled}")
+    private boolean enabled;
+
+    @Autowired
+    public MobileIDLoginAction(@Qualifier("MIDAuthenticator") MIDAuthenticator mIDAuthenticator,
+                               @Qualifier("ocspValidator") OCSPValidator ocspValidator) {
+        this.mIDAuthenticator = mIDAuthenticator;
+        this.ocspValidator = ocspValidator;
+    }
+
+    private void checkCert(X509Certificate x509Certificate) {
+        if (!enabled) {
+            return;
+        }
+
+        X509Certificate issuerCert = findIssuerCertificate(x509Certificate);
+        if (issuerCert != null) {
+            boolean result = ocspValidator
+                    .isCertiticateValid(x509Certificate, issuerCert,
+                                        ocspUrl);
+
+            if (!result) {
+                log.error("Could not verify client certificate validity");
+                throw new RuntimeException("Could not verify client certificate validity");
+            }
+        } else {
+            log.error("Issuer cert not found");
+            throw new RuntimeException("Issuer cert not found from setup");
+        }
+    }
+
+    private X509Certificate findIssuerCertificate(X509Certificate userCertificate) {
+        String issuerCN = X509Utils.getSubjectCNFromCertificate(userCertificate);
+        log.debug("IssuerCN extracted: {}", issuerCN);
+        return isseurCertificates.get(issuerCN);
+    }
+
+    private X509Certificate readCert(String filename) throws IOException, CertificateException {
+        String fullPath = certDirectory + "/" + filename;
+
+        FileInputStream fis = new FileInputStream(fullPath);
+        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+        X509Certificate cert = (X509Certificate) cf.generateCertificate(fis);
+        fis.close();
+
+        return cert;
+    }
 
     public Event idsubmit(RequestContext context) {
         try {
@@ -73,15 +134,16 @@ public class MobileIDLoginAction {
             if (StringUtils.isEmpty(certStr)) {
                 return null;
             }
-            X509Certificate[] certificates = new X509Certificate[1];
             byte[] decoded = Base64
                     .decode(certStr.replaceAll(BEGIN_CERT, "").replaceAll(END_CERT, ""));
-            certificates[0] = (X509Certificate) CertificateFactory.getInstance("X.509")
-                                                                  .generateCertificate(
-                                                                          new ByteArrayInputStream(
-                                                                                  decoded));
+            X509Certificate x509 = (X509Certificate) CertificateFactory.getInstance("X.509")
+                                                                       .generateCertificate(
+                                                                               new ByteArrayInputStream(
+                                                                                       decoded));
 
-            Principal subjectDN = certificates[0].getSubjectDN();
+            checkCert(x509);
+
+            Principal subjectDN = x509.getSubjectDN();
             Map<String, String> params = Splitter
                     .on(", ")
                     .withKeyValueSeparator("=")
@@ -101,9 +163,9 @@ public class MobileIDLoginAction {
                                                        )));
             return new Event(this, "success");
         } catch (Exception e) {
-            log.error("Mid Login check failed. Msg={}", e.getMessage());
+            log.error("ID Login check failed. Msg={}", e);
             clearSession(context);
-            throw new RuntimeException("MID_ERRROR");
+            throw new RuntimeException("ID_ERRROR");
         }
     }
 
@@ -177,6 +239,21 @@ public class MobileIDLoginAction {
         mIDAuthenticator.setLanguage(language);
         mIDAuthenticator.setLoginMessage(messageToDisplay);
         mIDAuthenticator.setServiceName(serviceName);
+        try {
+            if (enabled) {
+                Map<String, String> filenameAndCertCNMap =
+                        Arrays.stream(certificates.split(",")).map(prop -> prop.split(":"))
+                              .collect(
+                                      Collectors.toMap(e -> e[0], e -> e[1]));
+
+                for (Map.Entry<String, String> entry : filenameAndCertCNMap.entrySet()) {
+
+                    isseurCertificates.put(entry.getKey(), readCert(entry.getValue()));
+                }
+            }
+        } catch (IOException | CertificateException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void clearSession(RequestContext context) {
