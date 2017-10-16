@@ -1,4 +1,4 @@
-package ee.ria.sso;
+package ee.ria.sso.utils;
 
 
 import java.security.cert.CertificateEncodingException;
@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 public class X509Utils {
     private static final Logger log = LoggerFactory.getLogger(X509Utils.class);
 
-    static String getSubjectCNFromCertificate(X509Certificate certificate) {
+    public static String getSubjectCNFromCertificate(X509Certificate certificate) {
         try {
             X500Name x500name = new JcaX509CertificateHolder(certificate).getIssuer();
             RDN cn = x500name.getRDNs(BCStyle.CN)[0];

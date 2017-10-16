@@ -33,14 +33,16 @@ import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
 
 import ee.ria.sso.model.IDModel;
+import ee.ria.sso.utils.X509Utils;
+import ee.ria.sso.validators.OCSPValidator;
 
 
 /**
  * Created by serkp on 7.09.2017.
  */
 @Component("mobileIDLoginAction")
-public class MobileIDLoginAction {
-    private static final Logger log = LoggerFactory.getLogger(MobileIDLoginAction.class);
+public class RIAAuthenticationAction {
+    private static final Logger log = LoggerFactory.getLogger(RIAAuthenticationAction.class);
 
     private static final String SSL_CLIENT_CERT = "SSL_CLIENT_CERT";
     private static final String BEGIN_CERT = "-----BEGIN CERTIFICATE-----";
@@ -83,8 +85,8 @@ public class MobileIDLoginAction {
     private boolean enabled;
 
     @Autowired
-    public MobileIDLoginAction(@Qualifier("MIDAuthenticator") MIDAuthenticator mIDAuthenticator,
-                               @Qualifier("ocspValidator") OCSPValidator ocspValidator) {
+    public RIAAuthenticationAction(@Qualifier("MIDAuthenticator") MIDAuthenticator mIDAuthenticator,
+                                   @Qualifier("ocspValidator") OCSPValidator ocspValidator) {
         this.mIDAuthenticator = mIDAuthenticator;
         this.ocspValidator = ocspValidator;
     }
@@ -198,7 +200,7 @@ public class MobileIDLoginAction {
 
         } catch (AuthenticationException ex) {
             log.error("Mid Login start failed. Msg={}", ex.getMessage());
-            clearSession(context);
+            handleErrorSession(context);
             throw new RuntimeException("MID_ERRROR");
         }
 
@@ -228,9 +230,16 @@ public class MobileIDLoginAction {
             }
         } catch (AuthenticationException ex) {
             log.error("Mid Login check failed. Msg={}", ex.getMessage());
-            clearSession(context);
+            handleErrorSession(context);
             throw new RuntimeException("MID_ERRROR");
         }
+    }
+
+    private void handleErrorSession(RequestContext context) {
+        clearSession(context);
+        context.getFlowScope().put("SVC_BACK",
+                                   context.getExternalContext().getSessionMap().get
+                                           ("pac4jRequestedUrl"));
     }
 
     @PostConstruct
@@ -247,7 +256,6 @@ public class MobileIDLoginAction {
                                       Collectors.toMap(e -> e[0], e -> e[1]));
 
                 for (Map.Entry<String, String> entry : filenameAndCertCNMap.entrySet()) {
-
                     isseurCertificates.put(entry.getKey(), readCert(entry.getValue()));
                 }
             }

@@ -1,4 +1,4 @@
-package ee.ria.sso;
+package ee.ria.sso.validators;
 
 
 import java.io.BufferedOutputStream;
@@ -44,15 +44,6 @@ public class OCSPValidator {
 
     private static final Logger log = LoggerFactory.getLogger(OCSPValidator.class);
 
-
-    /**
-     * @param userCert   - User certificate which will be checked from OCSP.
-     * @param issuerCert - User certificate signer certificate (upper cert in chain).
-     * @param ocspUrl    - OCSP url where request is sent
-     * @return - TRUE if OCSP request was successful and certificate status was not UNKNOWN or
-     * REVOKED. In other cases
-     * will return FALSE and log errors.
-     */
     public boolean isCertiticateValid(X509Certificate userCert, X509Certificate issuerCert,
                                       String ocspUrl) {
         log.info(
@@ -97,26 +88,19 @@ public class OCSPValidator {
     }
 
     private boolean isCertificateStatusGOOD(CertificateStatus certificateStatus) {
-        // this is actually null == null, because GOOD is null
         if (certificateStatus == CertificateStatus.GOOD) {
             return true;
         }
 
         if (certificateStatus instanceof RevokedStatus) {
-            log.error("OCSP Status is revoked!");
             return false;
         } else if (certificateStatus instanceof UnknownStatus) {
-            log.error("OCSP Status is unknown!");
             return false;
         } else {
             throw new IllegalStateException("Unknow ocsp response certification status OBJECT");
         }
     }
 
-
-    /**
-     * Sends OCSPReq to ocspUrl. Throws exception if HTTP response code not 2xx.
-     */
     private OCSPResp sendOCSPReq(OCSPReq request, String ocspUrl) throws IOException {
         byte[] array = request.getEncoded();
 
@@ -140,13 +124,9 @@ public class OCSPValidator {
 
         }
 
-        //Get Response
         InputStream in = (InputStream) con.getContent();
         OCSPResp response = new OCSPResp(in);
         in.close();
-
-        log.info("Read OCSP response.");
-
         return response;
     }
 

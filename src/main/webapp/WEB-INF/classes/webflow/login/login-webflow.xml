@@ -35,14 +35,14 @@
 	</view-state>
 
 	<action-state id="IDLoginStart">
-		<evaluate expression="mobileIDLoginAction.idsubmit(flowRequestContext)"/>
+		<evaluate expression="riaAuthenticationAction.idsubmit(flowRequestContext)"/>
 		<transition on="success" to="realSubmit"/>
 		<transition on="error" to="initializeLoginForm"/>
 	</action-state>
 
 
 	<action-state id="mIDLoginStart">
-		<evaluate expression="mobileIDLoginAction.submit(flowRequestContext)"/>
+		<evaluate expression="riaAuthenticationAction.submit(flowRequestContext)"/>
 		<transition on="success" to="viewMobileIDLoginCode"/>
 		<transition on="error" to="initializeLoginForm"/>
 	</action-state>
@@ -52,7 +52,7 @@
 	</view-state>
 
 	<action-state id="checkMIDStatus">
-		<evaluate expression="mobileIDLoginAction.check(flowRequestContext)"/>
+		<evaluate expression="riaAuthenticationAction.check(flowRequestContext)"/>
 		<transition on="success" to="realSubmit"/>
 		<transition on="outstanding" to="viewMobileIDLoginCode"/>
 		<transition on="error" to="initializeLoginForm"/>

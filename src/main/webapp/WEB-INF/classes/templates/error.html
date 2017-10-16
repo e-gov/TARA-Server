@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+<html>
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -34,10 +35,12 @@
         <div class="alert alert--error alert--js">
             <p>
                 <strong th:text="#{ria.mid.error.title}"></strong>
-            <p th:text="#{ria.mid.error.text}" th:remove="tag">
+            <p th:text="#{ria.mid.error.text}" th:remove="tag"></p>
+
             </p>
-            </p>
+            <p><a th:href="${SVC_BACK}" th:text="#{ria.back.to.auth}"/></p>
         </div>
+
     </div>
 
     <!-- FOOTER -->

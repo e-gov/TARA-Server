@@ -23,6 +23,6 @@
 
     <bean id="mobileIDAuthenticator" class="com.codeborne.security.mobileid.MobileIDAuthenticator"/>
 
-    <bean id="mobileIDLoginAction" class="ee.ria.sso.MobileIDLoginAction" init-method="init"/>
+    <bean id="riaAuthenticationAction" class="ee.ria.sso.RIAAuthenticationAction" init-method="init"/>
 
 </beans>
