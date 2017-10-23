@@ -7,12 +7,39 @@
         </p>
     </div>
 </div>
+
+
 <!-- PAGE BAR -->
 <div class="page-bar">
     <div class="container clear">
         <h1 th:text="#{label.title}"></h1>
+        <ul>
+            <li th:style="__${#locale}__=='ru'?'display:none':''">
+                <a
+
+                        th:with="urlBuilder=${T(org.springframework.web.servlet.support.ServletUriComponentsBuilder).fromCurrentRequest()}"
+                        th:href="${T(java.net.URLDecoder).decode(urlBuilder.replaceQueryParam('locale', 'ru').toUriString())}"
+                        th:text="#{label.ru.name}"></a>
+            </li>
+
+            <li th:style="__${#locale}__=='en'?'display:none':''">
+                <a
+                   th:with="urlBuilder=${T(org.springframework.web.servlet.support.ServletUriComponentsBuilder).fromCurrentRequest()}"
+                   th:href="${T(java.net.URLDecoder).decode(urlBuilder.replaceQueryParam('locale', 'en').toUriString())}"
+                   th:text="#{label.en.name}"></a>
+            </li>
+
+            <li th:style="__${#locale}__=='et'?'display:none':''">
+                <a
+                   th:with="urlBuilder=${T(org.springframework.web.servlet.support.ServletUriComponentsBuilder).fromCurrentRequest()}"
+                   th:href="${T(java.net.URLDecoder).decode(urlBuilder.replaceQueryParam('locale', 'et').toUriString())}"
+                   th:text="#{label.et.name}"></a>
+            </li>
+        </ul>
     </div>
 </div>
+
+
 <!-- //PAGE BAR -->
 <!-- PAGE WRAPPER -->
 <div class="page-wrapper">
@@ -60,13 +87,14 @@
                     <form method="post" id="fm1" th:object="${credential}">
                         <h2 th:text="#{label.mobileid.title}"></h2>
 
-                        <div th:class="${moberrordiv}" >
-                            <h3 class="title"  th:text="${moberrortitle}"></h3>
+                        <div th:class="${moberrordiv}">
+                            <h3 class="title" th:text="${moberrortitle}"></h3>
                             <p th:text="${moberrortext}"></p>
                         </div>
 
-                        <div class="row row" >
-                            <label for="personalCode"><abbr title="Kohustuslik väli" class="mandatory">*</abbr><span th:text="#{label.idcode}" th:remove="tag"></span></label>
+                        <div class="row row">
+                            <label for="personalCode"><abbr title="Kohustuslik väli" class="mandatory">*</abbr><span
+                                    th:text="#{label.idcode}" th:remove="tag"></span></label>
 
                             <input class="txt"
                                    id="personalCode"
@@ -79,8 +107,9 @@
 
                         </div>
 
-                        <div class="row row" >
-                            <label for="mobileNumber"><abbr title="Kohustuslik väli" class="mandatory">*</abbr><span th:text="#{label.phonenumber}" th:remove="tag"></span></label>
+                        <div class="row row">
+                            <label for="mobileNumber"><abbr title="Kohustuslik väli" class="mandatory">*</abbr><span
+                                    th:text="#{label.phonenumber}" th:remove="tag"></span></label>
 
                             <input class="txt"
                                    id="mobileNumber"
@@ -93,14 +122,16 @@
 
                         </div>
 
-                        <input type="hidden" id="moblang" name="moblang"   th:value="et">
+                        <input type="hidden" id="moblang" name="moblang" th:value="et">
 
                         <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
                         <input type="hidden" name="_eventId" value="submit"/>
                         <input type="hidden" name="geolocation"/>
+                        <input type="hidden" name="svc" th:value="${service}"/>
 
                         <div class="row btns">
-                            <button type="submit" id="button2" class="btn btn--primary" th:text="#{label.button}"></button>
+                            <button type="submit" id="button2" class="btn btn--primary"
+                                    th:text="#{label.button}"></button>
                         </div>
                     </form>
                 </div>
@@ -110,15 +141,19 @@
 
     <!-- FOOTER -->
     <div class="footer">
-      <!--  <div class="funding">
-            <p><img src="/images/logo-europe.svg" alt=""><span th:text="#{label.footer.eu1}" th:remove="tag"></span><br><span th:text="#{label.footer.eu2}" th:remove="tag"></span></p>
-        </div>-->
+        <!--  <div class="funding">
+              <p><img src="/images/logo-europe.svg" alt=""><span th:text="#{label.footer.eu1}" th:remove="tag"></span><br><span th:text="#{label.footer.eu2}" th:remove="tag"></span></p>
+          </div>-->
         <div class="ria">
-            <p><span th:text="#{label.footer.ria}" th:remove="tag"></span> <span id="e65842083" th:text="#{label.footer.spanid}"></span>, <a href="http://www.ria.ee" target="_blank">www.ria.ee</a></p>
+            <p><span th:text="#{label.footer.ria}" th:remove="tag"></span> <span id="e65842083"
+                                                                                 th:text="#{label.footer.spanid}"></span>,
+                <a href="http://www.ria.ee" target="_blank">www.ria.ee</a></p>
         </div>
     </div>
 
     <!-- HIDING EMAIL -->
-    <script type="text/javascript">/*<![CDATA[*/eval("var a=\"0JDYPFi93v7fsXZoc8ha-.NbMIqln2A_U1GtERdVrex5k6Op@+LzBSQuHgywWjKTC4m\";var b=a.split(\"\").sort().join(\"\");var c=\"@6BHXy+eD66\";var d=\"\";for(var e=0;e<c.length;e++)d+=b.charAt(a.indexOf(c.charAt(e)));document.getElementById(\"e65842083\").innerHTML=\"<a href=\\\"mailto:\"+d+\"\\\">\"+d+\"</a>\"")/*]]>*/</script>
+    <script type="text/javascript">/*<![CDATA[*/
+    eval("var a=\"0JDYPFi93v7fsXZoc8ha-.NbMIqln2A_U1GtERdVrex5k6Op@+LzBSQuHgywWjKTC4m\";var b=a.split(\"\").sort().join(\"\");var c=\"@6BHXy+eD66\";var d=\"\";for(var e=0;e<c.length;e++)d+=b.charAt(a.indexOf(c.charAt(e)));document.getElementById(\"e65842083\").innerHTML=\"<a href=\\\"mailto:\"+d+\"\\\">\"+d+\"</a>\"")
+    /*]]>*/</script>
 
 </div>
