@@ -9,6 +9,18 @@
     <version>1.0</version>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/profiles/${build.profile.id}</directory>
+                <excludes>
+                    <exclude>/config/*</exclude>
+                </excludes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+        </resources>
+
         <plugins>
             <plugin>
                 <groupId>com.rimerosolutions.maven.plugins</groupId>
@@ -57,14 +69,12 @@
 
     <dependencies>
         <!-- https://mvnrepository.com/artifact/javax.servlet/servlet-api -->
-
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
             <version>3.0.1</version>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>org.apereo.cas</groupId>
             <artifactId>cas-server-webapp${app.server}</artifactId>
@@ -87,36 +97,42 @@
             <artifactId>cas-server-core</artifactId>
             <version>${cas.version}</version>
         </dependency>
-
         <dependency>
             <groupId>com.codeborne</groupId>
             <artifactId>mobileid</artifactId>
             <version>1.1</version>
         </dependency>
-
-
+        <dependency>
+            <groupId>com.brsanthu</groupId>
+            <artifactId>google-analytics-java</artifactId>
+            <version>1.1.2</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.httpcomponents</groupId>
+                    <artifactId>httpclient</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>2.7.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.1.4</version>
+        </dependency>
         <dependency>
             <groupId>org.apereo.cas</groupId>
             <artifactId>cas-server-support-jpa-service-registry</artifactId>
             <version>${cas.version}</version>
         </dependency>
-
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpkix-jdk15on</artifactId>
             <version>1.54</version>
         </dependency>
-
-
-        <!--
-                        <dependency>
-                            <groupId>org.apereo.cas</groupId>
-                            <artifactId>cas-server-support-json-service-registry</artifactId>
-                            <version>${cas.version}</version>
-                        </dependency>
-        -->
-
-
     </dependencies>
 
     <properties>
@@ -127,6 +143,8 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <cas.config>/etc/cas/config</cas.config>
+        <build.profile.id></build.profile.id>
     </properties>
 
     <repositories>
@@ -168,5 +186,56 @@
             </snapshots>
         </repository>
     </repositories>
+
+    <profiles>
+        <profile>
+            <id>dev</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <build.profile.id>dev</build.profile.id>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <version>3.0.2</version>
+                        <executions>
+                            <execution>
+                                <id>copy-resources</id>
+                                <phase>validate</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${cas.config}</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>src/main/profiles/${build.profile.id}/config</directory>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apereo.cas</groupId>
+                    <artifactId>cas-server-support-json-service-registry</artifactId>
+                    <version>${cas.version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>test</id>
+            <properties>
+                <build.profile.id>test</build.profile.id>
+            </properties>
+        </profile>
+    </profiles>
 
 </project>

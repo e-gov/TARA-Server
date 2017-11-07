@@ -6,7 +6,7 @@
         Default log directory is the current directory but that can be overridden with -Dcas.log.dir=<logdir>
         Or you can change this property to a new default
         -->
-        <Property name="cas.log.dir" >.</Property>
+        <Property name="cas.log.dir" >/etc/cas/logs</Property>
         <!-- To see more CAS specific logging, adjust this property to info or debug or run server with -Dcas.log.leve=debug -->
         <Property name="cas.log.level" >warn</Property>
     </Properties>
@@ -61,7 +61,7 @@
         <!-- Loggers inherit appenders from Root Logger unless additivity is false -->
         <AsyncLogger name="org.apereo" level="${sys:cas.log.level}" includeLocation="true"/>
         <AsyncLogger name="org.apereo.services.persondir" level="${sys:cas.log.level}" includeLocation="true"/>
-        <AsyncLogger name="org.apereo.cas.web.flow" level="info" includeLocation="true"/>
+        <AsyncLogger name="org.apereo.cas.web.flow" level="${sys:cas.log.level}" includeLocation="true"/>
         <AsyncLogger name="org.apache" level="warn" />
         <AsyncLogger name="org.apache.http" level="error" />
         <AsyncLogger name="org.springframework" level="warn" />
@@ -93,16 +93,19 @@
         <AsyncLogger name="org.ldaptive" level="warn" />
         <AsyncLogger name="com.hazelcast" level="warn" />
         <AsyncLogger name="org.jasig.spring" level="warn" />
+        <AsyncLogger name="com.codeborne.security" level="${sys:cas.log.level}" />
+        <AsyncLogger name="com.brsanthu.googleanalytics" level="${sys:cas.log.level}" />
+        <AsyncLogger name="ee.ria" level="${sys:cas.log.level}" />
 
         <!-- Log perf stats only to perfStats.log -->
-        <AsyncLogger name="perfStatsLogger" level="info" additivity="false" includeLocation="true">
+        <!--AsyncLogger name="perfStatsLogger" level="info" additivity="false" includeLocation="true">
             <AppenderRef ref="casPerf"/>
-        </AsyncLogger>
+        </AsyncLogger-->
 
         <!-- Log audit to all root appenders, and also to audit log (additivity is not false) -->
-        <AsyncLogger name="org.apereo.inspektr.audit.support" level="info" includeLocation="true" >
+        <!--AsyncLogger name="org.apereo.inspektr.audit.support" level="info" includeLocation="true" >
             <AppenderRef ref="casAudit"/>
-        </AsyncLogger>
+        </AsyncLogger-->
 
         <!-- All Loggers inherit appenders specified here, unless additivity="false" on the Logger -->
         <AsyncRoot level="warn">
