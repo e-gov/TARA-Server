@@ -86,3 +86,12 @@ build.cmd help
 ## External
 
 Deploy resultant `target/cas.war`  to a servlet container of choice.
+
+## Development
+Building WAR with development mode please execute the following command
+
+```
+mvn clean package -Pdev
+```
+
+When running standalone CAS server instance you can define `cas.log.dir` and `cas.log.level` system parameters to control logging output
