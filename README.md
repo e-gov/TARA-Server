@@ -88,7 +88,7 @@ build.cmd help
 Deploy resultant `target/cas.war`  to a servlet container of choice.
 
 ## Development
-Building WAR with development mode please execute the following command
+When building WAR with development mode please execute the following command
 
 ```
 mvn clean package -Pdev

@@ -4,6 +4,8 @@ import java.util.concurrent.Future;
 
 import javax.annotation.PostConstruct;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,7 @@ import ee.ria.sso.service.TrackingService;
 public class TrackingServiceImpl implements TrackingService {
 
     private final static String CATEGORY = "identification";
+    private final Logger log = LoggerFactory.getLogger(TrackingServiceImpl.class);
     private GoogleAnalytics googleAnalytics;
 
     @Autowired
@@ -31,23 +34,37 @@ public class TrackingServiceImpl implements TrackingService {
 
     @PostConstruct
     protected void init() {
-        this.googleAnalytics = new GoogleAnalytics(this.environment.getProperty("tara.tracking.id"));
+        String trackingId = this.environment.getProperty("tara.tracking.id");
+        if (trackingId.matches("^UA\\-[0-9]+\\-[0-9]{1}$")) {
+            this.log.debug("Google Analytics will be activated ...");
+            this.googleAnalytics = new GoogleAnalytics(trackingId);
+        }
     }
 
     @Override
     public Future<GoogleAnalyticsResponse> startIDCardLogin(RequestContext context) {
-        EventHit hit = new EventHit(CATEGORY, "login-idc")
-            .applicationName(Constants.APPLICATION_NAME)
-            .eventLabel("Logimine (ID-kaart)");
-        return this.googleAnalytics.postAsync(hit);
+        if (this.isEnabled()) {
+            EventHit hit = new EventHit(CATEGORY, "login-idc")
+                .applicationName(Constants.APPLICATION_NAME)
+                .eventLabel("Logimine (ID-kaart)");
+            return this.googleAnalytics.postAsync(hit);
+        }
+        return null;
     }
 
     @Override
     public Future<GoogleAnalyticsResponse> startMobileIDLogin(RequestContext context) {
-        EventHit hit = new EventHit(CATEGORY, "login-mid")
-            .applicationName(Constants.APPLICATION_NAME)
-            .eventLabel("Logimine (Mobiil-ID)");
-        return this.googleAnalytics.postAsync(hit);
+        if (this.isEnabled()) {
+            EventHit hit = new EventHit(CATEGORY, "login-mid")
+                .applicationName(Constants.APPLICATION_NAME)
+                .eventLabel("Logimine (Mobiil-ID)");
+            return this.googleAnalytics.postAsync(hit);
+        }
+        return null;
+    }
+
+    private boolean isEnabled() {
+        return this.googleAnalytics != null;
     }
 
 }
