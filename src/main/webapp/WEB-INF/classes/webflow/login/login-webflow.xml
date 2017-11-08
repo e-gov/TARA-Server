@@ -27,7 +27,6 @@
 		<transition on="success" to="viewLoginForm"/>
 	</action-state>
 
-
 	<view-state id="viewLoginForm" view="casLoginView" model="credential">
 		<transition on="submit" bind="true" validate="true" to="mIDLoginStart" history="invalidate"/>
 		<transition on="idsubmit" bind="true" validate="true" to="IDLoginStart"
@@ -35,14 +34,13 @@
 	</view-state>
 
 	<action-state id="IDLoginStart">
-		<evaluate expression="riaAuthenticationAction.idsubmit(flowRequestContext)"/>
+		<evaluate expression="idCardAuthenticationAction"/>
 		<transition on="success" to="realSubmit"/>
 		<transition on="error" to="initializeLoginForm"/>
 	</action-state>
 
-
 	<action-state id="mIDLoginStart">
-		<evaluate expression="riaAuthenticationAction.submit(flowRequestContext)"/>
+		<evaluate expression="mobileIDStartAuthenticationAction"/>
 		<transition on="success" to="viewMobileIDLoginCode"/>
 		<transition on="error" to="initializeLoginForm"/>
 	</action-state>
@@ -52,12 +50,11 @@
 	</view-state>
 
 	<action-state id="checkMIDStatus">
-		<evaluate expression="riaAuthenticationAction.check(flowRequestContext)"/>
+		<evaluate expression="mobileIDCheckAuthenticationAction"/>
 		<transition on="success" to="realSubmit"/>
 		<transition on="outstanding" to="viewMobileIDLoginCode"/>
 		<transition on="error" to="initializeLoginForm"/>
 	</action-state>
-
 
 	<action-state id="realSubmit">
 		<evaluate expression="authenticationViaFormAction"/>
@@ -89,4 +86,5 @@
 		<transition on="error" to="initializeLoginForm"/>
 		<transition on="gateway" to="gatewayServicesManagementCheck"/>
 	</action-state>
+
 </flow>
