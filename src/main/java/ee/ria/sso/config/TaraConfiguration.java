@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
 import ee.ria.sso.InsecureTrustManager;
 
@@ -20,6 +21,7 @@ import ee.ria.sso.InsecureTrustManager;
  */
 
 @Configuration
+@EnableAspectJAutoProxy(proxyTargetClass = true)
 @ComponentScan(basePackages = {"ee.ria.sso", "org.jasig.cas"})
 public class TaraConfiguration {
 

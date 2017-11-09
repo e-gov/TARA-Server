@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!-- Specify the refresh internal in seconds. -->
-<Configuration monitorInterval="5" packages="org.apereo.cas.logging">
+<Configuration monitorInterval="30" packages="org.apereo.cas.logging">
     <Properties>
         <!-- 
         Default log directory is the current directory but that can be overridden with -Dcas.log.dir=<logdir>
@@ -23,6 +23,15 @@
                 <TimeBasedTriggeringPolicy />
             </Policies>
         </RollingFile>
+        <RollingFile name="taraAuthentication" fileName="${sys:cas.log.dir}/tara_authentication.log" append="true"
+                     filePattern="${sys:cas.log.dir}/tara_authentication-%d{yyyy-MM-dd-HH}-%i.log">
+            <PatternLayout pattern="%d %p [%c] - %m%n"/>
+            <Policies>
+                <OnStartupTriggeringPolicy />
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+                <TimeBasedTriggeringPolicy />
+            </Policies>
+        </RollingFile>
         <RollingFile name="auditlogfile" fileName="${sys:cas.log.dir}/cas_audit.log" append="true"
                      filePattern="${sys:cas.log.dir}/cas_audit-%d{yyyy-MM-dd-HH}-%i.log">
             <PatternLayout pattern="%d %p [%c] - %m%n"/>
@@ -32,7 +41,6 @@
                 <TimeBasedTriggeringPolicy />
             </Policies>
         </RollingFile>
-
         <RollingFile name="perfFileAppender" fileName="${sys:cas.log.dir}/perfStats.log" append="true"
                      filePattern="${sys:cas.log.dir}/perfStats-%d{yyyy-MM-dd-HH}-%i.log">
             <PatternLayout pattern="%m%n"/>
@@ -42,7 +50,6 @@
                 <TimeBasedTriggeringPolicy />
             </Policies>
         </RollingFile>
-
         <CasAppender name="casAudit">
             <AppenderRef ref="auditlogfile" />
         </CasAppender>
@@ -93,9 +100,11 @@
         <AsyncLogger name="org.ldaptive" level="warn" />
         <AsyncLogger name="com.hazelcast" level="warn" />
         <AsyncLogger name="org.jasig.spring" level="warn" />
+        <AsyncLogger name="org.hibernate" level="warn" />
         <AsyncLogger name="com.codeborne.security" level="${sys:cas.log.level}" />
         <AsyncLogger name="com.brsanthu.googleanalytics" level="${sys:cas.log.level}" />
         <AsyncLogger name="ee.ria" level="${sys:cas.log.level}" />
+        <AsyncLogger name="ee.ria.sso.logging" level="${sys:cas.log.level}" />
 
         <!-- Log perf stats only to perfStats.log -->
         <!--AsyncLogger name="perfStatsLogger" level="info" additivity="false" includeLocation="true">
@@ -107,8 +116,13 @@
             <AppenderRef ref="casAudit"/>
         </AsyncLogger-->
 
+        <!-- Log authentication attempts to authentication log -->
+        <AsyncLogger name="ee.ria.sso.logging" level="info" includeLocation="true" additivity="false">
+            <AppenderRef ref="taraAuthentication"/>
+        </AsyncLogger>
+
         <!-- All Loggers inherit appenders specified here, unless additivity="false" on the Logger -->
-        <AsyncRoot level="warn">
+        <AsyncRoot level="debug">
             <AppenderRef ref="casFile"/>
             <!-- 
                  For deployment to an application server running as service, 

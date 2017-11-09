@@ -4,6 +4,7 @@ import java.util.concurrent.Future;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +36,7 @@ public class TrackingServiceImpl implements TrackingService {
     @PostConstruct
     protected void init() {
         String trackingId = this.environment.getProperty("tara.tracking.id");
-        if (trackingId.matches("^UA\\-[0-9]+\\-[0-9]{1}$")) {
+        if (StringUtils.isNotBlank(trackingId) && trackingId.matches("^UA\\-[0-9]+\\-[0-9]{1}$")) {
             this.log.debug("Google Analytics will be activated ...");
             this.googleAnalytics = new GoogleAnalytics(trackingId);
         }

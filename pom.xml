@@ -20,6 +20,11 @@
                 <directory>src/main/resources</directory>
             </resource>
         </resources>
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+            </testResource>
+        </testResources>
 
         <plugins>
             <plugin>
@@ -98,6 +103,11 @@
             <version>${cas.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-aspects</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.codeborne</groupId>
             <artifactId>mobileid</artifactId>
             <version>1.1</version>
@@ -124,19 +134,27 @@
             <version>42.1.4</version>
         </dependency>
         <dependency>
-            <groupId>org.apereo.cas</groupId>
-            <artifactId>cas-server-support-jpa-service-registry</artifactId>
-            <version>${cas.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpkix-jdk15on</artifactId>
             <version>1.54</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <version>${spring.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
     <properties>
         <cas.version>5.1.4</cas.version>
+        <spring.version>4.2.8.RELEASE</spring.version>
         <springboot.version>1.5.3.RELEASE</springboot.version>
         <!-- app.server could be -jetty, -undertow, -tomcat, or blank if you plan to provide appserver -->
         <app.server>-tomcat</app.server>
