@@ -10,6 +10,10 @@ public class RiaAuthenticationException extends RuntimeException {
 
     private AuthenticationException.Code code = AuthenticationException.Code.INTERNAL_ERROR;
 
+    public RiaAuthenticationException(String message) {
+        super(message);
+    }
+
     public RiaAuthenticationException(String message, AuthenticationException cause) {
         super(message, cause);
         this.code = cause.getCode();

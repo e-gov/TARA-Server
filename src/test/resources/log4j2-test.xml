@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO">
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+        </Console>
+        <File name="File" fileName="target/logs/test.log">
+            <PatternLayout pattern="%d %p [%c] - %m%n"/>
+        </File>
+        <File name="AuthenticationTracking" fileName="target/logs/auth.log">
+            <PatternLayout pattern="%d %p [%c] - %m%n"/>
+        </File>
+    </Appenders>
+    <Loggers>
+        <Logger name="com.codeborne.security" level="DEBUG"/>
+        <Logger name="com.brsanthu.googleanalytics" level="DEBUG"/>
+        <Logger name="ee.ria" level="DEBUG"/>
+        <Logger name="org.apereo" level="DEBUG" includeLocation="true"/>
+        <Logger name="org.apereo.services.persondir" level="DEBUG" includeLocation="true"/>
+        <Logger name="org.apereo.cas.web.flow" level="DEBUG" includeLocation="true"/>
+        <Logger name="org.apache" level="WARN"/>
+        <Logger name="org.apache.http" level="ERROR"/>
+        <Logger name="org.springframework" level="WARN"/>
+        <Logger name="org.springframework.cloud.server" level="WARN"/>
+        <Logger name="org.springframework.cloud.client" level="WARN"/>
+        <Logger name="org.springframework.cloud.bus" level="WARN"/>
+        <Logger name="org.springframework.aop" level="WARN"/>
+        <Logger name="org.springframework.boot" level="WARN"/>
+        <Logger name="org.springframework.boot.actuate.autoconfigure" level="WARN"/>
+        <Logger name="org.springframework.webflow" level="WARN"/>
+        <Logger name="org.springframework.session" level="WARN"/>
+        <Logger name="org.springframework.amqp" level="ERROR"/>
+        <Logger name="org.springframework.integration" level="WARN"/>
+        <Logger name="org.springframework.messaging" level="WARN"/>
+        <Logger name="org.springframework.web" level="WARN"/>
+        <Logger name="org.springframework.orm.jpa" level="WARN"/>
+        <Logger name="org.springframework.scheduling" level="WARN"/>
+        <Logger name="org.springframework.context.annotation" level="ERROR"/>
+        <Logger name="org.springframework.boot.devtools" level="ERROR"/>
+        <Logger name="org.springframework.web.socket" level="WARN"/>
+        <Logger name="org.thymeleaf" level="WARN"/>
+        <Logger name="org.pac4j" level="WARN"/>
+        <Logger name="org.opensaml" level="WARN"/>
+        <Logger name="net.sf.ehcache" level="WARN"/>
+        <Logger name="com.couchbase" level="WARN" includeLocation="true"/>
+        <Logger name="com.ryantenney.metrics" level="WARN"/>
+        <Logger name="net.jradius" level="WARN"/>
+        <Logger name="org.openid4java" level="WARN"/>
+        <Logger name="org.ldaptive" level="WARN"/>
+        <Logger name="com.hazelcast" level="WARN"/>
+        <Logger name="org.jasig.spring" level="WARN"/>
+        <Logger name="org.hibernate" level="WARN"/>
+        <Logger name="ee.ria.sso.logging" level="INFO">
+            <AppenderRef ref="AuthenticationTracking"/>
+        </Logger>
+        <Root level="INFO">
+            <AppenderRef ref="Console"/>
+        </Root>
+    </Loggers>
+</Configuration>
