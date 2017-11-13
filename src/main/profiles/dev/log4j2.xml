@@ -104,7 +104,6 @@
         <AsyncLogger name="com.codeborne.security" level="${sys:cas.log.level}" />
         <AsyncLogger name="com.brsanthu.googleanalytics" level="${sys:cas.log.level}" />
         <AsyncLogger name="ee.ria" level="${sys:cas.log.level}" />
-        <AsyncLogger name="ee.ria.sso.logging" level="${sys:cas.log.level}" />
 
         <!-- Log perf stats only to perfStats.log -->
         <!--AsyncLogger name="perfStatsLogger" level="info" additivity="false" includeLocation="true">
