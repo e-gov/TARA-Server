@@ -253,12 +253,26 @@
             <properties>
                 <build.profile.id>test</build.profile.id>
             </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apereo.cas</groupId>
+                    <artifactId>cas-server-support-jpa-service-registry</artifactId>
+                    <version>${cas.version}</version>
+                </dependency>
+            </dependencies>
         </profile>
         <profile>
             <id>prod</id>
             <properties>
                 <build.profile.id>prod</build.profile.id>
             </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apereo.cas</groupId>
+                    <artifactId>cas-server-support-jpa-service-registry</artifactId>
+                    <version>${cas.version}</version>
+                </dependency>
+            </dependencies>
         </profile>
     </profiles>
 
