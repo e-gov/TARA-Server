@@ -1,6 +1,5 @@
 package ee.ria.sso.service.impl;
 
-import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.Principal;
@@ -14,10 +13,7 @@ import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
-import javax.servlet.http.HttpServletRequest;
 
-import org.apache.axis.encoding.Base64;
-import org.apache.axis.utils.StringUtils;
 import org.apereo.cas.authentication.UsernamePasswordCredential;
 import org.apereo.cas.web.support.WebUtils;
 import org.slf4j.Logger;
@@ -48,9 +44,7 @@ import ee.ria.sso.validators.OCSPValidator;
 @Service
 public class RiaAuthenticationServiceImpl extends AbstractService implements RiaAuthenticationService {
 
-    private static final String SSL_CLIENT_CERT = "SSL_CLIENT_CERT";
-    private static final String BEGIN_CERT = "-----BEGIN CERTIFICATE-----";
-    private static final String END_CERT = "-----END CERTIFICATE-----";
+    private static final String HEADER_SSL_CLIENT_CERT = "X-Client-Certificate";
     private static final String MOBILE_CHALLENGE = "mobileChallenge";
     private static final String MOBILE_SESSION = "mobileSession";
     private static final String MOBILE_NUMBER = "mobileNumber";
@@ -100,36 +94,18 @@ public class RiaAuthenticationServiceImpl extends AbstractService implements Ria
     public Event loginByIDCard(RequestContext context) {
         Future<GoogleAnalyticsResponse> googleAnalyticsResponseFuture = this.trackingService.startIDCardLogin(context);
         try {
-            final HttpServletRequest request = WebUtils.getHttpServletRequest(context);
-            String certStr = request.getHeader(SSL_CLIENT_CERT);
-            if (StringUtils.isEmpty(certStr)) {
-                return null;
-            }
-            byte[] decoded = Base64
-                .decode(certStr.replaceAll(BEGIN_CERT, "").replaceAll(END_CERT, ""));
-            X509Certificate x509 = (X509Certificate) CertificateFactory.getInstance("X.509")
-                .generateCertificate(
-                    new ByteArrayInputStream(
-                        decoded));
-
-            checkCert(x509);
-            Principal subjectDN = x509.getSubjectDN();
-            Map<String, String> params = Splitter
-                .on(", ")
-                .withKeyValueSeparator("=")
-                .split(subjectDN.getName());
+            String encodedCertificate = WebUtils.getHttpServletRequest(context).getHeader(HEADER_SSL_CLIENT_CERT);
+            Assert.hasLength(encodedCertificate, "Unable to find certificate from request");
+            X509Certificate certificate = X509Utils.toX509Certificate(encodedCertificate);
+            this.checkCert(certificate);
+            Principal subjectDN = certificate.getSubjectDN();
+            Map<String, String> params = Splitter.on(", ").withKeyValueSeparator("=").split(subjectDN.getName());
             context.getFlowExecutionContext()
                 .getActiveSession()
                 .getScope()
                 .put("credential",
                     new UsernamePasswordCredential(params.get("SERIALNUMBER"),
-                        new IDModel(params.get
-                            ("SERIALNUMBER"),
-                            params.get
-                                ("GIVENNAME"),
-                            params.get(
-                                "SURNAME")
-                        )));
+                        new IDModel(params.get("SERIALNUMBER"), params.get("GIVENNAME"), params.get("SURNAME"))));
             return new Event(this, "success");
         } catch (Exception e) {
             this.handleError(context, e, "Login by ID-card failed");
