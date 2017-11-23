@@ -1,17 +1,7 @@
 #!/bin/bash
 
-
-function copy() {
-	echo -e "Creating configuration directory under /etc/cas"
-	mkdir -p /etc/cas/config
-
-	echo -e "Copying configuration files from etc/cas to /etc/cas"
-	cp -rfv etc/cas/* /etc/cas
-}
-
 function help() {
-	echo "Usage: build.sh [copy|clean|package|run|debug|bootrun|gencert]"
-	echo "	copy: Copy config from ./etc/cas/config to /etc/cas/config"
+	echo "Usage: build.sh [clean|package|run|debug|bootrun|gencert]"
 	echo "	clean: Clean Maven build directory"
 	echo "	package: Clean and build CAS war, also call copy"
 	echo "	run: Build and run CAS.war via spring boot (java -jar target/cas.war)"
@@ -42,9 +32,6 @@ function run() {
 }
 
 function gencert() {
-	if [[ ! -d /etc/cas ]] ; then 
-		copy
-	fi
 	which keytool
 	if [[ $? -ne 0 ]] ; then
 	    echo Error: Java JDK \'keytool\' is not installed or is not in the path
@@ -66,9 +53,6 @@ fi
 
 
 case "$1" in
-"copy")
-    copy 
-    ;;
 "clean")
 	shift
     clean "$@"
