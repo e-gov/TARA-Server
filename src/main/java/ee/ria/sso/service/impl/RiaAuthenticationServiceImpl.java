@@ -45,7 +45,6 @@ public class RiaAuthenticationServiceImpl extends AbstractService implements Ria
     private static final String MOBILE_CHALLENGE = "mobileChallenge";
     private static final String MOBILE_SESSION = "mobileSession";
     private static final String MOBILE_NUMBER = "mobileNumber";
-    private static final String IDENTITY = "identity";
     private static final String SSN = "principalCode";
     private static final String AUTH_COUNT = "authCount";
     private final Logger log = LoggerFactory.getLogger(RiaAuthenticationServiceImpl.class);

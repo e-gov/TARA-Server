@@ -33,6 +33,10 @@ public class TaraConfiguration {
         this.taraProperties = taraProperties;
     }
 
+    /*
+     * RESTRICTED METHODS
+     */
+
     @PostConstruct
     protected void init() throws Exception {
         if (this.taraProperties.getEnvironment().isDevelopment()) {

@@ -59,19 +59,24 @@ function APP() {
     }
 }
 
-var APP = new APP();
-
-function API() {
-    this.axios = axios.create({
-        baseURL: 'https://sso-test', // TODO
-        timeout: 60000,
-        headers: {
-            'Accept': 'application/json;charset=UTF-8',
-        }
-    });
+function API(url) {
+    this.client = axios.create({
+            baseURL: url,
+            timeout: 60000,
+            headers: {
+                'Accept': 'application/json;charset=UTF-8',
+            }
+    }),
     this.prepareIDCardCertificate = function () {
-        return this.axios.get('/idcard');
+        return this.client.get('/idcard');
+    },
+    this.init = function() {
+        this.client = axios.create({
+            baseURL: this.url,
+            timeout: 60000,
+            headers: {
+                'Accept': 'application/json;charset=UTF-8',
+            }
+        });
     }
 }
-
-var API = new API();

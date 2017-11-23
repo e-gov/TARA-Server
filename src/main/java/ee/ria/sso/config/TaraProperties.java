@@ -1,5 +1,6 @@
 package ee.ria.sso.config;
 
+import org.apereo.cas.configuration.CasConfigurationProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -11,7 +12,16 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties("tara")
 public class TaraProperties {
 
+    private final CasConfigurationProperties casConfigurationProperties;
     private Environment environment = new Environment();
+
+    public TaraProperties(CasConfigurationProperties casConfigurationProperties) {
+        this.casConfigurationProperties = casConfigurationProperties;
+    }
+
+    public String getApplicationUrl() {
+        return this.casConfigurationProperties.getServer().getName();
+    }
 
     public Environment getEnvironment() {
         return environment;
