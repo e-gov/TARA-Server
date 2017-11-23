@@ -9,31 +9,29 @@ import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
 import org.apereo.cas.authentication.UsernamePasswordCredential;
-import org.apereo.cas.web.support.WebUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import org.springframework.webflow.core.collection.SharedAttributeMap;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
 
-import com.brsanthu.googleanalytics.GoogleAnalyticsResponse;
 import com.codeborne.security.AuthenticationException;
 import com.codeborne.security.mobileid.MobileIDSession;
 import com.google.common.base.Splitter;
 
+import ee.ria.sso.Constants;
 import ee.ria.sso.MobileIDAuthenticatorWrapper;
 import ee.ria.sso.model.IDModel;
 import ee.ria.sso.service.RiaAuthenticationService;
-import ee.ria.sso.service.TrackingService;
 import ee.ria.sso.utils.X509Utils;
 import ee.ria.sso.validators.OCSPValidator;
 
@@ -44,7 +42,6 @@ import ee.ria.sso.validators.OCSPValidator;
 @Service
 public class RiaAuthenticationServiceImpl extends AbstractService implements RiaAuthenticationService {
 
-    private static final String HEADER_SSL_CLIENT_CERT = "X-Client-Certificate";
     private static final String MOBILE_CHALLENGE = "mobileChallenge";
     private static final String MOBILE_SESSION = "mobileSession";
     private static final String MOBILE_NUMBER = "mobileNumber";
@@ -54,7 +51,6 @@ public class RiaAuthenticationServiceImpl extends AbstractService implements Ria
     private final MobileIDAuthenticatorWrapper mobileIDAuthenticator;
     private final Map<String, X509Certificate> issuerCertificates = new HashMap<>();
     private final OCSPValidator ocspValidator;
-    private final TrackingService trackingService;
 
     @Value("${mobileID.countryCode:EE}")
     private String countryCode;
@@ -83,26 +79,23 @@ public class RiaAuthenticationServiceImpl extends AbstractService implements Ria
     @Value("${ocsp.enabled:false}")
     private boolean enabled;
 
-    public RiaAuthenticationServiceImpl(MobileIDAuthenticatorWrapper mobileIDAuthenticator, OCSPValidator ocspValidator, TrackingService trackingService, MessageSource messageSource) {
+    public RiaAuthenticationServiceImpl(MobileIDAuthenticatorWrapper mobileIDAuthenticator, OCSPValidator ocspValidator,
+                                        MessageSource messageSource) {
         super(messageSource);
         this.mobileIDAuthenticator = mobileIDAuthenticator;
         this.ocspValidator = ocspValidator;
-        this.trackingService = trackingService;
     }
 
     @Override
     public Event loginByIDCard(RequestContext context) {
-        Future<GoogleAnalyticsResponse> googleAnalyticsResponseFuture = this.trackingService.startIDCardLogin(context);
+        SharedAttributeMap<Object> map = this.getSessionMap(context);
         try {
-            String encodedCertificate = WebUtils.getHttpServletRequest(context).getHeader(HEADER_SSL_CLIENT_CERT);
-            Assert.hasLength(encodedCertificate, "Unable to find certificate from request");
-            X509Certificate certificate = X509Utils.toX509Certificate(encodedCertificate);
+            X509Certificate certificate = map.get(Constants.CERTIFICATE_SESSION_ATTRIBUTE, X509Certificate.class);
+            Assert.notNull(certificate, "Unable to find certificate from session");
             this.checkCert(certificate);
             Principal subjectDN = certificate.getSubjectDN();
             Map<String, String> params = Splitter.on(", ").withKeyValueSeparator("=").split(subjectDN.getName());
-            context.getFlowExecutionContext()
-                .getActiveSession()
-                .getScope()
+            context.getFlowExecutionContext().getActiveSession().getScope()
                 .put("credential",
                     new UsernamePasswordCredential(params.get("SERIALNUMBER"),
                         new IDModel(params.get("SERIALNUMBER"), params.get("GIVENNAME"), params.get("SURNAME"))));
@@ -110,14 +103,13 @@ public class RiaAuthenticationServiceImpl extends AbstractService implements Ria
         } catch (Exception e) {
             this.handleError(context, e, "Login by ID-card failed");
         } finally {
-            this.handleFuture(googleAnalyticsResponseFuture);
+            map.remove(Constants.CERTIFICATE_SESSION_ATTRIBUTE);
         }
         return null;
     }
 
     @Override
     public Event startLoginByMobileID(RequestContext context) {
-        Future<GoogleAnalyticsResponse> googleAnalyticsResponseFuture = this.trackingService.startMobileIDLogin(context);
         final String mobileNumber = context.getExternalContext().getRequestParameterMap().get(MOBILE_NUMBER);
         final String socialSecurityCode = context.getExternalContext().getRequestParameterMap().get(SSN);
         Assert.hasLength(mobileNumber, "No mobile number provided");
@@ -137,8 +129,6 @@ public class RiaAuthenticationServiceImpl extends AbstractService implements Ria
             context.getFlowScope().put(AUTH_COUNT, 0);
         } catch (AuthenticationException e) {
             this.handleError(context, e, "Start of Mobile ID login failed");
-        } finally {
-            this.handleFuture(googleAnalyticsResponseFuture);
         }
         return new Event(this, "success");
     }
@@ -148,14 +138,11 @@ public class RiaAuthenticationServiceImpl extends AbstractService implements Ria
         MobileIDSession session = (MobileIDSession) context.getFlowScope().get(MOBILE_SESSION);
         int checkCount = (int) context.getFlowScope().get(AUTH_COUNT);
         String mobileNumber = (String) context.getFlowScope().get(MOBILE_NUMBER);
-        log.debug("Checking (attempt {}) mobile ID login state with session code {}", checkCount,
-            session.sessCode);
+        log.debug("Checking (attempt {}) mobile ID login state with session code {}", checkCount, session.sessCode);
         try {
             if (this.mobileIDAuthenticator.isLoginComplete(session)) {
-                context.getFlowExecutionContext()
-                    .getActiveSession()
-                    .getScope()
-                    .put("credential", new UsernamePasswordCredential(mobileNumber, session));
+                context.getFlowExecutionContext().getActiveSession().getScope().put("credential",
+                    new UsernamePasswordCredential(mobileNumber, session));
                 return new Event(this, "success");
             } else {
                 context.getFlowScope().put(AUTH_COUNT, ++checkCount);
@@ -211,7 +198,6 @@ public class RiaAuthenticationServiceImpl extends AbstractService implements Ria
             boolean result = ocspValidator
                 .isCertiticateValid(x509Certificate, issuerCert,
                     ocspUrl);
-
             if (!result) {
                 log.error("Could not verify client certificate validity");
                 throw new RuntimeException("Could not verify client certificate validity");
@@ -230,12 +216,10 @@ public class RiaAuthenticationServiceImpl extends AbstractService implements Ria
 
     private X509Certificate readCert(String filename) throws IOException, CertificateException {
         String fullPath = certDirectory + "/" + filename;
-
         FileInputStream fis = new FileInputStream(fullPath);
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
         X509Certificate cert = (X509Certificate) cf.generateCertificate(fis);
         fis.close();
-
         return cert;
     }
 

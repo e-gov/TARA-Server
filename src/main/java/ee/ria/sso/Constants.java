@@ -7,5 +7,6 @@ package ee.ria.sso;
 public final class Constants {
 
     public static final String APPLICATION_NAME = "TARA";
+    public static final String CERTIFICATE_SESSION_ATTRIBUTE = "Client-Certificate";
 
 }

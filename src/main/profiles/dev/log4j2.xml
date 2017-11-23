@@ -50,18 +50,6 @@
                 <TimeBasedTriggeringPolicy />
             </Policies>
         </RollingFile>
-        <CasAppender name="casAudit">
-            <AppenderRef ref="auditlogfile" />
-        </CasAppender>
-        <CasAppender name="casFile">
-            <AppenderRef ref="file" />
-        </CasAppender>
-        <CasAppender name="casConsole">
-            <AppenderRef ref="console" />
-        </CasAppender>
-        <CasAppender name="casPerf">
-            <AppenderRef ref="perfFileAppender" />
-        </CasAppender>
     </Appenders>
     <Loggers>
         <!-- If adding a Logger with level set higher than warn, make category as selective as possible -->
@@ -105,29 +93,19 @@
         <AsyncLogger name="com.brsanthu.googleanalytics" level="${sys:cas.log.level}" />
         <AsyncLogger name="ee.ria" level="${sys:cas.log.level}" />
 
-        <!-- Log perf stats only to perfStats.log -->
-        <!--AsyncLogger name="perfStatsLogger" level="info" additivity="false" includeLocation="true">
-            <AppenderRef ref="casPerf"/>
-        </AsyncLogger-->
-
-        <!-- Log audit to all root appenders, and also to audit log (additivity is not false) -->
-        <!--AsyncLogger name="org.apereo.inspektr.audit.support" level="info" includeLocation="true" >
-            <AppenderRef ref="casAudit"/>
-        </AsyncLogger-->
-
         <!-- Log authentication attempts to authentication log -->
-        <AsyncLogger name="ee.ria.sso.logging" level="info" includeLocation="true" additivity="false">
+        <AsyncLogger name="ee.ria.sso.logging" level="${sys:cas.log.level}" includeLocation="true" additivity="false">
             <AppenderRef ref="taraAuthentication"/>
         </AsyncLogger>
 
         <!-- All Loggers inherit appenders specified here, unless additivity="false" on the Logger -->
-        <AsyncRoot level="debug">
-            <AppenderRef ref="casFile"/>
+        <AsyncRoot level="error">
+            <AppenderRef ref="file"/>
             <!-- 
                  For deployment to an application server running as service, 
                  delete the casConsole appender below
             -->
-            <AppenderRef ref="casConsole"/>
+            <AppenderRef ref="console"/>
         </AsyncRoot>
     </Loggers>
 </Configuration>
