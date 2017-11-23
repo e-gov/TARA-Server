@@ -69,14 +69,5 @@ function API(url) {
     }),
     this.prepareIDCardCertificate = function () {
         return this.client.get('/idcard');
-    },
-    this.init = function() {
-        this.client = axios.create({
-            baseURL: this.url,
-            timeout: 60000,
-            headers: {
-                'Accept': 'application/json;charset=UTF-8',
-            }
-        });
     }
 }

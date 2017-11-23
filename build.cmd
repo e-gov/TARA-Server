@@ -17,7 +17,6 @@
 @if %ERRORLEVEL% neq 0 set MAVEN_CMD=.\mvnw.bat
 
 @if "%1" == "" call:help
-@if "%1" == "copy" call:copy
 @if "%1" == "clean" call:clean %2 %3 %4
 @if "%1" == "package" call:package %2 %3 %4
 @if "%1" == "bootrun"  call:bootrun %2 %3 %4
@@ -29,18 +28,9 @@
 @rem function section starts here
 @goto:eof
 
-:copy
-    @echo "Creating configuration directory under %CONFIG_DIR%"
-    if not exist %CONFIG_DIR% mkdir %CONFIG_DIR%
-
-    @echo "Copying configuration files from etc/cas to /etc/cas"
-    xcopy /S /Y etc\cas\* \etc\cas
-@goto:eof
-
 :help
-    @echo "Usage: build.bat [copy|clean|package|run|debug|bootrun|gencert] [optional extra args for maven]"
-    @echo "To get started on a clean system, run "build.bat copy" and "build.bat gencert", then "build.bat run"
-    @echo "Note that using the copy or gencert arguments will create and/or overwrite the %CAS_DIR% which is outside this project"
+    @echo "Usage: build.bat [clean|package|run|debug|bootrun|gencert] [optional extra args for maven]"
+    @echo "To get started on a clean system, run "build.bat gencert" and then "build.bat run"
 @goto:eof
 
 :clean

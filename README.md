@@ -27,14 +27,22 @@ To see what commands are available to the build script, run:
 To package the final web application, run:
 
 ```bash
-./build.sh package
+./build.sh package -Pprod
 ```
 
 To update `SNAPSHOT` versions run:
 
 ```bash
-./build.sh package -U
+./build.sh package -U -Pprod
 ```
+
+When `Maven` is installed in current environment different profiles can be used for building like:
+
+```bash
+mvn clean package -P<profile>
+```
+
+where profile can be `dev`, `test` and `prod`
 
 # Deployment
 
@@ -46,28 +54,7 @@ On a successful deployment via the following methods, CAS will be available at:
 * `http://cas.server.name:8080/cas`
 * `https://cas.server.name:8443/cas`
 
-## Executable WAR
-
-Run the CAS web application as an executable WAR.
-
-```bash
-./build.sh run
-```
-
-## Spring Boot
-
-Run the CAS web application as an executable WAR via Spring Boot. This is most useful during development and testing.
-
-```bash
-./build.sh bootrun
-```
-
-### Warning!
-
-Be careful with this method of deployment. `bootRun` is not designed to work with already executable WAR artifacts such that CAS server web application. YMMV. Today, uses of this mode ONLY work when there is **NO OTHER** dependency added to the build script and the `cas-server-webapp` is the only present module. See [this issue](https://github.com/apereo/cas/issues/2334) and [this issue](https://github.com/spring-projects/spring-boot/issues/8320) for more info.
-
-
-## Spring Boot App Server Selection
+## App Server Selection
 There is an app.server property in the pom.xml that can be used to select a spring boot application server.
 It defaults to "-tomcat" but "-jetty" and "-undertow" are supported. 
 It can also be set to an empty value (nothing) if you want to deploy CAS to an external application server of your choice and you don't want the spring boot libraries included. 
