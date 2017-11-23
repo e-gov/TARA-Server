@@ -5,15 +5,15 @@ function APP() {
         }
     },
     this.isNumber = function(event) {
-        return !isNaN(String.fromCharCode(event.which));
+        return !isNaN(parseInt(String.fromCharCode(event.which)));
     },
     this.isPhoneNumber = function(event, value) {
         if (value.length == 1) {
-            return event.which == 171 || this.isNumber(event)
+            return event.which == 171 || APP.isNumber(event)
         } else if (value.length > 1 && value[0] == "+") {
-            return value.match(/\+/gi).length < 2 && (event.which == 171 || this.isNumber(event));
+            return value.match(/\+/gi).length < 2 && (event.which == 171 || APP.isNumber(event));
         }
-        return this.isNumber(event);
+        return APP.isNumber(event);
     },
     this.isValid = function(event, f, arg1) {
         return $.inArray(event.which, [8, 13]) == 0 || f(event, arg1);

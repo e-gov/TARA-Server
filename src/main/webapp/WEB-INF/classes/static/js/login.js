@@ -1,9 +1,9 @@
 $("input[id*='personalCode']").keypress(function (event) {
-    return APP.isValid(event, isNumber);
+    return APP.isValid(event, APP.isNumber);
 });
 
 $("input[id*='mobileNumber']").keyup(function (event) {
-    if (!isValid(event, APP.isPhoneNumber, this.value)) {
+    if (!APP.isValid(event, APP.isPhoneNumber, this.value)) {
         if (this.value[0] == "+") {
             this.value = "+" + this.value.replace(/\D/g, '');
         } else {
