@@ -21,6 +21,7 @@ import org.apereo.cas.configuration.CasConfigurationProperties;
 import org.apereo.cas.oidc.token.OidcIdTokenGeneratorService;
 import org.apereo.cas.services.OidcRegisteredService;
 import org.apereo.cas.services.ServicesManager;
+import org.apereo.cas.services.UnauthorizedServiceException;
 import org.apereo.cas.support.oauth.OAuth20ResponseTypes;
 import org.apereo.cas.support.oauth.authenticator.OAuth20CasAuthenticationBuilder;
 import org.apereo.cas.support.oauth.profile.OAuth20ProfileScopeToAttributesFilter;
@@ -45,49 +46,54 @@ import org.springframework.web.servlet.ModelAndView;
 import com.google.common.base.Throwables;
 
 public class OidcAuthorizeEndpointController extends OAuth20AuthorizeEndpointController {
-	private static final Logger LOGGER = LoggerFactory.getLogger(OidcAuthorizeEndpointController.class);
-	private final OidcIdTokenGeneratorService idTokenGenerator;
 
-	public OidcAuthorizeEndpointController(ServicesManager servicesManager, TicketRegistry ticketRegistry, OAuth20Validator validator, AccessTokenFactory accessTokenFactory, PrincipalFactory principalFactory, ServiceFactory<WebApplicationService> webApplicationServiceServiceFactory, OAuthCodeFactory oAuthCodeFactory, ConsentApprovalViewResolver consentApprovalViewResolver, OidcIdTokenGeneratorService idTokenGenerator, OAuth20ProfileScopeToAttributesFilter scopeToAttributesFilter, CasConfigurationProperties casProperties, CookieRetrievingCookieGenerator ticketGrantingTicketCookieGenerator, OAuth20CasAuthenticationBuilder authenticationBuilder) {
-		super(servicesManager, ticketRegistry, validator, accessTokenFactory, principalFactory, webApplicationServiceServiceFactory, oAuthCodeFactory, consentApprovalViewResolver, scopeToAttributesFilter, casProperties, ticketGrantingTicketCookieGenerator, authenticationBuilder);
-		this.idTokenGenerator = idTokenGenerator;
-	}
+    private static final Logger LOGGER = LoggerFactory.getLogger(OidcAuthorizeEndpointController.class);
+    private final OidcIdTokenGeneratorService idTokenGenerator;
 
-	@GetMapping({"/oidc/authorize"})
-	public ModelAndView handleRequest(HttpServletRequest request, HttpServletResponse response) throws Exception {
-		//request.getSession(true).invalidate();
-		Collection scopes = OAuth20Utils.getRequestedScopes(request);
-		if(scopes.isEmpty() || !scopes.contains("openid")) {
-			LOGGER.warn("Provided scopes [{}] are undefined by OpenID Connect, which requires that scope [{}] MUST be specified, or the behavior is unspecified. CAS MAY allow this request to be processed for now.", scopes, "openid");
-		}
+    public OidcAuthorizeEndpointController(ServicesManager servicesManager, TicketRegistry ticketRegistry, OAuth20Validator validator, AccessTokenFactory accessTokenFactory, PrincipalFactory principalFactory, ServiceFactory<WebApplicationService> webApplicationServiceServiceFactory, OAuthCodeFactory oAuthCodeFactory, ConsentApprovalViewResolver consentApprovalViewResolver, OidcIdTokenGeneratorService idTokenGenerator, OAuth20ProfileScopeToAttributesFilter scopeToAttributesFilter, CasConfigurationProperties casProperties, CookieRetrievingCookieGenerator ticketGrantingTicketCookieGenerator, OAuth20CasAuthenticationBuilder authenticationBuilder) {
+        super(servicesManager, ticketRegistry, validator, accessTokenFactory, principalFactory, webApplicationServiceServiceFactory, oAuthCodeFactory, consentApprovalViewResolver, scopeToAttributesFilter, casProperties, ticketGrantingTicketCookieGenerator, authenticationBuilder);
+        this.idTokenGenerator = idTokenGenerator;
+    }
 
-		return super.handleRequest(request, response);
-	}
+    @GetMapping({"/oidc/authorize"})
+    public ModelAndView handleRequest(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        Collection scopes = OAuth20Utils.getRequestedScopes(request);
+        if (scopes.isEmpty() || !scopes.contains("openid")) {
+            LOGGER.error("Provided scopes [{}] are undefined by OpenID Connect, which requires that scope [{}] MUST be specified, or the behavior is unspecified. CAS DO NOT allow this request to be processed for now", scopes, "openid");
+            return OAuth20Utils.produceErrorView(new UnauthorizedServiceException("screen.service.error.message", ""));
+        }
+        return super.handleRequest(request, response);
+    }
 
-	protected String buildCallbackUrlForTokenResponseType(J2EContext context, Authentication authentication, Service service, String redirectUri, String responseType, String clientId) {
-		if(!OAuth20Utils.isResponseType(responseType, OAuth20ResponseTypes.IDTOKEN_TOKEN)) {
-			return super.buildCallbackUrlForTokenResponseType(context, authentication, service, redirectUri, responseType, clientId);
-		} else {
-			LOGGER.debug("Handling callback for response type [{}]", responseType);
-			TicketGrantingTicket ticketGrantingTicket = CookieUtils.getTicketGrantingTicketFromRequest(this.ticketGrantingTicketCookieGenerator, this.ticketRegistry, context.getRequest());
-			return this.buildCallbackUrlForImplicitTokenResponseType(context, authentication, service, redirectUri, clientId, OAuth20ResponseTypes.IDTOKEN_TOKEN, ticketGrantingTicket);
-		}
-	}
+    /*
+     * RESTRICTED METHODS
+     */
 
-	private String buildCallbackUrlForImplicitTokenResponseType(J2EContext context, Authentication authentication, Service service, String redirectUri, String clientId, OAuth20ResponseTypes responseType, TicketGrantingTicket ticketGrantingTicket) {
-		try {
-			OidcRegisteredService e = (OidcRegisteredService)OAuth20Utils.getRegisteredOAuthService(this.servicesManager, clientId);
-			AccessTokenRequestDataHolder holder = new AccessTokenRequestDataHolder(service, authentication, e, ticketGrantingTicket);
-			AccessToken accessToken = this.generateAccessToken(holder);
-			LOGGER.debug("Generated OAuth access token: [{}]", accessToken);
-			long timeout = (long)this.casProperties.getTicket().getTgt().getTimeToKillInSeconds();
-			String idToken = this.idTokenGenerator.generate(context.getRequest(), context.getResponse(), accessToken, timeout, responseType, e);
-			LOGGER.debug("Generated id token [{}]", idToken);
-			ArrayList params = new ArrayList();
-			params.add(new BasicNameValuePair("id_token", idToken));
-			return this.buildCallbackUrlResponseType(authentication, service, redirectUri, accessToken, params);
-		} catch (Exception var15) {
-			throw Throwables.propagate(var15);
-		}
-	}
+    protected String buildCallbackUrlForTokenResponseType(J2EContext context, Authentication authentication, Service service, String redirectUri, String responseType, String clientId) {
+        if (!OAuth20Utils.isResponseType(responseType, OAuth20ResponseTypes.IDTOKEN_TOKEN)) {
+            return super.buildCallbackUrlForTokenResponseType(context, authentication, service, redirectUri, responseType, clientId);
+        } else {
+            LOGGER.debug("Handling callback for response type [{}]", responseType);
+            TicketGrantingTicket ticketGrantingTicket = CookieUtils.getTicketGrantingTicketFromRequest(this.ticketGrantingTicketCookieGenerator, this.ticketRegistry, context.getRequest());
+            return this.buildCallbackUrlForImplicitTokenResponseType(context, authentication, service, redirectUri, clientId, OAuth20ResponseTypes.IDTOKEN_TOKEN, ticketGrantingTicket);
+        }
+    }
+
+    private String buildCallbackUrlForImplicitTokenResponseType(J2EContext context, Authentication authentication, Service service, String redirectUri, String clientId, OAuth20ResponseTypes responseType, TicketGrantingTicket ticketGrantingTicket) {
+        try {
+            OidcRegisteredService e = (OidcRegisteredService) OAuth20Utils.getRegisteredOAuthService(this.servicesManager, clientId);
+            AccessTokenRequestDataHolder holder = new AccessTokenRequestDataHolder(service, authentication, e, ticketGrantingTicket);
+            AccessToken accessToken = this.generateAccessToken(holder);
+            LOGGER.debug("Generated OAuth access token: [{}]", accessToken);
+            long timeout = (long) this.casProperties.getTicket().getTgt().getTimeToKillInSeconds();
+            String idToken = this.idTokenGenerator.generate(context.getRequest(), context.getResponse(), accessToken, timeout, responseType, e);
+            LOGGER.debug("Generated id token [{}]", idToken);
+            ArrayList params = new ArrayList();
+            params.add(new BasicNameValuePair("id_token", idToken));
+            return this.buildCallbackUrlResponseType(authentication, service, redirectUri, accessToken, params);
+        } catch (Exception var15) {
+            throw Throwables.propagate(var15);
+        }
+    }
+
 }
