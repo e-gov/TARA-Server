@@ -14,7 +14,9 @@ Generic CAS WAR overlay to exercise the latest versions of CAS. This overlay cou
 
 # Configuration
 
-The `etc` directory contains the configuration files and directories that need to be copied to `/etc/cas/config`.
+The `src/main/profiles/<profile>/config` directory contains the configuration
+files and directories that need to/will be copied to `<cas.standalone.config>`
+folder (default `/etc/cas/config`).
 
 # Build
 
@@ -42,7 +44,12 @@ When `Maven` is installed in current environment different profiles can be used 
 mvn clean package -P<profile>
 ```
 
-where profile can be `dev`, `test` and `prod`
+where profile can be:
+
+- `dev` - used for local development only
+- `test` - used for remote `test` environment
+- `prod` - used for `prelive` and `live` environments
+
 
 # Deployment
 
@@ -51,8 +58,8 @@ where profile can be `dev`, `test` and `prod`
 
 On a successful deployment via the following methods, CAS will be available at:
 
-* `http://cas.server.name:8080/cas`
-* `https://cas.server.name:8443/cas`
+* `http://<cas.server.name>:8080/cas`
+* `https://<cas.server.name>:8443/cas`
 
 ## App Server Selection
 There is an app.server property in the pom.xml that can be used to select a spring boot application server.

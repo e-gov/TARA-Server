@@ -19,9 +19,6 @@
 @if "%1" == "" call:help
 @if "%1" == "clean" call:clean %2 %3 %4
 @if "%1" == "package" call:package %2 %3 %4
-@if "%1" == "bootrun"  call:bootrun %2 %3 %4
-@if "%1" == "debug" call:debug %2 %3 %4
-@if "%1" == "run" call:run %2 %3 %4
 @if "%1" == "help" call:help
 @if "%1" == "gencert" call:gencert
 
@@ -29,8 +26,8 @@
 @goto:eof
 
 :help
-    @echo "Usage: build.bat [clean|package|run|debug|bootrun|gencert] [optional extra args for maven]"
-    @echo "To get started on a clean system, run "build.bat gencert" and then "build.bat run"
+    @echo "Usage: build.bat [clean|package|gencert] [optional extra args for maven]"
+    @echo "To get started on a clean system, run "build.bat gencert" and then "build.bat package"
 @goto:eof
 
 :clean
@@ -41,19 +38,6 @@
 :package
     call %MAVEN_CMD% clean package -T 5 %1 %2 %3
     exit /B %ERRORLEVEL%
-@goto:eof
-
-:bootrun
-    call %MAVEN_CMD% clean package spring-boot:run -T 5 %1 %2 %3
-    exit /B %ERRORLEVEL%
-@goto:eof
-
-:debug
-    call:package %1 %2 %3 & java %JAVA_ARGS% -Xdebug -Xrunjdwp:transport=dt_socket,address=5000,server=y,suspend=n -jar target/cas.war
-@goto:eof
-
-:run
-    call:package %1 %2 %3 & java %JAVA_ARGS% -jar target/cas.war
 @goto:eof
 
 :gencert
