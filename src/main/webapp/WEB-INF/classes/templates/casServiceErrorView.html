@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title th:text="#{cas.login.pagetitle}"></title>
+    <title th:text="#{label.ria.title}"></title>
     <link rel="stylesheet" th:href="@{${#themes.code('standard.custom.css.file')}}"/>
     <link rel="icon" th:href="@{/favicon.ico}" type="image/x-icon"/>
 </head>
@@ -33,7 +33,7 @@
     <div class="main">
         <div class="alert alert--error alert--js">
             <p>
-                <strong th:text="#{ria.mid.error.servicelimited.title}"></strong>
+                <strong th:text="#{label.error.servicelimited.title}"></strong>
             </p>
         </div>
     </div>
@@ -46,8 +46,7 @@
                     th:text="#{label.footer.eu2}" th:remove="tag"></span></p>
         </div>-->
         <div class="ria">
-            <p><span th:text="#{label.footer.ria}" th:remove="tag"></span> <span id="e65842083"
-                                                                                 th:text="#{label.footer.spanid}"></span>,
+            <p><span th:text="#{label.ria.title}" th:remove="tag"></span> <span id="e65842083">help@ria.ee</span>,
                 <a href="http://www.ria.ee" target="_blank">www.ria.ee</a></p>
         </div>
     </div>

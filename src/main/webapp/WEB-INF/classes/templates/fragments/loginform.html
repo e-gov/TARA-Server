@@ -18,19 +18,13 @@
         <h1 th:text="#{label.title}"></h1>
         <ul>
             <li th:style="__${#locale}__=='ru'?'display:none':''">
-                <a th:with="urlBuilder=${T(org.springframework.web.servlet.support.ServletUriComponentsBuilder).fromCurrentRequest()}"
-                   th:href="${T(java.net.URLDecoder).decode(urlBuilder.replaceQueryParam('locale', 'ru').toUriString())}"
-                   th:text="#{label.ru.name}"></a>
+                <a th:href="${@taraProperties.getLocaleUrl('ru')}" th:text="#{label.ru.name}"></a>
             </li>
             <li th:style="__${#locale}__=='en'?'display:none':''">
-                <a th:with="urlBuilder=${T(org.springframework.web.servlet.support.ServletUriComponentsBuilder).fromCurrentRequest()}"
-                   th:href="${T(java.net.URLDecoder).decode(urlBuilder.replaceQueryParam('locale', 'en').toUriString())}"
-                   th:text="#{label.en.name}"></a>
+                <a th:href="${@taraProperties.getLocaleUrl('en')}" th:text="#{label.en.name}"></a>
             </li>
             <li th:style="__${#locale}__=='et'?'display:none':''">
-                <a th:with="urlBuilder=${T(org.springframework.web.servlet.support.ServletUriComponentsBuilder).fromCurrentRequest()}"
-                   th:href="${T(java.net.URLDecoder).decode(urlBuilder.replaceQueryParam('locale', 'et').toUriString())}"
-                   th:text="#{label.et.name}"></a>
+                <a th:href="${@taraProperties.getLocaleUrl('et')}" th:text="#{label.et.name}"></a>
             </li>
         </ul>
     </div>
@@ -44,8 +38,7 @@
             <div class="alert alert--error alert--js">
                 <p>
                     <strong th:text="#{label.page.alert.js.strong}"></strong>
-                <p th:text="#{label.page.alert.js.text}" th:remove="tag">
-                </p>
+                    <p th:text="#{label.page.alert.js.text}" th:remove="tag"></p>
                 </p>
             </div>
         </noscript>
@@ -58,12 +51,12 @@
                         <input type="hidden" name="_eventId" value="idsubmit"/>
                         <input type="hidden" name="idlang" id="idlang" th:value="${lang}">
                         <input type="hidden" name="geolocation"/>
-                        <h2 th:text="#{label.idcard.title}"></h2>
+                        <h2 th:text="#{label.id.enter}"></h2>
                         <div th:class="${icerrordiv}">
                             <h3 class="title" th:text="${icerrortitle}"></h3>
                             <p th:text="${icerrortext}"></p>
                         </div>
-                        <p class="row" th:text="#{label.idcard.instruction}"></p>
+                        <p class="row" th:text="#{label.id.instruction}"></p>
                         <div class="row btns">
                             <button type="button" class="btn btn--primary" th:text="#{label.button}"
                                 onclick="APP.loginByIDCard(); return false;"></button>
@@ -74,11 +67,12 @@
             <div class="block fields">
                 <div class="wrapper">
                     <form method="post" id="fm1" th:object="${credential}">
-                        <h2 th:text="#{label.mobileid.title}"></h2>
+                        <h2 th:text="#{label.mid.enter}"></h2>
                         <div th:class="${moberrordiv}">
                             <h3 class="title" th:text="${moberrortitle}"></h3>
                             <p th:text="${moberrortext}"></p>
                         </div>
+                        <p class="row" th:text="#{label.mid.instruction}"></p>
                         <div class="row row">
                             <label for="personalCode"><abbr title="Kohustuslik väli" class="mandatory">*</abbr><span
                                     th:text="#{label.idcode}" th:remove="tag"></span></label>
@@ -117,8 +111,7 @@
               <p><img src="/images/logo-europe.svg" alt=""><span th:text="#{label.footer.eu1}" th:remove="tag"></span><br><span th:text="#{label.footer.eu2}" th:remove="tag"></span></p>
           </div>-->
         <div class="ria">
-            <p><span th:text="#{label.footer.ria}" th:remove="tag"></span> <span id="e65842083"
-                                                                                 th:text="#{label.footer.spanid}"></span>,
+            <p><span th:text="#{label.ria.title}" th:remove="tag"></span> <span id="e65842083">help@ria.ee</span>,
                 <a href="http://www.ria.ee" target="_blank">www.ria.ee</a></p>
         </div>
     </div>

@@ -57,6 +57,10 @@
         <AsyncLogger name="org.apereo" level="${sys:cas.log.level}" includeLocation="true"/>
         <AsyncLogger name="org.apereo.services.persondir" level="${sys:cas.log.level}" includeLocation="true"/>
         <AsyncLogger name="org.apereo.cas.web.flow" level="${sys:cas.log.level}" includeLocation="true"/>
+        <AsyncLogger name="org.pac4j" level="${sys:cas.log.level}" />
+        <AsyncLogger name="com.codeborne.security" level="${sys:cas.log.level}" />
+        <AsyncLogger name="com.brsanthu.googleanalytics" level="${sys:cas.log.level}" />
+        <AsyncLogger name="ee.ria" level="${sys:cas.log.level}" />
         <AsyncLogger name="org.apache" level="warn" />
         <AsyncLogger name="org.apache.http" level="error" />
         <AsyncLogger name="org.springframework" level="warn" />
@@ -78,7 +82,6 @@
         <AsyncLogger name="org.springframework.boot.devtools" level="error" />
         <AsyncLogger name="org.springframework.web.socket" level="warn" />
         <AsyncLogger name="org.thymeleaf" level="warn" />
-        <AsyncLogger name="org.pac4j" level="warn" />
         <AsyncLogger name="org.opensaml" level="warn"/>
         <AsyncLogger name="net.sf.ehcache" level="warn" />
         <AsyncLogger name="com.couchbase" level="warn" includeLocation="true"/>
@@ -89,9 +92,6 @@
         <AsyncLogger name="com.hazelcast" level="warn" />
         <AsyncLogger name="org.jasig.spring" level="warn" />
         <AsyncLogger name="org.hibernate" level="warn" />
-        <AsyncLogger name="com.codeborne.security" level="${sys:cas.log.level}" />
-        <AsyncLogger name="com.brsanthu.googleanalytics" level="${sys:cas.log.level}" />
-        <AsyncLogger name="ee.ria" level="${sys:cas.log.level}" />
 
         <!-- Log authentication attempts to authentication log -->
         <AsyncLogger name="ee.ria.sso.logging" level="${sys:cas.log.level}" includeLocation="true" additivity="false">
@@ -99,7 +99,7 @@
         </AsyncLogger>
 
         <!-- All Loggers inherit appenders specified here, unless additivity="false" on the Logger -->
-        <AsyncRoot level="error">
+        <AsyncRoot level="debug">
             <AppenderRef ref="file"/>
             <!-- 
                  For deployment to an application server running as service, 
