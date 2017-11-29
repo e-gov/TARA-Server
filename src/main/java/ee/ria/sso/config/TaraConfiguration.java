@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.context.annotation.PropertySource;
 
 import ee.ria.sso.InsecureTrustManager;
 
@@ -21,6 +22,7 @@ import ee.ria.sso.InsecureTrustManager;
  */
 
 @Configuration
+@PropertySource("classpath:dynamic.properties")
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 @ComponentScan(basePackages = {"ee.ria.sso", "org.jasig.cas"})
 public class TaraConfiguration {
@@ -39,7 +41,7 @@ public class TaraConfiguration {
 
     @PostConstruct
     protected void init() throws Exception {
-        if (this.taraProperties.getEnvironment().isDevelopment()) {
+        if (this.taraProperties.getApplication().isDevelopment()) {
             StringBuilder sb = new StringBuilder();
             SSLContext sslContext = SSLContext.getInstance("SSL");
             sslContext.init(null, new TrustManager[]{new InsecureTrustManager()}, new SecureRandom());

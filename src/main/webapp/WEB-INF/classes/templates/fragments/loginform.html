@@ -112,7 +112,8 @@
           </div>-->
         <div class="ria">
             <p><span th:text="#{label.ria.title}" th:remove="tag"></span> <span id="e65842083">help@ria.ee</span>,
-                <a href="http://www.ria.ee" target="_blank">www.ria.ee</a></p>
+                <a href="http://www.ria.ee" target="_blank">www.ria.ee</a>,
+                <span th:text="#{label.version} + ': ' + ${@taraProperties.getApplicationVersion()}" th:remove="tag"></span></p>
         </div>
     </div>
     <!-- HIDING EMAIL -->

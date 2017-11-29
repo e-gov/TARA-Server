@@ -5,6 +5,7 @@ import java.net.URLDecoder;
 
 import org.apereo.cas.configuration.CasConfigurationProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -17,14 +18,20 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 public class TaraProperties {
 
     private final CasConfigurationProperties casConfigurationProperties;
-    private Environment environment = new Environment();
+    private final Environment environment;
+    private Application application = new Application();
 
-    public TaraProperties(CasConfigurationProperties casConfigurationProperties) {
+    public TaraProperties(CasConfigurationProperties casConfigurationProperties, Environment environment) {
         this.casConfigurationProperties = casConfigurationProperties;
+        this.environment = environment;
     }
 
     public String getApplicationUrl() {
         return this.casConfigurationProperties.getServer().getName();
+    }
+
+    public String getApplicationVersion() {
+        return this.environment.getProperty("tara.version", "-");
     }
 
     public String getLocaleUrl(String locale) throws UnsupportedEncodingException {
@@ -36,15 +43,15 @@ public class TaraProperties {
         return URLDecoder.decode(uri, "UTF-8");
     }
 
-    public Environment getEnvironment() {
-        return environment;
+    public Application getApplication() {
+        return application;
     }
 
     public enum Mode {
         development, production
     }
 
-    public static class Environment {
+    public static class Application {
 
         private Mode mode = Mode.production;
 
