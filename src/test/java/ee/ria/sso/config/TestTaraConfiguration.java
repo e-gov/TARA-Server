@@ -26,7 +26,7 @@ public class TestTaraConfiguration {
 
     @PostConstruct
     protected void init() {
-        this.taraProperties.getEnvironment().setMode(TaraProperties.Mode.development);
+        this.taraProperties.getApplication().setMode(TaraProperties.Mode.development);
     }
 
 }
