@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title th:text="#{cas.login.pagetitle}"></title>
+    <title th:text="#{label.ria.title}"></title>
     <link rel="stylesheet" th:href="@{${#themes.code('standard.custom.css.file')}}"/>
     <link rel="icon" th:href="@{/favicon.ico}" type="image/x-icon"/>
 </head>
@@ -35,8 +35,7 @@
             <div class="alert alert--error alert--js">
                 <p>
                     <strong th:text="#{label.page.alert.js.strong}"></strong>
-                <p th:text="#{label.page.alert.js.text}" th:remove="tag">
-                </p>
+                    <p th:text="#{label.page.alert.js.text}" th:remove="tag"></p>
                 </p>
             </div>
         </noscript>
@@ -45,18 +44,14 @@
             <div class="block fields">
                 <div class="wrapper">
                     <form id="mIDCheckForm" method="post">
-                        <h2 th:text="#{label.mobileid.check.title}"></h2>
-
+                        <h2 th:text="#{label.mid.check}"></h2>
                         <div class="row row">
                             <span th:text="${mobileChallenge}"></span>
                         </div>
-
-
                         <input type="hidden" id="moblang" name="moblang" th:value="${lang}">
                         <input type="hidden" name="lt" th:value="${loginTicket}"/>
                         <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
                         <input type="hidden" id="_eventId" name="_eventId" value="check"/>
-
                     </form>
                 </div>
             </div>
@@ -71,7 +66,7 @@
                     th:text="#{label.footer.eu2}" th:remove="tag"></span></p>
         </div>-->
         <div class="ria">
-            <p><span th:text="#{label.footer.ria}" th:remove="tag"></span> <span id="e65842083" th:text="#{label.footer.spanid}"></span>, <a href="http://www.ria.ee" target="_blank">www.ria.ee</a></p>
+            <p><span th:text="#{label.ria.title}" th:remove="tag"></span> <span id="e65842083">help@ria.ee</span>, <a href="http://www.ria.ee" target="_blank">www.ria.ee</a></p>
         </div>
     </div>
 

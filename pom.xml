@@ -89,6 +89,12 @@
         </dependency>
         <dependency>
             <groupId>org.apereo.cas</groupId>
+            <artifactId>cas-server-webapp-config</artifactId>
+            <version>${cas.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apereo.cas</groupId>
             <artifactId>cas-server-support-oidc</artifactId>
             <version>${cas.version}</version>
         </dependency>

@@ -59,8 +59,9 @@ public class OidcAuthorizeEndpointController extends OAuth20AuthorizeEndpointCon
     public ModelAndView handleRequest(HttpServletRequest request, HttpServletResponse response) throws Exception {
         Collection scopes = OAuth20Utils.getRequestedScopes(request);
         if (scopes.isEmpty() || !scopes.contains("openid")) {
-            LOGGER.error("Provided scopes [{}] are undefined by OpenID Connect, which requires that scope [{}] MUST be specified, or the behavior is unspecified. CAS DO NOT allow this request to be processed for now", scopes, "openid");
-            return OAuth20Utils.produceErrorView(new UnauthorizedServiceException("screen.service.error.message", ""));
+            String message = String.format("Provided scopes [%s] are undefined by OpenID Connect, which requires that scope [%s] MUST be specified. CAS DO NOT allow this request to be processed for now", scopes, "openid");
+            LOGGER.warn(message);
+            return OAuth20Utils.produceErrorView(new UnauthorizedServiceException("screen.service.error.message", message));
         }
         return super.handleRequest(request, response);
     }
