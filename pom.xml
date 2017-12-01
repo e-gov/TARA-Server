@@ -128,6 +128,12 @@
             <version>${spring.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.cryptacular</groupId>
+            <artifactId>cryptacular</artifactId>
+            <version>1.2.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>com.codeborne</groupId>
             <artifactId>mobileid</artifactId>
             <version>1.1</version>

@@ -13,6 +13,8 @@ import org.apereo.cas.authentication.handler.support.AbstractPreAndPostProcessin
 import org.apereo.cas.authentication.principal.PrincipalFactory;
 import org.apereo.cas.services.ServicesManager;
 
+import ee.ria.sso.authentication.credential.AbstractCredential;
+
 /**
  * Created by Janar Rahumeel (CGI Estonia)
  */
@@ -40,8 +42,8 @@ public class TaraAuthenticationHandler extends AbstractPreAndPostProcessingAuthe
             this.putIfNotEmpty(map, "principalCode", taraCredential.getPrincipalCode());
             this.putIfNotEmpty(map, "firstName", taraCredential.getFirstName());
             this.putIfNotEmpty(map, "lastName", taraCredential.getLastName());
-            if (AbstractCredential.Type.MobileID.equals(taraCredential.type)) {
-                this.putIfNotEmpty(map, "mobileNumber", ((MobileIDCredential) taraCredential).getMobileNumber());
+            if (AbstractCredential.Type.MobileID.equals(taraCredential.getType())) {
+                this.putIfNotEmpty(map, "mobileNumber", taraCredential.getMobileNumber());
             }
             return this.createHandlerResult(credential, this.principalFactory
                 .createPrincipal(taraCredential.getId(), map), new ArrayList<>());

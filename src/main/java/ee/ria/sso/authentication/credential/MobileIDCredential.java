@@ -1,4 +1,4 @@
-package ee.ria.sso.authentication;
+package ee.ria.sso.authentication.credential;
 
 import com.codeborne.security.mobileid.MobileIDSession;
 
@@ -15,6 +15,7 @@ public class MobileIDCredential extends AbstractCredential {
         this.mobileNumber = mobileNumber;
     }
 
+    @Override
     public String getMobileNumber() {
         return mobileNumber;
     }

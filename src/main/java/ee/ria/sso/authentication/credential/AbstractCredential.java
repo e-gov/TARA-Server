@@ -1,4 +1,4 @@
-package ee.ria.sso.authentication;
+package ee.ria.sso.authentication.credential;
 
 import org.apereo.cas.authentication.Credential;
 import org.springframework.webflow.core.collection.AttributeMap;
@@ -10,7 +10,7 @@ import org.springframework.webflow.core.collection.AttributeMap;
 public abstract class AbstractCredential implements Credential {
 
     public enum Type {
-        IDCard, MobileID
+        Default, IDCard, MobileID
     }
 
     protected AttributeMap attributes;
@@ -26,6 +26,8 @@ public abstract class AbstractCredential implements Credential {
         this.lastName = lastName;
 
     }
+
+    public abstract String getMobileNumber();
 
     @Override
     public String getId() {

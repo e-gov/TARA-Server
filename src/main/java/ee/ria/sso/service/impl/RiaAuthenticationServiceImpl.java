@@ -29,8 +29,8 @@ import com.google.common.base.Splitter;
 
 import ee.ria.sso.Constants;
 import ee.ria.sso.MobileIDAuthenticatorWrapper;
-import ee.ria.sso.authentication.IDCardCredential;
-import ee.ria.sso.authentication.MobileIDCredential;
+import ee.ria.sso.authentication.credential.IDCardCredential;
+import ee.ria.sso.authentication.credential.MobileIDCredential;
 import ee.ria.sso.authentication.RiaAuthenticationException;
 import ee.ria.sso.model.IDModel;
 import ee.ria.sso.service.RiaAuthenticationService;
