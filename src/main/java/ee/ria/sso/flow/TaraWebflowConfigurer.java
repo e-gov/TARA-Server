@@ -1,7 +1,6 @@
 package ee.ria.sso.flow;
 
 import org.apereo.cas.authentication.RememberMeUsernamePasswordCredential;
-import org.apereo.cas.authentication.UsernamePasswordCredential;
 import org.apereo.cas.web.flow.DefaultWebflowConfigurer;
 import org.springframework.webflow.definition.registry.FlowDefinitionRegistry;
 import org.springframework.webflow.engine.Flow;
