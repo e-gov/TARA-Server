@@ -1,4 +1,4 @@
-package ee.ria.sso;
+package ee.ria.sso.authentication.principal;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -10,11 +10,11 @@ import org.apereo.services.persondir.IPersonAttributeDao;
 import org.springframework.stereotype.Component;
 
 /**
- * Created by serkp on 14.09.2017.
+ * @author Janar Rahumeel (CGI Estonia)
  */
 
 @Component
-public class EchoingPrincipalResolver implements PrincipalResolver {
+public class TaraPrincipalResolver implements PrincipalResolver {
 
     public Principal resolve(Credential credential, Principal principal, AuthenticationHandler handler) {
         return principal;

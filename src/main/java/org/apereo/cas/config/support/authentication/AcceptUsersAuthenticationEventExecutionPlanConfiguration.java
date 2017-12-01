@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import ee.ria.sso.EchoingPrincipalResolver;
+import ee.ria.sso.authentication.principal.TaraPrincipalResolver;
 
 /**
  *
@@ -23,27 +23,25 @@ import ee.ria.sso.EchoingPrincipalResolver;
 @Configuration("acceptUsersAuthenticationEventExecutionPlanConfiguration")
 @EnableConfigurationProperties(CasConfigurationProperties.class)
 public class AcceptUsersAuthenticationEventExecutionPlanConfiguration implements AuthenticationEventExecutionPlanConfigurer {
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(AcceptUsersAuthenticationEventExecutionPlanConfiguration.class);
 
 	@Autowired
-	private CasConfigurationProperties casProperties;
+	private TaraPrincipalResolver taraPrincipalResolver;
 
 	@Autowired
-	private EchoingPrincipalResolver echoingPrincipalResolver;
-
-	@Autowired
-	@Qualifier("acceptUsersAuthenticationHandler")
-	private AuthenticationHandler acceptUsersAuthenticationHandler;
+	@Qualifier("taraAuthenticationHandler")
+	private AuthenticationHandler taraAuthenticationHandler;
 
 	@Override
 	public void configureAuthenticationExecutionPlan(final AuthenticationEventExecutionPlan plan) {
 		final String header = ""
-				+ "--------------------------------------------------------------"
-				+ "RIIGI INFOSÜSTEEMIDE AMET Authentication Execution Plan loaded"
-				+ "--------------------------------------------------------------";
+				+ "-----------------------------------------------------------------------"
+				+ "Authentication Execution Plan of RIIGI INFOSÜSTEEMI AMET has been loaded"
+				+ "-----------------------------------------------------------------------";
 
-		AsciiArtUtils.printAsciiArtWarning(LOGGER, "RIIGI INFOSÜSTEEMIDE AMET", header);
-		plan.registerAuthenticationHandlerWithPrincipalResolver(acceptUsersAuthenticationHandler, echoingPrincipalResolver);
-
+		AsciiArtUtils.printAsciiArtWarning(LOGGER, "RIIGI INFOSÜSTEEMI AMET", header);
+		plan.registerAuthenticationHandlerWithPrincipalResolver(this.taraAuthenticationHandler, this.taraPrincipalResolver);
 	}
+
 }

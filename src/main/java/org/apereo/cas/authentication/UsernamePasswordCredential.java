@@ -18,6 +18,7 @@ import ee.ria.sso.model.IDModel;
  * @since 5.1.4
  */
 
+@Deprecated
 public class UsernamePasswordCredential implements Credential, Serializable {
 	private static final long serialVersionUID = -700605081472810939L;
 

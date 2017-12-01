@@ -14,6 +14,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
  * @since 5.1.4
  */
 
+@Deprecated
 public class DefaultPrincipalFactory implements PrincipalFactory {
 	private static final long serialVersionUID = -3999695695604948495L;
 

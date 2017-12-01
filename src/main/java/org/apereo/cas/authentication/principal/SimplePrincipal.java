@@ -23,8 +23,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * @since 5.1.4
  */
 
+@Deprecated
 @JsonIgnoreProperties(
-		ignoreUnknown = true
+	ignoreUnknown = true
 )
 public class SimplePrincipal implements Principal {
 	private static final long serialVersionUID = -1255260750151385796L;

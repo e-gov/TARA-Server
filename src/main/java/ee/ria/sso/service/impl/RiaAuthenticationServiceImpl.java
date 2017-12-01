@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
-import org.apereo.cas.authentication.UsernamePasswordCredential;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,6 +29,9 @@ import com.google.common.base.Splitter;
 
 import ee.ria.sso.Constants;
 import ee.ria.sso.MobileIDAuthenticatorWrapper;
+import ee.ria.sso.authentication.IDCardCredential;
+import ee.ria.sso.authentication.MobileIDCredential;
+import ee.ria.sso.authentication.RiaAuthenticationException;
 import ee.ria.sso.model.IDModel;
 import ee.ria.sso.service.RiaAuthenticationService;
 import ee.ria.sso.utils.X509Utils;
@@ -97,8 +99,7 @@ public class RiaAuthenticationServiceImpl extends AbstractService implements Ria
             Map<String, String> params = Splitter.on(", ").withKeyValueSeparator("=").split(subjectDN.getName());
             context.getFlowExecutionContext().getActiveSession().getScope()
                 .put("credential",
-                    new UsernamePasswordCredential(params.get("SERIALNUMBER"),
-                        new IDModel(params.get("SERIALNUMBER"), params.get("GIVENNAME"), params.get("SURNAME"))));
+                    new IDCardCredential(new IDModel(params.get("SERIALNUMBER"), params.get("GIVENNAME"), params.get("SURNAME"))));
             return new Event(this, "success");
         } catch (Exception e) {
             this.handleError(context, e, "Login by ID-card failed");
@@ -142,7 +143,7 @@ public class RiaAuthenticationServiceImpl extends AbstractService implements Ria
         try {
             if (this.mobileIDAuthenticator.isLoginComplete(session)) {
                 context.getFlowExecutionContext().getActiveSession().getScope().put("credential",
-                    new UsernamePasswordCredential(mobileNumber, session));
+                    new MobileIDCredential(session, mobileNumber));
                 return new Event(this, "success");
             } else {
                 context.getFlowScope().put(AUTH_COUNT, ++checkCount);
@@ -225,10 +226,11 @@ public class RiaAuthenticationServiceImpl extends AbstractService implements Ria
 
     private void clearSession(RequestContext context) {
         context.getFlowScope().remove(MOBILE_CHALLENGE);
-        context.getFlowScope().remove(UsernamePasswordCredential.class.getSimpleName());
         context.getFlowScope().remove(MOBILE_NUMBER);
         context.getFlowScope().remove(MOBILE_SESSION);
         context.getFlowScope().remove(AUTH_COUNT);
+        context.getFlowScope().remove(MobileIDCredential.class.getSimpleName());
+        context.getFlowScope().remove(IDCardCredential.class.getSimpleName());
     }
 
 }

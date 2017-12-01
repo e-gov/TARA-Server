@@ -17,6 +17,7 @@ import org.apereo.cas.services.ServicesManager;
  * @since 5.1.4
  */
 
+@Deprecated
 public class AcceptUsersAuthenticationHandler
         extends AbstractPreAndPostProcessingAuthenticationHandler {
 

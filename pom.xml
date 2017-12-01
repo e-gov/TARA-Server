@@ -6,7 +6,20 @@
     <groupId>org.apereo.cas</groupId>
     <artifactId>cas-overlay</artifactId>
     <packaging>war</packaging>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
+
+    <properties>
+        <cas.version>5.1.4</cas.version>
+        <spring.version>4.2.8.RELEASE</spring.version>
+        <springboot.version>1.5.3.RELEASE</springboot.version>
+        <!-- app.server could be -jetty, -undertow, -tomcat, or blank if you plan to provide appserver -->
+        <app.server>-tomcat</app.server>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <cas.config>/etc/cas/config</cas.config>
+        <build.profile.id></build.profile.id>
+    </properties>
 
     <build>
         <resources>
@@ -122,7 +135,7 @@
         <dependency>
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
-            <version>2.7.2</version>
+            <version>2.7.1</version>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -147,19 +160,6 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <properties>
-        <cas.version>5.1.4</cas.version>
-        <spring.version>4.2.8.RELEASE</spring.version>
-        <springboot.version>1.5.3.RELEASE</springboot.version>
-        <!-- app.server could be -jetty, -undertow, -tomcat, or blank if you plan to provide appserver -->
-        <app.server>-tomcat</app.server>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <cas.config>/etc/cas/config</cas.config>
-        <build.profile.id></build.profile.id>
-    </properties>
 
     <repositories>
         <repository>
