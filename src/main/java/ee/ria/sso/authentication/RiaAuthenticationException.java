@@ -1,4 +1,4 @@
-package ee.ria.sso.service.impl;
+package ee.ria.sso.authentication;
 
 import com.codeborne.security.AuthenticationException;
 

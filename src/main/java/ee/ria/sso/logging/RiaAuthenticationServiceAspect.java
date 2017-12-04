@@ -12,7 +12,7 @@ import org.springframework.webflow.execution.RequestContext;
 
 import com.codeborne.security.AuthenticationException;
 
-import ee.ria.sso.service.impl.RiaAuthenticationException;
+import ee.ria.sso.authentication.RiaAuthenticationException;
 
 /**
  * @author Janar Rahumeel (CGI Estonia)
