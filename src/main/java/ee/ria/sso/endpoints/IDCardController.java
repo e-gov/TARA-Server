@@ -22,7 +22,7 @@ import ee.ria.sso.utils.X509Utils;
 @Controller
 public class IDCardController {
 
-    private static final String HEADER_SSL_CLIENT_CERT = "X-Client-Certificate";
+    private static final String HEADER_SSL_CLIENT_CERT = "XCLIENTCERTIFICATE";
     private final Logger log = LoggerFactory.getLogger(IDCardController.class);
 
     @GetMapping(path = {"/idcard"})
