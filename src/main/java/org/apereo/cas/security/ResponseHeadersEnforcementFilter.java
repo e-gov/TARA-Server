@@ -136,22 +136,23 @@ public final class ResponseHeadersEnforcementFilter extends AbstractSecurityFilt
                     httpServletResponse.addIntHeader("Expires", 0);
                     LOGGER.fine("Adding Cache Control response headers for " + uri);
                 }
-                if (this.enableStrictTransportSecurity && servletRequest.isSecure()) {
-                    httpServletResponse.addHeader("Strict-Transport-Security", "max-age=15768000 ; includeSubDomains");
+                if (this.enableStrictTransportSecurity && servletRequest.isSecure() &&
+                        this.hasNotHeaderValue(httpServletResponse, "Strict-Transport-Security", "max-age=15768000; includeSubDomains")) {
+                    httpServletResponse.addHeader("Strict-Transport-Security", "max-age=15768000; includeSubDomains");
                     LOGGER.fine("Adding HSTS response headers for " + uri);
                 }
                 if (this.enableXContentTypeOptions &&
-                    this.hasNotHeaderValue(httpServletResponse, "X-Content-Type-Options", "nosniff")) {
+                        this.hasNotHeaderValue(httpServletResponse, "X-Content-Type-Options", "nosniff")) {
                     httpServletResponse.addHeader("X-Content-Type-Options", "nosniff");
                     LOGGER.fine("Adding X-Content Type response headers for " + uri);
                 }
                 if (this.enableXFrameOptions &&
-                    this.hasNotHeaderValue(httpServletResponse, "X-Frame-Options", "DENY")) {
+                        this.hasNotHeaderValue(httpServletResponse, "X-Frame-Options", "DENY")) {
                     httpServletResponse.addHeader("X-Frame-Options", "DENY");
                     LOGGER.fine("Adding X-Frame Options response headers for " + uri);
                 }
                 if (this.enableXSSProtection &&
-                    this.hasNotHeaderValue(httpServletResponse, "X-XSS-Protection", "1; mode=block")) {
+                        this.hasNotHeaderValue(httpServletResponse, "X-XSS-Protection", "1; mode=block")) {
                     httpServletResponse.addHeader("X-XSS-Protection", "1; mode=block");
                     LOGGER.fine("Adding X-XSS Protection response headers for " + uri);
                 }
