@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apereo.cas.support.oauth.util.OAuth20Utils;
 import org.pac4j.core.authorization.checker.AuthorizationChecker;
 import org.pac4j.core.authorization.checker.DefaultAuthorizationChecker;
@@ -34,8 +33,8 @@ import org.pac4j.core.util.CommonHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ee.ria.sso.Constants;
 import ee.ria.sso.validators.OIDCRequestValidator;
+import ee.ria.sso.validators.RequestParameter;
 
 /**
  * Created by Janar Rahumeel (CGI Estonia)
@@ -182,18 +181,7 @@ public class DefaultSecurityLogic<R, C extends WebContext> extends ProfileManage
 
     private Optional<Integer> validateOIDCRequest(C context) {
         if (context.getPath().equals("/oidc/authorize")) {
-            Optional<Integer> code = OIDCRequestValidator.validateAll((J2EContext) context,
-                Arrays.asList(OIDCRequestValidator.RequestParameter.values()));
-            if (code.isPresent()) {
-                return code;
-            }
-            Collection<String> scopes = OAuth20Utils.getRequestedScopes((J2EContext) context);
-            if (scopes.isEmpty() || !scopes.contains("openid")) {
-                // TODO return JSON
-                this.log.error(String.format("Provided scopes [%s] are undefined by OpenID Connect, which requires that scope [%s] MUST be specified. CAS DO NOT allow this request to be processed for now", scopes, "openid"));
-                //return 400;
-            }
-            // TODO
+            return OIDCRequestValidator.validateAll((J2EContext) context, Arrays.asList(RequestParameter.values()));
         }
         return Optional.empty();
     }

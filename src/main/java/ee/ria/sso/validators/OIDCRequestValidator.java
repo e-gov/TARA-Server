@@ -1,15 +1,15 @@
 package ee.ria.sso.validators;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apereo.cas.support.oauth.util.OAuth20Utils;
 import org.pac4j.core.context.J2EContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Created by Janar Rahumeel (CGI Estonia)
@@ -18,24 +18,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class OIDCRequestValidator {
 
     private static final Logger log = LoggerFactory.getLogger(OIDCRequestValidator.class);
-    private static final ObjectMapper mapper = new ObjectMapper();
-
-    public enum RequestParameter {
-
-        CLIENT_ID("invalid_client"), SCOPE("invalid_scope"), STATE("invalid_request"), REDIRECT_URI("invalid_request"),
-        RESPONSE_TYPE("invalid_request");
-
-        private String error;
-
-        RequestParameter(String error) {
-            this.error = error;
-        }
-
-        public String getError() {
-            return error;
-        }
-
-    }
 
     public static Optional<Integer> validateAll(final J2EContext context, final List<RequestParameter> parameters) {
         if (CollectionUtils.isNotEmpty(parameters)) {
@@ -54,22 +36,54 @@ public class OIDCRequestValidator {
             String parameterKey = parameter.name().toLowerCase();
             String parameterValue = context.getRequestParameter(parameterKey);
             if (StringUtils.isBlank(parameterValue)) {
-                log.warn("No request parameter <{}> provided", parameterKey);
-                context.writeResponseContent(mapper.writeValueAsString(new ErrorResponse(parameter.getError())));
-                context.setResponseContentType("application/json");
-                context.setResponseStatus(400);
-                return Optional.of(400);
+                return resultOfBadRequest(ErrorResponse.of(context, parameter.getError(),
+                    String.format("No value for request parameter <%s> provided", parameterKey)));
             }
+            Optional<Integer> code;
+            switch (parameter) {
+                case SCOPE:
+                    code = validateScopeValue(context);
+                    break;
+                default:
+                    code = Optional.empty();
+            }
+            return code;
         } catch (Exception e) {
             if (log.isDebugEnabled()) {
                 log.error("Error while validating OIDC request", e);
             } else {
                 log.error("Error while validating OIDC request: {}", e.getMessage());
             }
-            context.setResponseStatus(500);
-            return Optional.of(500);
+            return resultOfInternalServerError(ErrorResponse.of(context, "server_error"));
+        }
+    }
+
+    private static Optional<Integer> validateScopeValue(final J2EContext context) throws Exception {
+        Collection<String> scopes = OAuth20Utils.getRequestedScopes(context);
+        if (scopes.isEmpty() || !scopes.contains("openid")) {
+            return resultOfBadRequest(ErrorResponse.of(context, String.format("Provided scopes [%s] are undefined by OpenID Connect, which requires that scope [%s] MUST be specified. TARA do not allow this request to be processed", scopes, "openid")));
         }
         return Optional.empty();
+    }
+
+    private static Optional<Integer> resultOfInternalServerError(final ErrorResponse response) {
+        return resultOf(response, Optional.of(500));
+    }
+
+    private static Optional<Integer> resultOfBadRequest(final ErrorResponse response) {
+        return resultOf(response, Optional.of(400));
+    }
+
+    private static Optional<Integer> resultOf(final ErrorResponse response, Optional<Integer> optional) {
+        if (response.hasErrorDescription()) {
+            log.error(response.getErrorDescription());
+        }
+        if (response.isValidRedirectURI()) {
+            if (!response.sendRedirect()) {
+                return Optional.of(500);
+            }
+        }
+        return optional;
     }
 
 }
