@@ -1,8 +1,6 @@
 package ee.ria.sso.validators;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URLEncoder;
 
 import org.apache.commons.lang3.StringUtils;
@@ -56,11 +54,7 @@ public final class ErrorResponse {
             StringBuilder sb = new StringBuilder();
             sb.append(this.context.getRequestParameter(RequestParameter.REDIRECT_URI.name().toLowerCase()));
             sb.append("?");
-            try {
-                sb.append(String.format("error=%s", URLEncoder.encode(this.error, "UTF-8")));
-            } catch (UnsupportedEncodingException e) {
-                sb.append(String.format("error=server%3Derror"));
-            }
+            sb.append(String.format("error=%s", URLEncoder.encode(this.error, "UTF-8")));
             if (this.hasErrorDescription()) {
                 sb.append(String.format("&error_description=%s", URLEncoder.encode(this.errorDescription, "UTF-8")));
             }
