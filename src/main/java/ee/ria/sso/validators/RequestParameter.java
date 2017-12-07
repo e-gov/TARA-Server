@@ -10,7 +10,8 @@ public enum RequestParameter {
     SCOPE("invalid_scope"),
     STATE("invalid_request"),
     REDIRECT_URI("invalid_request"),
-    RESPONSE_TYPE("invalid_request");
+    RESPONSE_TYPE("invalid_request"),
+    NONCE("invalid_request");
 
     private String error;
 
