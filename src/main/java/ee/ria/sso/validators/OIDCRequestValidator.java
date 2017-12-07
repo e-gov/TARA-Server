@@ -62,10 +62,10 @@ public class OIDCRequestValidator {
     }
 
     private static Optional<Integer> validateScopeValue(final J2EContext context) throws Exception {
-        Collection<String> scopes = OAuth20Utils.getRequestedScopes(context);
-        if (scopes.isEmpty() || !scopes.contains("openid")) {
-            return resultOfBadRequest(ErrorResponse.of(context,
-                String.format("Provided scopes <%s> are undefined by OpenID Connect, which requires that scope <%s> MUST be specified. TARA do not allow this request to be processed", scopes, "openid")));
+        String scope = context.getRequestParameter(RequestParameter.SCOPE.name().toLowerCase());
+        if (!"openid".equals(scope)) {
+            return resultOfBadRequest(ErrorResponse.of(context, "invalid_scope",
+                String.format("Provided scope <%s> is not allowed by TARA, only <%s> is permitted. TARA do not allow this request to be processed", scope, "openid")));
         }
         return Optional.empty();
     }
