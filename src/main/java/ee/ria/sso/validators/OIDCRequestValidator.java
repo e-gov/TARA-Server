@@ -1,5 +1,6 @@
 package ee.ria.sso.validators;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -34,10 +35,15 @@ public class OIDCRequestValidator {
     public static Optional<Integer> validate(final J2EContext context, final RequestParameter parameter) {
         try {
             String parameterKey = parameter.name().toLowerCase();
+            String[] values = context.getRequest().getParameterValues(parameterKey);
+            if (values != null && values.length > 1) {
+                return resultOfBadRequest(ErrorResponse.of(context, "invalid_request",
+                    String.format("Multiple values found in the request for <%s> parameter", parameterKey)));
+            }
             String parameterValue = context.getRequestParameter(parameterKey);
             if (StringUtils.isBlank(parameterValue)) {
                 return resultOfBadRequest(ErrorResponse.of(context, parameter.getError(),
-                    String.format("No value for request parameter <%s> provided", parameterKey)));
+                    String.format("No value found in the request for <%s> parameter", parameterKey)));
             }
             Optional<Integer> code;
             switch (parameter) {
