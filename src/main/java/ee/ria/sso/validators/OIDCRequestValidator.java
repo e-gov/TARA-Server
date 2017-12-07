@@ -44,6 +44,9 @@ public class OIDCRequestValidator {
                 case SCOPE:
                     code = validateScopeValue(context);
                     break;
+                case RESPONSE_TYPE:
+                    code = validateResponseType(context);
+                    break;
                 default:
                     code = Optional.empty();
             }
@@ -61,7 +64,17 @@ public class OIDCRequestValidator {
     private static Optional<Integer> validateScopeValue(final J2EContext context) throws Exception {
         Collection<String> scopes = OAuth20Utils.getRequestedScopes(context);
         if (scopes.isEmpty() || !scopes.contains("openid")) {
-            return resultOfBadRequest(ErrorResponse.of(context, String.format("Provided scopes [%s] are undefined by OpenID Connect, which requires that scope [%s] MUST be specified. TARA do not allow this request to be processed", scopes, "openid")));
+            return resultOfBadRequest(ErrorResponse.of(context,
+                String.format("Provided scopes <%s> are undefined by OpenID Connect, which requires that scope <%s> MUST be specified. TARA do not allow this request to be processed", scopes, "openid")));
+        }
+        return Optional.empty();
+    }
+
+    private static Optional<Integer> validateResponseType(final J2EContext context) {
+        String responseType = context.getRequestParameter(RequestParameter.RESPONSE_TYPE.name().toLowerCase());
+        if (!"code".equals(responseType)) {
+            return resultOfBadRequest(ErrorResponse.of(context, "unsupported_response_type",
+                String.format("Provided response type <%s> is not allowed by TARA, only <%s> is permitted. TARA do not allow this request to be processed", responseType, "code")));
         }
         return Optional.empty();
     }
