@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 import org.apereo.cas.support.oauth.util.OAuth20Utils;
 import org.pac4j.core.authorization.checker.AuthorizationChecker;
@@ -32,13 +33,16 @@ import org.pac4j.core.util.CommonHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ee.ria.sso.validators.OIDCRequestValidator;
+import ee.ria.sso.validators.RequestParameter;
+
 /**
  * Created by Janar Rahumeel (CGI Estonia)
  */
 
 public class DefaultSecurityLogic<R, C extends WebContext> extends ProfileManagerFactoryAware<C> implements SecurityLogic<R, C> {
 
-    protected Logger logger = LoggerFactory.getLogger(this.getClass());
+    protected Logger log = LoggerFactory.getLogger(this.getClass());
     private ClientFinder clientFinder = new DefaultClientFinder();
     private AuthorizationChecker authorizationChecker = new DefaultAuthorizationChecker();
     private MatchingChecker matchingChecker = new DefaultMatchingChecker();
@@ -48,7 +52,7 @@ public class DefaultSecurityLogic<R, C extends WebContext> extends ProfileManage
     }
 
     public R perform(C context, Config config, SecurityGrantedAccessAdapter<R, C> securityGrantedAccessAdapter, HttpActionAdapter<R, C> httpActionAdapter, String clients, String authorizers, String matchers, Boolean inputMultiProfile, Object... parameters) {
-        this.logger.debug("=== SECURITY ===");
+        this.log.debug("=== SECURITY ===");
         boolean multiProfile;
         if (inputMultiProfile == null) {
             multiProfile = false;
@@ -66,41 +70,44 @@ public class DefaultSecurityLogic<R, C extends WebContext> extends ProfileManage
         // TODO is it most appropriate place for this code
         String language = context.getRequestParameter("lang");
         if (Arrays.asList("et", "en", "ru").contains(language)) {
-            this.logger.debug("Setting locale from 'lang' parameter to [{}]", language);
+            this.log.debug("Setting locale from 'lang' parameter to [{}]", language);
             context.setSessionAttribute("org.springframework.web.servlet.i18n.SessionLocaleResolver.LOCALE", new Locale(language));
         }
         HttpAction action;
         try {
-            this.logger.debug("url: {}", context.getFullRequestURL());
-            this.logger.debug("matchers: {}", matchers);
+            this.log.debug("url: {}", context.getFullRequestURL());
+            this.log.debug("matchers: {}", matchers);
             if (!this.matchingChecker.matches(context, matchers, config.getMatchers())) {
-                this.logger.debug("no matching for this request -> grant access");
+                this.log.debug("no matching for this request -> grant access");
                 return securityGrantedAccessAdapter.adapt(context, parameters);
-            } else if (!this.validateOIDCRequest(context)) {
-                return httpActionAdapter.adapt(HttpAction.status("", 403, context).getCode(), context);
             }
-            this.logger.debug("clients: {}", clients);
+            // Validating OAuth 2.0 Authorization request according to RFC6749
+            Optional<Integer> errorCode = this.validateOIDCRequest(context);
+            if (errorCode.isPresent()) {
+                return httpActionAdapter.adapt(errorCode.get(), context);
+            }
+            this.log.debug("clients: {}", clients);
             List<Client> currentClients = this.clientFinder.find(configClients, context, clients);
-            this.logger.debug("currentClients: {}", currentClients);
+            this.log.debug("currentClients: {}", currentClients);
             boolean loadProfilesFromSession = this.loadProfilesFromSession(context, currentClients);
-            this.logger.debug("loadProfilesFromSession: {}", loadProfilesFromSession);
+            this.log.debug("loadProfilesFromSession: {}", loadProfilesFromSession);
             ProfileManager manager = this.getProfileManager(context, config);
             List<CommonProfile> profiles = manager.getAll(loadProfilesFromSession);
-            this.logger.debug("profiles: {}", profiles);
+            this.log.debug("profiles: {}", profiles);
             if (CommonHelper.isEmpty(profiles) && CommonHelper.isNotEmpty(currentClients)) {
                 boolean updated = false;
                 Iterator var18 = currentClients.iterator();
                 while (var18.hasNext()) {
                     Client currentClient = (Client) var18.next();
                     if (currentClient instanceof DirectClient) {
-                        this.logger.debug("Performing authentication for direct client: {}", currentClient);
+                        this.log.debug("Performing authentication for direct client: {}", currentClient);
                         Credentials credentials = currentClient.getCredentials(context);
-                        this.logger.debug("credentials: {}", credentials);
+                        this.log.debug("credentials: {}", credentials);
                         CommonProfile profile = currentClient.getUserProfile(credentials, context);
-                        this.logger.debug("profile: {}", profile);
+                        this.log.debug("profile: {}", profile);
                         if (profile != null) {
                             boolean saveProfileInSession = this.saveProfileInSession(context, currentClients, (DirectClient) currentClient, profile);
-                            this.logger.debug("saveProfileInSession: {} / multiProfile: {}", saveProfileInSession, multiProfile);
+                            this.log.debug("saveProfileInSession: {} / multiProfile: {}", saveProfileInSession, multiProfile);
                             manager.save(saveProfileInSession, profile, multiProfile);
                             updated = true;
                             if (!multiProfile) {
@@ -111,27 +118,27 @@ public class DefaultSecurityLogic<R, C extends WebContext> extends ProfileManage
                 }
                 if (updated) {
                     profiles = manager.getAll(loadProfilesFromSession);
-                    this.logger.debug("new profiles: {}", profiles);
+                    this.log.debug("new profiles: {}", profiles);
                 }
             }
             if (CommonHelper.isNotEmpty(profiles)) {
-                this.logger.debug("authorizers: {}", authorizers);
+                this.log.debug("authorizers: {}", authorizers);
                 if (this.authorizationChecker.isAuthorized(context, profiles, authorizers, config.getAuthorizers())) {
-                    this.logger.debug("authenticated and authorized -> grant access");
+                    this.log.debug("authenticated and authorized -> grant access");
                     return securityGrantedAccessAdapter.adapt(context, parameters);
                 }
-                this.logger.debug("forbidden");
+                this.log.debug("forbidden");
                 action = this.forbidden(context, currentClients, profiles, authorizers);
             } else if (this.startAuthentication(context, currentClients)) {
-                this.logger.debug("Starting authentication");
+                this.log.debug("Starting authentication");
                 this.saveRequestedUrl(context, currentClients);
                 action = this.redirectToIdentityProvider(context, currentClients);
             } else {
-                this.logger.debug("unauthorized");
+                this.log.debug("unauthorized");
                 action = this.unauthorized(context, currentClients);
             }
         } catch (HttpAction var23) {
-            this.logger.debug("extra HTTP action required in security: {}", var23.getCode());
+            this.log.debug("extra HTTP action required in security: {}", var23.getCode());
             action = var23;
         } catch (TechnicalException var24) {
             throw var24;
@@ -159,7 +166,7 @@ public class DefaultSecurityLogic<R, C extends WebContext> extends ProfileManage
 
     protected void saveRequestedUrl(C context, List<Client> currentClients) throws HttpAction {
         String requestedUrl = context.getFullRequestURL();
-        this.logger.debug("requestedUrl: {}", requestedUrl);
+        this.log.debug("requestedUrl: {}", requestedUrl);
         context.setSessionAttribute("pac4jRequestedUrl", requestedUrl);
     }
 
@@ -172,15 +179,11 @@ public class DefaultSecurityLogic<R, C extends WebContext> extends ProfileManage
         return HttpAction.unauthorized("unauthorized", context, (String) null);
     }
 
-    private boolean validateOIDCRequest(C context) {
+    private Optional<Integer> validateOIDCRequest(C context) {
         if (context.getPath().equals("/oidc/authorize")) {
-            Collection<String> scopes = OAuth20Utils.getRequestedScopes((J2EContext) context);
-            if (scopes.isEmpty() || !scopes.contains("openid")) {
-                this.logger.error(String.format("Provided scopes [%s] are undefined by OpenID Connect, which requires that scope [%s] MUST be specified. CAS DO NOT allow this request to be processed for now", scopes, "openid"));
-                return false;
-            }
+            return OIDCRequestValidator.validateAll((J2EContext) context, Arrays.asList(RequestParameter.values()));
         }
-        return true;
+        return Optional.empty();
     }
 
     public ClientFinder getClientFinder() {
