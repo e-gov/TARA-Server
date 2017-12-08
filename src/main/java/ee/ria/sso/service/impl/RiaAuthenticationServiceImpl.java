@@ -1,18 +1,24 @@
 package ee.ria.sso.service.impl;
 
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.Principal;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
+import com.codeborne.security.AuthenticationException;
+import com.codeborne.security.mobileid.MobileIDSession;
+import com.google.common.base.Splitter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,26 +29,30 @@ import org.springframework.webflow.core.collection.SharedAttributeMap;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
 
-import com.codeborne.security.AuthenticationException;
-import com.codeborne.security.mobileid.MobileIDSession;
-import com.google.common.base.Splitter;
-
 import ee.ria.sso.Constants;
 import ee.ria.sso.MobileIDAuthenticatorWrapper;
+import ee.ria.sso.authentication.RiaAuthenticationException;
 import ee.ria.sso.authentication.credential.IDCardCredential;
 import ee.ria.sso.authentication.credential.MobileIDCredential;
-import ee.ria.sso.authentication.RiaAuthenticationException;
 import ee.ria.sso.model.IDModel;
 import ee.ria.sso.service.RiaAuthenticationService;
+import ee.ria.sso.statistics.StatAuthTypeEnum;
+import ee.ria.sso.statistics.StatOperationCode;
+import ee.ria.sso.statistics.StatisticsWrapper;
 import ee.ria.sso.utils.X509Utils;
 import ee.ria.sso.validators.OCSPValidator;
+
 
 /**
  * @author Janar Rahumeel (CGI Estonia)
  */
 
 @Service
-public class RiaAuthenticationServiceImpl extends AbstractService implements RiaAuthenticationService {
+public class RiaAuthenticationServiceImpl extends AbstractService
+        implements RiaAuthenticationService {
+
+    private String pattern = "dd.MM.yyyy HH:mm:ss";
+    private SimpleDateFormat sdf = new SimpleDateFormat(pattern);
 
     private static final String MOBILE_CHALLENGE = "mobileChallenge";
     private static final String MOBILE_SESSION = "mobileSession";
@@ -53,6 +63,7 @@ public class RiaAuthenticationServiceImpl extends AbstractService implements Ria
     private final MobileIDAuthenticatorWrapper mobileIDAuthenticator;
     private final Map<String, X509Certificate> issuerCertificates = new HashMap<>();
     private final OCSPValidator ocspValidator;
+    private final StatisticsWrapper statisticsWrapper;
 
     @Value("${mobileID.countryCode:EE}")
     private String countryCode;
@@ -81,27 +92,43 @@ public class RiaAuthenticationServiceImpl extends AbstractService implements Ria
     @Value("${ocsp.enabled:false}")
     private boolean enabled;
 
-    public RiaAuthenticationServiceImpl(MobileIDAuthenticatorWrapper mobileIDAuthenticator, OCSPValidator ocspValidator,
-                                        MessageSource messageSource) {
+    public RiaAuthenticationServiceImpl(MobileIDAuthenticatorWrapper mobileIDAuthenticator,
+                                        OCSPValidator ocspValidator,
+                                        MessageSource messageSource,
+                                        StatisticsWrapper statisticsWrapper) {
         super(messageSource);
         this.mobileIDAuthenticator = mobileIDAuthenticator;
         this.ocspValidator = ocspValidator;
+        this.statisticsWrapper = statisticsWrapper;
     }
 
     @Override
     public Event loginByIDCard(RequestContext context) {
         SharedAttributeMap<Object> map = this.getSessionMap(context);
         try {
-            X509Certificate certificate = map.get(Constants.CERTIFICATE_SESSION_ATTRIBUTE, X509Certificate.class);
+            X509Certificate certificate =
+                    map.get(Constants.CERTIFICATE_SESSION_ATTRIBUTE, X509Certificate.class);
             Assert.notNull(certificate, "Unable to find certificate from session");
+            statisticsWrapper.logStatisticsAction(sdf.format(new Date()), context,
+                                                  StatAuthTypeEnum.ID_CARD,
+                                                  StatOperationCode.START_AUTH, "");
             this.checkCert(certificate);
             Principal subjectDN = certificate.getSubjectDN();
-            Map<String, String> params = Splitter.on(", ").withKeyValueSeparator("=").split(subjectDN.getName());
+            Map<String, String> params =
+                    Splitter.on(", ").withKeyValueSeparator("=").split(subjectDN.getName());
             context.getFlowExecutionContext().getActiveSession().getScope()
-                .put("credential",
-                    new IDCardCredential(new IDModel(params.get("SERIALNUMBER"), params.get("GIVENNAME"), params.get("SURNAME"))));
+                   .put("credential",
+                        new IDCardCredential(
+                                new IDModel(params.get("SERIALNUMBER"), params.get("GIVENNAME"),
+                                            params.get("SURNAME"))));
+            statisticsWrapper
+                    .logStatisticsAction(sdf.format(new Date()), context, StatAuthTypeEnum.ID_CARD,
+                                         StatOperationCode.SUCCESSFUL_AUTH, "");
             return new Event(this, "success");
         } catch (Exception e) {
+            statisticsWrapper
+                    .logStatisticsAction(sdf.format(new Date()), context, StatAuthTypeEnum.ID_CARD,
+                                         StatOperationCode.ERROR, e.getMessage());
             this.handleError(context, e, "Login by ID-card failed");
         } finally {
             map.remove(Constants.CERTIFICATE_SESSION_ATTRIBUTE);
@@ -111,16 +138,22 @@ public class RiaAuthenticationServiceImpl extends AbstractService implements Ria
 
     @Override
     public Event startLoginByMobileID(RequestContext context) {
-        final String mobileNumber = context.getExternalContext().getRequestParameterMap().get(MOBILE_NUMBER);
-        final String socialSecurityCode = context.getExternalContext().getRequestParameterMap().get(SSN);
+        final String mobileNumber =
+                context.getExternalContext().getRequestParameterMap().get(MOBILE_NUMBER);
+        final String socialSecurityCode =
+                context.getExternalContext().getRequestParameterMap().get(SSN);
         Assert.hasLength(mobileNumber, "No mobile number provided");
         Assert.hasLength(socialSecurityCode, "No social security code provided");
         context.getFlowScope().remove("ERROR_CODE");
         if (this.log.isDebugEnabled()) {
-            this.log.debug("Starting mobile ID login: <number:{}>, <ssn:{}>", mobileNumber, socialSecurityCode);
+            this.log.debug("Starting mobile ID login: <number:{}>, <ssn:{}>", mobileNumber,
+                           socialSecurityCode);
         }
         try {
-            MobileIDSession mobileIDSession = this.mobileIDAuthenticator.startLogin(socialSecurityCode, this.countryCode, mobileNumber);
+            statisticsWrapper.logStatisticsAction(sdf.format(new Date()), context, StatAuthTypeEnum.MOBILE_ID,
+                                                  StatOperationCode.START_AUTH, "");
+            MobileIDSession mobileIDSession = this.mobileIDAuthenticator
+                    .startLogin(socialSecurityCode, this.countryCode, mobileNumber);
             if (this.log.isDebugEnabled()) {
                 this.log.debug("Login response received ...");
             }
@@ -129,6 +162,8 @@ public class RiaAuthenticationServiceImpl extends AbstractService implements Ria
             context.getFlowScope().put(MOBILE_SESSION, mobileIDSession);
             context.getFlowScope().put(AUTH_COUNT, 0);
         } catch (AuthenticationException e) {
+            statisticsWrapper.logStatisticsAction(sdf.format(new Date()), context, StatAuthTypeEnum.MOBILE_ID,
+                                                  StatOperationCode.ERROR, e.getCode().name());
             this.handleError(context, e, "Start of Mobile ID login failed");
         }
         return new Event(this, "success");
@@ -139,17 +174,26 @@ public class RiaAuthenticationServiceImpl extends AbstractService implements Ria
         MobileIDSession session = (MobileIDSession) context.getFlowScope().get(MOBILE_SESSION);
         int checkCount = (int) context.getFlowScope().get(AUTH_COUNT);
         String mobileNumber = (String) context.getFlowScope().get(MOBILE_NUMBER);
-        log.debug("Checking (attempt {}) mobile ID login state with session code {}", checkCount, session.sessCode);
+        log.debug("Checking (attempt {}) mobile ID login state with session code {}", checkCount,
+                  session.sessCode);
         try {
             if (this.mobileIDAuthenticator.isLoginComplete(session)) {
                 context.getFlowExecutionContext().getActiveSession().getScope().put("credential",
-                    new MobileIDCredential(session, mobileNumber));
+                                                                                    new MobileIDCredential(
+                                                                                            session,
+                                                                                            mobileNumber));
+                statisticsWrapper.logStatisticsAction(sdf.format(new Date()), context,
+                                                      StatAuthTypeEnum.MOBILE_ID,
+                                                      StatOperationCode.SUCCESSFUL_AUTH, "");
                 return new Event(this, "success");
             } else {
                 context.getFlowScope().put(AUTH_COUNT, ++checkCount);
                 return new Event(this, "outstanding");
             }
         } catch (AuthenticationException e) {
+            statisticsWrapper.logStatisticsAction(sdf.format(new Date()), context,
+                                                  StatAuthTypeEnum.MOBILE_ID,
+                                                  StatOperationCode.ERROR, e.getCode().name());
             this.handleError(context, e, "Check of Mobile ID login status failed");
         }
         return null;
@@ -168,9 +212,9 @@ public class RiaAuthenticationServiceImpl extends AbstractService implements Ria
         try {
             if (this.enabled) {
                 Map<String, String> filenameAndCertCNMap =
-                    Arrays.stream(certificates.split(",")).map(prop -> prop.split(":"))
-                        .collect(
-                            Collectors.toMap(e -> e[0], e -> e[1]));
+                        Arrays.stream(certificates.split(",")).map(prop -> prop.split(":"))
+                              .collect(
+                                      Collectors.toMap(e -> e[0], e -> e[1]));
 
                 for (Map.Entry<String, String> entry : filenameAndCertCNMap.entrySet()) {
                     this.issuerCertificates.put(entry.getKey(), readCert(entry.getValue()));
@@ -183,7 +227,8 @@ public class RiaAuthenticationServiceImpl extends AbstractService implements Ria
 
     private void handleError(RequestContext context, Exception exception, String error) {
         this.clearSession(context);
-        context.getFlowScope().put("SVC_BACK", context.getExternalContext().getSessionMap().get("pac4jRequestedUrl"));
+        context.getFlowScope().put("SVC_BACK", context.getExternalContext().getSessionMap()
+                                                      .get("pac4jRequestedUrl"));
         if (exception instanceof AuthenticationException) {
             throw new RiaAuthenticationException(error, (AuthenticationException) exception);
         }
@@ -197,8 +242,8 @@ public class RiaAuthenticationServiceImpl extends AbstractService implements Ria
         X509Certificate issuerCert = findIssuerCertificate(x509Certificate);
         if (issuerCert != null) {
             boolean result = ocspValidator
-                .isCertiticateValid(x509Certificate, issuerCert,
-                    ocspUrl);
+                    .isCertiticateValid(x509Certificate, issuerCert,
+                                        ocspUrl);
             if (!result) {
                 log.error("Could not verify client certificate validity");
                 throw new RuntimeException("Could not verify client certificate validity");

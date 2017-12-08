@@ -10,10 +10,21 @@
         <!-- To see more CAS specific logging, adjust this property to info or debug or run server with -Dcas.log.leve=debug -->
         <Property name="cas.log.level">debug</Property>
     </Properties>
+
     <Appenders>
         <Console name="console" target="SYSTEM_OUT">
             <PatternLayout pattern="%d %p [%c] - &lt;%m&gt;%n"/>
         </Console>
+        <RollingFile name="statisticsAppender" fileName="${sys:cas.log.dir}/statistics/stats.log" append="true"
+                     filePattern="${sys:cas.log.dir}/statistics/stats-%d{yyyy-MM-dd-HH}-%i.log">
+            <PatternLayout pattern="%m%n"/>
+            <Policies>
+                <OnStartupTriggeringPolicy/>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+            </Policies>
+        </RollingFile>
+
         <RollingFile name="file" fileName="${sys:cas.log.dir}/cas.log" append="true"
                      filePattern="${sys:cas.log.dir}/cas-%d{yyyy-MM-dd-HH}-%i.log">
             <PatternLayout pattern="%d %p [%c] - &lt;%m&gt;%n"/>
@@ -126,5 +137,12 @@
             -->
             <!--AppenderRef ref="casConsole"/-->
         </AsyncRoot>
+
+        <logger name="ee.ria.sso.statistics" additivity="false">
+            <level value="info"/>
+            <appender-ref ref="statisticsAppender"/>
+        </logger>
+
+
     </Loggers>
 </Configuration>
