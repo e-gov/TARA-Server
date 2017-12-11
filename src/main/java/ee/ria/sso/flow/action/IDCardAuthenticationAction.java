@@ -5,7 +5,7 @@ import org.springframework.webflow.action.AbstractAction;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
 
-import ee.ria.sso.service.RiaAuthenticationService;
+import ee.ria.sso.service.AuthenticationService;
 
 /**
  * @author Janar Rahumeel (CGI Estonia)
@@ -14,10 +14,10 @@ import ee.ria.sso.service.RiaAuthenticationService;
 @Component("idCardAuthenticationAction")
 public class IDCardAuthenticationAction extends AbstractAction {
 
-    private final RiaAuthenticationService riaAuthenticationService;
+    private final AuthenticationService authenticationService;
 
-    public IDCardAuthenticationAction(RiaAuthenticationService riaAuthenticationService) {
-        this.riaAuthenticationService = riaAuthenticationService;
+    public IDCardAuthenticationAction(AuthenticationService authenticationService) {
+        this.authenticationService = authenticationService;
     }
 
     /*
@@ -26,7 +26,7 @@ public class IDCardAuthenticationAction extends AbstractAction {
 
     @Override
     protected Event doExecute(RequestContext requestContext) throws Exception {
-        return this.riaAuthenticationService.loginByIDCard(requestContext);
+        return this.authenticationService.loginByIDCard(requestContext);
     }
 
 }

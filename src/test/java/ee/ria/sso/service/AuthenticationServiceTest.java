@@ -13,17 +13,17 @@ import ee.ria.sso.AbstractTest;
  * @author Janar Rahumeel (CGI Estonia)
  */
 
-public class RiaAuthenticationServiceTest extends AbstractTest {
+public class AuthenticationServiceTest extends AbstractTest {
 
     @Autowired
-    private RiaAuthenticationService riaAuthenticationService;
+    private AuthenticationService authenticationService;
 
     @Test(expected = RuntimeException.class)
     public void testStartLoginByMobileIDFailed() {
         Map<String, String> map = new HashMap<>();
         map.put("mobileNumber", "+37252839476");
         map.put("principalCode", "38882736672");
-        Event event = this.riaAuthenticationService.startLoginByMobileID(this.getRequestContext(map));
+        Event event = this.authenticationService.startLoginByMobileID(this.getRequestContext(map));
     }
 
 }

@@ -20,11 +20,11 @@ import ee.ria.sso.authentication.TaraAuthenticationException;
 
 @Aspect
 @Component
-public class RiaAuthenticationServiceAspect {
+public class AuthenticationServiceAspect {
 
-    private final Logger log = LoggerFactory.getLogger(RiaAuthenticationServiceAspect.class);
+    private final Logger log = LoggerFactory.getLogger(AuthenticationServiceAspect.class);
 
-    @Around("execution(org.springframework.webflow.execution.Event ee.ria.sso.service.RiaAuthenticationService.*(..))")
+    @Around("execution(org.springframework.webflow.execution.Event ee.ria.sso.service.AuthenticationService.*(..))")
     public Event log(ProceedingJoinPoint point) throws Throwable {
         this.log.info("Calling <RiaAuthenticationService.{}> ...", point.getSignature().getName());
         this.logArguments(point.getArgs());

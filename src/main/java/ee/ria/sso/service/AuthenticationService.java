@@ -7,7 +7,7 @@ import org.springframework.webflow.execution.RequestContext;
  * @author Janar Rahumeel (CGI Estonia)
  */
 
-public interface RiaAuthenticationService {
+public interface AuthenticationService {
 
     Event loginByIDCard(RequestContext context);
 
