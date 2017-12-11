@@ -1,6 +1,7 @@
 package ee.ria.sso.statistics;
 
+public enum StatisticsOperation {
 
-public enum StatOperationCode {
     START_AUTH, SUCCESSFUL_AUTH, ERROR
+
 }
