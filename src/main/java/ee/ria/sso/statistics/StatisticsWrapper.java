@@ -17,15 +17,15 @@ public class StatisticsWrapper {
 
     private static final Logger log = LoggerFactory.getLogger(StatisticsWrapper.class);
 
-    public void logStatisticsAction(String toiminguAeg, RequestContext context, StatAuthTypeEnum
-            autentimisMeetod, StatOperationCode toiminguTulemus, String ebaeduPohjus) {
+    public void logStatisticsAction(String time, RequestContext context, StatAuthTypeEnum
+        authenticationMethod, StatOperationCode result, String causeOfError) {
         String separator = ";";
         String clientId = UriComponentsBuilder.fromUriString(context.getExternalContext()
-                                                                    .getRequestParameterMap()
-                                                                    .get("service")).build()
-                                              .getQueryParams().get("client_id").get(0);
-        log.info(toiminguAeg + separator + clientId + separator + autentimisMeetod + separator
-                         + toiminguTulemus + separator + ebaeduPohjus);
+            .getRequestParameterMap()
+            .get("service")).build()
+            .getQueryParams().get("client_id").get(0);
+        log.info(time + separator + clientId + separator + authenticationMethod + separator
+            + result + separator + causeOfError);
     }
 
 }
