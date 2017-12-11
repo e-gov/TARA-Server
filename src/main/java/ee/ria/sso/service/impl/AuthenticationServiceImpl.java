@@ -101,18 +101,16 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
     public Event loginByIDCard(RequestContext context) {
         SharedAttributeMap<Object> map = this.getSessionMap(context);
         try {
-            X509Certificate certificate =
-                map.get(Constants.CERTIFICATE_SESSION_ATTRIBUTE, X509Certificate.class);
+            this.statistics.collect(LocalDateTime.now(), context, StatisticsAuthenticationType.ID_CARD,
+                StatisticsOperation.START_AUTH);
+            X509Certificate certificate = map.get(Constants.CERTIFICATE_SESSION_ATTRIBUTE, X509Certificate.class);
             Assert.notNull(certificate, "Unable to find certificate from session");
             this.checkCert(certificate);
             Principal subjectDN = certificate.getSubjectDN();
-            Map<String, String> params =
-                Splitter.on(", ").withKeyValueSeparator("=").split(subjectDN.getName());
+            Map<String, String> params = Splitter.on(", ").withKeyValueSeparator("=").split(subjectDN.getName());
             context.getFlowExecutionContext().getActiveSession().getScope()
-                .put("credential",
-                    new IDCardCredential(
-                        new IDModel(params.get("SERIALNUMBER"), params.get("GIVENNAME"),
-                            params.get("SURNAME"))));
+                .put("credential", new IDCardCredential(
+                    new IDModel(params.get("SERIALNUMBER"), params.get("GIVENNAME"), params.get("SURNAME"))));
             this.statistics.collect(LocalDateTime.now(), context, StatisticsAuthenticationType.ID_CARD,
                     StatisticsOperation.SUCCESSFUL_AUTH);
             return new Event(this, "success");
