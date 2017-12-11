@@ -12,7 +12,7 @@ import org.springframework.webflow.execution.RequestContext;
 
 import com.codeborne.security.AuthenticationException;
 
-import ee.ria.sso.authentication.RiaAuthenticationException;
+import ee.ria.sso.authentication.TaraAuthenticationException;
 
 /**
  * @author Janar Rahumeel (CGI Estonia)
@@ -37,10 +37,10 @@ public class RiaAuthenticationServiceAspect {
             } else {
                 this.log.error("Authentication error have been occurred (enable debug level for stacktrace): {}", e.getMessage());
             }
-            if (e instanceof RiaAuthenticationException) {
-                throw new RiaAuthenticationException("Authentication error", new AuthenticationException(((RiaAuthenticationException) e).getCode()));
+            if (e instanceof TaraAuthenticationException) {
+                throw new TaraAuthenticationException("Authentication error", new AuthenticationException(((TaraAuthenticationException) e).getCode()));
             }
-            throw new RiaAuthenticationException("Authentication error");
+            throw new TaraAuthenticationException("Authentication error");
         }
         this.log.info("Event of <{}> has been triggered", event.getId());
         return event;

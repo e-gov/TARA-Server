@@ -31,7 +31,7 @@ import ee.ria.sso.Constants;
 import ee.ria.sso.MobileIDAuthenticatorWrapper;
 import ee.ria.sso.authentication.credential.IDCardCredential;
 import ee.ria.sso.authentication.credential.MobileIDCredential;
-import ee.ria.sso.authentication.RiaAuthenticationException;
+import ee.ria.sso.authentication.TaraAuthenticationException;
 import ee.ria.sso.model.IDModel;
 import ee.ria.sso.service.RiaAuthenticationService;
 import ee.ria.sso.utils.X509Utils;
@@ -185,9 +185,9 @@ public class RiaAuthenticationServiceImpl extends AbstractService implements Ria
         this.clearSession(context);
         context.getFlowScope().put("SVC_BACK", context.getExternalContext().getSessionMap().get("pac4jRequestedUrl"));
         if (exception instanceof AuthenticationException) {
-            throw new RiaAuthenticationException(error, (AuthenticationException) exception);
+            throw new TaraAuthenticationException(error, (AuthenticationException) exception);
         }
-        throw new RiaAuthenticationException(error, exception);
+        throw new TaraAuthenticationException(error, exception);
     }
 
     private void checkCert(X509Certificate x509Certificate) {

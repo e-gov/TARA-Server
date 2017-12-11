@@ -1,13 +1,12 @@
 package org.pac4j.core.engine;
 
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
-import org.apereo.cas.support.oauth.util.OAuth20Utils;
 import org.pac4j.core.authorization.checker.AuthorizationChecker;
 import org.pac4j.core.authorization.checker.DefaultAuthorizationChecker;
 import org.pac4j.core.client.Client;
@@ -33,6 +32,8 @@ import org.pac4j.core.util.CommonHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ee.ria.sso.authentication.TaraCredentialsException;
+import ee.ria.sso.flow.JSONFlowExecutionException;
 import ee.ria.sso.validators.OIDCRequestValidator;
 import ee.ria.sso.validators.RequestParameter;
 
@@ -140,6 +141,8 @@ public class DefaultSecurityLogic<R, C extends WebContext> extends ProfileManage
         } catch (HttpAction var23) {
             this.log.debug("extra HTTP action required in security: {}", var23.getCode());
             action = var23;
+        } catch (TaraCredentialsException e) {
+            throw JSONFlowExecutionException.ofUnauthorized(Collections.singletonMap("error", e.getError()), e);
         } catch (TechnicalException var24) {
             throw var24;
         } catch (Throwable var25) {
