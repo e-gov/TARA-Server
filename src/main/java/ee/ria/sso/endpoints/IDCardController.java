@@ -44,9 +44,9 @@ public class IDCardController {
 
     private void log(Exception e) {
         if (this.log.isDebugEnabled()) {
-            this.log.error("Controller error", e);
+            this.log.error("ID-Card controller error", e);
         } else {
-            this.log.error("Controller error: {}", e.getMessage());
+            this.log.error("ID-Card controller error: {}", e.getMessage());
         }
     }
 

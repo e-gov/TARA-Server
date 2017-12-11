@@ -7,7 +7,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apereo.cas.authentication.principal.Principal;
 import org.apereo.cas.authentication.principal.PrincipalFactory;
 
-import ee.ria.sso.authentication.RiaAuthenticationException;
+import ee.ria.sso.authentication.TaraAuthenticationException;
 
 /**
  * Created by Janar Rahumeel (CGI Estonia)
@@ -21,12 +21,12 @@ public class TaraPrincipalFactory implements PrincipalFactory {
     }
 
     public Principal createPrincipal(String id) {
-        throw new RiaAuthenticationException("Attributes are mandatory when creating principal");
+        throw new TaraAuthenticationException("Attributes are mandatory when creating principal");
     }
 
     public Principal createPrincipal(String id, Map<String, Object> attributes) {
         if (MapUtils.isEmpty(attributes)) {
-            throw new RiaAuthenticationException("No any attributes found when creating principal");
+            throw new TaraAuthenticationException("No any attributes found when creating principal");
         }
         return new TaraPrincipal(id, attributes);
     }
