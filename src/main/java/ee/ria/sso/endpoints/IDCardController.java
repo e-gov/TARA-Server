@@ -25,24 +25,15 @@ public class IDCardController {
 
     private static final String HEADER_SSL_CLIENT_CERT = "XCLIENTCERTIFICATE";
     private final Logger log = LoggerFactory.getLogger(IDCardController.class);
-    private final StatisticsHandler statistics;
-
-    public IDCardController(StatisticsHandler statistics) {
-        this.statistics = statistics;
-    }
 
     @GetMapping(path = {"/idcard"})
     public ModelAndView handleRequest(HttpServletRequest request) throws Exception {
         try {
-            /*this.statistics.collect(LocalDateTime.now(), request,
-                StatisticsAuthenticationType.ID_CARD, StatisticsOperation.START_AUTH);*/
             String encodedCertificate = request.getHeader(HEADER_SSL_CLIENT_CERT);
             Assert.hasLength(encodedCertificate, "Unable to find certificate from request");
             request.getSession().setAttribute(Constants.CERTIFICATE_SESSION_ATTRIBUTE, X509Utils.toX509Certificate(encodedCertificate));
             return new ModelAndView(new MappingJackson2JsonView(), Collections.singletonMap("ok", true));
         } catch (Exception e) {
-            /*this.statistics.collect(LocalDateTime.now(), request, StatisticsAuthenticationType.ID_CARD,
-                StatisticsOperation.ERROR, e.getMessage());*/
             this.log(e);
             return new ModelAndView(new MappingJackson2JsonView(), Collections.singletonMap("ok", false));
         }
