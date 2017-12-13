@@ -3,23 +3,21 @@ package ee.ria.sso.authentication.credential;
 import org.apereo.cas.authentication.Credential;
 import org.springframework.webflow.core.collection.AttributeMap;
 
+import ee.ria.sso.authentication.AuthenticationType;
+
 /**
  * Created by Janar Rahumeel (CGI Estonia)
  */
 
 public abstract class AbstractCredential implements Credential {
 
-    public enum Type {
-        Default, IDCard, MobileID
-    }
-
     protected AttributeMap attributes;
-    protected final Type type;
+    protected final AuthenticationType type;
     protected final String principalCode;
     protected final String firstName;
     protected final String lastName;
 
-    public AbstractCredential(Type type, String principalCode, String firstName, String lastName) {
+    public AbstractCredential(AuthenticationType type, String principalCode, String firstName, String lastName) {
         this.type = type;
         this.principalCode = principalCode;
         this.firstName = firstName;
@@ -60,7 +58,7 @@ public abstract class AbstractCredential implements Credential {
         return attributes;
     }
 
-    public Type getType() {
+    public AuthenticationType getType() {
         return type;
     }
 

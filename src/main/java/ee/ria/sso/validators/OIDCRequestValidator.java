@@ -26,7 +26,7 @@ public class OIDCRequestValidator {
     public static void checkGrantType(HttpServletRequest request) {
         Optional<String> grantType = Optional.ofNullable(request.getParameter("grant_type"));
         if (grantType.isPresent()) {
-            if (!OAuth20GrantTypes.AUTHORIZATION_CODE.getType().equals(grantType)) {
+            if (!OAuth20GrantTypes.AUTHORIZATION_CODE.getType().equals(grantType.get())) {
                 throw JSONFlowExecutionException.ofBadRequest(Collections.singletonMap("error", "unsupported_grant_type"),
                     new RuntimeException("Unsupported grant type"));
             }

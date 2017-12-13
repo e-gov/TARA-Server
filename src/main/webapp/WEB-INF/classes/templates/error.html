@@ -35,9 +35,9 @@
         <div class="alert alert--error alert--js">
             <p>
                 <strong th:text="#{label.error.title}"></strong>
-                <p th:text="#{label.error.text}" th:remove="tag"></p>
+                <span th:text="#{label.error.text}" th:remove="tag"></span>
             </p>
-            <p><a th:href="${SVC_BACK}" th:text="#{label.back}"/></p>
+            <p><a th:href="${session.pac4jRequestedUrl}" th:text="#{label.back}"/></p>
         </div>
 
     </div>
