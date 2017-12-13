@@ -7,10 +7,9 @@ import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.webflow.core.collection.AttributeMap;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
-
-import com.codeborne.security.AuthenticationException;
 
 import ee.ria.sso.authentication.TaraAuthenticationException;
 
@@ -32,15 +31,18 @@ public class AuthenticationServiceAspect {
         try {
             event = (Event) point.proceed();
         } catch (Exception e) {
-            if (this.log.isDebugEnabled()) {
-                this.log.error("Authentication error have been occurred", e);
-            } else {
-                this.log.error("Authentication error have been occurred (enable debug level for stacktrace): {}", e.getMessage());
-            }
-            if (e instanceof TaraAuthenticationException) {
-                throw new TaraAuthenticationException("Authentication error", new AuthenticationException(((TaraAuthenticationException) e).getCode()));
-            }
+            this.logException(e);
             throw new TaraAuthenticationException("Authentication error");
+        }
+        if ("error".equals(event.getId())) {
+            AttributeMap<Object> attributes = event.getAttributes();
+            try {
+                if (attributes.contains("exception")) {
+                    this.logException(attributes.get("exception", Exception.class));
+                }
+            } catch (IllegalArgumentException e) {
+                this.log.warn(e.getMessage());
+            }
         }
         this.log.info("Event of <{}> has been triggered", event.getId());
         return event;
@@ -55,6 +57,17 @@ public class AuthenticationServiceAspect {
             if (arguments[0] != null) {
                 RequestContext context = (RequestContext) arguments[0];
                 this.log.info("Request: {}", context.getExternalContext().getRequestParameterMap());
+            }
+        }
+    }
+
+    private void logException(Exception exception) {
+        if (exception != null) {
+            if (this.log.isDebugEnabled()) {
+                this.log.error("Authentication error have been occurred", exception);
+            } else {
+                this.log.error("Authentication error have been occurred (enable debug level for stacktrace): {}",
+                    exception.getMessage());
             }
         }
     }

@@ -1,6 +1,5 @@
 package ee.ria.sso.statistics;
 
-
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -17,6 +16,7 @@ import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.webflow.execution.RequestContext;
 
+import ee.ria.sso.authentication.AuthenticationType;
 
 /**
  * Created by serkp on 08.12.2017.
@@ -28,25 +28,25 @@ public class StatisticsHandler {
     private final Logger log = LoggerFactory.getLogger(StatisticsHandler.class);
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
 
-    public void collect(LocalDateTime time, RequestContext context, StatisticsAuthenticationType authenticationType,
+    public void collect(LocalDateTime time, RequestContext context, AuthenticationType authenticationType,
                         StatisticsOperation operationCode) {
         this.collect(time, (HttpServletRequest) context.getExternalContext().getNativeRequest(), authenticationType,
             operationCode);
     }
 
-    public void collect(LocalDateTime time, HttpServletRequest request, StatisticsAuthenticationType authenticationType,
+    public void collect(LocalDateTime time, HttpServletRequest request, AuthenticationType authenticationType,
                         StatisticsOperation operationCode) {
         Assert.isTrue(!Arrays.asList(StatisticsOperation.ERROR).contains(operationCode), "Illegal operation code");
         this.collect(time, request, authenticationType, operationCode, "");
     }
 
-    public void collect(LocalDateTime time, RequestContext context, StatisticsAuthenticationType authenticationType,
+    public void collect(LocalDateTime time, RequestContext context, AuthenticationType authenticationType,
                         StatisticsOperation operationCode, String causeOfError) {
         this.collect(time, (HttpServletRequest) context.getExternalContext().getNativeRequest(), authenticationType,
             operationCode, causeOfError);
     }
 
-    public void collect(LocalDateTime time, HttpServletRequest request, StatisticsAuthenticationType authenticationType,
+    public void collect(LocalDateTime time, HttpServletRequest request, AuthenticationType authenticationType,
                         StatisticsOperation operationCode, String causeOfError) {
         Optional<String> clientId = this.getClientId(request);
         if (clientId.isPresent()) {
