@@ -39,6 +39,7 @@ import ee.ria.sso.service.AuthenticationService;
 import ee.ria.sso.statistics.StatisticsHandler;
 import ee.ria.sso.statistics.StatisticsOperation;
 import ee.ria.sso.utils.X509Utils;
+import ee.ria.sso.validators.OCSPValidationException;
 import ee.ria.sso.validators.OCSPValidator;
 
 
@@ -107,7 +108,7 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
                     new IDModel(params.get("SERIALNUMBER"), params.get("GIVENNAME"), params.get("SURNAME"))));
             this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.IDCard, StatisticsOperation.SUCCESSFUL_AUTH);
             return new Event(this, "success");
-        } catch (Exception e) {
+        } catch (OCSPValidationException e) {
             return this.sendErrorEvent(context, AuthenticationType.IDCard, e);
         } finally {
             map.remove(Constants.CERTIFICATE_SESSION_ATTRIBUTE);
@@ -195,6 +196,10 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
             String messageKey = String.format("message.mid.%s", ((AuthenticationException) exception).getCode().name()
                 .toLowerCase().replace("_", ""));
             context.getFlowScope().put(Constants.ERROR_MESSAGE, this.getMessage(messageKey, "message.mid.serviceerror"));
+        } else if (exception instanceof OCSPValidationException) {
+            String messageKey = String.format("message.idc.%s", ((OCSPValidationException) exception).getStatus().name()
+                .toLowerCase());
+            context.getFlowScope().put(Constants.ERROR_MESSAGE, this.getMessage(messageKey, "message.idc.error"));
         } else {
             context.getFlowScope().put(Constants.ERROR_MESSAGE, this.getMessage("message.general.error"));
         }
@@ -205,15 +210,11 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
         if (!this.enabled) {
             return;
         }
-        X509Certificate issuerCert = findIssuerCertificate(x509Certificate);
+        X509Certificate issuerCert = this.findIssuerCertificate(x509Certificate);
         if (issuerCert != null) {
-            boolean result = this.ocspValidator.isCertiticateValid(x509Certificate, issuerCert, this.ocspUrl);
-            if (!result) {
-                log.error("Could not verify client certificate validity");
-                throw new RuntimeException("Could not verify client certificate validity");
-            }
+            this.ocspValidator.validate(x509Certificate, issuerCert, this.ocspUrl);
         } else {
-            log.error("Issuer cert not found");
+            this.log.error("Issuer cert not found");
             throw new RuntimeException("Issuer cert not found from setup");
         }
     }
