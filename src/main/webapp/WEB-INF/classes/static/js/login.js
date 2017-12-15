@@ -12,3 +12,6 @@ $("input[id*='mobileNumber']").keyup(function (event) {
     }
     return true;
 });
+
+$('#accordion').on('hidden.bs.collapse', APP.toggleChevron);
+$('#accordion').on('shown.bs.collapse', APP.toggleChevron);

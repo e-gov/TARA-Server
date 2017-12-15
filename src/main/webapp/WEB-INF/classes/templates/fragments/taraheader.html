@@ -1,0 +1,28 @@
+<header>
+    <div class="header-bar">
+        <div class="container">
+            <!-- <button type="button" name="button">Ligipääsetavus</button> -->
+            <div class="pull-right">
+                <a th:style="__${#locale}__=='ru'?'display:none':''" th:href="${@taraProperties.getLocaleUrl('ru')}"
+                   th:text="#{label.ru.name}"></a>
+                <a th:style="__${#locale}__=='en'?'display:none':''" th:href="${@taraProperties.getLocaleUrl('en')}"
+                   th:text="#{label.en.name}"></a>
+                <a th:style="__${#locale}__=='et'?'display:none':''" th:href="${@taraProperties.getLocaleUrl('et')}"
+                   th:text="#{label.et.name}"></a>
+            </div>
+        </div>
+    </div>
+    <div class="logo-bar">
+        <div class="container">
+            <div class="row white">
+                <div class="col-md-3 col-sm-3">
+                    <div class="tara-logo img-responsive">
+                    </div>
+                </div>
+                <div class="col-md-9 col-sm-9 text-right">
+                    <p>Turvaliseks autentimiseks asutuste e-teenustes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>

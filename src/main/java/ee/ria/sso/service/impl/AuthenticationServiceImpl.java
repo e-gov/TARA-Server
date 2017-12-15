@@ -17,7 +17,6 @@ import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.webflow.core.collection.LocalAttributeMap;
@@ -34,6 +33,7 @@ import ee.ria.sso.MobileIDAuthenticatorWrapper;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.credential.IDCardCredential;
 import ee.ria.sso.authentication.credential.MobileIDCredential;
+import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.model.IDModel;
 import ee.ria.sso.service.AuthenticationService;
 import ee.ria.sso.statistics.StatisticsHandler;
@@ -83,10 +83,9 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
     @Value("${ocsp.enabled:false}")
     private boolean enabled;
 
-    public AuthenticationServiceImpl(MobileIDAuthenticatorWrapper mobileIDAuthenticator,
-                                     OCSPValidator ocspValidator,
-                                     MessageSource messageSource,
-                                     StatisticsHandler statistics) {
+    public AuthenticationServiceImpl(TaraResourceBundleMessageSource messageSource,
+                                     MobileIDAuthenticatorWrapper mobileIDAuthenticator,
+                                     OCSPValidator ocspValidator, StatisticsHandler statistics) {
         super(messageSource);
         this.mobileIDAuthenticator = mobileIDAuthenticator;
         this.ocspValidator = ocspValidator;
@@ -195,13 +194,16 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
         if (exception instanceof AuthenticationException) {
             String messageKey = String.format("message.mid.%s", ((AuthenticationException) exception).getCode().name()
                 .toLowerCase().replace("_", ""));
-            context.getFlowScope().put(Constants.ERROR_MESSAGE, this.getMessage(messageKey, "message.mid.serviceerror"));
+            context.getFlowScope().put(Constants.ERROR_MESSAGE, this.getMessage(messageKey, "message.mid.error"));
+            context.getFlowScope().put(Constants.ERROR_CHANNEL, AuthenticationType.MobileID.name());
         } else if (exception instanceof OCSPValidationException) {
             String messageKey = String.format("message.idc.%s", ((OCSPValidationException) exception).getStatus().name()
                 .toLowerCase());
             context.getFlowScope().put(Constants.ERROR_MESSAGE, this.getMessage(messageKey, "message.idc.error"));
+            context.getFlowScope().put(Constants.ERROR_CHANNEL, AuthenticationType.IDCard.name());
         } else {
             context.getFlowScope().put(Constants.ERROR_MESSAGE, this.getMessage("message.general.error"));
+            context.getFlowScope().put(Constants.ERROR_CHANNEL, AuthenticationType.Default.name());
         }
         return new Event(this, "error", new LocalAttributeMap<>("exception", exception));
     }
@@ -240,6 +242,7 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
         context.getFlowScope().remove(Constants.MOBILE_SESSION);
         context.getFlowScope().remove(Constants.AUTH_COUNT);
         context.getFlowScope().remove(Constants.ERROR_MESSAGE);
+        context.getFlowScope().remove(Constants.ERROR_CHANNEL);
         context.getFlowScope().remove(MobileIDCredential.class.getSimpleName());
         context.getFlowScope().remove(IDCardCredential.class.getSimpleName());
     }
