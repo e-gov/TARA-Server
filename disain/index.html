@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TARA autentimisteenus</title>
+
+  <!-- Main CSS file -->
+  <link rel="stylesheet" href="css/bootstrap.min.css" />
+  <link rel="stylesheet" href="css/font-awesome.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,900" rel="stylesheet">
+
+
+  <!-- Favicon -->
+  <link rel="shortcut icon" href="images/icon/favicon.png">
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="images/icon/apple-touch-icon-144-precomposed.png">
+  <link rel="apple-touch-icon-precomposed" sizes="114x114" href="images/icon/apple-touch-icon-114-precomposed.png">
+  <link rel="apple-touch-icon-precomposed" sizes="72x72" href="images/icon/apple-touch-icon-72-precomposed.png">
+  <link rel="apple-touch-icon-precomposed" href="images/icon/apple-touch-icon-57-precomposed.png">
+
+  <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+  <!--[if lt IE 9]>
+	  <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+	  <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+	<![endif]-->
+
+</head>
+<header>
+  <div class="header-bar">
+    <div class="container">
+      <!-- <button type="button" name="button">Ligipääsetavus</button> -->
+      <div class="pull-right">
+        <a href="#">РУССКИЙ</a>
+        <a href="#">ENGLISH</a>
+      </div>
+    </div>
+  </div>
+  <div class="logo-bar">
+    <div class="container">
+      <div class="row white">
+        <div class="col-md-3 col-sm-3">
+          <div class="tara-logo img-responsive">
+          </div>
+        </div>
+        <div class="col-md-9 col-sm-9 text-right">
+          <p>Turvaliseks autentimiseks asutuste e-teenustes</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+
+
+<body>
+
+  <div class="container">
+    <h3>Vali tuvastamismeetod</h3>
+
+    <div id="accordion" role="tablist" aria-multiselectable="true">
+      <div class="panel">
+        <div class="method-block white row hidden-xs accordion-toggle collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+          <div class="col-md-3 col-sm-3">
+            <div class="id-card"></div>
+          </div>
+          <div class="col-md-8 col-sm-8">
+            <h3>ID-Kaart</h3>
+            <p>Logimiseks vajad kaardilugejat ja kehtivat ID-kaarti</p>
+          </div>
+          <div class="col-md-1 col-sm-1">
+            <i class="fa pull-right method-chevron fa-chevron-down"></i>
+          </div>
+        </div>
+        <div id="collapseOne" class="collapse" role="tabpanel" aria-labelledby="methodIDCard" aria-expanded="false">
+          <div class="block-hr hidden-xs"></div>
+          <div class="white hidden-xs method-block-collapsible">
+            <div class="row">
+              <div class="col-md-6 col-sm-6 col-xs-6">
+                <p>Sisesta kaart lugejasse ja vajuta "Sisene"</p>
+                <button class="primary" type="button" name="button">Sisene</button>
+              </div>
+              <div class="col-md-6 col-sm-6 col-xs-6">
+                <a href="http://id.ee/index.php?id=35803" class="pull-right help-link">Abi id.ee-st</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="method-block white row accordion-toggle" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseMob" aria-expanded="true" aria-controls="collapseMob">
+          <div class="col-md-3 col-sm-3 col-xs-3">
+            <div class="mob-id"></div>
+          </div>
+          <div class="col-md-8 col-sm-8 col-xs-9">
+            <h3>Mobiil-ID</h3>
+            <p>Logimiseks vajad kehtivat mobiil-ID lepingut.</p>
+          </div>
+          <div class="col-md-1 col-sm-1 hidden-xs">
+            <i class="fa pull-right method-chevron fa-chevron-down"></i>
+          </div>
+        </div>
+
+        <div id="collapseMob" class="collapse" role="tabpanel" aria-labelledby="methodMobID" aria-expanded="true">
+          <div class="block-hr"></div>
+          <div class="white method-block-collapsible">
+            <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore </p>
+            <div class="row">
+              <form>
+                <div class="label-input col-md-6 col-sm-6">
+                  <label for="exampleInputName2">Isikukood</label>
+                  <input type="text" class="" id="exampleInputName2" placeholder="">
+                </div>
+                <div class="label-input input-group col-md-6 col-sm-6">
+                  <label for="exampleInputEmail2">Telefoninumber</label>
+                  <span class="input-group-addon" id="basic-addon1">+372</span>
+                  <input type="text" placeholder="" aria-describedby="basic-addon1">
+                </div>
+              </form>
+            </div>
+            <div class="row">
+              <div class="col-md-6 col-sm-6 col-xs-50">
+                <button class="primary" type="button" name="button">Sisene</button>
+              </div>
+              <div class="col-md-6 col-sm-6 col-xs-50">
+                <a href="http://id.ee/index.php?id=35803&amp;group_id=1&amp;item=203&amp;crumbs=.203" class="pull-right help-link">Abi id.ee-st</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+
+    </div>
+    <a href="#" class="text-black row icon-link">
+    <i class="fa fa-chevron-left fa-fw"></i>Tagasi teenusepakkuja juurde
+  </a>
+
+
+    <script type="text/javascript" src="/js/jquery.min.js"></script>
+    <!-- jQuery -->
+    <script type="text/javascript" src="/js/bootstrap.min.js"></script>
+    <!-- Bootstrap -->
+    <script type="text/javascript" src="/js/script.js"></script>
+    <footer class="footer">
+      <div class="container">
+        <div class="row">
+          <hr>
+          <div class="col-md-4 col-md-offset-2 col-md-push-6 col-sm-4 col-sm-offset-2 col-sm-push-6">
+            <ul class="footer-links">
+              <li>
+                <a href="#">Raporteeri viga</a>
+              </li>
+              <li>
+                <a href="#">TARA-st lähemalt</a>
+              </li>
+            </ul>
+          </div>
+          <div class="col-md-6 col-md-pull-6 col-sm-6 col-sm-pull-6">
+            <div class="eu-logo"></div>
+          </div>
+        </div>
+      </div>
+    </footer>
+    
+
+  </div>
+  <!--container -->
+</body>
+
+</html>
