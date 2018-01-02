@@ -34,8 +34,8 @@ p {
 a {
   color: #006833;
   text-decoration: underline; }
-  a:focus, a:hover {
-    color: #004f26; }
+a:focus, a:hover {
+  color: #004f26; }
 
 ul {
   list-style: none; }
@@ -47,6 +47,8 @@ button {
   background: none; }
 
 .text-black {
+  color: #000; }
+.text-black:hover {
   color: #000; }
 
 .text-red {
@@ -65,10 +67,10 @@ button.primary {
   font-weight: 900;
   margin-top: 20px;
   border-bottom: 3px solid #394d79; }
-  @media all and (max-width: 480px) {
-    button.primary {
-      width: 100%;
-      display: block; } }
+@media all and (max-width: 480px) {
+  button.primary {
+    width: 100%;
+    display: block; } }
 
 label {
   font-size: 14px;
@@ -96,8 +98,8 @@ input {
   float: none;
   padding-right: 15px;
   padding-left: 15px; }
-  .label-input.input-group[class*=col-] label {
-    padding-left: 15px; }
+.label-input.input-group[class*=col-] label {
+  padding-left: 15px; }
 
 @media screen and (max-width: 766px) {
   .label-input {
@@ -106,31 +108,31 @@ input {
 header .header-bar {
   background-color: #4D4D4D;
   height: 33px; }
-  header .header-bar button {
-    height: 33px;
-    background-color: #E6E6E6;
-    padding: 0 11px; }
-    header .header-bar button:hover {
-      background-color: #d9d9d9; }
-  header .header-bar a {
-    color: #FFF;
-    line-height: 33px;
-    font-size: 10px;
-    text-decoration: none; }
-    header .header-bar a:first-child {
-      padding-right: 18px; }
+header .header-bar button {
+  height: 33px;
+  background-color: #E6E6E6;
+  padding: 0 11px; }
+header .header-bar button:hover {
+  background-color: #d9d9d9; }
+header .header-bar a {
+  color: #FFF;
+  line-height: 33px;
+  font-size: 10px;
+  text-decoration: none; }
+header .header-bar a:first-child {
+  padding-right: 18px; }
 
 header .logo-bar {
   padding: 12px 0;
   background-color: #FFF; }
+header .logo-bar p {
+  margin: 0;
+  line-height: 48px; }
+@media screen and (max-width: 767px) {
   header .logo-bar p {
-    margin: 0;
-    line-height: 48px; }
-    @media screen and (max-width: 767px) {
-      header .logo-bar p {
-        margin-top: 1em;
-        text-align: left;
-        line-height: 24px; } }
+    margin-top: 1em;
+    text-align: left;
+    line-height: 24px; } }
 
 footer.footer {
   position: absolute;
@@ -139,12 +141,12 @@ footer.footer {
   left: 0;
   padding: 1rem;
   text-align: center; }
-  footer.footer hr {
-    border-top: 1px solid #999999;
-    margin-bottom: 5px; }
-  footer.footer .row {
-    margin-left: 0;
-    margin-right: 0; }
+footer.footer hr {
+  border-top: 1px solid #999999;
+  margin-bottom: 5px; }
+footer.footer .row {
+  margin-left: 0;
+  margin-right: 0; }
 
 .tara-logo {
   background-image: url("/images/tara.svg");
@@ -155,36 +157,36 @@ footer.footer {
   margin-left: 0;
   margin-right: 0;
   margin-top: 20px;
-  padding: 0 15px 15px;
+  padding: 0 10px 10px;
   box-shadow: 1px 1px 1px 0 rgba(0, 0, 0, 0.35); }
-  @media screen and (max-width: 766px) {
-    .method-block {
-      padding: 0 10px 10px; } }
-  .method-block .id-card {
-    background-image: url("/images/idkaart.svg");
-    background-repeat: no-repeat;
-    height: 67px;
-    margin-top: 2em; }
+@media screen and (max-width: 766px) {
+  .method-block {
+    padding: 0 10px 10px; } }
+.method-block .id-card {
+  background-image: url("/images/idkaart.svg");
+  background-repeat: no-repeat;
+  height: 67px;
+  margin-top: 15px; }
+.method-block .mob-id {
+  background-image: url("/images/mobiilid.svg");
+  background-repeat: no-repeat;
+  background-size: contain;
+  height: 67px;
+  margin-top: 15px;
+  margin-left: 2em; }
+@media screen and (max-width: 766px) {
   .method-block .mob-id {
-    background-image: url("/images/mobiilid.svg");
-    background-repeat: no-repeat;
-    background-size: contain;
-    height: 67px;
-    margin-top: 2em;
-    margin-left: 2em; }
-    @media screen and (max-width: 766px) {
-      .method-block .mob-id {
-        margin-left: 0; } }
+    margin-left: 0; } }
+.method-block .method-chevron {
+  margin-top: 3em; }
+@media screen and (max-width: 766px) {
   .method-block .method-chevron {
-    margin-top: 3.5em; }
-    @media screen and (max-width: 766px) {
-      .method-block .method-chevron {
-        margin-top: 20px; } }
-    @media screen and (max-width: 480px) {
-      .method-block .method-chevron {
-        float: right;
-        margin-top: 0;
-        font-size: 14px; } }
+    margin-top: 20px; } }
+@media screen and (max-width: 480px) {
+  .method-block .method-chevron {
+    float: right;
+    margin-top: 0;
+    font-size: 14px; } }
 
 .collapsing {
   box-shadow: 1px 1px 1px 0 rgba(0, 0, 0, 0.35); }
@@ -195,14 +197,14 @@ footer.footer {
   position: relative;
   z-index: 1;
   background: #FFF; }
-  .block-hr:before {
-    content: "";
-    position: absolute;
-    bottom: 0;
-    left: 2.5%;
-    height: 1px;
-    width: 94%;
-    border-top: 1px solid #D5D5D5; }
+.block-hr:before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 2.5%;
+  height: 1px;
+  width: 94%;
+  border-top: 1px solid #D5D5D5; }
 
 .method-block-collapsible {
   padding: 15px;
@@ -231,11 +233,11 @@ footer.footer {
 
 .help-link {
   padding-top: 2.3em; }
-  @media screen and (max-width: 480px) {
-    .help-link {
-      display: block;
-      text-align: center;
-      width: 100%; } }
+@media screen and (max-width: 480px) {
+  .help-link {
+    display: block;
+    text-align: center;
+    width: 100%; } }
 
 .icon-link {
   text-decoration: none; }
@@ -254,17 +256,18 @@ ul.footer-links {
   padding-left: 0;
   margin-right: -15px;
   margin-left: -15px; }
-  ul.footer-links li:first-child {
-    padding-bottom: 4px; }
-  @media screen and (max-width: 766px) {
-    ul.footer-links {
-      list-style: none;
-      text-align: left; } }
+ul.footer-links li:first-child {
+  padding-bottom: 4px; }
+@media screen and (max-width: 766px) {
+  ul.footer-links {
+    list-style: none;
+    text-align: left; } }
 
 .error-box {
   border: 2px solid #FF0000;
   padding: 15px 20px;
-  margin: 0 15px 20px 15px; }
+  margin: 0 15px 20px 15px;
+  background-color: #FFF; }
 
 .panel {
   margin-bottom: 0;
@@ -273,5 +276,15 @@ ul.footer-links {
   border-radius: 0;
   -webkit-box-shadow: none;
   box-shadow: none; }
+
+.info-block {
+  background: #FFF;
+  padding: 2em; }
+.info-block p {
+  display: inline-block;
+  max-width: 350px; }
+
+.icon-big {
+  width: 2em; }
 
 /*# sourceMappingURL=style.css.map */

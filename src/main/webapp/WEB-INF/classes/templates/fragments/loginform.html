@@ -16,17 +16,9 @@
                     <i class="fa pull-right method-chevron fa-chevron-down"></i>
                 </div>
             </div>
-            <div id="collapseOne" th:class="${ERROR_CHANNEL == 'IDCard'} ? 'collapse in' : 'collapse'" role="tabpanel"
-                 aria-labelledby="methodIDCard" aria-expanded="false">
+            <div id="collapseOne" class="collapse" role="tabpanel" aria-labelledby="methodIDCard" aria-expanded="false">
                 <div class="block-hr hidden-xs"></div>
                 <div class="white hidden-xs method-block-collapsible">
-                    <div th:if="${ERROR_CHANNEL == 'IDCard'}" id="idCardErrorRow" class="row">
-                        <div class="error-box">
-                            <h4 class="text-red"><i class="fa fa-times-circle-o fa-fw"></i>
-                                <span th:text="#{message.auth.error}" th:remove="tag"></span></h4>
-                            <p th:text="${TARA_ERROR_MESSAGE}"></p>
-                        </div>
-                    </div>
                     <div class="row">
                         <div class="col-md-6 col-sm-6 col-xs-6">
                             <p th:text="#{label.id.instruction}"></p>
@@ -61,17 +53,9 @@
                     <i class="fa pull-right method-chevron fa-chevron-down"></i>
                 </div>
             </div>
-            <div id="collapseMob" th:class="${ERROR_CHANNEL == 'MobileID'} ? 'collapse in' : 'collapse'" role="tabpanel"
-                 aria-labelledby="methodMobID" aria-expanded="false">
+            <div id="collapseMob" class="collapse" role="tabpanel" aria-labelledby="methodMobID" aria-expanded="false">
                 <div class="block-hr"></div>
                 <div class="white method-block-collapsible">
-                    <div th:if="${ERROR_CHANNEL == 'MobileID'}" id="mobileIdErrorRow" class="row">
-                        <div class="error-box">
-                            <h4 class="text-red"><i class="fa fa-times-circle-o fa-fw"></i>
-                                <span th:text="#{message.auth.error}" th:remove="tag"></span></h4>
-                            <p th:text="${TARA_ERROR_MESSAGE}"></p>
-                        </div>
-                    </div>
                     <p th:text="#{label.mid.instruction}"></p>
                     <div class="row">
                         <form method="post" id="mobileIdForm" th:object="${credential}">
@@ -114,4 +98,3 @@
     <script type="application/javascript" src="/js/login.js"></script>
     <div th:replace="fragments/tarafooter">Footer</div>
 </div>
-<!--container -->

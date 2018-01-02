@@ -14,12 +14,12 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
-import org.springframework.webflow.core.collection.LocalAttributeMap;
 import org.springframework.webflow.core.collection.SharedAttributeMap;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
@@ -31,6 +31,7 @@ import com.google.common.base.Splitter;
 import ee.ria.sso.Constants;
 import ee.ria.sso.MobileIDAuthenticatorWrapper;
 import ee.ria.sso.authentication.AuthenticationType;
+import ee.ria.sso.authentication.TaraAuthenticationException;
 import ee.ria.sso.authentication.credential.IDCardCredential;
 import ee.ria.sso.authentication.credential.MobileIDCredential;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
@@ -107,8 +108,8 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
                     new IDModel(params.get("SERIALNUMBER"), params.get("GIVENNAME"), params.get("SURNAME"))));
             this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.IDCard, StatisticsOperation.SUCCESSFUL_AUTH);
             return new Event(this, "success");
-        } catch (OCSPValidationException e) {
-            return this.sendErrorEvent(context, AuthenticationType.IDCard, e);
+        } catch (Exception e) {
+            throw this.handleException(context, AuthenticationType.IDCard, e);
         } finally {
             map.remove(Constants.CERTIFICATE_SESSION_ATTRIBUTE);
         }
@@ -118,13 +119,12 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
     public Event startLoginByMobileID(RequestContext context) {
         final String mobileNumber = context.getExternalContext().getRequestParameterMap().get(Constants.MOBILE_NUMBER);
         final String socialSecurityCode = context.getExternalContext().getRequestParameterMap().get(Constants.SSN);
-        Assert.hasLength(mobileNumber, "No mobile number provided");
-        Assert.hasLength(socialSecurityCode, "No social security code provided");
-        context.getFlowScope().remove("ERROR_CODE"); // TODO What is this?
-        if (this.log.isDebugEnabled()) {
-            this.log.debug("Starting mobile ID login: <number:{}>, <ssn:{}>", mobileNumber, socialSecurityCode);
-        }
         try {
+            Assert.hasLength(mobileNumber, "No mobile number provided");
+            Assert.hasLength(socialSecurityCode, "No social security code provided");
+            if (this.log.isDebugEnabled()) {
+                this.log.debug("Starting mobile ID login: <number:{}>, <ssn:{}>", mobileNumber, socialSecurityCode);
+            }
             this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.MobileID, StatisticsOperation.START_AUTH);
             MobileIDSession mobileIDSession = this.mobileIDAuthenticator.startLogin(socialSecurityCode, this.countryCode,
                 mobileNumber);
@@ -136,8 +136,8 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
             context.getFlowScope().put(Constants.MOBILE_SESSION, mobileIDSession);
             context.getFlowScope().put(Constants.AUTH_COUNT, 0);
             return new Event(this, "success");
-        } catch (AuthenticationException e) {
-            return this.sendErrorEvent(context, AuthenticationType.MobileID, e);
+        } catch (Exception e) {
+            throw this.handleException(context, AuthenticationType.MobileID, e);
         }
     }
 
@@ -159,7 +159,7 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
                 return new Event(this, "outstanding");
             }
         } catch (AuthenticationException e) {
-            return this.sendErrorEvent(context, AuthenticationType.MobileID, e);
+            throw this.handleException(context, AuthenticationType.MobileID, e);
         }
     }
 
@@ -188,24 +188,24 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
         }
     }
 
-    private Event sendErrorEvent(RequestContext context, AuthenticationType type, Exception exception) {
+    private RuntimeException handleException(RequestContext context, AuthenticationType type, Exception exception) {
         this.clearScope(context);
         this.statistics.collect(LocalDateTime.now(), context, type, StatisticsOperation.ERROR, exception.getMessage());
+        String errorMessage = null;
         if (exception instanceof AuthenticationException) {
             String messageKey = String.format("message.mid.%s", ((AuthenticationException) exception).getCode().name()
                 .toLowerCase().replace("_", ""));
-            context.getFlowScope().put(Constants.ERROR_MESSAGE, this.getMessage(messageKey, "message.mid.error"));
-            context.getFlowScope().put(Constants.ERROR_CHANNEL, AuthenticationType.MobileID.name());
+            errorMessage = this.getMessage(messageKey, "message.mid.error");
         } else if (exception instanceof OCSPValidationException) {
             String messageKey = String.format("message.idc.%s", ((OCSPValidationException) exception).getStatus().name()
                 .toLowerCase());
-            context.getFlowScope().put(Constants.ERROR_MESSAGE, this.getMessage(messageKey, "message.idc.error"));
-            context.getFlowScope().put(Constants.ERROR_CHANNEL, AuthenticationType.IDCard.name());
-        } else {
-            context.getFlowScope().put(Constants.ERROR_MESSAGE, this.getMessage("message.general.error"));
-            context.getFlowScope().put(Constants.ERROR_CHANNEL, AuthenticationType.Default.name());
+            errorMessage = this.getMessage(messageKey, "message.idc.error");
         }
-        return new Event(this, "error", new LocalAttributeMap<>("exception", exception));
+        if (StringUtils.isBlank(errorMessage)) {
+            errorMessage = this.getMessage("message.general.error");
+        }
+        context.getRequestScope().put(Constants.ERROR_MESSAGE, errorMessage);
+        return new TaraAuthenticationException(errorMessage);
     }
 
     private void checkCert(X509Certificate x509Certificate) {
@@ -237,12 +237,11 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
     }
 
     private void clearScope(RequestContext context) {
+        context.getRequestScope().remove(Constants.ERROR_MESSAGE);
         context.getFlowScope().remove(Constants.MOBILE_CHALLENGE);
         context.getFlowScope().remove(Constants.MOBILE_NUMBER);
         context.getFlowScope().remove(Constants.MOBILE_SESSION);
         context.getFlowScope().remove(Constants.AUTH_COUNT);
-        context.getFlowScope().remove(Constants.ERROR_MESSAGE);
-        context.getFlowScope().remove(Constants.ERROR_CHANNEL);
         context.getFlowScope().remove(MobileIDCredential.class.getSimpleName());
         context.getFlowScope().remove(IDCardCredential.class.getSimpleName());
     }
