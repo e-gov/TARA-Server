@@ -36,11 +36,6 @@ public class DefaultCredential extends AbstractCredential {
     }
 
     @Override
-    public AuthenticationType getType() {
-        throw new NotImplementedException("Not implemented");
-    }
-
-    @Override
     public String getFirstName() {
         throw new NotImplementedException("Not implemented");
     }
