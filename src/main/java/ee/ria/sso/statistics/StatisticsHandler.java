@@ -26,7 +26,7 @@ import ee.ria.sso.authentication.AuthenticationType;
 public class StatisticsHandler {
 
     private final Logger log = LoggerFactory.getLogger(StatisticsHandler.class);
-    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss");
 
     public void collect(LocalDateTime time, RequestContext context, AuthenticationType authenticationType,
                         StatisticsOperation operationCode) {
