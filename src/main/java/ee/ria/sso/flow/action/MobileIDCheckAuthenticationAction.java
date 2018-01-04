@@ -1,7 +1,6 @@
 package ee.ria.sso.flow.action;
 
 import org.springframework.stereotype.Component;
-import org.springframework.webflow.action.AbstractAction;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
 
@@ -12,7 +11,7 @@ import ee.ria.sso.service.AuthenticationService;
  */
 
 @Component
-public class MobileIDCheckAuthenticationAction extends AbstractAction {
+public class MobileIDCheckAuthenticationAction extends AbstractAuthenticationAction {
 
     private final AuthenticationService authenticationService;
 
@@ -25,7 +24,7 @@ public class MobileIDCheckAuthenticationAction extends AbstractAction {
      */
 
     @Override
-    protected Event doExecute(RequestContext requestContext) throws Exception {
+    protected Event doAuthenticationExecute(RequestContext requestContext) {
         return this.authenticationService.checkLoginForMobileID(requestContext);
     }
 

@@ -7,11 +7,12 @@ import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import org.springframework.webflow.core.collection.AttributeMap;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
 
 import ee.ria.sso.authentication.TaraAuthenticationException;
+import ee.ria.sso.config.TaraResourceBundleMessageSource;
+import ee.ria.sso.common.AbstractService;
 
 /**
  * @author Janar Rahumeel (CGI Estonia)
@@ -19,9 +20,13 @@ import ee.ria.sso.authentication.TaraAuthenticationException;
 
 @Aspect
 @Component
-public class AuthenticationServiceAspect {
+public class AuthenticationServiceAspect extends AbstractService {
 
     private final Logger log = LoggerFactory.getLogger(AuthenticationServiceAspect.class);
+
+    public AuthenticationServiceAspect(TaraResourceBundleMessageSource messageSource) {
+        super(messageSource);
+    }
 
     @Around("execution(org.springframework.webflow.execution.Event ee.ria.sso.service.AuthenticationService.*(..))")
     public Event log(ProceedingJoinPoint point) throws Throwable {
@@ -32,16 +37,10 @@ public class AuthenticationServiceAspect {
             event = (Event) point.proceed();
         } catch (Exception e) {
             this.logException(e);
-            throw new TaraAuthenticationException("Authentication error");
-        }
-        if ("error".equals(event.getId())) {
-            AttributeMap<Object> attributes = event.getAttributes();
-            try {
-                if (attributes.contains("exception")) {
-                    this.logException(attributes.get("exception", Exception.class));
-                }
-            } catch (IllegalArgumentException e) {
-                this.log.warn(e.getMessage());
+            if (e instanceof TaraAuthenticationException) {
+                throw e;
+            } else {
+                throw new TaraAuthenticationException(this.getMessage("message.auth.error"), e);
             }
         }
         this.log.info("Event of <{}> has been triggered", event.getId());
