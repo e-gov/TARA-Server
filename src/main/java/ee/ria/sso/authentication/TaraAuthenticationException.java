@@ -6,12 +6,16 @@ package ee.ria.sso.authentication;
 
 public class TaraAuthenticationException extends RuntimeException {
 
-    public TaraAuthenticationException(String message) {
-        super(message);
+    private String localizedErrorMessage;
+
+    public TaraAuthenticationException(String localizedErrorMessage, Exception cause) {
+        super(cause);
+        this.localizedErrorMessage = localizedErrorMessage;
     }
 
-    public TaraAuthenticationException(String message, Exception cause) {
-        super(message, cause);
+    @Override
+    public String getLocalizedMessage() {
+        return this.localizedErrorMessage;
     }
 
 }

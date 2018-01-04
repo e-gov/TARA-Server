@@ -30,8 +30,8 @@
             <div class="error-box">
                 <h4 class="text-red"><i class="fa fa-times-circle-o fa-fw"></i><span th:text="#{label.error.title}"
                                                                                      th:remove="tag"></span></h4>
-                <p th:if="${param.TARA_ERROR_MESSAGE != null}" th:text="${param.TARA_ERROR_MESSAGE}"></p>
-                <p th:unless="${param.TARA_ERROR_MESSAGE != null}" th:text="#{message.auth.error}"></p>
+                <p th:if="${TARA_ERROR_MESSAGE != null}" th:text="${TARA_ERROR_MESSAGE}"></p>
+                <p th:unless="${TARA_ERROR_MESSAGE != null}" th:text="#{message.auth.error}"></p>
             </div>
         </div>
     </div>

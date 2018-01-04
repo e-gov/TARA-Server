@@ -26,7 +26,7 @@ public class TaraWebflowConfigurer extends DefaultWebflowConfigurer {
             this.createFlowVariable(flow, "credential", RememberMeUsernamePasswordCredential.class);
             ViewState state = (ViewState)flow.getState("viewLoginForm");
             BinderConfiguration cfg = this.getViewStateBinderConfiguration(state);
-            cfg.addBinding(new BinderConfiguration.Binding("rememberMe", (String)null, false));
+            cfg.addBinding(new BinderConfiguration.Binding("rememberMe", null, false));
         } else {
             this.createFlowVariable(flow, "credential", DefaultCredential.class);
         }

@@ -34,6 +34,7 @@ import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.TaraAuthenticationException;
 import ee.ria.sso.authentication.credential.IDCardCredential;
 import ee.ria.sso.authentication.credential.MobileIDCredential;
+import ee.ria.sso.common.AbstractService;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.model.IDModel;
 import ee.ria.sso.service.AuthenticationService;
@@ -191,21 +192,20 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
     private RuntimeException handleException(RequestContext context, AuthenticationType type, Exception exception) {
         this.clearScope(context);
         this.statistics.collect(LocalDateTime.now(), context, type, StatisticsOperation.ERROR, exception.getMessage());
-        String errorMessage = null;
+        String localizedErrorMessage = null;
         if (exception instanceof AuthenticationException) {
             String messageKey = String.format("message.mid.%s", ((AuthenticationException) exception).getCode().name()
                 .toLowerCase().replace("_", ""));
-            errorMessage = this.getMessage(messageKey, "message.mid.error");
+            localizedErrorMessage = this.getMessage(messageKey, "message.mid.error");
         } else if (exception instanceof OCSPValidationException) {
             String messageKey = String.format("message.idc.%s", ((OCSPValidationException) exception).getStatus().name()
                 .toLowerCase());
-            errorMessage = this.getMessage(messageKey, "message.idc.error");
+            localizedErrorMessage = this.getMessage(messageKey, "message.idc.error");
         }
-        if (StringUtils.isBlank(errorMessage)) {
-            errorMessage = this.getMessage("message.general.error");
+        if (StringUtils.isBlank(localizedErrorMessage)) {
+            localizedErrorMessage = this.getMessage("message.general.error");
         }
-        context.getRequestScope().put(Constants.ERROR_MESSAGE, errorMessage);
-        return new TaraAuthenticationException(errorMessage);
+        return new TaraAuthenticationException(localizedErrorMessage, exception);
     }
 
     private void checkCert(X509Certificate x509Certificate) {
@@ -228,7 +228,7 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
     }
 
     private X509Certificate readCert(String filename) throws IOException, CertificateException {
-        String fullPath = certDirectory + "/" + filename;
+        String fullPath = this.certDirectory + "/" + filename;
         FileInputStream fis = new FileInputStream(fullPath);
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
         X509Certificate cert = (X509Certificate) cf.generateCertificate(fis);
@@ -237,7 +237,6 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
     }
 
     private void clearScope(RequestContext context) {
-        context.getRequestScope().remove(Constants.ERROR_MESSAGE);
         context.getFlowScope().remove(Constants.MOBILE_CHALLENGE);
         context.getFlowScope().remove(Constants.MOBILE_NUMBER);
         context.getFlowScope().remove(Constants.MOBILE_SESSION);

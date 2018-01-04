@@ -1,41 +1,35 @@
 package ee.ria.sso.flow;
 
-import java.util.Map;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.web.servlet.view.AbstractView;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.webflow.core.collection.LocalAttributeMap;
+import org.springframework.webflow.execution.Action;
+import org.springframework.webflow.execution.ActionExecutionException;
+import org.springframework.webflow.execution.RequestContext;
 
 /**
  * Created by Janar Rahumeel (CGI Estonia)
  */
 
-public abstract class AbstractFlowExecutionException extends RuntimeException {
+public abstract class AbstractFlowExecutionException extends ActionExecutionException {
 
-    private final AbstractView view;
-    private final HttpStatus status;
-    private final Map<String, ?> model;
+    protected final ModelAndView modelAndView;
 
-    public AbstractFlowExecutionException(AbstractView view, Map<String, ?> model, HttpStatus status, Exception e) {
-        super(e);
-        this.view = view;
-        this.model = model;
-        this.status = status;
+    public AbstractFlowExecutionException(String flowId, ModelAndView modelAndView, Exception e) {
+        super(flowId, null, null, new LocalAttributeMap(), e);
+        this.modelAndView = modelAndView;
+    }
+
+    public AbstractFlowExecutionException(RequestContext context, Action action, ModelAndView modelAndView, Exception e) {
+        super(context.getActiveFlow().getId(), context.getCurrentState() != null ? context.getCurrentState().getId() : null, action, context.getAttributes(), e);
+        this.modelAndView = modelAndView;
     }
 
     /*
      * ACCESSORS
      */
 
-    public HttpStatus getStatus() {
-        return status;
-    }
-
-    public Map<String, ?> getModel() {
-        return model;
-    }
-
-    public AbstractView getView() {
-        return view;
+    public ModelAndView getModelAndView() {
+        return this.modelAndView;
     }
 
 }

@@ -19,8 +19,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 import org.springframework.web.servlet.handler.SimpleUrlHandlerMapping;
+import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
 import org.springframework.web.servlet.i18n.SessionLocaleResolver;
 import org.springframework.web.servlet.mvc.Controller;
 import org.springframework.web.servlet.mvc.ParameterizableViewController;
@@ -39,9 +41,17 @@ public class CasWebAppConfiguration extends WebMvcConfigurerAdapter {
     private final Logger log = LoggerFactory.getLogger(CasWebAppConfiguration.class);
 
     @Autowired
+    private LocaleChangeInterceptor localeChangeInterceptor;
+
+    @Autowired
     private CasConfigurationProperties casProperties;
 
     public CasWebAppConfiguration() {
+    }
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(this.localeChangeInterceptor);
     }
 
     @RefreshScope
