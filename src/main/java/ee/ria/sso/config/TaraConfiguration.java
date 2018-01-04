@@ -14,6 +14,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
 import ee.ria.sso.InsecureTrustManager;
 
@@ -25,7 +26,7 @@ import ee.ria.sso.InsecureTrustManager;
 @PropertySource("classpath:dynamic.properties")
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 @ComponentScan(basePackages = {"ee.ria.sso", "org.jasig.cas"})
-public class TaraConfiguration {
+public class TaraConfiguration extends WebMvcConfigurerAdapter {
 
     private final Logger log = LoggerFactory.getLogger(TaraConfiguration.class);
     private final TaraProperties taraProperties;

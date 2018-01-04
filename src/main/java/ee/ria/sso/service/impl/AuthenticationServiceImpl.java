@@ -204,7 +204,7 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
         if (StringUtils.isBlank(errorMessage)) {
             errorMessage = this.getMessage("message.general.error");
         }
-        context.getRequestScope().put(Constants.ERROR_MESSAGE, errorMessage);
+        context.getExternalContext().getSessionMap().put(Constants.ERROR_MESSAGE, errorMessage);
         return new TaraAuthenticationException(errorMessage);
     }
 
@@ -237,7 +237,7 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
     }
 
     private void clearScope(RequestContext context) {
-        context.getRequestScope().remove(Constants.ERROR_MESSAGE);
+        context.getExternalContext().getSessionMap().remove(Constants.ERROR_MESSAGE);
         context.getFlowScope().remove(Constants.MOBILE_CHALLENGE);
         context.getFlowScope().remove(Constants.MOBILE_NUMBER);
         context.getFlowScope().remove(Constants.MOBILE_SESSION);
