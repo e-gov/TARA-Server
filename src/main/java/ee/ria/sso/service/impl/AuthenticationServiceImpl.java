@@ -32,11 +32,10 @@ import ee.ria.sso.Constants;
 import ee.ria.sso.MobileIDAuthenticatorWrapper;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.TaraAuthenticationException;
-import ee.ria.sso.authentication.credential.IDCardCredential;
-import ee.ria.sso.authentication.credential.MobileIDCredential;
+import ee.ria.sso.authentication.TaraCredentialsException;
+import ee.ria.sso.authentication.credential.TaraCredential;
 import ee.ria.sso.common.AbstractService;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
-import ee.ria.sso.model.IDModel;
 import ee.ria.sso.service.AuthenticationService;
 import ee.ria.sso.statistics.StatisticsHandler;
 import ee.ria.sso.statistics.StatisticsOperation;
@@ -105,8 +104,7 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
             Principal subjectDN = certificate.getSubjectDN();
             Map<String, String> params = Splitter.on(", ").withKeyValueSeparator("=").split(subjectDN.getName());
             context.getFlowExecutionContext().getActiveSession().getScope()
-                .put("credential", new IDCardCredential(
-                    new IDModel(params.get("SERIALNUMBER"), params.get("GIVENNAME"), params.get("SURNAME"))));
+                .put("credential", new TaraCredential(params.get("SERIALNUMBER"), params.get("GIVENNAME"), params.get("SURNAME")));
             this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.IDCard, StatisticsOperation.SUCCESSFUL_AUTH);
             return new Event(this, "success");
         } catch (Exception e) {
@@ -118,22 +116,20 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
 
     @Override
     public Event startLoginByMobileID(RequestContext context) {
-        final String mobileNumber = context.getExternalContext().getRequestParameterMap().get(Constants.MOBILE_NUMBER);
-        final String socialSecurityCode = context.getExternalContext().getRequestParameterMap().get(Constants.SSN);
+        final TaraCredential credential = context.getFlowExecutionContext().getActiveSession().getScope().get("credential", TaraCredential.class);
         try {
-            Assert.hasLength(mobileNumber, "No mobile number provided");
-            Assert.hasLength(socialSecurityCode, "No social security code provided");
             if (this.log.isDebugEnabled()) {
-                this.log.debug("Starting mobile ID login: <number:{}>, <ssn:{}>", mobileNumber, socialSecurityCode);
+                this.log.debug("Starting mobile ID login: <number:{}>, <ssn:{}>", credential.getMobileNumber(), credential.getPrincipalCode());
             }
             this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.MobileID, StatisticsOperation.START_AUTH);
-            MobileIDSession mobileIDSession = this.mobileIDAuthenticator.startLogin(socialSecurityCode, this.countryCode,
-                mobileNumber);
+            this.validateCredential(credential);
+            MobileIDSession mobileIDSession = this.mobileIDAuthenticator.startLogin(credential.getPrincipalCode(), this.countryCode,
+                credential.getMobileNumber());
             if (this.log.isDebugEnabled()) {
                 this.log.debug("Login response received ...");
             }
             context.getFlowScope().put(Constants.MOBILE_CHALLENGE, mobileIDSession.challenge);
-            context.getFlowScope().put(Constants.MOBILE_NUMBER, mobileNumber);
+            context.getFlowScope().put(Constants.MOBILE_NUMBER, credential.getMobileNumber());
             context.getFlowScope().put(Constants.MOBILE_SESSION, mobileIDSession);
             context.getFlowScope().put(Constants.AUTH_COUNT, 0);
             return new Event(this, "success");
@@ -151,7 +147,7 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
         try {
             if (this.mobileIDAuthenticator.isLoginComplete(session)) {
                 context.getFlowExecutionContext().getActiveSession().getScope().put("credential",
-                    new MobileIDCredential(session, mobileNumber));
+                    new TaraCredential(session.personalCode, session.firstName, session.lastName, mobileNumber));
                 this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.MobileID,
                     StatisticsOperation.SUCCESSFUL_AUTH);
                 return new Event(this, "success");
@@ -189,11 +185,23 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
         }
     }
 
+    private void validateCredential(TaraCredential credential) {
+        if (!StringUtils.isNumeric(credential.getPrincipalCode())) {
+            throw new TaraCredentialsException("message.mid.invalidcode", credential.getPrincipalCode());
+        }
+        if (StringUtils.isBlank(credential.getMobileNumber()) || !credential.getMobileNumber().matches("^[+]?\\d+$")) {
+            throw new TaraCredentialsException("message.mid.invalidnumber", credential.getMobileNumber());
+        }
+    }
+
     private RuntimeException handleException(RequestContext context, AuthenticationType type, Exception exception) {
         this.clearScope(context);
         this.statistics.collect(LocalDateTime.now(), context, type, StatisticsOperation.ERROR, exception.getMessage());
         String localizedErrorMessage = null;
-        if (exception instanceof AuthenticationException) {
+        if (exception instanceof TaraCredentialsException) {
+            localizedErrorMessage = this.getMessage(((TaraCredentialsException) exception).getKey(), "message.mid.error",
+                ((TaraCredentialsException) exception).getValue());
+        } else if (exception instanceof AuthenticationException) {
             String messageKey = String.format("message.mid.%s", ((AuthenticationException) exception).getCode().name()
                 .toLowerCase().replace("_", ""));
             localizedErrorMessage = this.getMessage(messageKey, "message.mid.error");
@@ -241,8 +249,7 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
         context.getFlowScope().remove(Constants.MOBILE_NUMBER);
         context.getFlowScope().remove(Constants.MOBILE_SESSION);
         context.getFlowScope().remove(Constants.AUTH_COUNT);
-        context.getFlowScope().remove(MobileIDCredential.class.getSimpleName());
-        context.getFlowScope().remove(IDCardCredential.class.getSimpleName());
+        context.getFlowScope().remove(TaraCredential.class.getSimpleName());
     }
 
 }

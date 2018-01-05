@@ -60,14 +60,16 @@
                     <div class="row">
                         <form method="post" id="mobileIdForm" th:object="${credential}">
                             <div class="label-input col-md-6 col-sm-6">
-                                <label for="personalCode"><span th:text="#{label.idcode}"
-                                                                th:remove="tag"></span></label>
+                                <label for="personalCode">
+                                    <span th:text="#{label.idcode}" th:remove="tag"></span>
+                                </label>
                                 <input type="text" id="personalCode" placeholder="" size="25" tabindex="1"
                                        th:field="*{principalCode}" autocomplete="off" required>
                             </div>
                             <div class="label-input input-group col-md-6 col-sm-6">
-                                <label for="mobileNumber"><span th:text="#{label.phonenumber}"
-                                                                th:remove="tag"></span></label>
+                                <label for="mobileNumber">
+                                    <span th:text="#{label.phonenumber}" th:remove="tag"></span>
+                                </label>
                                 <span class="input-group-addon" id="basic-addon1">+372</span>
                                 <input id="mobileNumber" type="text" placeholder="" aria-describedby="basic-addon1"
                                        size="25" tabindex="2" th:field="*{mobileNumber}" autocomplete="off" required>
