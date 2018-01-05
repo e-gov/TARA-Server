@@ -32,8 +32,12 @@ public class AbstractService {
     }
 
     protected String getMessage(String key, String defaultMessageKey) {
+        return this.getMessage(key, defaultMessageKey, new Object[] {});
+    }
+
+    protected String getMessage(String key, String defaultMessageKey, Object... parameters) {
         try {
-            return this.messageSource.getMessage(key, new Object[]{}, LocaleContextHolder.getLocale());
+            return this.messageSource.getMessage(key, parameters, LocaleContextHolder.getLocale());
         } catch (NoSuchMessageException e) {
             this.log.warn("No message key <{}> found, defaulting to <{}> ", key, defaultMessageKey);
             return this.getMessage(defaultMessageKey);

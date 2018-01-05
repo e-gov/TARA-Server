@@ -28,9 +28,8 @@
 	</action-state>
 
 	<view-state id="viewLoginForm" view="casLoginView" model="credential">
-		<transition on="submit" bind="true" validate="true" to="mIDLoginStart" history="invalidate"/>
-		<transition on="idsubmit" bind="true" validate="true" to="IDLoginStart"
-					history="invalidate"/>
+		<transition on="submit" bind="true" validate="false" to="mIDLoginStart" history="invalidate"/>
+		<transition on="idsubmit" bind="true" validate="false" to="IDLoginStart" history="invalidate"/>
 	</view-state>
 
 	<action-state id="IDLoginStart">

@@ -9,23 +9,34 @@ import ee.ria.sso.authentication.AuthenticationType;
  * Created by Janar Rahumeel (CGI Estonia)
  */
 
-public abstract class AbstractCredential implements Credential {
+public class TaraCredential implements Credential {
 
-    protected AttributeMap attributes;
-    protected final AuthenticationType type;
-    protected final String principalCode;
-    protected final String firstName;
-    protected final String lastName;
+    private final AuthenticationType type;
+    private AttributeMap attributes;
+    private String principalCode;
+    private String firstName;
+    private String lastName;
+    private String mobileNumber;
 
-    public AbstractCredential(AuthenticationType type, String principalCode, String firstName, String lastName) {
-        this.type = type;
+    public TaraCredential() {
+        this.type = AuthenticationType.Default;
+    }
+
+    public TaraCredential(String principalCode, String firstName, String lastName) {
+        this.type = AuthenticationType.IDCard;
         this.principalCode = principalCode;
         this.firstName = firstName;
         this.lastName = lastName;
 
     }
 
-    public abstract String getMobileNumber();
+    public TaraCredential(String principalCode, String firstName, String lastName, String mobileNumber) {
+        this.type = AuthenticationType.MobileID;
+        this.principalCode = principalCode;
+        this.firstName = firstName;
+        this.lastName = lastName;
+
+    }
 
     @Override
     public String getId() {
@@ -40,7 +51,7 @@ public abstract class AbstractCredential implements Credential {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        AbstractCredential other = (AbstractCredential) o;
+        TaraCredential other = (TaraCredential) o;
         return this.principalCode != null ? this.principalCode.equals(other.principalCode)
             : other.principalCode == null;
     }
@@ -64,6 +75,18 @@ public abstract class AbstractCredential implements Credential {
 
     public String getPrincipalCode() {
         return principalCode;
+    }
+
+    public void setPrincipalCode(String principalCode) {
+        this.principalCode = principalCode;
+    }
+
+    public String getMobileNumber() {
+        return mobileNumber;
+    }
+
+    public void setMobileNumber(String mobileNumber) {
+        this.mobileNumber = mobileNumber;
     }
 
     public String getFirstName() {

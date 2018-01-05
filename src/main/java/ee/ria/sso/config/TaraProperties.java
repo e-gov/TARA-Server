@@ -1,8 +1,12 @@
 package ee.ria.sso.config;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
 import java.net.URLDecoder;
+import java.util.Locale;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.client.utils.URIBuilder;
 import org.apereo.cas.configuration.CasConfigurationProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.env.Environment;
@@ -41,6 +45,13 @@ public class TaraProperties {
             uri = String.format("https://%s%s", uriFragments[1], uri.substring(uri.replace("://", "").indexOf("/") + 3));
         }
         return URLDecoder.decode(uri, "UTF-8");
+    }
+
+    public String getBackUrl(String pac4jRequestedUrl, Locale locale) throws URISyntaxException {
+        if (StringUtils.isNotBlank(pac4jRequestedUrl)) {
+            return new URIBuilder(pac4jRequestedUrl).setParameter("lang", locale.getLanguage()).build().toString();
+        }
+        return "#";
     }
 
     public Application getApplication() {
