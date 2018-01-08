@@ -173,11 +173,11 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
         try {
             if (this.enabled) {
                 Map<String, String> filenameAndCertCNMap =
-                    Arrays.stream(certificates.split(",")).map(prop -> prop.split(":"))
+                    Arrays.stream(this.certificates.split(",")).map(prop -> prop.split(":"))
                         .collect(
                             Collectors.toMap(e -> e[0], e -> e[1]));
                 for (Map.Entry<String, String> entry : filenameAndCertCNMap.entrySet()) {
-                    this.issuerCertificates.put(entry.getKey(), readCert(entry.getValue()));
+                    this.issuerCertificates.put(entry.getKey(), this.readCert(entry.getValue()));
                 }
             }
         } catch (IOException | CertificateException e) {
