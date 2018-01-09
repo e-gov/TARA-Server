@@ -232,7 +232,7 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
     private X509Certificate findIssuerCertificate(X509Certificate userCertificate) {
         String issuerCN = X509Utils.getSubjectCNFromCertificate(userCertificate);
         log.debug("IssuerCN extracted: {}", issuerCN);
-        return issuerCertificates.get(issuerCN);
+        return this.issuerCertificates.get(issuerCN);
     }
 
     private X509Certificate readCert(String filename) throws IOException, CertificateException {
