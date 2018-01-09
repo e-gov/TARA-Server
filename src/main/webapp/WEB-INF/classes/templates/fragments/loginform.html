@@ -94,7 +94,7 @@
             </div>
         </div>
     </div>
-    <a href="#" class="text-black row icon-link">
+    <a th:href="${@taraProperties.getHomeUrl()}" class="text-black row icon-link">
         <i class="fa fa-chevron-left fa-fw"></i><span th:text="#{label.home}" th:remove="tag"></span>
     </a>
     <script type="application/javascript" src="/js/login.js"></script>
