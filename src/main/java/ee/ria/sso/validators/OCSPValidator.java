@@ -50,10 +50,9 @@ public class OCSPValidator {
             OCSPResp response = this.sendOCSPReq(builder.build(), url);
             BasicOCSPResp basicOCSPResponse = (BasicOCSPResp) response.getResponseObject();
             Optional<SingleResp> singleResponse = Arrays.stream(basicOCSPResponse.getResponses())
-                .filter(singleResp -> singleResp.getCertID()
-                    .equals(certID)).findFirst();
+                .filter(singleResp -> singleResp.getCertID().equals(certID)).findFirst();
             if (!singleResponse.isPresent()) {
-                throw OCSPValidationException.of(new RuntimeException("No OCSP response is present"));
+                throw new RuntimeException("No OCSP response is present");
             }
             org.bouncycastle.cert.ocsp.CertificateStatus status = singleResponse.get().getCertStatus();
             if (status == org.bouncycastle.cert.ocsp.CertificateStatus.GOOD) {
@@ -66,6 +65,8 @@ public class OCSPValidator {
             } else {
                 throw new IllegalStateException(String.format("Unknown OCSP certificate status <%s> received", status));
             }
+        } catch (OCSPValidationException e) {
+            throw e;
         } catch (Exception e) {
             throw OCSPValidationException.of(e);
         }

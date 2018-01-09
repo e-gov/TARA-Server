@@ -15,10 +15,11 @@
     <div class="logo-bar">
         <div class="container">
             <div class="row white">
-                <div class="col-md-3 col-sm-3">
-                    <div class="tara-logo img-responsive">
+                <a th:href="${@taraProperties.getBackUrl(session.pac4jRequestedUrl, #locale)}">
+                    <div class="col-md-3 col-sm-3">
+                        <div class="tara-logo img-responsive"></div>
                     </div>
-                </div>
+                </a>
                 <div class="col-md-9 col-sm-9 text-right">
                     <p th:text="#{label.tara}"></p>
                 </div>
