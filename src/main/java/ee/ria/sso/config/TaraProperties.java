@@ -4,14 +4,22 @@ import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.util.Locale;
+import java.util.Optional;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
 import org.apereo.cas.configuration.CasConfigurationProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.webflow.core.collection.ParameterMap;
+import org.springframework.webflow.execution.RequestContextHolder;
+
+import ee.ria.sso.model.EmptyOidcRegisteredService;
+import ee.ria.sso.service.ManagerService;
 
 /**
  * @author Janar Rahumeel (CGI Estonia)
@@ -23,11 +31,13 @@ public class TaraProperties {
 
     private final CasConfigurationProperties casConfigurationProperties;
     private final Environment environment;
+    private final ManagerService managerService;
     private Application application = new Application();
 
-    public TaraProperties(CasConfigurationProperties casConfigurationProperties, Environment environment) {
+    public TaraProperties(CasConfigurationProperties casConfigurationProperties, Environment environment, ManagerService managerService) {
         this.casConfigurationProperties = casConfigurationProperties;
         this.environment = environment;
+        this.managerService = managerService;
     }
 
     public String getApplicationUrl() {
@@ -50,6 +60,19 @@ public class TaraProperties {
     public String getBackUrl(String pac4jRequestedUrl, Locale locale) throws URISyntaxException {
         if (StringUtils.isNotBlank(pac4jRequestedUrl)) {
             return new URIBuilder(pac4jRequestedUrl).setParameter("lang", locale.getLanguage()).build().toString();
+        }
+        return "#";
+    }
+
+    public String getHomeUrl() throws Exception {
+        ParameterMap map = RequestContextHolder.getRequestContext().getRequestParameters();
+        if (map.contains("service")) {
+            Optional<NameValuePair> uri = new URIBuilder(URLDecoder.decode(map.getRequired("service"), "UTF-8")).
+                getQueryParams().stream().filter(p -> p.getName().equals("redirect_uri")).findFirst();
+            if (uri.isPresent()) {
+                return this.managerService.getServiceByID(uri.get().getValue()).orElse(new EmptyOidcRegisteredService()).
+                    getInformationUrl();
+            }
         }
         return "#";
     }
@@ -78,6 +101,10 @@ public class TaraProperties {
             this.mode = mode;
         }
 
+    }
+
+    public static void main(String[] atgs) throws UnsupportedEncodingException, URISyntaxException {
+        System.out.println(Pattern.matches("^.*[\\?]{1}.*(?!.*[\\?]{1}.*)+$", "https://localhost:8451/oauth/response?jah=1"));
     }
 
 }

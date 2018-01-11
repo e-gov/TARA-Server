@@ -3,6 +3,7 @@
 	"clientId": "openIdDemo",
 	"clientSecret": "secret",
 	"serviceId": "https://localhost:8451/oauth/response",
+	"informationUrl": "https://localhost:8451/ui",
 	"signIdToken": true,
 	"name": "openIdDemo",
 	"id": 322,

@@ -76,14 +76,12 @@ public class OAuth20AuthorizeEndpointController extends BaseOAuth20Controller {
 		if(this.verifyAuthorizeRequest(request) && isRequestAuthenticated(manager, context)) {
 			String clientId = context.getRequestParameter("client_id");
 			OAuthRegisteredService registeredService = this.getRegisteredServiceByClientId(clientId);
-
 			try {
 				RegisteredServiceAccessStrategyUtils.ensureServiceAccessIsAllowed(clientId, registeredService);
 			} catch (Exception var8) {
 				LOGGER.error(var8.getMessage(), var8);
 				return OAuth20Utils.produceUnauthorizedErrorView();
 			}
-
 			ModelAndView mv = this.consentApprovalViewResolver.resolve(context, registeredService);
 			return !mv.isEmpty() && mv.hasView()?mv:this.redirectToCallbackRedirectUrl(manager, registeredService, context, clientId);
 		} else {
