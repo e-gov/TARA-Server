@@ -1,6 +1,7 @@
 package ee.ria.sso.config;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.util.Locale;
@@ -14,7 +15,10 @@ import org.apereo.cas.configuration.CasConfigurationProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.webflow.core.collection.ParameterMap;
 import org.springframework.webflow.execution.RequestContextHolder;
 
@@ -48,13 +52,26 @@ public class TaraProperties {
         return this.environment.getProperty("tara.version", "-");
     }
 
-    public String getLocaleUrl(String locale) throws UnsupportedEncodingException {
-        String[] uriFragments = this.casConfigurationProperties.getServer().getName().split("://");
-        String uri = ServletUriComponentsBuilder.fromCurrentRequest().replaceQueryParam("locale", locale).toUriString();
-        if ("https".equalsIgnoreCase(uriFragments[0])) {
-            uri = String.format("https://%s%s", uriFragments[1], uri.substring(uri.replace("://", "").indexOf("/") + 3));
+    public String getLocaleUrl(String locale) throws Exception {
+        UriComponentsBuilder builder = ServletUriComponentsBuilder.fromCurrentRequest().replaceQueryParam("locale", locale);
+        RequestAttributes attributes = org.springframework.web.context.request.RequestContextHolder.currentRequestAttributes();
+        if (attributes instanceof ServletRequestAttributes) {
+            int statusCode = ((ServletRequestAttributes) attributes).getResponse().getStatus();
+            switch (statusCode) {
+                case 200:
+                    break;
+                case 404:
+                    builder.replacePath("" + statusCode);
+                    break;
+                default:
+                    builder.replacePath("error");
+            }
         }
-        return URLDecoder.decode(uri, "UTF-8");
+        URI serverUri = new URI(this.casConfigurationProperties.getServer().getName());
+        if ("https".equalsIgnoreCase(serverUri.getScheme())) {
+            builder.port((serverUri.getPort() == -1) ? 443 : serverUri.getPort());
+        }
+        return builder.scheme(serverUri.getScheme()).host(serverUri.getHost()).build(true).toUriString();
     }
 
     public String getBackUrl(String pac4jRequestedUrl, Locale locale) throws URISyntaxException {
@@ -101,10 +118,6 @@ public class TaraProperties {
             this.mode = mode;
         }
 
-    }
-
-    public static void main(String[] atgs) throws UnsupportedEncodingException, URISyntaxException {
-        System.out.println(Pattern.matches("^.*[\\?]{1}.*(?!.*[\\?]{1}.*)+$", "https://localhost:8451/oauth/response?jah=1"));
     }
 
 }
