@@ -64,12 +64,6 @@ public class TaraProperties {
         return builder.scheme(serverUri.getScheme()).host(serverUri.getHost()).build(true).toUriString();
     }
 
-    public static void main(String[] args) {
-        String uri = "https://sso-test/login?service=https%3A%2F%2Fsso-test%2Foauth2.0%2FcallbackAuthorize%3Fclient_name%3DCasOAuthClient%26client_id%3DopenIdDemo%26redirect_uri%3Dhttps%3A%2F%2Flocalhost%3A8451%2Foauth%2Fresponse";
-        UriComponentsBuilder builder = ServletUriComponentsBuilder.fromUriString(uri).replacePath("error");
-        System.out.println(builder.toUriString());
-    }
-
     public String getBackUrl(String pac4jRequestedUrl, Locale locale) throws URISyntaxException {
         if (StringUtils.isNotBlank(pac4jRequestedUrl)) {
             return new URIBuilder(pac4jRequestedUrl).setParameter("lang", locale.getLanguage()).build().toString();
