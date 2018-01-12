@@ -120,8 +120,4 @@ public class TaraProperties {
 
     }
 
-    public static void main(String[] atgs) throws UnsupportedEncodingException, URISyntaxException {
-        System.out.println(Pattern.matches("^.*[\\?]{1}.*(?!.*[\\?]{1}.*)+$", "https://localhost:8451/oauth/response?jah=1"));
-    }
-
 }
