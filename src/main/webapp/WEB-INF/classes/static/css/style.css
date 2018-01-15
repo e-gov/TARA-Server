@@ -75,8 +75,7 @@ button.primary {
 label {
   font-size: 14px;
   color: #000;
-  font-weight: 400;
-  display: table-caption; }
+  font-weight: 400; }
 
 input {
   display: block;
@@ -98,8 +97,6 @@ input {
   float: none;
   padding-right: 15px;
   padding-left: 15px; }
-.label-input.input-group[class*=col-] label {
-  padding-left: 15px; }
 
 @media screen and (max-width: 766px) {
   .label-input {
@@ -119,8 +116,8 @@ header .header-bar a {
   line-height: 33px;
   font-size: 10px;
   text-decoration: none; }
-header .header-bar a:first-child {
-  padding-right: 18px; }
+header .header-bar a:last-child {
+  padding-left: 18px; }
 
 header .logo-bar {
   padding: 12px 0;
