@@ -52,6 +52,10 @@ public class TaraProperties {
         return this.environment.getProperty("tara.version", "-");
     }
 
+    public boolean isNotLocale(String code, Locale locale) {
+        return !locale.getLanguage().equalsIgnoreCase(code);
+    }
+
     public String getLocaleUrl(String locale) throws Exception {
         UriComponentsBuilder builder = ServletUriComponentsBuilder.fromCurrentRequest().replaceQueryParam("locale", locale);
         RequestAttributes attributes = org.springframework.web.context.request.RequestContextHolder.currentRequestAttributes();
