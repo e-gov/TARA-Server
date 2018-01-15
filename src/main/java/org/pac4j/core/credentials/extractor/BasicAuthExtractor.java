@@ -41,7 +41,6 @@ public class BasicAuthExtractor implements CredentialsExtractor<UsernamePassword
             } catch (UnsupportedEncodingException var6) {
                 throw new CredentialsException("Bad format of the basic auth header");
             }
-
             int delim = token.indexOf(":");
             if (delim < 0) {
                 throw new CredentialsException("Bad format of the basic auth header");
