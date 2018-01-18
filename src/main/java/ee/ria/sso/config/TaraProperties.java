@@ -1,12 +1,10 @@
 package ee.ria.sso.config;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.NameValuePair;
@@ -109,6 +107,7 @@ public class TaraProperties {
     public static class Application {
 
         private Mode mode = Mode.production;
+        private String digestAlgorithm = "SHA-256";
 
         public boolean isDevelopment() {
             return Mode.development.equals(this.mode);
@@ -120,6 +119,14 @@ public class TaraProperties {
 
         public void setMode(Mode mode) {
             this.mode = mode;
+        }
+
+        public String getDigestAlgorithm() {
+            return digestAlgorithm;
+        }
+
+        public void setDigestAlgorithm(String digestAlgorithm) {
+            this.digestAlgorithm = digestAlgorithm;
         }
 
     }
