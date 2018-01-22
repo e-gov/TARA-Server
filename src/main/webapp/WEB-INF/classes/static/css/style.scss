@@ -114,6 +114,12 @@ input {
   background: #FFFFFF;
 }
 
+.input-group {
+  @media screen and (max-width: 767px) {
+    width: 100%;
+  }
+}
+
 .input-group-addon,
 input {
   border: 2px solid #E6E6E6;
@@ -133,9 +139,13 @@ input {
 }
 
 .label-input {
-  @media screen and (max-width: 766px) {
+  @media screen and (max-width: 767px) {
     margin-bottom: 10px;
   }
+}
+
+.space-top-2 {
+  margin-top: 20px;
 }
 
 header {
@@ -208,12 +218,12 @@ footer.footer {
 .method-block {
   margin-left: 0;
   margin-right: 0;
-  margin-top: 20px;
   padding: 0 10px 10px;
   box-shadow: 1px 1px 1px 0 rgba(0,0,0,0.35);
   @media screen and (max-width: 766px) {
     padding: 0 10px 10px;
   }
+
 
   .id-card {
     background-image: url("/images/idkaart.svg");
@@ -309,6 +319,11 @@ footer.footer {
 
 .icon-link {
   text-decoration: none;
+}
+
+.back-link {
+  margin: 1.3em 0;
+  display: inline-block;
 }
 
 .eu-logo {
