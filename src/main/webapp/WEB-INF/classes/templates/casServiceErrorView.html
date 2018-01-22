@@ -23,7 +23,7 @@
 <body>
 <div layout:fragment="content" th:remove="tag">
     <div class="container">
-        <a th:href="${@taraProperties.getBackUrl(session.pac4jRequestedUrl, #locale)}" class="text-black row icon-link">
+        <a th:href="${@taraProperties.getBackUrl(session.pac4jRequestedUrl, #locale)}" class="text-black back-link icon-link">
             <i class="fa fa-chevron-left fa-fw"></i><span th:text="#{label.back}" th:remove="tag"></span>
         </a>
         <div class="info-block method-block text-center">
