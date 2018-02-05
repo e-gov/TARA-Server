@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- @include head, header -->
+
+<body>
+
+  <div class="container">
+    <h3>Vali tuvastamismeetod</h3>
+
+    <div id="accordion" role="tablist" aria-multiselectable="true">
+      <div class="panel">
+        <div class="method-block white row hidden-xs accordion-toggle collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+          <div class="col-md-3 col-sm-3">
+            <div class="id-card"></div>
+          </div>
+          <div class="col-md-8 col-sm-8">
+            <h3>ID-Kaart</h3>
+            <p>Logimiseks vajad kaardilugejat ja kehtivat ID-kaarti</p>
+          </div>
+          <div class="col-md-1 col-sm-1">
+            <i class="fa pull-right method-chevron fa-chevron-down"></i>
+          </div>
+        </div>
+        <div id="collapseOne" class="collapse" role="tabpanel" aria-labelledby="methodIDCard" aria-expanded="false">
+          <div class="block-hr hidden-xs"></div>
+          <div class="white hidden-xs method-block-collapsible">
+            <div class="row">
+              <div class="col-md-6 col-sm-6 col-xs-6">
+                <p>Sisesta kaart lugejasse ja vajuta "Sisene"</p>
+                <button class="primary" type="button" name="button">Sisene</button>
+              </div>
+              <div class="col-md-6 col-sm-6 col-xs-6">
+                <a href="http://id.ee/index.php?id=35803" class="pull-right help-link">Abi id.ee-st</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="method-block white row accordion-toggle" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseMob" aria-expanded="true" aria-controls="collapseMob">
+          <div class="col-md-3 col-sm-3 col-xs-3">
+            <div class="mob-id"></div>
+          </div>
+          <div class="col-md-8 col-sm-8 col-xs-9">
+            <h3>Mobiil-ID</h3>
+            <p>Logimiseks vajad kehtivat mobiil-ID lepingut.</p>
+          </div>
+          <div class="col-md-1 col-sm-1 hidden-xs">
+            <i class="fa pull-right method-chevron fa-chevron-down"></i>
+          </div>
+        </div>
+
+        <div id="collapseMob" class="collapse" role="tabpanel" aria-labelledby="methodMobID" aria-expanded="true">
+          <div class="block-hr"></div>
+          <div class="white method-block-collapsible">
+            <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore </p>
+            <div class="row">
+              <form>
+                <div class="label-input col-md-6 col-sm-6">
+                  <label for="exampleInputName2">Isikukood</label>
+                  <input type="text" class="" id="exampleInputName2" placeholder="">
+                </div>
+                <div class="label-input input-group col-md-6 col-sm-6">
+                  <label for="exampleInputEmail2">Telefoninumber</label>
+                  <span class="input-group-addon" id="basic-addon1">+372</span>
+                  <input type="text" placeholder="" aria-describedby="basic-addon1">
+                </div>
+              </form>
+            </div>
+            <div class="row">
+              <div class="col-md-6 col-sm-6 col-xs-50">
+                <button class="primary" type="button" name="button">Sisene</button>
+              </div>
+              <div class="col-md-6 col-sm-6 col-xs-50">
+                <a href="http://id.ee/index.php?id=35803&amp;group_id=1&amp;item=203&amp;crumbs=.203" class="pull-right help-link">Abi id.ee-st</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+
+    </div>
+    <a href="#" class="text-black row icon-link">
+    <i class="fa fa-chevron-left fa-fw"></i>Tagasi teenusepakkuja juurde
+  </a>
+
+
+    <!-- @include scripts, footer -->
+
+  </div>
+  <!--container -->
+</body>
+
+</html>

@@ -42,10 +42,7 @@ public class FlowExecutionExceptionResolver implements HandlerExceptionResolver 
             } else {
                 log.error("Flow execution error: {}", exception.getMessage());
             }
-            ModelAndView mw = new ModelAndView(((AbstractFlowExecutionException) exception).getView(),
-                ((AbstractFlowExecutionException) exception).getModel());
-            mw.setStatus(((AbstractFlowExecutionException) exception).getStatus());
-            return mw;
+            return ((AbstractFlowExecutionException) exception).getModelAndView();
         } else {
             log.debug("Ignoring the received exception due to a type mismatch", exception);
             return null;

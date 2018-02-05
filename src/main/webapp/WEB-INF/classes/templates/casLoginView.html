@@ -1,17 +1,39 @@
 <!DOCTYPE html>
 <html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout">
-
 <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE9">
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title th:text="#{label.ria.title}"></title>
+    <!-- Main CSS file -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="/css/font-awesome.css"/>
+    <link rel="stylesheet" href="/css/style.css"/>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,900" rel="stylesheet">
+    <!-- Favicon -->
+    <link rel="icon" th:href="@{/favicon.ico}" type="image/x-icon"/>
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <!--[if IE]>
+    <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.auto.min.js"></script>
+    <![endif]-->
+    <script src="https://unpkg.com/axios@0.17.1/dist/axios.min.js"></script>
+    <script type="text/javascript" src="/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="/js/cas.js"></script>
 </head>
-
 <body>
-<div layout:fragment="content">
-    <div class="row">
-        <div class="col-sm-12 col-md-6 col-md-pull-6">
-            <div th:replace="fragments/loginform" />
-        </div>
-    </div>
+<div layout:fragment="content" th:remove="tag">
+    <script th:inline="javascript">
+        var API = new API(/*[[${@taraProperties.getApplicationUrl()}]]*/'');
+        var APP = new APP();
+        APP.errors['id']['message'] = 'Palun veenduge, et ID-kaart on sisestatud kaardilugejasse õigesti, sulgege ja taasavage lehitseja ning proovige uuesti TODO';
+    </script>
+    <div th:replace="fragments/loginform"/>
 </div>
 </body>
 </html>

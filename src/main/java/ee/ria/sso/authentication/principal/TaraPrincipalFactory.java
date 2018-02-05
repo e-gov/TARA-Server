@@ -21,12 +21,12 @@ public class TaraPrincipalFactory implements PrincipalFactory {
     }
 
     public Principal createPrincipal(String id) {
-        throw new TaraAuthenticationException("Attributes are mandatory when creating principal");
+        throw new IllegalArgumentException("Attributes are mandatory when creating principal");
     }
 
     public Principal createPrincipal(String id, Map<String, Object> attributes) {
         if (MapUtils.isEmpty(attributes)) {
-            throw new TaraAuthenticationException("No any attributes found when creating principal");
+            throw new IllegalArgumentException("No any attributes found when creating principal");
         }
         return new TaraPrincipal(id, attributes);
     }

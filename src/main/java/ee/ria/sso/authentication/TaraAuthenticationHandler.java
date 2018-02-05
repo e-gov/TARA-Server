@@ -13,7 +13,7 @@ import org.apereo.cas.authentication.handler.support.AbstractPreAndPostProcessin
 import org.apereo.cas.authentication.principal.PrincipalFactory;
 import org.apereo.cas.services.ServicesManager;
 
-import ee.ria.sso.authentication.credential.AbstractCredential;
+import ee.ria.sso.authentication.credential.TaraCredential;
 
 /**
  * Created by Janar Rahumeel (CGI Estonia)
@@ -27,7 +27,7 @@ public class TaraAuthenticationHandler extends AbstractPreAndPostProcessingAuthe
 
     @Override
     public boolean supports(Credential credential) {
-        return credential instanceof AbstractCredential;
+        return credential instanceof TaraCredential;
     }
 
     /*
@@ -37,12 +37,12 @@ public class TaraAuthenticationHandler extends AbstractPreAndPostProcessingAuthe
     @Override
     protected HandlerResult doAuthentication(Credential credential) throws GeneralSecurityException, PreventedException {
         final Map<String, Object> map = new LinkedHashMap<>();
-        if (credential instanceof AbstractCredential) {
-            AbstractCredential taraCredential = (AbstractCredential) credential;
+        if (credential instanceof TaraCredential) {
+            TaraCredential taraCredential = (TaraCredential) credential;
             this.putIfNotEmpty(map, "principalCode", taraCredential.getPrincipalCode());
             this.putIfNotEmpty(map, "firstName", taraCredential.getFirstName());
             this.putIfNotEmpty(map, "lastName", taraCredential.getLastName());
-            if (AbstractCredential.Type.MobileID.equals(taraCredential.getType())) {
+            if (AuthenticationType.MobileID.equals(taraCredential.getType())) {
                 this.putIfNotEmpty(map, "mobileNumber", taraCredential.getMobileNumber());
             }
             return this.createHandlerResult(credential, this.principalFactory

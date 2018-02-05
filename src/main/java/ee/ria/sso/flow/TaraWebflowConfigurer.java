@@ -8,7 +8,7 @@ import org.springframework.webflow.engine.ViewState;
 import org.springframework.webflow.engine.builder.BinderConfiguration;
 import org.springframework.webflow.engine.builder.support.FlowBuilderServices;
 
-import ee.ria.sso.authentication.credential.DefaultCredential;
+import ee.ria.sso.authentication.credential.TaraCredential;
 
 /**
  * Created by Janar Rahumeel (CGI Estonia)
@@ -26,9 +26,9 @@ public class TaraWebflowConfigurer extends DefaultWebflowConfigurer {
             this.createFlowVariable(flow, "credential", RememberMeUsernamePasswordCredential.class);
             ViewState state = (ViewState)flow.getState("viewLoginForm");
             BinderConfiguration cfg = this.getViewStateBinderConfiguration(state);
-            cfg.addBinding(new BinderConfiguration.Binding("rememberMe", (String)null, false));
+            cfg.addBinding(new BinderConfiguration.Binding("rememberMe", null, false));
         } else {
-            this.createFlowVariable(flow, "credential", DefaultCredential.class);
+            this.createFlowVariable(flow, "credential", TaraCredential.class);
         }
     }
 

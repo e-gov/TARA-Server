@@ -1,124 +1,106 @@
-<script th:inline="javascript">
-    var API = new API(/*[[${@taraProperties.getApplicationUrl()}]]*/'');
-    var APP = new APP();
-    APP.errors['id']['message'] = 'Palun veenduge, et ID-kaart on sisestatud kaardilugejasse õigesti, sulgege ja taasavage lehitseja ning proovige uuesti';
-</script>
-<!-- PAGE ALERTS -->
-<div class="page-alerts">
-    <div class="alert alert--error alert--ie">
-        <p class="title" th:text="#{label.page.alert.title}"></p>
-        <p class="danger" th:text="#{label.page.alert.danger}"></p>
-        <p th:text="#{label.page.alert.text}">
-        </p>
-    </div>
-</div>
-<!-- PAGE BAR -->
-<div class="page-bar">
-    <div class="container clear">
-        <h1 th:text="#{label.title}"></h1>
-        <ul>
-            <li th:style="__${#locale}__=='ru'?'display:none':''">
-                <a th:href="${@taraProperties.getLocaleUrl('ru')}" th:text="#{label.ru.name}"></a>
-            </li>
-            <li th:style="__${#locale}__=='en'?'display:none':''">
-                <a th:href="${@taraProperties.getLocaleUrl('en')}" th:text="#{label.en.name}"></a>
-            </li>
-            <li th:style="__${#locale}__=='et'?'display:none':''">
-                <a th:href="${@taraProperties.getLocaleUrl('et')}" th:text="#{label.et.name}"></a>
-            </li>
-        </ul>
-    </div>
-</div>
-<!-- //PAGE BAR -->
-<!-- PAGE WRAPPER -->
-<div class="page-wrapper">
-    <!-- MAIN -->
-    <div class="main">
-        <noscript>
-            <div class="alert alert--error alert--js">
-                <p>
-                    <strong th:text="#{label.page.alert.js.strong}"></strong>
-                    <p th:text="#{label.page.alert.js.text}" th:remove="tag"></p>
-                </p>
-            </div>
-        </noscript>
-        <!-- ROW -->
-        <div class="row col-2 clear">
-            <div class="block copy">
-                <div class="wrapper">
-                    <form method="post" id="idCardForm">
-                        <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
-                        <input type="hidden" name="_eventId" value="idsubmit"/>
-                        <input type="hidden" name="idlang" id="idlang" th:value="${lang}">
-                        <input type="hidden" name="geolocation"/>
-                        <h2 th:text="#{label.id.enter}"></h2>
-                        <div th:class="${icerrordiv}">
-                            <h3 class="title" th:text="${icerrortitle}"></h3>
-                            <p th:text="${icerrortext}"></p>
-                        </div>
-                        <p class="row" th:text="#{label.id.instruction}"></p>
-                        <div class="row btns">
-                            <button type="button" class="btn btn--primary" th:text="#{label.button}"
-                                onclick="APP.loginByIDCard(); return false;"></button>
-                        </div>
-                    </form>
+<div class="container">
+    <h3 th:text="#{label.choose}"></h3>
+    <div id="accordion" role="tablist" aria-multiselectable="true">
+        <div class="panel">
+            <div class="method-block space-top-2 white row hidden-xs accordion-toggle collapsed" role="button"
+                 data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="false"
+                 aria-controls="collapseOne">
+                <div class="col-md-3 col-sm-3">
+                    <div class="id-card"></div>
+                </div>
+                <div class="col-md-8 col-sm-8">
+                    <h3 th:text="#{label.id.title}"></h3>
+                    <p th:text="#{label.id.start}"></p>
+                </div>
+                <div class="col-md-1 col-sm-1">
+                    <i class="fa pull-right method-chevron fa-chevron-down"></i>
                 </div>
             </div>
-            <div class="block fields">
-                <div class="wrapper">
-                    <form method="post" id="fm1" th:object="${credential}">
-                        <h2 th:text="#{label.mid.enter}"></h2>
-                        <div th:class="${moberrordiv}">
-                            <h3 class="title" th:text="${moberrortitle}"></h3>
-                            <p th:text="${moberrortext}"></p>
+            <div id="collapseOne" class="collapse" role="tabpanel" aria-labelledby="methodIDCard" aria-expanded="false">
+                <div class="block-hr hidden-xs"></div>
+                <div class="white hidden-xs method-block-collapsible">
+                    <div class="row">
+                        <div class="col-md-6 col-sm-6 col-xs-6">
+                            <p th:text="#{label.id.instruction}"></p>
+                            <form method="post" id="idCardForm">
+                                <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
+                                <input type="hidden" name="_eventId" value="idsubmit"/>
+                                <input type="hidden" name="idlang" id="idlang" th:value="${lang}">
+                                <input type="hidden" name="geolocation"/>
+                                <button type="button" name="button" class="primary" th:text="#{label.button}"
+                                        onclick="APP.loginByIDCard(); return false;"></button>
+                            </form>
                         </div>
-                        <p class="row" th:text="#{label.mid.instruction}"></p>
-                        <div class="row row">
-                            <label for="personalCode"><abbr title="Kohustuslik väli" class="mandatory">*</abbr><span
-                                    th:text="#{label.idcode}" th:remove="tag"></span></label>
-                            <input class="txt" id="personalCode" size="25" required type="text" tabindex="1"
-                                   th:field="*{principalCode}" autocomplete="off"/>
+                        <div class="col-md-6 col-sm-6 col-xs-6">
+                            <a href="http://id.ee/index.php?id=35803" target="_blank" class="pull-right help-link"
+                               th:text="#{label.id.help}"></a>
                         </div>
-                        <div class="row row">
-                            <label for="mobileNumber"><abbr title="Kohustuslik väli" class="mandatory">*</abbr><span
-                                    th:text="#{label.phonenumber}" th:remove="tag"></span></label>
-                            <input class="txt"
-                                   id="mobileNumber"
-                                   size="25"
-                                   required
-                                   tabindex="2"
-                                   type="text"
-                                   th:field="*{mobileNumber}"
-                                   autocomplete="off"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="panel">
+            <div div class="method-block space-top-2 white row accordion-toggle" role="button" data-toggle="collapse"
+                 data-parent="#accordion" href="#collapseMob" aria-expanded="true" aria-controls="collapseMob">
+                <div class="col-md-3 col-sm-3 col-xs-3">
+                    <div class="mob-id"></div>
+                </div>
+                <div class="col-md-8 col-sm-8 col-xs-9">
+                    <h3 th:text="#{label.mid.title}"></h3>
+                    <p th:text="#{label.mid.start}"></p>
+                </div>
+                <div class="col-md-1 col-sm-1 hidden-xs">
+                    <i class="fa pull-right method-chevron fa-chevron-down"></i>
+                </div>
+            </div>
+            <div id="collapseMob" class="collapse" role="tabpanel" aria-labelledby="methodMobID" aria-expanded="false">
+                <div class="block-hr"></div>
+                <div class="white method-block-collapsible">
+                    <p th:text="#{label.mid.instruction}"></p>
+                    <div class="row">
+                        <form method="post" id="mobileIdForm" th:object="${credential}">
+                            <div class="label-input col-md-6 col-sm-6">
+                                <label for="personalCode">
+                                    <span th:text="#{label.idcode}" th:remove="tag"></span>
+                                </label>
+                                <input type="text" id="personalCode" placeholder="" size="25" tabindex="1"
+                                       th:field="*{principalCode}" autocomplete="off" required>
+                            </div>
+                            <div class="label-input input-group col-md-6 col-sm-6">
+                                <label for="mobileNumber">
+                                    <span th:text="#{label.phonenumber}" th:remove="tag"></span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-addon" id="basic-phonenumber">+372</span>
+                                    <input id="mobileNumber" type="text" placeholder=""
+                                           aria-describedby="basic-phonenumber"
+                                           size="25" tabindex="2" th:field="*{mobileNumber}" autocomplete="off"
+                                           required>
+                                </div>
+                            </div>
+                            <input type="hidden" id="moblang" name="moblang" th:value="et">
+                            <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
+                            <input type="hidden" name="_eventId" value="submit"/>
+                            <input type="hidden" name="geolocation"/>
+                        </form>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 col-sm-6 col-xs-50">
+                            <button type="button" class="primary" th:text="#{label.button}"
+                                    onclick="$('#mobileIdForm').submit()"></button>
                         </div>
-                        <input type="hidden" id="moblang" name="moblang" th:value="et">
-                        <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
-                        <input type="hidden" name="_eventId" value="submit"/>
-                        <input type="hidden" name="geolocation"/>
-                        <input type="hidden" name="svc" th:value="${service}"/>
-                        <div class="row btns">
-                            <button type="submit" id="button2" class="btn btn--primary"
-                                    th:text="#{label.button}"></button>
+                        <div class="col-md-6 col-sm-6 col-xs-50">
+                            <a href="http://id.ee/index.php?id=35803&amp;group_id=1&amp;item=203&amp;crumbs=.203"
+                               class="pull-right help-link" target="_blank" th:text="#{label.mid.help}"></a>
                         </div>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    <!-- FOOTER -->
-    <div class="footer">
-        <!--  <div class="funding">
-              <p><img src="/images/logo-europe.svg" alt=""><span th:text="#{label.footer.eu1}" th:remove="tag"></span><br><span th:text="#{label.footer.eu2}" th:remove="tag"></span></p>
-          </div>-->
-        <div class="ria">
-            <p><span th:text="#{label.ria.title}" th:remove="tag"></span> <span id="e65842083">help@ria.ee</span>,
-                <a href="http://www.ria.ee" target="_blank">www.ria.ee</a>,
-                <span th:text="#{label.version} + ': ' + ${@taraProperties.getApplicationVersion()}" th:remove="tag"></span></p>
-        </div>
-    </div>
-    <!-- HIDING EMAIL -->
-    <script type="text/javascript">/*<![CDATA[*/
-    eval("var a=\"0JDYPFi93v7fsXZoc8ha-.NbMIqln2A_U1GtERdVrex5k6Op@+LzBSQuHgywWjKTC4m\";var b=a.split(\"\").sort().join(\"\");var c=\"@6BHXy+eD66\";var d=\"\";for(var e=0;e<c.length;e++)d+=b.charAt(a.indexOf(c.charAt(e)));document.getElementById(\"e65842083\").innerHTML=\"<a href=\\\"mailto:\"+d+\"\\\">\"+d+\"</a>\"")
-    /*]]>*/</script>
+    <a th:href="${@taraProperties.getHomeUrl()}" class="text-black back-link icon-link">
+        <i class="fa fa-chevron-left fa-fw"></i><span th:text="#{label.home}" th:remove="tag"></span>
+    </a>
     <script type="application/javascript" src="/js/login.js"></script>
+    <div th:replace="fragments/tarafooter">Footer</div>
 </div>

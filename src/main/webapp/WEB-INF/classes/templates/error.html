@@ -1,67 +1,44 @@
 <!DOCTYPE html>
-<html>
-<html>
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout">
 <head>
-    <meta charset="UTF-8"/>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE9">
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title th:text="#{label.ria.title}"></title>
-    <link rel="stylesheet" th:href="@{${#themes.code('standard.custom.css.file')}}"/>
+    <!-- Main CSS file -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="/css/font-awesome.css"/>
+    <link rel="stylesheet" href="/css/style.css"/>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,900" rel="stylesheet">
+    <!-- Favicon -->
     <link rel="icon" th:href="@{/favicon.ico}" type="image/x-icon"/>
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
 </head>
-
+<div th:replace="fragments/taraheader" th:remove="tag">Header</div>
 <body>
-
-<!-- PAGE ALERTS -->
-<div class="page-alerts">
-    <div class="alert alert--error alert--ie">
-        <p class="title" th:text="#{label.page.alert.title}"></p>
-        <p class="danger" th:text="#{label.page.alert.danger}"></p>
-        <p th:text="#{label.page.alert.text}">
-        </p>
-    </div>
-</div>
-<!-- PAGE BAR -->
-<div class="page-bar">
-    <div class="container clear">
-        <h1 th:text="#{label.title}"></h1>
-    </div>
-</div>
-<!-- //PAGE BAR -->
-<!-- PAGE WRAPPER -->
-
-<div class="page-wrapper">
-    <!-- MAIN -->
-    <div class="main">
-        <div class="alert alert--error alert--js">
-            <p>
-                <strong th:text="#{label.error.title}"></strong>
-                <p th:text="#{label.error.text}" th:remove="tag"></p>
-            </p>
-            <p><a th:href="${SVC_BACK}" th:text="#{label.back}"/></p>
-        </div>
-
-    </div>
-
-    <!-- FOOTER -->
-    <div class="footer">
-        <!--<div class="funding">
-            <p><img src="/images/logo-europe.svg" alt=""><span th:text="#{label.footer.eu1}"
-                                                               th:remove="tag"></span><br><span
-                    th:text="#{label.footer.eu2}" th:remove="tag"></span></p>
-        </div>-->
-        <div class="ria">
-            <p><span th:text="#{label.ria.title}" th:remove="tag"></span> <span id="e65842083">help@ria.ee</span>,
-                <a href="http://www.ria.ee" target="_blank">www.ria.ee</a></p>
+<div layout:fragment="content" th:remove="tag">
+    <div class="container">
+        <a th:href="${@taraProperties.getBackUrl(session.pac4jRequestedUrl, #locale)}" class="text-black back-link icon-link">
+            <i class="fa fa-chevron-left fa-fw"></i><span th:text="#{label.back}" th:remove="tag"></span>
+        </a>
+        <div class="row">
+            <div class="error-box">
+                <h4 class="text-red"><i class="fa fa-times-circle-o fa-fw"></i><span th:text="#{label.error.title}"
+                                                                                     th:remove="tag"></span></h4>
+                <p th:if="${TARA_ERROR_MESSAGE != null}" th:text="${TARA_ERROR_MESSAGE}"></p>
+                <p th:unless="${TARA_ERROR_MESSAGE != null}" th:text="#{message.auth.error}"></p>
+            </div>
         </div>
     </div>
-
-    <!-- HIDING EMAIL -->
-    <script type="text/javascript">/*<![CDATA[*/
-    eval("var a=\"0JDYPFi93v7fsXZoc8ha-.NbMIqln2A_U1GtERdVrex5k6Op@+LzBSQuHgywWjKTC4m\";var b=a.split(\"\").sort().join(\"\");var c=\"@6BHXy+eD66\";var d=\"\";for(var e=0;e<c.length;e++)d+=b.charAt(a.indexOf(c.charAt(e)));document.getElementById(\"e65842083\").innerHTML=\"<a href=\\\"mailto:\"+d+\"\\\">\"+d+\"</a>\"")
-    /*]]>*/</script>
-
+    <script type="text/javascript" src="/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/js/bootstrap.min.js"></script>
+    <div th:replace="fragments/tarafooter" th:remove="tag">Footer</div>
 </div>
-
 </body>
 </html>
 

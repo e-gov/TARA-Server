@@ -23,7 +23,7 @@ function APP() {
     },
     this.submitIDCardForm = function() {
         $("#idCardForm").submit();
-    }
+    },
     this.handleIDCardCertificateResponse = function (promise) {
         var _this = this;
         promise
@@ -37,6 +37,9 @@ function APP() {
             .catch(function(error) {
                 _this.handleError(error, 'id');
             });
+    },
+    this.toggleChevron = function(event) {
+        $(event.target).prev('.method-block').find("i").toggleClass('fa-chevron-up fa-chevron-down');
     },
     this.handleError = function (error, scenario) {
         if (error.response) {
@@ -55,7 +58,6 @@ function APP() {
             console.log('Error', error.message);
         }
         console.log(error.config);
-        alert(this.errors[scenario]['message']);
     }
 }
 

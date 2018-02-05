@@ -1,23 +1,22 @@
 package ee.ria.sso.flow.action;
 
 import org.springframework.stereotype.Component;
-import org.springframework.webflow.action.AbstractAction;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
 
-import ee.ria.sso.service.RiaAuthenticationService;
+import ee.ria.sso.service.AuthenticationService;
 
 /**
  * @author Janar Rahumeel (CGI Estonia)
  */
 
 @Component
-public class MobileIDStartAuthenticationAction extends AbstractAction {
+public class MobileIDStartAuthenticationAction extends AbstractAuthenticationAction {
 
-    private final RiaAuthenticationService riaAuthenticationService;
+    private final AuthenticationService authenticationService;
 
-    public MobileIDStartAuthenticationAction(RiaAuthenticationService riaAuthenticationService) {
-        this.riaAuthenticationService = riaAuthenticationService;
+    public MobileIDStartAuthenticationAction(AuthenticationService authenticationService) {
+        this.authenticationService = authenticationService;
     }
 
     /*
@@ -25,8 +24,8 @@ public class MobileIDStartAuthenticationAction extends AbstractAction {
      */
 
     @Override
-    protected Event doExecute(RequestContext requestContext) throws Exception {
-        return this.riaAuthenticationService.startLoginByMobileID(requestContext);
+    protected Event doAuthenticationExecute(RequestContext requestContext) {
+        return this.authenticationService.startLoginByMobileID(requestContext);
     }
 
 }

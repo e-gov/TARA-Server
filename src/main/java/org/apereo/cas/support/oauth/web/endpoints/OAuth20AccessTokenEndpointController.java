@@ -42,12 +42,12 @@ import org.pac4j.core.profile.UserProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import com.google.common.base.Throwables;
 
 import ee.ria.sso.flow.JSONFlowExecutionException;
+import ee.ria.sso.validators.OIDCRequestValidator;
 
 /**
  * Created by Janar Rahumeel (CGI Estonia)
@@ -88,6 +88,7 @@ public class OAuth20AccessTokenEndpointController extends BaseOAuth20Controller 
     public void handleRequest(HttpServletRequest request, HttpServletResponse response) throws Exception {
         try {
             response.setContentType("text/plain");
+            OIDCRequestValidator.checkGrantType(request);
             if (!this.verifyAccessTokenRequest(request, response)) {
                 throw JSONFlowExecutionException.ofBadRequest(Collections.singletonMap("error", "invalid_request"),
                     new RuntimeException("Access token request verification failed"));
@@ -113,6 +114,8 @@ public class OAuth20AccessTokenEndpointController extends BaseOAuth20Controller 
                 this.generateAccessTokenResponse(request, response, responseHolder, context, accessToken, refreshToken);
                 response.setStatus(200);
             }
+        } catch (JSONFlowExecutionException e) {
+            throw e;
         } catch (Exception var8) {
             LOGGER.error(var8.getMessage(), var8);
             throw Throwables.propagate(var8);
@@ -162,39 +165,33 @@ public class OAuth20AccessTokenEndpointController extends BaseOAuth20Controller 
 
     private boolean verifyAccessTokenRequest(HttpServletRequest request, HttpServletResponse response) {
         String grantType = request.getParameter("grant_type");
-        if (!isGrantTypeSupported(grantType, OAuth20GrantTypes.AUTHORIZATION_CODE, OAuth20GrantTypes.PASSWORD,
-            OAuth20GrantTypes.REFRESH_TOKEN)) {
-            LOGGER.warn("Grant type is not supported: [{}]", grantType);
-            return false;
-        } else {
-            ProfileManager manager = WebUtils.getPac4jProfileManager(request, response);
-            Optional<UserProfile> profile = manager.get(true);
-            if (profile != null && profile.isPresent()) {
-                UserProfile uProfile = profile.get();
-                String clientId;
-                if (OAuth20Utils.isGrantType(grantType, OAuth20GrantTypes.AUTHORIZATION_CODE)) {
-                    clientId = uProfile.getId();
-                    String redirectUri = request.getParameter("redirect_uri");
-                    OAuthRegisteredService registeredService = OAuth20Utils.getRegisteredOAuthService(this.servicesManager, clientId);
-                    LOGGER.debug("Received grant type [{}] with client id [{}] and redirect URI [{}]", new Object[]{
-                        grantType, clientId, redirectUri});
-                    return uProfile instanceof OAuthClientProfile && this.validator.checkParameterExist(request, "redirect_uri") &&
-                        this.validator.checkParameterExist(request, "code") && this.validator.checkCallbackValid(registeredService, redirectUri);
-                } else if (OAuth20Utils.isGrantType(grantType, OAuth20GrantTypes.REFRESH_TOKEN)) {
-                    return uProfile instanceof OAuthClientProfile && this.validator.checkParameterExist(request, "refresh_token");
-                } else if (!OAuth20Utils.isGrantType(grantType, OAuth20GrantTypes.PASSWORD)) {
-                    return false;
-                } else {
-                    clientId = request.getParameter("client_id");
-                    LOGGER.debug("Received grant type [{}] with client id [{}]", grantType, clientId);
-                    OAuthRegisteredService registeredService = OAuth20Utils.getRegisteredOAuthService(this.servicesManager, clientId);
-                    return uProfile instanceof OAuthUserProfile && this.validator.checkParameterExist(request, "client_id") &&
-                        this.validator.checkServiceValid(registeredService);
-                }
-            } else {
-                LOGGER.warn("Could not locate authenticated profile for this request");
+        ProfileManager manager = WebUtils.getPac4jProfileManager(request, response);
+        Optional<UserProfile> profile = manager.get(true);
+        if (profile != null && profile.isPresent()) {
+            UserProfile uProfile = profile.get();
+            String clientId;
+            if (OAuth20Utils.isGrantType(grantType, OAuth20GrantTypes.AUTHORIZATION_CODE)) {
+                clientId = uProfile.getId();
+                String redirectUri = request.getParameter("redirect_uri");
+                OAuthRegisteredService registeredService = OAuth20Utils.getRegisteredOAuthService(this.servicesManager, clientId);
+                LOGGER.debug("Received grant type [{}] with client id [{}] and redirect URI [{}]", new Object[]{
+                    grantType, clientId, redirectUri});
+                return uProfile instanceof OAuthClientProfile && this.validator.checkParameterExist(request, "redirect_uri") &&
+                    this.validator.checkParameterExist(request, "code") && this.validator.checkCallbackValid(registeredService, redirectUri);
+            } else if (OAuth20Utils.isGrantType(grantType, OAuth20GrantTypes.REFRESH_TOKEN)) {
+                return uProfile instanceof OAuthClientProfile && this.validator.checkParameterExist(request, "refresh_token");
+            } else if (!OAuth20Utils.isGrantType(grantType, OAuth20GrantTypes.PASSWORD)) {
                 return false;
+            } else {
+                clientId = request.getParameter("client_id");
+                LOGGER.debug("Received grant type [{}] with client id [{}]", grantType, clientId);
+                OAuthRegisteredService registeredService = OAuth20Utils.getRegisteredOAuthService(this.servicesManager, clientId);
+                return uProfile instanceof OAuthUserProfile && this.validator.checkParameterExist(request, "client_id") &&
+                    this.validator.checkServiceValid(registeredService);
             }
+        } else {
+            LOGGER.warn("Could not locate authenticated profile for this request");
+            return false;
         }
     }
 

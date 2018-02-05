@@ -1,16 +1,19 @@
 package ee.ria.sso.validators;
 
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apereo.cas.support.oauth.util.OAuth20Utils;
+import org.apereo.cas.support.oauth.OAuth20GrantTypes;
 import org.pac4j.core.context.J2EContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import ee.ria.sso.flow.JSONFlowExecutionException;
 
 /**
  * Created by Janar Rahumeel (CGI Estonia)
@@ -19,6 +22,19 @@ import org.slf4j.LoggerFactory;
 public class OIDCRequestValidator {
 
     private static final Logger log = LoggerFactory.getLogger(OIDCRequestValidator.class);
+
+    public static void checkGrantType(HttpServletRequest request) {
+        Optional<String> grantType = Optional.ofNullable(request.getParameter("grant_type"));
+        if (grantType.isPresent()) {
+            if (!OAuth20GrantTypes.AUTHORIZATION_CODE.getType().equals(grantType.get())) {
+                throw JSONFlowExecutionException.ofBadRequest(Collections.singletonMap("error", "unsupported_grant_type"),
+                    new RuntimeException("Unsupported grant type"));
+            }
+        } else {
+            throw JSONFlowExecutionException.ofBadRequest(Collections.singletonMap("error", "invalid_request"),
+                new RuntimeException("No grant type found"));
+        }
+    }
 
     public static Optional<Integer> validateAll(final J2EContext context, final List<RequestParameter> parameters) {
         if (CollectionUtils.isNotEmpty(parameters)) {
@@ -34,16 +50,16 @@ public class OIDCRequestValidator {
 
     public static Optional<Integer> validate(final J2EContext context, final RequestParameter parameter) {
         try {
-            String parameterKey = parameter.name().toLowerCase();
-            String[] values = context.getRequest().getParameterValues(parameterKey);
+            String[] values = context.getRequest().getParameterValues(parameter.getParameterKey());
             if (values != null && values.length > 1) {
                 return resultOfBadRequest(ErrorResponse.of(context, "invalid_request",
-                    String.format("Multiple values found in the request for <%s> parameter", parameterKey)));
+                    String.format("Multiple values found in the request for <%s> parameter", parameter.getParameterKey())));
             }
-            String parameterValue = context.getRequestParameter(parameterKey);
-            if (StringUtils.isBlank(parameterValue)) {
+            String parameterValue = context.getRequestParameter(parameter.getParameterKey());
+            boolean isValueMandatory = parameter.isMandatory() || context.getRequestParameters().containsKey(parameter.getParameterKey());
+            if (StringUtils.isBlank(parameterValue) && isValueMandatory) {
                 return resultOfBadRequest(ErrorResponse.of(context, parameter.getError(),
-                    String.format("No value found in the request for <%s> parameter", parameterKey)));
+                    String.format("No value found in the request for <%s> parameter", parameter.getParameterKey())));
             }
             Optional<Integer> code;
             switch (parameter) {
@@ -66,6 +82,10 @@ public class OIDCRequestValidator {
             return resultOfInternalServerError(ErrorResponse.of(context, "server_error"));
         }
     }
+
+    /*
+     * RESTRICTED METHODS
+     */
 
     private static Optional<Integer> validateScopeValue(final J2EContext context) throws Exception {
         String scope = context.getRequestParameter(RequestParameter.SCOPE.name().toLowerCase());
