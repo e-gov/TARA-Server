@@ -1,3 +1,5 @@
+<img src='doc/img/ee_cef_0.png'></img>
+
 CAS Overlay Template
 ============================
 
