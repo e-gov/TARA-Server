@@ -35,7 +35,7 @@ public class TaraCredential implements Credential {
         this.principalCode = principalCode;
         this.firstName = firstName;
         this.lastName = lastName;
-
+        this.mobileNumber = mobileNumber;
     }
 
     @Override
