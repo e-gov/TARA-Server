@@ -19,9 +19,9 @@
             <div id="collapseOne" class="collapse" role="tabpanel" aria-labelledby="methodIDCard" aria-expanded="false">
                 <div class="block-hr hidden-xs"></div>
                 <div class="white hidden-xs method-block-collapsible">
+                    <p th:text="#{label.id.instruction}"></p>
                     <div class="row">
                         <div class="col-md-6 col-sm-6 col-xs-6">
-                            <p th:text="#{label.id.instruction}"></p>
                             <form method="post" id="idCardForm">
                                 <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
                                 <input type="hidden" name="_eventId" value="idsubmit"/>
