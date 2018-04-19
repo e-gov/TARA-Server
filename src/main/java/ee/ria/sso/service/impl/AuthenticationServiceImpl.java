@@ -147,7 +147,7 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
         try {
             if (this.mobileIDAuthenticator.isLoginComplete(session)) {
                 context.getFlowExecutionContext().getActiveSession().getScope().put("credential",
-                    new TaraCredential(session.personalCode, session.firstName, session.lastName, getPhoneNumberWithCountryCode(mobileNumber)));
+                    new TaraCredential(session.personalCode, session.firstName, session.lastName, getFormattedPhoneNumber(mobileNumber)));
                 this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.MobileID,
                     StatisticsOperation.SUCCESSFUL_AUTH);
                 return new Event(this, "success");
@@ -158,10 +158,6 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
         } catch (AuthenticationException e) {
             throw this.handleException(context, AuthenticationType.MobileID, e);
         }
-    }
-
-    private String getPhoneNumberWithCountryCode(String mobileNumber) {
-        return "+372" + mobileNumber;
     }
 
     /*
@@ -254,6 +250,13 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
         context.getFlowScope().remove(Constants.MOBILE_SESSION);
         context.getFlowScope().remove(Constants.AUTH_COUNT);
         context.getFlowScope().remove(TaraCredential.class.getSimpleName());
+    }
+
+    private String getFormattedPhoneNumber(String mobileNumber) {
+        if (mobileNumber.startsWith("372")) {
+            return "+" + mobileNumber;
+        }
+        return "+372" + mobileNumber;
     }
 
 }
