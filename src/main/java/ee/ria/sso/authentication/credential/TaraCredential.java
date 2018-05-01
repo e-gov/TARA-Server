@@ -1,5 +1,6 @@
 package ee.ria.sso.authentication.credential;
 
+import ee.ria.sso.model.AuthenticationResult;
 import org.apereo.cas.authentication.Credential;
 import org.springframework.webflow.core.collection.AttributeMap;
 
@@ -12,11 +13,12 @@ import ee.ria.sso.authentication.AuthenticationType;
 public class TaraCredential implements Credential {
 
     private final AuthenticationType type;
-    private AttributeMap attributes;
     private String principalCode;
     private String firstName;
     private String lastName;
     private String mobileNumber;
+    private String country;
+    private String dateOfBirth;
 
     public TaraCredential() {
         this.type = AuthenticationType.Default;
@@ -36,6 +38,14 @@ public class TaraCredential implements Credential {
         this.firstName = firstName;
         this.lastName = lastName;
         this.mobileNumber = mobileNumber;
+    }
+
+    public TaraCredential(AuthenticationResult authResult) {
+        this.type = AuthenticationType.eIDAS;
+        this.principalCode = getFormattedPersonIdentifier(authResult.getAttributes().get("PersonIdentifier"));
+        this.firstName = authResult.getAttributes().get("FirstName");
+        this.lastName = authResult.getAttributes().get("FamilyName");
+        this.dateOfBirth = authResult.getAttributes().get("DateOfBirth");
     }
 
     @Override
@@ -65,10 +75,6 @@ public class TaraCredential implements Credential {
      * ACCESSORS
      */
 
-    public AttributeMap getAttributes() {
-        return attributes;
-    }
-
     public AuthenticationType getType() {
         return type;
     }
@@ -97,4 +103,24 @@ public class TaraCredential implements Credential {
         return lastName;
     }
 
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public String getDateOfBirth() {
+        return dateOfBirth;
+    }
+
+    public void setDateOfBirth(String dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
+    }
+
+    private String getFormattedPersonIdentifier(String personIdentifier) {
+        String[] parts = personIdentifier.split("/");
+        return parts[0] + parts[2];
+    }
 }

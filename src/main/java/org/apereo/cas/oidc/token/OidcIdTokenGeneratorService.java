@@ -124,8 +124,8 @@ public class OidcIdTokenGeneratorService {
         //claims.setExpirationTime(NumericDate.fromSeconds(15));
         claims.setIssuedAtToNow();
         claims.setNotBeforeMinutesInThePast(this.skew);
-        claims.setSubject("EE" + principal.getId());
-        claims.setClaim("profile_attributes", filterMobileIDAttributes(principal.getAttributes()));
+        claims.setSubject(principal.getId());
+        claims.setClaim("profile_attributes", filterAttributes(principal.getAttributes()));
 
         if (authentication.getAttributes().containsKey(casProperties.getAuthn().getMfa().getAuthenticationContextAttribute())) {
             final Collection<Object> val = CollectionUtils.toCollection(
@@ -150,12 +150,27 @@ public class OidcIdTokenGeneratorService {
         return claims;
     }
 
-    // TODO
+    private Map<String, Object> filterAttributes(Map<String, Object> inputAttributes) {
+        if (inputAttributes.get("mobileNumber") != null) {
+            return filterMobileIDAttributes(inputAttributes);
+        } else {
+            return filterEidasAttributes(inputAttributes);
+        }
+    }
+
     private Map<String, Object> filterMobileIDAttributes(Map<String, Object> inputAttributes) {
         Map<String, Object> attrs = new TreeMap(String.CASE_INSENSITIVE_ORDER);
         attrs.put("mobile_number", inputAttributes.get("mobileNumber"));
         attrs.put("family_name", inputAttributes.get("lastName"));
         attrs.put("given_name", inputAttributes.get("firstName"));
+        return attrs;
+    }
+
+    private Map<String,Object> filterEidasAttributes(Map<String, Object> inputAttributes) {
+        Map<String, Object> attrs = new TreeMap(String.CASE_INSENSITIVE_ORDER);
+        attrs.put("family_name", inputAttributes.get("lastName"));
+        attrs.put("given_name", inputAttributes.get("firstName"));
+        attrs.put("date_of_birth", inputAttributes.get("dateOfBirth"));
         return attrs;
     }
 

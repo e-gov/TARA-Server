@@ -244,6 +244,15 @@ footer.footer {
     }
   }
 
+  .eidas {
+    background-image: url("/images/eidas.svg");
+    background-repeat: no-repeat;
+    background-size: contain;
+    height: 67px;
+    margin-top: 15px;
+    margin-left: 2em;
+  }
+
   .method-chevron {
     margin-top: 3em;
     @media screen and (max-width: 766px) {

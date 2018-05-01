@@ -15,4 +15,8 @@ public interface AuthenticationService {
 
     Event checkLoginForMobileID(RequestContext context);
 
+    Event startLoginByEidas(RequestContext context);
+
+    Event checkLoginForEidas(RequestContext context);
+
 }

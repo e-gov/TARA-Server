@@ -1,7 +1,6 @@
 package ee.ria.sso.service.impl;
 
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.security.Principal;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -10,10 +9,17 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import ee.ria.sso.EidasAuthenticator;
+import ee.ria.sso.authentication.EidasAuthenticationFailedException;
+import ee.ria.sso.model.AuthenticationResult;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,42 +59,48 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
 
     private final Logger log = LoggerFactory.getLogger(AuthenticationServiceImpl.class);
     private final MobileIDAuthenticatorWrapper mobileIDAuthenticator;
+    private final EidasAuthenticator eidasAuthenticator;
     private final Map<String, X509Certificate> issuerCertificates = new HashMap<>();
     private final OCSPValidator ocspValidator;
     private final StatisticsHandler statistics;
 
     @Value("${mobileID.countryCode:EE}")
-    private String countryCode;
+    private String midCountryCode;
 
     @Value("${mobileID.language:EST}")
-    private String language;
+    private String midLanguage;
 
     @Value("${mobileID.serviceName:Testimine}")
-    private String serviceName;
+    private String midServiceName;
 
     @Value("${mobileID.messageToDisplay:''}")
-    private String messageToDisplay;
+    private String midMessageToDisplay;
 
     @Value("${mobileID.serviceUrl:https://tsp.demo.sk.ee}")
-    private String serviceUrl;
+    private String midServiceUrl;
 
     @Value("${ocsp.url:http://demo.sk.ee/ocsp}")
     private String ocspUrl;
 
     @Value("${ocsp.certificateDirectory:}")
-    private String certDirectory;
+    private String ocspCertDirectory;
 
     @Value("${ocsp.certificates:}")
-    private String certificates;
+    private String ocspCertificates;
 
     @Value("${ocsp.enabled:false}")
-    private boolean enabled;
+    private boolean ocspEnabled;
+
+    @Value("${eidas.serviceUrl:http://localhost:8889}")
+    private String eidasServiceUrl;
 
     public AuthenticationServiceImpl(TaraResourceBundleMessageSource messageSource,
                                      MobileIDAuthenticatorWrapper mobileIDAuthenticator,
+                                     EidasAuthenticator eidasAuthenticator,
                                      OCSPValidator ocspValidator, StatisticsHandler statistics) {
         super(messageSource);
         this.mobileIDAuthenticator = mobileIDAuthenticator;
+        this.eidasAuthenticator = eidasAuthenticator;
         this.ocspValidator = ocspValidator;
         this.statistics = statistics;
     }
@@ -104,7 +116,7 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
             Principal subjectDN = certificate.getSubjectDN();
             Map<String, String> params = Splitter.on(", ").withKeyValueSeparator("=").split(subjectDN.getName());
             context.getFlowExecutionContext().getActiveSession().getScope()
-                .put("credential", new TaraCredential(params.get("SERIALNUMBER"), params.get("GIVENNAME"), params.get("SURNAME")));
+                .put("credential", new TaraCredential("EE" + params.get("SERIALNUMBER"), params.get("GIVENNAME"), params.get("SURNAME")));
             this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.IDCard, StatisticsOperation.SUCCESSFUL_AUTH);
             return new Event(this, "success");
         } catch (Exception e) {
@@ -123,7 +135,7 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
             }
             this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.MobileID, StatisticsOperation.START_AUTH);
             this.validateCredential(credential);
-            MobileIDSession mobileIDSession = this.mobileIDAuthenticator.startLogin(credential.getPrincipalCode(), this.countryCode,
+            MobileIDSession mobileIDSession = this.mobileIDAuthenticator.startLogin(credential.getPrincipalCode(), this.midCountryCode,
                 credential.getMobileNumber());
             if (this.log.isDebugEnabled()) {
                 this.log.debug("Login response received ...");
@@ -147,7 +159,7 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
         try {
             if (this.mobileIDAuthenticator.isLoginComplete(session)) {
                 context.getFlowExecutionContext().getActiveSession().getScope().put("credential",
-                    new TaraCredential(session.personalCode, session.firstName, session.lastName, getFormattedPhoneNumber(mobileNumber)));
+                    new TaraCredential("EE" + session.personalCode, session.firstName, session.lastName, getFormattedPhoneNumber(mobileNumber)));
                 this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.MobileID,
                     StatisticsOperation.SUCCESSFUL_AUTH);
                 return new Event(this, "success");
@@ -160,22 +172,73 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
         }
     }
 
+    @Override
+    public Event startLoginByEidas(RequestContext context) {
+        final TaraCredential credential = context.getFlowExecutionContext().getActiveSession().getScope().get("credential", TaraCredential.class);
+        try {
+            if (this.log.isDebugEnabled()) {
+                this.log.debug("Starting eIDAS login: <country:{}>", credential.getCountry());
+            }
+            this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.eIDAS, StatisticsOperation.START_AUTH);
+
+            String relayState = UUID.randomUUID().toString();
+            context.getExternalContext().getSessionMap().put(relayState, context.getFlowScope().get("service"));
+            byte[] authnRequest = this.eidasAuthenticator.authenticate(credential.getCountry(), relayState);
+            HttpServletResponse response = (HttpServletResponse) context.getExternalContext().getNativeResponse();
+            response.setContentType("text/html; charset=UTF-8");
+            OutputStream out = response.getOutputStream();
+            out.write(authnRequest);
+            out.flush();
+            out.close();
+            context.getExternalContext().recordResponseComplete();
+            return new Event(this, "success");
+        } catch (Exception e) {
+            throw this.handleException(context, AuthenticationType.eIDAS, e);
+        }
+    }
+
+    @Override
+    public Event checkLoginForEidas(RequestContext context) {
+        try {
+            HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getNativeRequest();
+            String relayState = request.getParameter("RelayState");
+            validateRelayState(relayState, context);
+            byte[] authResultBytes = this.eidasAuthenticator.getAuthenticationResult(request);
+            ObjectMapper jacksonObjectMapper = new ObjectMapper();
+            AuthenticationResult authResult = jacksonObjectMapper.readValue(new String(authResultBytes), AuthenticationResult.class);
+            TaraCredential credential = new TaraCredential(authResult);
+            context.getFlowExecutionContext().getActiveSession().getScope().put("credential",
+                    credential);
+            context.getFlowScope().put("service", context.getExternalContext().getSessionMap().get(relayState));
+            this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.eIDAS,
+                    StatisticsOperation.SUCCESSFUL_AUTH);
+            return new Event(this, "success");
+        } catch (Exception e) {
+            throw this.handleException(context, AuthenticationType.eIDAS, e);
+        }
+    }
+
     /*
      * RESTRICTED METHODS
      */
 
     @PostConstruct
     protected void init() {
-        this.mobileIDAuthenticator.setDigidocServiceURL(this.serviceUrl);
-        this.mobileIDAuthenticator.setLanguage(this.language);
-        this.mobileIDAuthenticator.setLoginMessage(this.messageToDisplay);
-        this.mobileIDAuthenticator.setServiceName(this.serviceName);
+        initMobileAuthenticator();
+        initEidasAuthenticator();
+    }
+
+    private void initMobileAuthenticator()  {
+        this.mobileIDAuthenticator.setDigidocServiceURL(this.midServiceUrl);
+        this.mobileIDAuthenticator.setLanguage(this.midLanguage);
+        this.mobileIDAuthenticator.setLoginMessage(this.midMessageToDisplay);
+        this.mobileIDAuthenticator.setServiceName(this.midServiceName);
         try {
-            if (this.enabled) {
+            if (this.ocspEnabled) {
                 Map<String, String> filenameAndCertCNMap =
-                    Arrays.stream(this.certificates.split(",")).map(prop -> prop.split(":"))
-                        .collect(
-                            Collectors.toMap(e -> e[0], e -> e[1]));
+                        Arrays.stream(this.ocspCertificates.split(",")).map(prop -> prop.split(":"))
+                                .collect(
+                                        Collectors.toMap(e -> e[0], e -> e[1]));
                 for (Map.Entry<String, String> entry : filenameAndCertCNMap.entrySet()) {
                     this.issuerCertificates.put(entry.getKey(), this.readCert(entry.getValue()));
                 }
@@ -183,6 +246,10 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
         } catch (IOException | CertificateException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void initEidasAuthenticator() {
+        this.eidasAuthenticator.setEidasClientUrl(this.eidasServiceUrl);
     }
 
     private void validateCredential(TaraCredential credential) {
@@ -209,6 +276,8 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
             String messageKey = String.format("message.idc.%s", ((OCSPValidationException) exception).getStatus().name()
                 .toLowerCase());
             localizedErrorMessage = this.getMessage(messageKey, "message.idc.error");
+        } else if (exception instanceof EidasAuthenticationFailedException) {
+            localizedErrorMessage = this.getMessage("message.eidas.authfailed", "message.eidas.error");
         }
         if (StringUtils.isBlank(localizedErrorMessage)) {
             localizedErrorMessage = this.getMessage("message.general.error");
@@ -217,7 +286,7 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
     }
 
     private void checkCert(X509Certificate x509Certificate) {
-        if (!this.enabled) {
+        if (!this.ocspEnabled) {
             return;
         }
         X509Certificate issuerCert = this.findIssuerCertificate(x509Certificate);
@@ -236,7 +305,7 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
     }
 
     private X509Certificate readCert(String filename) throws IOException, CertificateException {
-        String fullPath = this.certDirectory + "/" + filename;
+        String fullPath = this.ocspCertDirectory + "/" + filename;
         FileInputStream fis = new FileInputStream(fullPath);
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
         X509Certificate cert = (X509Certificate) cf.generateCertificate(fis);
@@ -250,6 +319,12 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
         context.getFlowScope().remove(Constants.MOBILE_SESSION);
         context.getFlowScope().remove(Constants.AUTH_COUNT);
         context.getFlowScope().remove(TaraCredential.class.getSimpleName());
+    }
+
+    private void validateRelayState(String relayState, RequestContext context) {
+        if (StringUtils.isEmpty(relayState) || !context.getExternalContext().getSessionMap().contains(relayState)) {
+            throw new RuntimeException("SAML response's relay state (" + relayState + ") not found among previously stored relay states!");
+        }
     }
 
     private String getFormattedPhoneNumber(String mobileNumber) {

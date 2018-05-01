@@ -45,6 +45,9 @@ public class TaraAuthenticationHandler extends AbstractPreAndPostProcessingAuthe
             if (AuthenticationType.MobileID.equals(taraCredential.getType())) {
                 this.putIfNotEmpty(map, "mobileNumber", taraCredential.getMobileNumber());
             }
+            if (AuthenticationType.eIDAS.equals(taraCredential.getType())) {
+                this.putIfNotEmpty(map, "dateOfBirth", taraCredential.getDateOfBirth());
+            }
             return this.createHandlerResult(credential, this.principalFactory
                 .createPrincipal(taraCredential.getId(), map), new ArrayList<>());
         }

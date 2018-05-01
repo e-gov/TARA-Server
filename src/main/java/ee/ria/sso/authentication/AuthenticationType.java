@@ -6,6 +6,6 @@ package ee.ria.sso.authentication;
 
 public enum AuthenticationType {
 
-    Default, IDCard, MobileID
+    Default, IDCard, MobileID, eIDAS
 
 }

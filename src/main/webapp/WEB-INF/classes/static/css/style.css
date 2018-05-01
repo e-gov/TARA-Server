@@ -177,6 +177,13 @@ footer.footer .row {
   height: 67px;
   margin-top: 15px;
   margin-left: 2em; }
+.method-block .eidas {
+  background-image: url("/images/eidas.svg");
+  background-repeat: no-repeat;
+  background-size: contain;
+  height: 67px;
+  margin-top: 15px;
+  margin-left: 2em; }
 @media screen and (max-width: 766px) {
   .method-block .mob-id {
     margin-left: 0; } }

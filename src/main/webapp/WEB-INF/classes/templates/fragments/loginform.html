@@ -97,6 +97,49 @@
                 </div>
             </div>
         </div>
+        <div class="panel">
+            <div class="method-block space-top-2 white row hidden-xs accordion-toggle collapsed" role="button"
+                 data-toggle="collapse" data-parent="#accordion" href="#collapseEidas" aria-expanded="false"
+                 aria-controls="collapseEidas">
+                <div class="col-md-3 col-sm-3">
+                    <div class="eidas"></div>
+                </div>
+                <div class="col-md-8 col-sm-8">
+                    <h3 th:text="#{label.eidas.title}"></h3>
+                    <p th:text="#{label.eidas.start}"></p>
+                </div>
+                <div class="col-md-1 col-sm-1">
+                    <i class="fa pull-right method-chevron fa-chevron-down"></i>
+                </div>
+            </div>
+            <div id="collapseEidas" class="collapse" role="tabpanel" aria-labelledby="methodEidas" aria-expanded="false">
+                <div class="block-hr hidden-xs"></div>
+                <div class="white hidden-xs method-block-collapsible">
+                    <p th:text="#{label.eidas.instruction}"></p>
+                    <div class="row">
+                        <form method="post" id="eidasForm" th:object="${credential}">
+                            <div class="label-input col-md-6 col-sm-6">
+                                <label for="country">
+                                    <span th:text="#{label.country}" th:remove="tag"></span>
+                                </label>
+                                <input type="text" id="country" placeholder="" size="2"
+                                       th:field="*{country}" autocomplete="off" required>
+                            </div>
+                            <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
+                            <input type="hidden" name="_eventId" value="eidassubmit"/>
+                            <input type="hidden" name="eidaslang" id="eidaslang" th:value="${lang}">
+                            <input type="hidden" name="geolocation"/>
+                        </form>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 col-sm-6 col-xs-50 offset-md-6 offset-sm-6 offset-xs-50">
+                            <button type="button" name="button" class="primary" th:text="#{label.button}"
+                                    onclick="$('#eidasForm').submit()"></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     <a th:href="${@taraProperties.getHomeUrl()}" class="text-black back-link icon-link">
         <i class="fa fa-chevron-left fa-fw"></i><span th:text="#{label.home}" th:remove="tag"></span>

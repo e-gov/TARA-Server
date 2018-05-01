@@ -8,6 +8,14 @@
 		<evaluate expression="initialFlowSetupAction"/>
 	</on-start>
 
+	<action-state id="handleCallbackResultOrStartNewAuthenticationProcess">
+		<evaluate expression="EIDASCallbackAction"/>
+		<transition on="login" to="initialAuthenticationRequestValidationCheck" />
+		<transition on="eidasCallback" to="handleEIDASCallBack"/>
+		<transition on="error" to="initializeLoginForm"/>
+	</action-state>
+
+
 	<action-state id="initialAuthenticationRequestValidationCheck">
 		<evaluate expression="initialAuthenticationRequestValidationAction"/>
 		<transition on="authenticationFailure" to="handleAuthenticationFailure"/>
@@ -30,6 +38,7 @@
 	<view-state id="viewLoginForm" view="casLoginView" model="credential">
 		<transition on="submit" bind="true" validate="false" to="mIDLoginStart" history="invalidate"/>
 		<transition on="idsubmit" bind="true" validate="false" to="IDLoginStart" history="invalidate"/>
+		<transition on="eidassubmit" bind="true" validate="false" to="EIDASLoginStart" history="invalidate"/>
 	</view-state>
 
 	<action-state id="IDLoginStart">
@@ -52,6 +61,24 @@
 		<evaluate expression="mobileIDCheckAuthenticationAction"/>
 		<transition on="success" to="realSubmit"/>
 		<transition on="outstanding" to="viewMobileIDLoginCode"/>
+		<transition on="error" to="initializeLoginForm"/>
+	</action-state>
+
+	<action-state id="EIDASLoginStart">
+		<evaluate expression="EIDASStartAuthenticationAction"/>
+		<transition on="success" to="keepEIDASFlowAlive"/>
+		<transition on="error" to="initializeLoginForm"/>
+	</action-state>
+
+	<view-state id="keepEIDASFlowAlive">
+		<on-entry>
+			<evaluate expression="EIDASKeepAliveAuthenticationAction"></evaluate>
+		</on-entry>
+	</view-state>
+
+	<action-state id="handleEIDASCallBack">
+		<evaluate expression="EIDASCheckAuthenticationAction"/>
+		<transition on="success" to="realSubmit"/>
 		<transition on="error" to="initializeLoginForm"/>
 	</action-state>
 
