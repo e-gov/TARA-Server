@@ -1,4 +1,9 @@
 <div class="container">
+    <noscript>
+        <div class="alert alert-danger" role="alert">
+            <strong th:text="#{label.warning}"></strong> <span th:text="#{label.warning.no.javascript}"></span>
+        </div>
+    </noscript>
     <h3 th:text="#{label.choose}"></h3>
     <div id="accordion" role="tablist" aria-multiselectable="true">
         <div class="panel">
@@ -97,7 +102,8 @@
                 </div>
             </div>
         </div>
-        <div class="panel">
+
+        <div class="panel" th:if="${not #lists.isEmpty(@taraProperties.getListOfCountries(#locale.language))}">
             <div class="method-block space-top-2 white row hidden-xs accordion-toggle collapsed" role="button"
                  data-toggle="collapse" data-parent="#accordion" href="#collapseEidas" aria-expanded="false"
                  aria-controls="collapseEidas">
@@ -117,25 +123,22 @@
                 <div class="white hidden-xs method-block-collapsible">
                     <p th:text="#{label.eidas.instruction}"></p>
                     <div class="row">
-                        <form method="post" id="eidasForm" th:object="${credential}">
-                            <div class="label-input col-md-6 col-sm-6">
-                                <label for="country">
-                                    <span th:text="#{label.country}" th:remove="tag"></span>
-                                </label>
-                                <input type="text" id="country" placeholder="" size="2"
-                                       th:field="*{country}" autocomplete="off" required>
+                        <div class="col-md-9">
+                            <div class="row" id="eIDAScountryList">
+                                <button type="button" class="btn btn-lg btn-link col-md-6" th:each="country : ${@taraProperties.getListOfCountries(#locale.language)}">
+                                    <div align="left" th:id="${country}"><span class="flag-icon" th:classappend="${'flag-icon-' + #strings.toLowerCase(country)}"></span><span style="padding-left:5px;color: #000;" th:text="#{${'label.country.' + country}}"></span></div>
+                                </button>
                             </div>
-                            <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
-                            <input type="hidden" name="_eventId" value="eidassubmit"/>
-                            <input type="hidden" name="eidaslang" id="eidaslang" th:value="${lang}">
-                            <input type="hidden" name="geolocation"/>
-                        </form>
+                        </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-6 col-sm-6 col-xs-50 offset-md-6 offset-sm-6 offset-xs-50">
-                            <button type="button" name="button" class="primary" th:text="#{label.button}"
-                                    onclick="$('#eidasForm').submit()"></button>
-                        </div>
+                        <form method="post" id="eidasForm" th:object="${credential}">
+                            <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
+                            <input type="hidden" name="_eventId" value="eidassubmit"/>
+                            <input type="hidden" name="eidaslang" id="eidaslang" th:value="${#locale.language}">
+                            <input type="hidden" name="country" value="" />
+                            <input type="hidden" name="geolocation"/>
+                        </form>
                     </div>
                 </div>
             </div>

@@ -3,14 +3,17 @@ package ee.ria.sso.config;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
-import java.util.Locale;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
 import org.apereo.cas.configuration.CasConfigurationProperties;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestAttributes;
@@ -35,6 +38,12 @@ public class TaraProperties {
     private final Environment environment;
     private final ManagerService managerService;
     private Application application = new Application();
+
+    @Autowired
+    private TaraResourceBundleMessageSource messageSource;
+
+    @Value("#{'${eidas.client.availableCountries}'.split(',')}")
+    private List<String> eidasClientAvailableCountries;
 
     public TaraProperties(CasConfigurationProperties casConfigurationProperties, Environment environment, ManagerService managerService) {
         this.casConfigurationProperties = casConfigurationProperties;
@@ -96,6 +105,22 @@ public class TaraProperties {
         return "#";
     }
 
+    public List<String> getListOfCountries(String locale) {
+        return getSortedByLocaleNameList(locale == null ? LocaleContextHolder.getLocale() : new Locale(locale));
+    }
+
+    private List<String> getSortedByLocaleNameList(Locale locale) {
+        return eidasClientAvailableCountries.stream()
+                .map(c -> new Country(c, getCountryTranslation(locale, c)))
+                .sorted()
+                .map(Country::getCode)
+                .collect(Collectors.toList());
+    }
+
+    private String getCountryTranslation(Locale locale, String c) {
+        return messageSource.getMessage("label.country." + c.toUpperCase(), null, null, locale);
+    }
+
     public Application getApplication() {
         return application;
     }
@@ -131,4 +156,27 @@ public class TaraProperties {
 
     }
 
+    public class Country implements Comparable<Country> {
+
+        private final String code;
+        private final String name;
+
+        public Country(String code, String name) {
+            this.code = code;
+            this.name = name;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        @Override
+        public int compareTo(Country o) {
+            return this.getName().compareTo(o.getName());
+        }
+    }
 }

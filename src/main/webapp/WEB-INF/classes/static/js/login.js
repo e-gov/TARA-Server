@@ -15,3 +15,8 @@ $("input[id*='mobileNumber']").keyup(function (event) {
 
 $('#accordion').on('hidden.bs.collapse', APP.toggleChevron);
 $('#accordion').on('shown.bs.collapse', APP.toggleChevron);
+
+$('#eIDAScountryList button').on('click', function(){
+     $('#eidasForm input[name="country"]').val($(this).find( "div" ).attr('id'));
+     $('#eidasForm').submit()
+});
