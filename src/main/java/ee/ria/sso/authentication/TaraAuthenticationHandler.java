@@ -42,6 +42,7 @@ public class TaraAuthenticationHandler extends AbstractPreAndPostProcessingAuthe
             this.putIfNotEmpty(map, "principalCode", taraCredential.getPrincipalCode());
             this.putIfNotEmpty(map, "firstName", taraCredential.getFirstName());
             this.putIfNotEmpty(map, "lastName", taraCredential.getLastName());
+            this.putIfNotEmpty(map, "authenticationType", taraCredential.getType().getAmrName());
             if (AuthenticationType.MobileID.equals(taraCredential.getType())) {
                 this.putIfNotEmpty(map, "mobileNumber", taraCredential.getMobileNumber());
             }

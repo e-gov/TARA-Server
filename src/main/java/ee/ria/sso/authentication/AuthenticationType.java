@@ -6,6 +6,15 @@ package ee.ria.sso.authentication;
 
 public enum AuthenticationType {
 
-    Default, IDCard, MobileID, eIDAS
+    Default(""), IDCard("idcard"), MobileID("mID"), eIDAS("eIDAS");
 
+    private final String amrName;
+
+    AuthenticationType(String amrName) {
+        this.amrName = amrName;
+    }
+
+    public String getAmrName() {
+        return this.amrName;
+    }
 }

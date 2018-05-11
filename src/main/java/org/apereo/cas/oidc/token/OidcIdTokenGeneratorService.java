@@ -10,6 +10,7 @@ import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import ee.ria.sso.authentication.AuthenticationType;
 import org.apache.commons.codec.digest.MessageDigestAlgorithms;
 import org.apereo.cas.authentication.Authentication;
 import org.apereo.cas.authentication.AuthenticationHandler;
@@ -28,6 +29,7 @@ import org.apereo.cas.web.support.WebUtils;
 import org.jose4j.jws.AlgorithmIdentifiers;
 import org.jose4j.jwt.JwtClaims;
 import org.jose4j.jwt.NumericDate;
+import org.jose4j.lang.JoseException;
 import org.pac4j.core.context.J2EContext;
 import org.pac4j.core.profile.ProfileManager;
 import org.pac4j.core.profile.UserProfile;
@@ -75,7 +77,7 @@ public class OidcIdTokenGeneratorService {
                            final AccessToken accessTokenId,
                            final long timeout,
                            final OAuth20ResponseTypes responseType,
-                           final OAuthRegisteredService registeredService) throws Exception {
+                           final OAuthRegisteredService registeredService) throws JoseException {
 
         final OidcRegisteredService oidcRegisteredService = (OidcRegisteredService) registeredService;
 
@@ -121,7 +123,6 @@ public class OidcIdTokenGeneratorService {
         final NumericDate expirationDate = NumericDate.now();
         expirationDate.addSeconds(timeout);
         claims.setExpirationTime(expirationDate);
-        //claims.setExpirationTime(NumericDate.fromSeconds(15));
         claims.setIssuedAtToNow();
         claims.setNotBeforeMinutesInThePast(this.skew);
         claims.setSubject(principal.getId());
@@ -133,14 +134,13 @@ public class OidcIdTokenGeneratorService {
             claims.setStringClaim(OidcConstants.ACR, val.iterator().next().toString());
         }
         if (authentication.getAttributes().containsKey(AuthenticationHandler.SUCCESSFUL_AUTHENTICATION_HANDLERS)) {
-            final Collection<Object> val = CollectionUtils.toCollection(
-                authentication.getAttributes().get(AuthenticationHandler.SUCCESSFUL_AUTHENTICATION_HANDLERS));
+            final Collection<Object> val = CollectionUtils.toCollection(principal.getAttributes().get("authenticationType"));
             claims.setStringListClaim(OidcConstants.AMR, val.toArray(new String[]{}));
         }
 
         claims.setClaim(OAuth20Constants.STATE, authentication.getAttributes().get(OAuth20Constants.STATE));
         claims.setClaim(OAuth20Constants.NONCE, authentication.getAttributes().get(OAuth20Constants.NONCE));
-        claims.setClaim(OidcConstants.CLAIM_AT_HASH, generateAccessTokenHash(accessTokenId, service));
+        claims.setClaim(OidcConstants.CLAIM_AT_HASH, generateAccessTokenHash(accessTokenId));
 
 		/*principal.getAttributes().entrySet().stream()
                 .filter(entry -> casProperties.getAuthn().getOidc().getClaims().contains(entry.getKey()))
@@ -174,8 +174,7 @@ public class OidcIdTokenGeneratorService {
         return attrs;
     }
 
-    private String generateAccessTokenHash(final AccessToken accessTokenId,
-                                           final OidcRegisteredService service) {
+    private String generateAccessTokenHash(final AccessToken accessTokenId) {
         final byte[] tokenBytes = accessTokenId.getId().getBytes();
         final String hashAlg;
 
