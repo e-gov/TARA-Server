@@ -1,8 +1,10 @@
 package ee.ria.sso.config;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -63,7 +65,7 @@ public class TaraProperties {
         return !locale.getLanguage().equalsIgnoreCase(code);
     }
 
-    public String getLocaleUrl(String locale) throws Exception {
+    public String getLocaleUrl(String locale) throws URISyntaxException {
         UriComponentsBuilder builder = ServletUriComponentsBuilder.fromCurrentRequest().replaceQueryParam("locale", locale);
         RequestAttributes attributes = org.springframework.web.context.request.RequestContextHolder.currentRequestAttributes();
         if (attributes instanceof ServletRequestAttributes) {
@@ -72,7 +74,7 @@ public class TaraProperties {
                 case 200:
                     break;
                 case 404:
-                    builder.replacePath("" + statusCode);
+                    builder.replacePath(Integer.toString(statusCode));
                     break;
                 default:
                     builder.replacePath("error");
@@ -92,10 +94,10 @@ public class TaraProperties {
         return "#";
     }
 
-    public String getHomeUrl() throws Exception {
+    public String getHomeUrl() throws UnsupportedEncodingException, URISyntaxException {
         ParameterMap map = RequestContextHolder.getRequestContext().getRequestParameters();
         if (map.contains("service")) {
-            Optional<NameValuePair> uri = new URIBuilder(URLDecoder.decode(map.getRequired("service"), "UTF-8")).
+            Optional<NameValuePair> uri = new URIBuilder(URLDecoder.decode(map.getRequired("service"), StandardCharsets.UTF_8.name())).
                 getQueryParams().stream().filter(p -> p.getName().equals("redirect_uri")).findFirst();
             if (uri.isPresent()) {
                 return this.managerService.getServiceByID(uri.get().getValue()).orElse(new EmptyOidcRegisteredService()).
@@ -177,6 +179,21 @@ public class TaraProperties {
         @Override
         public int compareTo(Country o) {
             return this.getName().compareTo(o.getName());
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof Country)) return false;
+            Country country = (Country) o;
+            return Objects.equals(code, country.code) &&
+                    Objects.equals(name, country.name);
+        }
+
+        @Override
+        public int hashCode() {
+
+            return Objects.hash(code, name);
         }
     }
 }
