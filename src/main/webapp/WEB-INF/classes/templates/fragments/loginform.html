@@ -6,7 +6,8 @@
     </noscript>
     <h3 th:text="#{label.choose}"></h3>
     <div id="accordion" role="tablist" aria-multiselectable="true">
-        <div class="panel">
+
+        <div class="panel" th:if="${session.taraAuthenticationMethods == null or #lists.contains(session.taraAuthenticationMethods,'IDCard')}">
             <div class="method-block space-top-2 white row hidden-xs accordion-toggle collapsed" role="button"
                  data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="false"
                  aria-controls="collapseOne">
@@ -44,7 +45,8 @@
                 </div>
             </div>
         </div>
-        <div class="panel">
+
+        <div class="panel" th:if="${session.taraAuthenticationMethods == null or #lists.contains(session.taraAuthenticationMethods,'MobileID')}">
             <div div class="method-block space-top-2 white row accordion-toggle" role="button" data-toggle="collapse"
                  data-parent="#accordion" href="#collapseMob" aria-expanded="true" aria-controls="collapseMob">
                 <div class="col-md-3 col-sm-3 col-xs-3">
@@ -103,7 +105,8 @@
             </div>
         </div>
 
-        <div class="panel" th:if="${not #lists.isEmpty(@taraProperties.getListOfCountries(#locale.language))}">
+        <div class="panel" th:if="${session.taraAuthenticationMethods == null or #lists.contains(session.taraAuthenticationMethods,'eIDAS')
+         and not #lists.isEmpty(@taraProperties.getListOfCountries(#locale.language))}">
             <div class="method-block space-top-2 white row hidden-xs accordion-toggle collapsed" role="button"
                  data-toggle="collapse" data-parent="#accordion" href="#collapseEidas" aria-expanded="false"
                  aria-controls="collapseEidas">
@@ -144,6 +147,7 @@
             </div>
         </div>
     </div>
+
     <a th:href="${@taraProperties.getHomeUrl()}" class="text-black back-link icon-link">
         <i class="fa fa-chevron-left fa-fw"></i><span th:text="#{label.home}" th:remove="tag"></span>
     </a>

@@ -1,12 +1,17 @@
 package ee.ria.sso.validators;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 
+import ee.ria.sso.authentication.AuthenticationType;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apereo.cas.support.oauth.OAuth20GrantTypes;
 import org.pac4j.core.context.J2EContext;
@@ -89,10 +94,27 @@ public class OIDCRequestValidator {
 
     private static Optional<Integer> validateScopeValue(final J2EContext context) throws Exception {
         String scope = context.getRequestParameter(RequestParameter.SCOPE.name().toLowerCase());
-        if (!"openid".equals(scope)) {
+        List scopes = Arrays.stream(scope.split(" ")).collect(Collectors.toList());
+
+        if (scopes.isEmpty() || !scopes.contains(TaraScope.OPENID.getFormalName())) {
             return resultOfBadRequest(ErrorResponse.of(context, "invalid_scope",
                 String.format("Provided scope <%s> is not allowed by TARA, only <%s> is permitted. TARA do not allow this request to be processed", scope, "openid")));
         }
+
+        List<String> allowedScopes = Stream.of(TaraScope.values()).map(TaraScope::getFormalName).collect(Collectors.toList());
+        List<String> invalidScopes = ListUtils.subtract(scopes, allowedScopes);
+        if (!invalidScopes.isEmpty()) {
+            return resultOfBadRequest(ErrorResponse.of(context, "invalid_scope", String.format(
+                    "Provided scopes <%s> are not allowed by TARA, only <%s> are permitted. TARA do not allow this request to be processed",
+                    invalidScopes.stream().collect(Collectors.joining(", ")),
+                    allowedScopes.stream().collect(Collectors.joining(", "))
+            )));
+        }
+
+        List<String> authenticationMethods = scopes.contains(TaraScope.EIDASONLY.getFormalName()) ? Arrays.asList(AuthenticationType.eIDAS.name()) :
+                Arrays.asList(AuthenticationType.IDCard.name(), AuthenticationType.MobileID.name(), AuthenticationType.eIDAS.name());
+        context.setSessionAttribute("taraAuthenticationMethods", authenticationMethods);
+
         return Optional.empty();
     }
 
