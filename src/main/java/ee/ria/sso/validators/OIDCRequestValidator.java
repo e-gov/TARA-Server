@@ -9,7 +9,6 @@ import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 
-import ee.ria.sso.authentication.AuthenticationType;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -97,23 +96,19 @@ public class OIDCRequestValidator {
         List scopes = Arrays.stream(scope.split(" ")).collect(Collectors.toList());
 
         if (scopes.isEmpty() || !scopes.contains(TaraScope.OPENID.getFormalName())) {
-            return resultOfBadRequest(ErrorResponse.of(context, "invalid_scope",
-                String.format("Provided scope <%s> is not allowed by TARA, only <%s> is permitted. TARA do not allow this request to be processed", scope, "openid")));
-        }
-
-        List<String> allowedScopes = Stream.of(TaraScope.values()).map(TaraScope::getFormalName).collect(Collectors.toList());
-        List<String> invalidScopes = ListUtils.subtract(scopes, allowedScopes);
-        if (!invalidScopes.isEmpty()) {
             return resultOfBadRequest(ErrorResponse.of(context, "invalid_scope", String.format(
-                    "Provided scopes <%s> are not allowed by TARA, only <%s> are permitted. TARA do not allow this request to be processed",
-                    invalidScopes.stream().collect(Collectors.joining(", ")),
-                    allowedScopes.stream().collect(Collectors.joining(", "))
+                    "Required scope <%s> not provided. TARA do not allow this request to be processed",
+                    TaraScope.OPENID.getFormalName()
             )));
         }
 
-        List<String> authenticationMethods = scopes.contains(TaraScope.EIDASONLY.getFormalName()) ? Arrays.asList(AuthenticationType.eIDAS.name()) :
-                Arrays.asList(AuthenticationType.IDCard.name(), AuthenticationType.MobileID.name(), AuthenticationType.eIDAS.name());
-        context.setSessionAttribute("taraAuthenticationMethods", authenticationMethods);
+        List<String> allowedScopes = Stream.of(TaraScope.values()).map(TaraScope::getFormalName).collect(Collectors.toList());
+        if (!ListUtils.subtract(scopes, allowedScopes).isEmpty()) {
+            return resultOfBadRequest(ErrorResponse.of(context, "invalid_scope", String.format(
+                    "One or some of the provided scopes are not allowed by TARA, only <%s> are permitted. TARA do not allow this request to be processed",
+                    allowedScopes.stream().collect(Collectors.joining(", "))
+            )));
+        }
 
         return Optional.empty();
     }
@@ -121,8 +116,9 @@ public class OIDCRequestValidator {
     private static Optional<Integer> validateResponseType(final J2EContext context) {
         String responseType = context.getRequestParameter(RequestParameter.RESPONSE_TYPE.name().toLowerCase());
         if (!"code".equals(responseType)) {
-            return resultOfBadRequest(ErrorResponse.of(context, "unsupported_response_type",
-                String.format("Provided response type <%s> is not allowed by TARA, only <%s> is permitted. TARA do not allow this request to be processed", responseType, "code")));
+            return resultOfBadRequest(ErrorResponse.of(context, "unsupported_response_type", String.format(
+                    "Provided response type is not allowed by TARA, only <%s> is permitted. TARA do not allow this request to be processed", "code"
+            )));
         }
         return Optional.empty();
     }

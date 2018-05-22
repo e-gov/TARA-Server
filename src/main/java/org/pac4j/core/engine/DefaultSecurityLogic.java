@@ -6,7 +6,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import ee.ria.sso.authentication.AuthenticationType;
+import ee.ria.sso.validators.TaraScope;
 import org.pac4j.core.authorization.checker.AuthorizationChecker;
 import org.pac4j.core.authorization.checker.DefaultAuthorizationChecker;
 import org.pac4j.core.client.Client;
@@ -133,6 +136,7 @@ public class DefaultSecurityLogic<R, C extends WebContext> extends ProfileManage
             } else if (this.startAuthentication(context, currentClients)) {
                 this.log.debug("Starting authentication");
                 this.saveRequestedUrl(context, currentClients);
+                this.saveAllowedAuthenticationMethods(context);
                 action = this.redirectToIdentityProvider(context, currentClients);
             } else {
                 this.log.debug("unauthorized");
@@ -171,6 +175,15 @@ public class DefaultSecurityLogic<R, C extends WebContext> extends ProfileManage
         String requestedUrl = context.getFullRequestURL();
         this.log.debug("requestedUrl: {}", requestedUrl);
         context.setSessionAttribute("pac4jRequestedUrl", requestedUrl);
+    }
+
+    protected void saveAllowedAuthenticationMethods(C context) {
+        String scope = context.getRequestParameter(RequestParameter.SCOPE.name().toLowerCase());
+        List scopes = Arrays.stream(scope.split(" ")).collect(Collectors.toList());
+
+        List<String> authenticationMethods = scopes.contains(TaraScope.EIDASONLY.getFormalName()) ? Arrays.asList(AuthenticationType.eIDAS.name()) :
+                Arrays.asList(AuthenticationType.IDCard.name(), AuthenticationType.MobileID.name(), AuthenticationType.eIDAS.name());
+        context.setSessionAttribute("taraAuthenticationMethods", authenticationMethods);
     }
 
     protected HttpAction redirectToIdentityProvider(C context, List<Client> currentClients) throws HttpAction {
