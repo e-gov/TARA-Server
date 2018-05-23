@@ -11,7 +11,8 @@ public enum RequestParameter {
     STATE("invalid_request", true),
     REDIRECT_URI("invalid_request", true),
     RESPONSE_TYPE("invalid_request", true),
-    NONCE("invalid_request", false);
+    NONCE("invalid_request", false),
+    ACR_VALUES("invalid_request", false);
 
     private String error;
     private boolean mandatory;

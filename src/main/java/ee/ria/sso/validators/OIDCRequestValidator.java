@@ -17,6 +17,7 @@ import org.pac4j.core.context.J2EContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ee.ria.sso.authentication.LevelOfAssurance;
 import ee.ria.sso.flow.JSONFlowExecutionException;
 
 /**
@@ -73,6 +74,9 @@ public class OIDCRequestValidator {
                 case RESPONSE_TYPE:
                     code = validateResponseType(context);
                     break;
+                case ACR_VALUES:
+                    code = validateAcrValues(context);
+                    break;
                 default:
                     code = Optional.empty();
             }
@@ -120,6 +124,24 @@ public class OIDCRequestValidator {
                     "Provided response type is not allowed by TARA, only <%s> is permitted. TARA do not allow this request to be processed", "code"
             )));
         }
+        return Optional.empty();
+    }
+
+    private static Optional<Integer> validateAcrValues(final J2EContext context) {
+        String acrValues = context.getRequestParameter(RequestParameter.ACR_VALUES.name().toLowerCase());
+
+        if (acrValues != null) {
+            final List<String> allowedValues = Stream.of(LevelOfAssurance.values())
+                    .map(LevelOfAssurance::getAcrName).collect(Collectors.toList());
+
+            if (!allowedValues.contains(acrValues)) {
+                return resultOfBadRequest(ErrorResponse.of(context, "unsupported_acr_values", String.format(
+                        "Provided acr_values is not allowed by TARA, only <%s> are permitted. TARA do not allow this request to be processed",
+                        allowedValues.stream().collect(Collectors.joining(", ")
+                ))));
+            }
+        }
+
         return Optional.empty();
     }
 

@@ -1,8 +1,8 @@
 package ee.ria.sso.authentication.credential;
 
+import ee.ria.sso.authentication.LevelOfAssurance;
 import ee.ria.sso.model.AuthenticationResult;
 import org.apereo.cas.authentication.Credential;
-import org.springframework.webflow.core.collection.AttributeMap;
 
 import ee.ria.sso.authentication.AuthenticationType;
 
@@ -19,6 +19,7 @@ public class TaraCredential implements Credential {
     private String mobileNumber;
     private String country;
     private String dateOfBirth;
+    private LevelOfAssurance levelOfAssurance;
 
     public TaraCredential() {
         this.type = AuthenticationType.Default;
@@ -46,6 +47,9 @@ public class TaraCredential implements Credential {
         this.firstName = authResult.getAttributes().get("FirstName");
         this.lastName = authResult.getAttributes().get("FamilyName");
         this.dateOfBirth = authResult.getAttributes().get("DateOfBirth");
+
+        String loa = authResult.getLevelOfAssurance();
+        if (loa != null) this.levelOfAssurance = LevelOfAssurance.findByFormalName(loa);
     }
 
     @Override
@@ -117,6 +121,14 @@ public class TaraCredential implements Credential {
 
     public void setDateOfBirth(String dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
+    }
+
+    public LevelOfAssurance getLevelOfAssurance() {
+        return levelOfAssurance;
+    }
+
+    public void setLevelOfAssurance(LevelOfAssurance levelOfAssurance) {
+        this.levelOfAssurance = levelOfAssurance;
     }
 
     private String getFormattedPersonIdentifier(String personIdentifier) {

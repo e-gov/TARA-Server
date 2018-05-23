@@ -128,11 +128,15 @@ public class OidcIdTokenGeneratorService {
         claims.setSubject(principal.getId());
         claims.setClaim("profile_attributes", filterAttributes(principal.getAttributes()));
 
-        if (authentication.getAttributes().containsKey(casProperties.getAuthn().getMfa().getAuthenticationContextAttribute())) {
+        if (AuthenticationType.eIDAS.name().equals(principal.getAttributes().get("authenticationType"))) {
+            String levelOfAssurance = (String) principal.getAttributes().get("levelOfAssurance");
+            if (levelOfAssurance != null) claims.setStringClaim(OidcConstants.ACR, levelOfAssurance);
+        }
+        /*if (authentication.getAttributes().containsKey(casProperties.getAuthn().getMfa().getAuthenticationContextAttribute())) {
             final Collection<Object> val = CollectionUtils.toCollection(
                 authentication.getAttributes().get(casProperties.getAuthn().getMfa().getAuthenticationContextAttribute()));
             claims.setStringClaim(OidcConstants.ACR, val.iterator().next().toString());
-        }
+        }*/
         if (authentication.getAttributes().containsKey(AuthenticationHandler.SUCCESSFUL_AUTHENTICATION_HANDLERS)) {
             final Collection<Object> val = CollectionUtils.toCollection(principal.getAttributes().get("authenticationType"));
             claims.setStringListClaim(OidcConstants.AMR, val.toArray(new String[]{}));

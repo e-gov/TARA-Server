@@ -137,6 +137,7 @@ public class DefaultSecurityLogic<R, C extends WebContext> extends ProfileManage
                 this.log.debug("Starting authentication");
                 this.saveRequestedUrl(context, currentClients);
                 this.saveAllowedAuthenticationMethods(context);
+                this.saveAcrValuesIfPresent(context);
                 action = this.redirectToIdentityProvider(context, currentClients);
             } else {
                 this.log.debug("unauthorized");
@@ -184,6 +185,14 @@ public class DefaultSecurityLogic<R, C extends WebContext> extends ProfileManage
         List<String> authenticationMethods = scopes.contains(TaraScope.EIDASONLY.getFormalName()) ? Arrays.asList(AuthenticationType.eIDAS.name()) :
                 Arrays.asList(AuthenticationType.IDCard.name(), AuthenticationType.MobileID.name(), AuthenticationType.eIDAS.name());
         context.setSessionAttribute("taraAuthenticationMethods", authenticationMethods);
+    }
+
+    protected void saveAcrValuesIfPresent(C context) {
+        String acrValues = context.getRequestParameter(RequestParameter.ACR_VALUES.getParameterKey());
+        if (acrValues == null) return;
+
+        this.log.debug("acr_values: {}", acrValues);
+        context.setSessionAttribute("taraAuthorizeRequestAcrValues", acrValues);
     }
 
     protected HttpAction redirectToIdentityProvider(C context, List<Client> currentClients) throws HttpAction {

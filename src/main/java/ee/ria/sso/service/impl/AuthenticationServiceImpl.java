@@ -183,7 +183,8 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
 
             String relayState = UUID.randomUUID().toString();
             context.getExternalContext().getSessionMap().put(relayState, context.getFlowScope().get("service"));
-            byte[] authnRequest = this.eidasAuthenticator.authenticate(credential.getCountry(), relayState);
+            String loa = (String) context.getExternalContext().getSessionMap().get("taraAuthorizeRequestAcrValues");
+            byte[] authnRequest = this.eidasAuthenticator.authenticate(credential.getCountry(), relayState, loa);
             HttpServletResponse response = (HttpServletResponse) context.getExternalContext().getNativeResponse();
             response.setContentType("text/html; charset=UTF-8");
             OutputStream out = response.getOutputStream();

@@ -48,6 +48,8 @@ public class TaraAuthenticationHandler extends AbstractPreAndPostProcessingAuthe
             }
             if (AuthenticationType.eIDAS.equals(taraCredential.getType())) {
                 this.putIfNotEmpty(map, "dateOfBirth", taraCredential.getDateOfBirth());
+                if (taraCredential.getLevelOfAssurance() != null)
+                    map.put("levelOfAssurance", taraCredential.getLevelOfAssurance().getAcrName());
             }
             return this.createHandlerResult(credential, this.principalFactory
                 .createPrincipal(taraCredential.getId(), map), new ArrayList<>());
