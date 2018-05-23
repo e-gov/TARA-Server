@@ -46,12 +46,9 @@ public class EidasAuthenticator {
         this.eidasClientUrl = eidasClientUrl;
     }
 
-    public byte[] authenticate(String country, String relayState, String loa) throws IOException {
+    public byte[] authenticate(String country, String relayState, LevelOfAssurance loa) throws IOException {
         String uri = eidasClientUrl + "/login" + "?Country=" + country + "&RelayState=" + relayState;
-        if (loa != null && Stream.of(LevelOfAssurance.values()).map(LevelOfAssurance::getAcrName)
-                .collect(Collectors.toList()).contains(loa)) {
-            uri += ("&LoA=" + loa.toUpperCase());
-        }
+        if (loa != null) uri += ("&LoA=" + loa.getAcrName().toUpperCase());
 
         log.debug("Sending authentication request to eIDAS-Client: <{}>", uri);
         HttpGet get = new HttpGet(uri);

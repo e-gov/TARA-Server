@@ -25,16 +25,24 @@ public enum LevelOfAssurance {
         return this.acrName;
     }
 
-    private static final Map<String, LevelOfAssurance> map;
+    private static final Map<String, LevelOfAssurance> formalNameMap;
+    private static final Map<String, LevelOfAssurance> acrNameMap;
 
     static {
-        map = new HashMap<String, LevelOfAssurance>();
+        formalNameMap = new HashMap<String, LevelOfAssurance>();
+        acrNameMap = new HashMap<String, LevelOfAssurance>();
+
         for (LevelOfAssurance loa : LevelOfAssurance.values()) {
-            map.put(loa.formalName, loa);
+            formalNameMap.put(loa.formalName, loa);
+            acrNameMap.put(loa.acrName, loa);
         }
     }
 
     public static LevelOfAssurance findByFormalName(String formalName) {
-        return map.get(formalName);
+        return formalNameMap.get(formalName);
+    }
+
+    public static LevelOfAssurance findByAcrName(String acrName) {
+        return acrNameMap.get(acrName);
     }
 }

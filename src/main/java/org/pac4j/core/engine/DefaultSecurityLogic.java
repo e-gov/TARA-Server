@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import ee.ria.sso.authentication.AuthenticationType;
+import ee.ria.sso.authentication.LevelOfAssurance;
 import ee.ria.sso.validators.TaraScope;
 import org.pac4j.core.authorization.checker.AuthorizationChecker;
 import org.pac4j.core.authorization.checker.DefaultAuthorizationChecker;
@@ -137,7 +138,7 @@ public class DefaultSecurityLogic<R, C extends WebContext> extends ProfileManage
                 this.log.debug("Starting authentication");
                 this.saveRequestedUrl(context, currentClients);
                 this.saveAllowedAuthenticationMethods(context);
-                this.saveAcrValuesIfPresent(context);
+                this.saveLevelOfAssuranceIfPresent(context);
                 action = this.redirectToIdentityProvider(context, currentClients);
             } else {
                 this.log.debug("unauthorized");
@@ -187,12 +188,14 @@ public class DefaultSecurityLogic<R, C extends WebContext> extends ProfileManage
         context.setSessionAttribute("taraAuthenticationMethods", authenticationMethods);
     }
 
-    protected void saveAcrValuesIfPresent(C context) {
+    protected void saveLevelOfAssuranceIfPresent(C context) {
         String acrValues = context.getRequestParameter(RequestParameter.ACR_VALUES.getParameterKey());
         if (acrValues == null) return;
 
         this.log.debug("acr_values: {}", acrValues);
-        context.setSessionAttribute("taraAuthorizeRequestAcrValues", acrValues);
+
+        LevelOfAssurance loa = LevelOfAssurance.findByAcrName(acrValues);
+        context.setSessionAttribute("taraAuthorizeRequestLevelOfAssurance", loa);
     }
 
     protected HttpAction redirectToIdentityProvider(C context, List<Client> currentClients) throws HttpAction {

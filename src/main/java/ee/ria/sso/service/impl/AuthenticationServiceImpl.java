@@ -18,7 +18,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ee.ria.sso.EidasAuthenticator;
-import ee.ria.sso.authentication.EidasAuthenticationFailedException;
+import ee.ria.sso.authentication.*;
 import ee.ria.sso.model.AuthenticationResult;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -36,9 +36,6 @@ import com.google.common.base.Splitter;
 
 import ee.ria.sso.Constants;
 import ee.ria.sso.MobileIDAuthenticatorWrapper;
-import ee.ria.sso.authentication.AuthenticationType;
-import ee.ria.sso.authentication.TaraAuthenticationException;
-import ee.ria.sso.authentication.TaraCredentialsException;
 import ee.ria.sso.authentication.credential.TaraCredential;
 import ee.ria.sso.common.AbstractService;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
@@ -183,7 +180,7 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
 
             String relayState = UUID.randomUUID().toString();
             context.getExternalContext().getSessionMap().put(relayState, context.getFlowScope().get("service"));
-            String loa = (String) context.getExternalContext().getSessionMap().get("taraAuthorizeRequestAcrValues");
+            LevelOfAssurance loa = (LevelOfAssurance) context.getExternalContext().getSessionMap().get("taraAuthorizeRequestLevelOfAssurance");
             byte[] authnRequest = this.eidasAuthenticator.authenticate(credential.getCountry(), relayState, loa);
             HttpServletResponse response = (HttpServletResponse) context.getExternalContext().getNativeResponse();
             response.setContentType("text/html; charset=UTF-8");
