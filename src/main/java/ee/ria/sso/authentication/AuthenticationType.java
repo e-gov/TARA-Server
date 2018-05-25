@@ -6,7 +6,7 @@ package ee.ria.sso.authentication;
 
 public enum AuthenticationType {
 
-    Default(""), IDCard("idcard"), MobileID("mID"), eIDAS("eIDAS");
+    Default(""), IDCard("idcard"), MobileID("mID"), eIDAS("eIDAS"), BankLink("banklink"); // TODO: correct name?
 
     private final String amrName;
 

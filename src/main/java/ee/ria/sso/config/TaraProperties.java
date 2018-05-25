@@ -47,6 +47,9 @@ public class TaraProperties {
     @Value("#{'${eidas.client.availableCountries}'.split(',')}")
     private List<String> eidasClientAvailableCountries;
 
+    @Value("#{'${bank.availableBanks}'.split(',')}")
+    private List<String> bankAvailableBanks;
+
     public TaraProperties(CasConfigurationProperties casConfigurationProperties, Environment environment, ManagerService managerService) {
         this.casConfigurationProperties = casConfigurationProperties;
         this.environment = environment;
@@ -123,6 +126,21 @@ public class TaraProperties {
         return messageSource.getMessage("label.country." + c.toUpperCase(), null, null, locale);
     }
 
+    public List<Bank> getListOfBanks() {
+        return bankAvailableBanks.stream()
+                .map(b -> new Bank(b, getBankUrl(b), getBankName(b)))
+                .filter(b -> b.getUrl() != null)
+                .collect(Collectors.toList());
+    }
+
+    private String getBankUrl(String b) {
+        return environment.getProperty("bank." + b + ".url");
+    }
+
+    private String getBankName(String b) {
+        return messageSource.getMessage("label.bank." + b, null, null);
+    }
+
     public Application getApplication() {
         return application;
     }
@@ -194,6 +212,31 @@ public class TaraProperties {
         public int hashCode() {
 
             return Objects.hash(code, name);
+        }
+    }
+
+    public class Bank {
+
+        private final String identifier;
+        private final String url;
+        private final String name;
+
+        public Bank(String identifier, String url, String name) {
+            this.identifier = identifier;
+            this.url = url;
+            this.name = name;
+        }
+
+        public String getIdentifier() {
+            return identifier;
+        }
+
+        public String getUrl() {
+            return url;
+        }
+
+        public String getName() {
+            return name;
         }
     }
 }

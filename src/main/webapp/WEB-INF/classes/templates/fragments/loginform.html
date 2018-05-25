@@ -146,6 +146,51 @@
                 </div>
             </div>
         </div>
+
+        <div class="panel" th:if="${session.taraAuthenticationMethods == null or #lists.contains(session.taraAuthenticationMethods,'BankLink')
+             and not #lists.isEmpty(@taraProperties.getListOfBanks())}">
+            <div class="method-block space-top-2 white row accordion-toggle collapsed" role="button"
+                 data-toggle="collapse" data-parent="#accordion" href="#collapseBank" aria-expanded="false"
+                 aria-controls="collapseBank">
+                <div class="col-md-3 col-sm-3 col-xs-3">
+                    <div class="bank-link"></div>
+                </div>
+                <div class="col-md-8 col-sm-8 col-xs-9">
+                    <h3 th:text="#{label.bank.title}"></h3>
+                    <p th:text="#{label.bank.start}"></p>
+                </div>
+                <div class="col-md-1 col-sm-1 hidden-xs">
+                    <i class="fa pull-right method-chevron fa-chevron-down"></i>
+                </div>
+            </div>
+            <div id="collapseBank" class="collapse" role="tabpanel" aria-labelledby="methodBank" aria-expanded="false">
+                <div class="block-hr"></div>
+                <div class="white method-block-collapsible">
+                    <p th:text="#{label.bank.instruction}"></p>
+                    <div class="row">
+                        <div class="col-md-12 col-xs-12">
+                            <div class="row" id="bankList">
+                                <button type="button" class="btn btn-lg btn-link col-md-3 col-xs-4" th:each="bank : ${@taraProperties.getListOfBanks()}">
+                                    <div align="center" th:id="${bank.identifier}">
+                                        <span class="bank-icon" th:classappend="${'bank-icon-' + bank.identifier}"></span><br>
+                                        <span th:text="${bank.name}"></span>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <form method="post" id="bankForm" th:object="${credential}">
+                            <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
+                            <input type="hidden" name="_eventId" value="banksubmit"/>
+                            <input type="hidden" name="banklang" id="banklang" th:value="${#locale.language}">
+                            <input type="hidden" name="country" value="" />
+                            <input type="hidden" name="geolocation"/>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <a th:href="${@taraProperties.getHomeUrl()}" class="text-black back-link icon-link">

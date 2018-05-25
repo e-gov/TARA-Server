@@ -1,0 +1,30 @@
+.bank-icon {
+  background-size: contain;
+  background-position: 50%;
+  background-repeat: no-repeat;
+  position: relative;
+  display: inline-block;
+  padding-top: 35%;
+  width: 100%;
+}
+.bank-icon-coop {
+  background-image: url(../images/banks/logo_coop.gif);
+}
+.bank-icon-danske {
+  background-image: url(../images/banks/logo_danske.gif);
+}
+.bank-icon-lhv {
+  background-image: url(../images/banks/logo_lhv.gif);
+}
+.bank-icon-nordea {
+  background-image: url(../images/banks/logo_nordea.gif);
+}
+.bank-icon-lhv {
+  background-image: url(../images/banks/logo_lhv.gif);
+}
+.bank-icon-seb {
+  background-image: url(../images/banks/logo_seb.gif);
+}
+.bank-icon-swedbank {
+  background-image: url(../images/banks/logo_swedbank.gif);
+}

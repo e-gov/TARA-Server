@@ -184,8 +184,18 @@ footer.footer .row {
   height: 67px;
   margin-top: 15px;
   margin-left: 2em; }
+.method-block .bank-link {
+  background-image: url("/images/banklink.svg");
+  background-repeat: no-repeat;
+  background-size: contain;
+  height: 67px;
+  margin-top: 15px;
+  margin-left: 2em; }
 @media screen and (max-width: 766px) {
   .method-block .mob-id {
+    margin-left: 0; } }
+@media screen and (max-width: 766px) {
+  .method-block .bank-link {
     margin-left: 0; } }
 .method-block .method-chevron {
   margin-top: 3em; }
