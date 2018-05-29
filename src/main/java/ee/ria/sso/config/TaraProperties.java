@@ -44,10 +44,10 @@ public class TaraProperties {
     @Autowired
     private TaraResourceBundleMessageSource messageSource;
 
-    @Value("#{'${eidas.client.availableCountries}'.split(',')}")
+    @Value("#{T(ee.ria.sso.config.TaraProperties).parsePropertiesList('${eidas.client.availableCountries:}')}")
     private List<String> eidasClientAvailableCountries;
 
-    @Value("#{'${bank.availableBanks}'.split(',')}")
+    @Value("#{T(ee.ria.sso.config.TaraProperties).parsePropertiesList('${bank.availableBanks:}')}")
     private List<String> bankAvailableBanks;
 
     public TaraProperties(CasConfigurationProperties casConfigurationProperties, Environment environment, ManagerService managerService) {
@@ -238,5 +238,10 @@ public class TaraProperties {
         public String getName() {
             return name;
         }
+    }
+
+    public static List<String> parsePropertiesList(String input) {
+        if (input == null || input.isEmpty()) return Collections.emptyList();
+        return Arrays.asList(input.split(","));
     }
 }

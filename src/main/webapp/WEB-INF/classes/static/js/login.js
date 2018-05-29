@@ -20,3 +20,8 @@ $('#eIDAScountryList button').on('click', function(){
      $('#eidasForm input[name="country"]').val($(this).find( "div" ).attr('id'));
      $('#eidasForm').submit()
 });
+
+$('#bankList button').on('click', function(){
+     $('#bankForm input[name="bank"]').val($(this).find( "div" ).attr('id'));
+     $('#bankForm').submit()
+});

@@ -184,7 +184,7 @@ public class DefaultSecurityLogic<R, C extends WebContext> extends ProfileManage
         List scopes = Arrays.stream(scope.split(" ")).collect(Collectors.toList());
 
         List<String> authenticationMethods = scopes.contains(TaraScope.EIDASONLY.getFormalName()) ? Arrays.asList(AuthenticationType.eIDAS.name()) :
-                Arrays.asList(AuthenticationType.IDCard.name(), AuthenticationType.MobileID.name(), AuthenticationType.eIDAS.name(), AuthenticationType.BankLink.name());
+                Arrays.stream(AuthenticationType.values()).filter(e -> e != AuthenticationType.Default).map(AuthenticationType::name).collect(Collectors.toList());
         context.setSessionAttribute("taraAuthenticationMethods", authenticationMethods);
     }
 
