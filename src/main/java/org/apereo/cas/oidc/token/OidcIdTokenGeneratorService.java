@@ -1,11 +1,6 @@
 package org.apereo.cas.oidc.token;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Optional;
-import java.util.TreeMap;
-import java.util.UUID;
+import java.util.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -154,28 +149,51 @@ public class OidcIdTokenGeneratorService {
         return claims;
     }
 
+    private static final Map<String, String> attributeMap = new HashMap<>();
+    static {
+        attributeMap.put("lastName", "family_name");
+        attributeMap.put("firstName", "given_name");
+        attributeMap.put("dateOfBirth", "date_of_birth");
+        attributeMap.put("mobileNumber", "mobile_number");
+    }
+
     private Map<String, Object> filterAttributes(Map<String, Object> inputAttributes) {
-        if (inputAttributes.get("mobileNumber") != null) {
-            return filterMobileIDAttributes(inputAttributes);
-        } else {
-            return filterEidasAttributes(inputAttributes);
+        Map<String, Object> attrs = new TreeMap(String.CASE_INSENSITIVE_ORDER);
+
+        for (String inputAttributeName : inputAttributes.keySet()) {
+            String mappedAttributeName = attributeMap.get(inputAttributeName);
+            if (mappedAttributeName == null) continue;
+
+            attrs.put(mappedAttributeName, inputAttributes.get(inputAttributeName));
         }
-    }
 
-    private Map<String, Object> filterMobileIDAttributes(Map<String, Object> inputAttributes) {
-        Map<String, Object> attrs = new TreeMap(String.CASE_INSENSITIVE_ORDER);
-        attrs.put("mobile_number", inputAttributes.get("mobileNumber"));
-        attrs.put("family_name", inputAttributes.get("lastName"));
-        attrs.put("given_name", inputAttributes.get("firstName"));
+        if (attrs.get("date_of_birth") == null) {
+            String principalCode = (String) inputAttributes.get("principalCode");
+            if (principalCode != null) {
+                String dateOfBirth = tryToExtractDateOfBirth(principalCode);
+                if (dateOfBirth != null) attrs.put("date_of_birth", dateOfBirth);
+            }
+        }
+
         return attrs;
     }
 
-    private Map<String,Object> filterEidasAttributes(Map<String, Object> inputAttributes) {
-        Map<String, Object> attrs = new TreeMap(String.CASE_INSENSITIVE_ORDER);
-        attrs.put("family_name", inputAttributes.get("lastName"));
-        attrs.put("given_name", inputAttributes.get("firstName"));
-        attrs.put("date_of_birth", inputAttributes.get("dateOfBirth"));
-        return attrs;
+    private String tryToExtractDateOfBirth(String principalCode) {
+        if (principalCode.length() != 13 || !principalCode.startsWith("EE")) return null;
+
+        int sexAndCentury = Integer.parseUnsignedInt(principalCode.substring(2, 3));
+        if (sexAndCentury < 1 || sexAndCentury > 6) return null;
+
+        int birthYear = Integer.parseUnsignedInt(principalCode.substring(3, 5));
+        birthYear += (1800 + ((sexAndCentury - 1) >>> 1) * 100);
+
+        int birthMonth = Integer.parseUnsignedInt(principalCode.substring(5, 7));
+        if (birthMonth < 1 || birthMonth > 12) return null;
+
+        int birthDay = Integer.parseUnsignedInt(principalCode.substring(7, 9));
+        if (birthDay < 1 || birthDay > 31) return null;
+
+        return String.format("%04d-%02d-%02d", birthYear, birthMonth, birthDay);
     }
 
     private String generateAccessTokenHash(final AccessToken accessTokenId) {
