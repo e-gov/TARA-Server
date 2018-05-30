@@ -148,7 +148,7 @@
         </div>
 
         <div class="panel" th:if="${session.taraAuthenticationMethods == null or #lists.contains(session.taraAuthenticationMethods,'BankLink')
-             and not #lists.isEmpty(@taraProperties.getListOfBanks())}">
+             and not #lists.isEmpty(@taraProperties.getListOfBanks(#locale.language))}">
             <div class="method-block space-top-2 white row accordion-toggle collapsed" role="button"
                  data-toggle="collapse" data-parent="#accordion" href="#collapseBank" aria-expanded="false"
                  aria-controls="collapseBank">
@@ -170,7 +170,7 @@
                     <div class="row">
                         <div class="col-md-12 col-xs-12">
                             <div class="row" id="bankList">
-                                <button type="button" class="btn btn-lg btn-link col-md-3 col-xs-4" th:each="bank : ${@taraProperties.getListOfBanks()}">
+                                <button type="button" class="btn btn-lg btn-link col-md-3 col-xs-4" th:each="bank : ${@taraProperties.getListOfBanks(#locale.language)}">
                                     <div align="center" th:id="${bank.identifier}">
                                         <span class="bank-icon" th:classappend="${'bank-icon-' + bank.identifier}"></span><br>
                                         <span th:text="${bank.name}"></span>

@@ -126,9 +126,10 @@ public class TaraProperties {
         return messageSource.getMessage("label.country." + c.toUpperCase(), null, null, locale);
     }
 
-    public List<Bank> getListOfBanks() {
+    public List<Bank> getListOfBanks(String locale) {
+        final Locale l = (locale == null) ? LocaleContextHolder.getLocale() : new Locale(locale);
         return bankAvailableBanks.stream()
-                .map(b -> new Bank(b, getBankUrl(b), getBankName(b)))
+                .map(b -> new Bank(b, getBankUrl(b), getBankName(b, l)))
                 .filter(b -> b.getUrl() != null)
                 .collect(Collectors.toList());
     }
@@ -137,8 +138,8 @@ public class TaraProperties {
         return environment.getProperty("bank." + b + ".url");
     }
 
-    private String getBankName(String b) {
-        return messageSource.getMessage("label.bank." + b, null, null);
+    private String getBankName(String b, Locale locale) {
+        return messageSource.getMessage("label.bank." + b, null, "no translation", locale);
     }
 
     public Application getApplication() {
