@@ -169,7 +169,7 @@ public class OidcIdTokenGeneratorService {
 
         if (attrs.get("date_of_birth") == null) {
             String principalCode = (String) inputAttributes.get("principalCode");
-            if (principalCode != null) {
+            if (principalCode != null && isEstonianIdCode(principalCode)) {
                 String dateOfBirth = tryToExtractDateOfBirth(principalCode);
                 if (dateOfBirth != null) attrs.put("date_of_birth", dateOfBirth);
             }
@@ -178,19 +178,21 @@ public class OidcIdTokenGeneratorService {
         return attrs;
     }
 
-    private String tryToExtractDateOfBirth(String principalCode) {
-        if (principalCode.length() != 13 || !principalCode.startsWith("EE")) return null;
+    private boolean isEstonianIdCode(String principalCode) {
+        return principalCode.length() == 13 && principalCode.startsWith("EE");
+    }
 
-        int sexAndCentury = Integer.parseUnsignedInt(principalCode.substring(2, 3));
+    private String tryToExtractDateOfBirth(String estonianIdCode) {
+        int sexAndCentury = Integer.parseUnsignedInt(estonianIdCode.substring(2, 3));
         if (sexAndCentury < 1 || sexAndCentury > 6) return null;
 
-        int birthYear = Integer.parseUnsignedInt(principalCode.substring(3, 5));
+        int birthYear = Integer.parseUnsignedInt(estonianIdCode.substring(3, 5));
         birthYear += (1800 + ((sexAndCentury - 1) >>> 1) * 100);
 
-        int birthMonth = Integer.parseUnsignedInt(principalCode.substring(5, 7));
+        int birthMonth = Integer.parseUnsignedInt(estonianIdCode.substring(5, 7));
         if (birthMonth < 1 || birthMonth > 12) return null;
 
-        int birthDay = Integer.parseUnsignedInt(principalCode.substring(7, 9));
+        int birthDay = Integer.parseUnsignedInt(estonianIdCode.substring(7, 9));
         if (birthDay < 1 || birthDay > 31) return null;
 
         return String.format("%04d-%02d-%02d", birthYear, birthMonth, birthDay);
