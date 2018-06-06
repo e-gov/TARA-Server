@@ -1,13 +1,9 @@
 package ee.ria.sso.config;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.stream.Collectors;
-
+import ee.ria.sso.authentication.BankEnum;
+import ee.ria.sso.model.EmptyOidcRegisteredService;
+import ee.ria.sso.service.ManagerService;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
@@ -25,8 +21,13 @@ import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.webflow.core.collection.ParameterMap;
 import org.springframework.webflow.execution.RequestContextHolder;
 
-import ee.ria.sso.model.EmptyOidcRegisteredService;
-import ee.ria.sso.service.ManagerService;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Janar Rahumeel (CGI Estonia)
@@ -47,8 +48,8 @@ public class TaraProperties {
     @Value("#{T(ee.ria.sso.config.TaraProperties).parsePropertiesList('${eidas.client.availableCountries:}')}")
     private List<String> eidasClientAvailableCountries;
 
-    @Value("#{T(ee.ria.sso.config.TaraProperties).parsePropertiesList('${bank.availableBanks:}')}")
-    private List<String> bankAvailableBanks;
+    @Value("#{T(ee.ria.sso.config.TaraProperties).parseBankList('${bank.availableBanks:}')}")
+    private List<BankEnum> bankAvailableBanks;
 
     public TaraProperties(CasConfigurationProperties casConfigurationProperties, Environment environment, ManagerService managerService) {
         this.casConfigurationProperties = casConfigurationProperties;
@@ -126,24 +127,28 @@ public class TaraProperties {
         return messageSource.getMessage("label.country." + c.toUpperCase(), null, null, locale);
     }
 
-    public List<Bank> getListOfBanks(String locale) {
-        final Locale l = (locale == null) ? LocaleContextHolder.getLocale() : new Locale(locale);
-        return bankAvailableBanks.stream()
-                .map(b -> new Bank(b, getBankUrl(b), getBankName(b, l)))
-                .filter(b -> b.getUrl() != null)
-                .collect(Collectors.toList());
-    }
-
-    private String getBankUrl(String b) {
-        return environment.getProperty("bank." + b + ".url");
-    }
-
-    private String getBankName(String b, Locale locale) {
-        return messageSource.getMessage("label.bank." + b, null, "no translation", locale);
+    public List<BankEnum> getListOfBanks() {
+        return bankAvailableBanks;
     }
 
     public Application getApplication() {
         return application;
+    }
+
+    public String getBanklinkReturnUrl() {
+        return environment.getProperty("bank.returnUrl");
+    }
+
+    public String getBanklinkKeyStore() {
+        return environment.getProperty("bank.keystore");
+    }
+
+    public String getBanklinkKeyStoreType() {
+        return environment.getProperty("bank.keystore.type");
+    }
+
+    public String getBanklinkKeyStorePass() {
+        return environment.getProperty("bank.keystore.pass");
     }
 
     public enum Mode {
@@ -216,33 +221,19 @@ public class TaraProperties {
         }
     }
 
-    public class Bank {
-
-        private final String identifier;
-        private final String url;
-        private final String name;
-
-        public Bank(String identifier, String url, String name) {
-            this.identifier = identifier;
-            this.url = url;
-            this.name = name;
-        }
-
-        public String getIdentifier() {
-            return identifier;
-        }
-
-        public String getUrl() {
-            return url;
-        }
-
-        public String getName() {
-            return name;
-        }
-    }
-
     public static List<String> parsePropertiesList(String input) {
         if (input == null || input.isEmpty()) return Collections.emptyList();
         return Arrays.asList(input.split(","));
+    }
+
+    public static List<BankEnum> parseBankList(String input) {
+        List<String> availableBanks = parsePropertiesList(input);
+        List<String> validBanks = Arrays.stream(BankEnum.values()).map(BankEnum::getName).collect(Collectors.toList());
+        return CollectionUtils.intersection(availableBanks, validBanks).stream()
+                .map(b -> BankEnum.valueOf(b.toUpperCase())).collect(Collectors.toList());
+    }
+
+    public Environment getEnvironment() {
+        return environment;
     }
 }

@@ -134,6 +134,21 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>com.nortal.banklink</groupId>
+            <artifactId>banklink-core</artifactId>
+            <version>2.1.14</version>
+        </dependency>
+        <dependency>
+            <groupId>com.nortal.banklink</groupId>
+            <artifactId>banklink-authentication</artifactId>
+            <version>2.1.14</version>
+        </dependency>
+        <dependency>
+            <groupId>com.nortal.banklink</groupId>
+            <artifactId>banklink-link</artifactId>
+            <version>2.1.14</version>
+        </dependency>
+        <dependency>
             <groupId>com.codeborne</groupId>
             <artifactId>mobileid</artifactId>
             <version>1.1</version>
@@ -168,6 +183,18 @@
     </dependencies>
 
     <repositories>
+        <repository>
+            <id>lib</id>
+            <name>lib</name>
+            <releases>
+                <enabled>true</enabled>
+                <checksumPolicy>ignore</checksumPolicy>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <url>file://${project.basedir}/maven/lib</url>
+        </repository>
         <repository>
             <id>sonatype-releases</id>
             <url>http://oss.sonatype.org/content/repositories/releases/</url>

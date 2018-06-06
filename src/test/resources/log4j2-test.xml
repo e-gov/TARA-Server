@@ -12,6 +12,9 @@
         </File>
     </Appenders>
     <Loggers>
+        <Logger name="com.nortal" level="DEBUG">
+            <AppenderRef ref="Console"/>
+        </Logger>
         <Logger name="com.codeborne.security" level="DEBUG"/>
         <Logger name="com.brsanthu.googleanalytics" level="DEBUG"/>
         <Logger name="ee.ria" level="DEBUG"/>

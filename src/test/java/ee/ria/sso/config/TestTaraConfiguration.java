@@ -1,7 +1,6 @@
 package ee.ria.sso.config;
 
-import javax.annotation.PostConstruct;
-
+import ee.ria.sso.test.TestServicesManager;
 import org.apereo.cas.configuration.CasConfigurationProperties;
 import org.apereo.cas.services.ServicesManager;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +8,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
-import ee.ria.sso.test.TestServicesManager;
+import javax.annotation.PostConstruct;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * @author Janar Rahumeel (CGI Estonia)
@@ -37,4 +39,11 @@ public class TestTaraConfiguration {
         this.taraProperties.getApplication().setMode(TaraProperties.Mode.development);
     }
 
+    @Bean
+    KeyPair mockBankRsaKeyPair() throws NoSuchAlgorithmException {
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+        keyGen.initialize(2048);
+        KeyPair keyPair = keyGen.genKeyPair();
+        return keyPair;
+    }
 }

@@ -127,11 +127,7 @@ public class OidcIdTokenGeneratorService {
             String levelOfAssurance = (String) principal.getAttributes().get("levelOfAssurance");
             if (levelOfAssurance != null) claims.setStringClaim(OidcConstants.ACR, levelOfAssurance);
         }
-        /*if (authentication.getAttributes().containsKey(casProperties.getAuthn().getMfa().getAuthenticationContextAttribute())) {
-            final Collection<Object> val = CollectionUtils.toCollection(
-                authentication.getAttributes().get(casProperties.getAuthn().getMfa().getAuthenticationContextAttribute()));
-            claims.setStringClaim(OidcConstants.ACR, val.iterator().next().toString());
-        }*/
+
         if (authentication.getAttributes().containsKey(AuthenticationHandler.SUCCESSFUL_AUTHENTICATION_HANDLERS)) {
             final Collection<Object> val = CollectionUtils.toCollection(principal.getAttributes().get("authenticationType"));
             claims.setStringListClaim(OidcConstants.AMR, val.toArray(new String[]{}));
@@ -140,11 +136,6 @@ public class OidcIdTokenGeneratorService {
         claims.setClaim(OAuth20Constants.STATE, authentication.getAttributes().get(OAuth20Constants.STATE));
         claims.setClaim(OAuth20Constants.NONCE, authentication.getAttributes().get(OAuth20Constants.NONCE));
         claims.setClaim(OidcConstants.CLAIM_AT_HASH, generateAccessTokenHash(accessTokenId));
-
-		/*principal.getAttributes().entrySet().stream()
-                .filter(entry -> casProperties.getAuthn().getOidc().getClaims().contains(entry.getKey()))
-				.forEach(entry -> claims.setClaim(entry.getKey(), entry.getValue
-				()));*/
 
         return claims;
     }

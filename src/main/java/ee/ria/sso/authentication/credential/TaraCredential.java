@@ -52,6 +52,14 @@ public class TaraCredential implements Credential {
         if (loa != null) this.levelOfAssurance = LevelOfAssurance.findByFormalName(loa);
     }
 
+    // TODO refacto needed: use specific credentials for each auth impl
+    public TaraCredential(AuthenticationType authenticationType, String principalCode, String firstName, String lastName) {
+        this.type = authenticationType;
+        this.principalCode = principalCode;
+        this.firstName = firstName;
+        this.lastName = lastName;
+    }
+
     @Override
     public String getId() {
         return this.principalCode;

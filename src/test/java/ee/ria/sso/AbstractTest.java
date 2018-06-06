@@ -3,9 +3,11 @@ package ee.ria.sso;
 import java.util.Map;
 
 import org.junit.runner.RunWith;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.webflow.execution.RequestContext;
+import org.springframework.webflow.test.MockExternalContext;
 import org.springframework.webflow.test.MockParameterMap;
 import org.springframework.webflow.test.MockRequestContext;
 
@@ -21,10 +23,16 @@ public abstract class AbstractTest {
 
     protected RequestContext getRequestContext(Map<String, String> parameters) {
         MockRequestContext context = new MockRequestContext();
+
+        MockExternalContext mockExternalContext = new MockExternalContext();
+        mockExternalContext.setNativeRequest(new MockHttpServletRequest());
+        context.setExternalContext(mockExternalContext);
+
         MockParameterMap map = (MockParameterMap) context.getExternalContext().getRequestParameterMap();
         parameters.forEach((k, v) ->
-            map.put(k, v)
+                map.put(k, v)
         );
+
         return context;
     }
 

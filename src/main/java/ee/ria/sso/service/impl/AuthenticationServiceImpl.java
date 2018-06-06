@@ -1,6 +1,8 @@
 package ee.ria.sso.service.impl;
 
 import java.io.*;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -17,13 +19,20 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nortal.banklink.authentication.AuthLink;
+import com.nortal.banklink.authentication.AuthLinkInfo;
+import com.nortal.banklink.authentication.AuthLinkManager;
+import com.nortal.banklink.core.packet.Packet;
 import ee.ria.sso.EidasAuthenticator;
 import ee.ria.sso.authentication.*;
+import ee.ria.sso.authentication.BankEnum;
 import ee.ria.sso.model.AuthenticationResult;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.webflow.core.collection.SharedAttributeMap;
@@ -60,6 +69,7 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
     private final Map<String, X509Certificate> issuerCertificates = new HashMap<>();
     private final OCSPValidator ocspValidator;
     private final StatisticsHandler statistics;
+    private final AuthLinkManager authLinkManager;
 
     @Value("${mobileID.countryCode:EE}")
     private String midCountryCode;
@@ -94,12 +104,14 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
     public AuthenticationServiceImpl(TaraResourceBundleMessageSource messageSource,
                                      MobileIDAuthenticatorWrapper mobileIDAuthenticator,
                                      EidasAuthenticator eidasAuthenticator,
-                                     OCSPValidator ocspValidator, StatisticsHandler statistics) {
+                                     OCSPValidator ocspValidator, StatisticsHandler statistics,
+                                     AuthLinkManager authLinkManager) {
         super(messageSource);
         this.mobileIDAuthenticator = mobileIDAuthenticator;
         this.eidasAuthenticator = eidasAuthenticator;
         this.ocspValidator = ocspValidator;
         this.statistics = statistics;
+        this.authLinkManager = authLinkManager;
     }
 
     @Override
@@ -113,7 +125,7 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
             Principal subjectDN = certificate.getSubjectDN();
             Map<String, String> params = Splitter.on(", ").withKeyValueSeparator("=").split(subjectDN.getName());
             context.getFlowExecutionContext().getActiveSession().getScope()
-                .put("credential", new TaraCredential("EE" + params.get("SERIALNUMBER"), params.get("GIVENNAME"), params.get("SURNAME")));
+                .put("credential", new TaraCredential(AuthenticationType.IDCard, "EE" + params.get("SERIALNUMBER"), params.get("GIVENNAME"), params.get("SURNAME")));
             this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.IDCard, StatisticsOperation.SUCCESSFUL_AUTH);
             return new Event(this, "success");
         } catch (Exception e) {
@@ -216,6 +228,68 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
         }
     }
 
+    @Override
+    public Event startLoginByBankLink(RequestContext context) {
+        try {
+            String bankCode = context.getRequestParameters().get("bank");
+            if (StringUtils.isEmpty(bankCode)) {
+                throw new IllegalStateException("Requested bank parameter cannot be null nor empty!");
+            }
+
+            BankEnum bankEnum = BankEnum.valueOf(bankCode.toUpperCase());
+            AuthLink banklink = authLinkManager.getBankLink(bankEnum.getAuthLinkBank());
+            context.getRequestScope().put("url", banklink.getUrl());
+
+            Packet outgoingPacket = banklink.createOutgoingPacket();
+            outgoingPacket.setParameter("VK_LANG", LocaleContextHolder.getLocale().getISO3Language().toUpperCase());
+            context.getRequestScope().put("packet", outgoingPacket);
+
+            String nonce = outgoingPacket.getParameterValue("VK_NONCE");
+            context.getExternalContext().getSessionMap().put( nonce, context.getFlowScope().get("service"));
+
+            return new Event(this, "success");
+        } catch (Exception e) {
+            throw this.handleException(context, AuthenticationType.BankLink, e);
+        }
+    }
+
+    @Override
+    public Event checkLoginForBankLink(RequestContext context) {
+        try {
+            HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getNativeRequest();
+
+            AuthLinkInfo authInfo = authLinkManager.getPacketInfo((HttpServletRequest) context.getExternalContext().getNativeRequest());
+
+
+            String principalCode = authInfo.getCountry() + authInfo.getCode();
+            String firstName = getUnescapedNameField(authInfo.getFirstName());
+            String lastName = getUnescapedNameField(authInfo.getLastName());
+
+            TaraCredential credential = new TaraCredential(AuthenticationType.BankLink, principalCode, firstName, lastName);
+            context.getFlowExecutionContext().getActiveSession().getScope().put("credential", credential);
+
+            String vkNonce = request.getParameter("VK_NONCE");
+            if (StringUtils.isEmpty(vkNonce) || !context.getExternalContext().getSessionMap().contains(vkNonce)) {
+                throw new RuntimeException("Bank response's nonce " + vkNonce + " not found among previously stored nonces!");
+            }
+
+            context.getFlowScope().put("service", context.getExternalContext().getSessionMap().get(vkNonce));
+            this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.BankLink,
+                    StatisticsOperation.SUCCESSFUL_AUTH);
+
+            return new Event(this, "success");
+        } catch (Exception e) {
+            throw this.handleException(context, AuthenticationType.BankLink, e);
+        }
+    }
+
+    public static String getUnescapedNameField(String name) {
+        if (StringUtils.isEmpty(name))
+            throw new IllegalStateException("Name field cannot be empty!");
+
+        return StringEscapeUtils.unescapeHtml4(name).toUpperCase();
+    }
+
     /*
      * RESTRICTED METHODS
      */
@@ -304,11 +378,10 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
 
     private X509Certificate readCert(String filename) throws IOException, CertificateException {
         String fullPath = this.ocspCertDirectory + "/" + filename;
-        FileInputStream fis = new FileInputStream(fullPath);
-        CertificateFactory cf = CertificateFactory.getInstance("X.509");
-        X509Certificate cert = (X509Certificate) cf.generateCertificate(fis);
-        fis.close();
-        return cert;
+        try ( FileInputStream fis = new FileInputStream(fullPath) ) {
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            return (X509Certificate) cf.generateCertificate(fis);
+        }
     }
 
     private void clearScope(RequestContext context) {
