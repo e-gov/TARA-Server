@@ -110,6 +110,11 @@ public class TaraConfiguration extends WebMvcConfigurerAdapter {
     }
 
     @Bean
+    AuthLink lhvAuthLink(KeyStore keyStore) {
+        return ipizzaAuthLinkLink(BankEnum.LHV, keyStore);
+    }
+
+    @Bean
     AuthLink coopAuthLink(KeyStore keyStore) {
         return ipizzaAuthLinkLink(BankEnum.COOP, keyStore);
     }
@@ -120,10 +125,10 @@ public class TaraConfiguration extends WebMvcConfigurerAdapter {
 
     private BankLinkConfig.IPizzaConfig ipizza(BankEnum bank, KeyStore keyStore) {
         return BankLinkConfig.IPizzaConfig.ipizza(cfg(bank.getUrlCode()), taraProperties.getBanklinkReturnUrl(), cfg(bank.getVkSenderIdCode()), cfg(bank.getVkRecIdCode()),
-                bankPub(bank.getAuthLinkBank(), keyStore), clientPriv(bank.getAuthLinkBank(), keyStore));
+                bankPub(bank, keyStore), clientPriv(bank, keyStore));
     }
 
-    private PublicKey bankPub(Bank bank, KeyStore keyStore) {
+    private PublicKey bankPub(BankEnum bank, KeyStore keyStore) {
         try {
             Certificate certificate = keyStore.getCertificate(bank.name().toLowerCase());
 
@@ -139,7 +144,7 @@ public class TaraConfiguration extends WebMvcConfigurerAdapter {
         }
     }
 
-    private PrivateKey clientPriv(Bank bank, KeyStore keyStore) {
+    private PrivateKey clientPriv(BankEnum bank, KeyStore keyStore) {
         try {
             String keyAlias = bank.name().toLowerCase() + "_priv";
             Key key = keyStore.getKey(keyAlias, taraProperties.getBanklinkKeyStorePass().toCharArray());
