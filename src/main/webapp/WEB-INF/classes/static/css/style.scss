@@ -244,6 +244,18 @@ footer.footer {
     }
   }
 
+  .smart-id {
+    background-image: url("/images/smartIdLogo.png");
+    background-repeat: no-repeat;
+    background-size: contain;
+    height: 67px;
+    margin-top: 15px;
+    margin-left: 2em;
+    @media screen and (max-width: 766px) {
+      margin-left: 0;
+    }
+  }
+
   .eidas {
     background-image: url("/images/eidas.svg");
     background-repeat: no-repeat;

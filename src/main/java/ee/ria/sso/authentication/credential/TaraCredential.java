@@ -1,10 +1,9 @@
 package ee.ria.sso.authentication.credential;
 
+import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.LevelOfAssurance;
 import ee.ria.sso.model.AuthenticationResult;
 import org.apereo.cas.authentication.Credential;
-
-import ee.ria.sso.authentication.AuthenticationType;
 
 /**
  * Created by Janar Rahumeel (CGI Estonia)

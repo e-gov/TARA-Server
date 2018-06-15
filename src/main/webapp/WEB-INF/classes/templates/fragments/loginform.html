@@ -1,4 +1,4 @@
-<div class="container">
+<div class="container" xmlns:th="http://www.w3.org/1999/xhtml">
     <noscript>
         <div class="alert alert-danger" role="alert">
             <strong th:text="#{label.warning}"></strong> <span th:text="#{label.warning.no.javascript}"></span>
@@ -186,6 +186,58 @@
                             <input type="hidden" name="bank" value="" />
                             <input type="hidden" name="geolocation"/>
                         </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel" th:if="${(session.taraAuthenticationMethods == null or #lists.contains(session.taraAuthenticationMethods,'SmartID'))
+                and @environment.getProperty('smart-id.enabled') == 'true'}">
+            <div div class="method-block space-top-2 white row accordion-toggle" role="button" data-toggle="collapse"
+                 data-parent="#accordion" href="#collapseSmartIdForm" aria-expanded="true" aria-controls="collapseSmartIdForm">
+                <div class="col-md-3 col-sm-3 col-xs-3">
+                    <div class="smart-id"></div>
+                </div>
+                <div class="col-md-8 col-sm-8 col-xs-9">
+                    <h3 th:text="#{label.smartId.title}"></h3>
+                    <p th:text="#{label.smartId.start}"></p>
+                </div>
+                <div class="col-md-1 col-sm-1 hidden-xs">
+                    <i class="fa pull-right method-chevron fa-chevron-down"></i>
+                </div>
+            </div>
+            <div id="collapseSmartIdForm" class="collapse" role="tabpanel" aria-labelledby="methodSmartID" aria-expanded="false">
+                <div class="block-hr"></div>
+                <div class="white method-block-collapsible">
+                    <p th:text="#{label.smartId.instruction}"></p>
+                    <div class="row">
+                        <form method="post" id="smartIdForm" th:object="${credential}">
+                            <div class="label-input col-md-6 col-sm-6">
+                                <label for="personIdentifier">
+                                    <span th:text="#{label.idcode}" th:remove="tag"></span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-addon" id="default-country">EE</span>
+                                    <input type="text" id="personIdentifier" placeholder="" size="25" tabindex="1"
+                                           aria-describedby="default-country" th:field="*{principalCode}" autocomplete="off" required>
+                                </div>
+                            </div>
+                            <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
+                            <input type="hidden" name="_eventId" value="smartIdSubmit"/>
+                            <input type="hidden" name="geolocation"/>
+                        </form>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 col-sm-6 col-xs-50">
+                            <button type="button" class="primary" th:text="#{label.button}"
+                                    onclick="$('#smartIdForm').submit()"></button>
+                        </div>
+                        <div class="col-md-6 col-sm-6 col-xs-50">
+                            <a href="https://www.smart-id.com/help/faq/"
+                               class="pull-right help-link"
+                               target="_blank"
+                               th:text="#{label.smartId.help}"></a>
+                        </div>
                     </div>
                 </div>
             </div>

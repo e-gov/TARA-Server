@@ -40,6 +40,7 @@
 		<transition on="idsubmit" bind="true" validate="false" to="IDLoginStart" history="invalidate"/>
 		<transition on="eidassubmit" bind="true" validate="false" to="EIDASLoginStart" history="invalidate"/>
 		<transition on="banksubmit" bind="true" validate="false" to="BankLoginStart" history="invalidate"/>
+		<transition on="smartIdSubmit" bind="true" validate="false" to="smartIdLoginStart" history="invalidate"/>
 	</view-state>
 
 	<action-state id="IDLoginStart">
@@ -62,6 +63,23 @@
 		<evaluate expression="mobileIDCheckAuthenticationAction"/>
 		<transition on="success" to="realSubmit"/>
 		<transition on="outstanding" to="viewMobileIDLoginCode"/>
+		<transition on="error" to="initializeLoginForm"/>
+	</action-state>
+
+	<action-state id="smartIdLoginStart">
+		<evaluate expression="smartIDStartAuthenticationAction"/>
+		<transition on="success" to="viewSmartIDVerificationCode"/>
+		<transition on="error" to="initializeLoginForm"/>
+	</action-state>
+
+	<view-state id="viewSmartIDVerificationCode" view="casSmartIdVerificationCode" model="credential">
+		<transition on="check" to="checkSmartIDLoginStatus"/>
+	</view-state>
+
+	<action-state id="checkSmartIDLoginStatus">
+		<evaluate expression="smartIDCheckAuthenticationAction"/>
+		<transition on="success" to="realSubmit"/>
+		<transition on="outstanding" to="viewSmartIDVerificationCode"/>
 		<transition on="error" to="initializeLoginForm"/>
 	</action-state>
 
