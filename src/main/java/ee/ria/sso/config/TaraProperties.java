@@ -109,8 +109,6 @@ public class TaraProperties {
             try {
                 uri = new URIBuilder(URLDecoder.decode(map.getRequired("service"), StandardCharsets.UTF_8.name())).
                         getQueryParams().stream().filter(p -> p.getName().equals("redirect_uri")).findFirst();
-
-
             } catch (URISyntaxException | UnsupportedEncodingException e) {
                 log.error("Failed to parse home url", e);
                 uri = Optional.empty();
