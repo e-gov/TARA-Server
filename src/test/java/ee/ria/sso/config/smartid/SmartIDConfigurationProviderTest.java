@@ -1,19 +1,30 @@
 package ee.ria.sso.config.smartid;
 
+import ee.ria.sso.config.TaraResourceBundleMessageSource;
+import ee.ria.sso.flow.action.SmartIDCheckAuthenticationAction;
+import ee.ria.sso.flow.action.SmartIDStartAuthenticationAction;
+import ee.ria.sso.service.smartid.SmartIDAuthenticationService;
+import ee.ria.sso.service.smartid.SmartIDAuthenticationValidatorWrapper;
+import ee.ria.sso.statistics.StatisticsHandler;
+import ee.sk.smartid.AuthenticationResponseValidator;
 import ee.sk.smartid.HashType;
+import ee.sk.smartid.rest.SmartIdConnector;
+import org.glassfish.jersey.client.ClientConfig;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
+import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.Arrays;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 @TestPropertySource(locations= "classpath:application-test.properties")
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -24,6 +35,9 @@ public class SmartIDConfigurationProviderTest {
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
+
+    @Autowired
+    private ApplicationContext applicationContext;
 
     @Autowired
     private SmartIDConfigurationProvider configurationProvider;
@@ -53,5 +67,29 @@ public class SmartIDConfigurationProviderTest {
         confProvider.setSessionStatusSocketOpenDuration(3000);
         confProvider.setConnectionTimeout(2999);
         confProvider.init();
+    }
+
+    @Test
+    public void whenSmartIdEnabledThenItsRequiredBeansInitiated() {
+        assertTrue(configurationProvider.isEnabled());
+        assertBeanInitiated(SmartIDConfiguration.class);
+        assertBeanInitiated(SmartIDConfigurationProvider.class);
+        assertBeanInitiated(SmartIDAuthenticationService.class);
+        assertBeanInitiated(SmartIDAuthenticationValidatorWrapper.class);
+        assertBeanInitiated(AuthenticationResponseValidator.class);
+        assertBeanInitiated(SmartIdConnector.class);
+        assertBeanInitiated(ClientConfig.class);
+        assertBeanInitiated(SmartIDCheckAuthenticationAction.class);
+        assertBeanInitiated(SmartIDStartAuthenticationAction.class);
+        assertBeanInitiated(StatisticsHandler.class);
+        assertBeanInitiated(TaraResourceBundleMessageSource.class);
+    }
+
+    private void assertBeanInitiated(Class clazz) {
+        try {
+            applicationContext.getBean(clazz);
+        } catch (NoSuchBeanDefinitionException e) {
+            fail("Bean <" + clazz + "> is not initiated!");
+        }
     }
 }

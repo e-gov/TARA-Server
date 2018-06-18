@@ -29,6 +29,8 @@ public class SmartIDConfigurationProvider {
     private static final int DEFAULT_READ_TIMEOUT = 30000;
     private static final int DEFAULT_SESSION_STATUS_SOCKET_OPEN_DURATION = 3000;
 
+    private boolean enabled;
+
     @NotBlank
     private String relyingPartyUuid;
 
