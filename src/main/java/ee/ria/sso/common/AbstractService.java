@@ -1,14 +1,8 @@
 package ee.ria.sso.common;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.MessageSource;
-import org.springframework.context.NoSuchMessageException;
-import org.springframework.context.i18n.LocaleContextHolder;
+import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import org.springframework.webflow.core.collection.SharedAttributeMap;
 import org.springframework.webflow.execution.RequestContext;
-
-import ee.ria.sso.config.TaraResourceBundleMessageSource;
 
 /**
  * @author Janar Rahumeel (CGI Estonia)
@@ -16,8 +10,7 @@ import ee.ria.sso.config.TaraResourceBundleMessageSource;
 
 public class AbstractService {
 
-    private final Logger log = LoggerFactory.getLogger(AbstractService.class);
-    private final MessageSource messageSource;
+    private final TaraResourceBundleMessageSource messageSource;
 
     public AbstractService(TaraResourceBundleMessageSource messageSource) {
         this.messageSource = messageSource;
@@ -28,20 +21,15 @@ public class AbstractService {
     }
 
     protected String getMessage(String key) {
-        return this.messageSource.getMessage(key, new Object[]{}, LocaleContextHolder.getLocale());
+        return messageSource.getMessage(key);
     }
 
     protected String getMessage(String key, String defaultMessageKey) {
-        return this.getMessage(key, defaultMessageKey, new Object[] {});
+        return messageSource.getMessage(key, defaultMessageKey);
     }
 
     protected String getMessage(String key, String defaultMessageKey, Object... parameters) {
-        try {
-            return this.messageSource.getMessage(key, parameters, LocaleContextHolder.getLocale());
-        } catch (NoSuchMessageException e) {
-            this.log.warn("No message key <{}> found, defaulting to <{}> ", key, defaultMessageKey);
-            return this.getMessage(defaultMessageKey);
-        }
+        return messageSource.getMessage(key, defaultMessageKey, parameters);
     }
 
 }

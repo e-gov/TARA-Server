@@ -1,22 +1,22 @@
 package ee.ria.sso;
 
-import java.util.Map;
-
+import ee.ria.sso.config.TestTaraConfiguration;
 import org.junit.runner.RunWith;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.webflow.execution.RequestContext;
 import org.springframework.webflow.test.MockExternalContext;
 import org.springframework.webflow.test.MockParameterMap;
 import org.springframework.webflow.test.MockRequestContext;
 
-import ee.ria.sso.config.TestTaraConfiguration;
+import java.util.Map;
 
 /**
  * @author Janar Rahumeel (CGI Estonia)
  */
-
+@TestPropertySource(locations= "classpath:application-test.properties")
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {TestTaraConfiguration.class})
 public abstract class AbstractTest {

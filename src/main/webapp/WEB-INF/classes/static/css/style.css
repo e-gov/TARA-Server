@@ -77,18 +77,26 @@ label {
   color: #000;
   font-weight: 400; }
 
-input,button {
+input,button,select {
   display: block;
   padding: 9px;
   width: 100%;
   background: #FFFFFF; }
+
+select {
+  background: #E6E6E6;
+}
+
+select:disabled {
+  background: #f2f2f2;
+  cursor: not-allowed; }
 
 @media screen and (max-width: 767px) {
   .input-group {
     width: 100%; } }
 
 .input-group-addon,
-input, button {
+input, button, select {
   border: 2px solid #E6E6E6;
   box-shadow: 1px 1px 1px 0 rgba(0, 0, 0, 0.15);
   border-radius: 1px; }
@@ -172,6 +180,13 @@ footer.footer .row {
   margin-top: 15px; }
 .method-block .mob-id {
   background-image: url("/images/mobiilid.svg");
+  background-repeat: no-repeat;
+  background-size: contain;
+  height: 67px;
+  margin-top: 15px;
+  margin-left: 2em; }
+.method-block .smart-id {
+  background-image: url("/images/smartIdLogo.png");
   background-repeat: no-repeat;
   background-size: contain;
   height: 67px;
