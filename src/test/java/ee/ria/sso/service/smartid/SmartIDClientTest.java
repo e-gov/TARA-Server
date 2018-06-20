@@ -59,7 +59,13 @@ public class SmartIDClientTest {
         when(smartIdConnector.authenticate(any(NationalIdentity.class), any())).thenReturn(mockAuthResponse);
 
         AuthenticationHash authHash = AuthenticationHash.generateRandomHash();
-        AuthenticationSessionResponse authResponse = smartIDClient.authenticateSubject("EE", SmartIDMockData.VALID_EE_PERSON_IDENTIFIER, authHash);
+        SmartIDClient.AuthenticationRequest authRequest = SmartIDClient.AuthenticationRequest.builder()
+                .personCountry("EE")
+                .personIdentifier(SmartIDMockData.VALID_EE_PERSON_IDENTIFIER)
+                .authenticationHash(authHash)
+                .certificateLevel(CertificateLevel.QUALIFIED)
+                .build();
+        AuthenticationSessionResponse authResponse = smartIDClient.authenticateSubject(authRequest);
 
         assertEquals(mockAuthResponse, authResponse);
         verifyAuthenticationRequest(authHash);

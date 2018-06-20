@@ -29,6 +29,8 @@ import static org.junit.Assert.*;
         initializers = ConfigFileApplicationContextInitializer.class)
 public class SmartIDAuthenticationValidatorWrapperTest {
 
+    private static final CertificateLevel CERTIFICATE_LEVEL = CertificateLevel.QUALIFIED;
+
     @Autowired
     private AuthenticationResponseValidator authResponseValidator;
     
@@ -39,13 +41,12 @@ public class SmartIDAuthenticationValidatorWrapperTest {
         validatorWrapper = new SmartIDAuthenticationValidatorWrapper(authResponseValidator);
     }
 
-//    TOODO: multiple probs
     @Test
     public void getAuthenticationSessionStatus_sessionComplete_endResultOK() {
         SessionStatus sessionStatus = mockCompleteSessionStatus(SessionEndResult.OK);
 
         AuthenticationHash authHash = SmartIDMockData.mockAuthenticationHash();
-        SmartIdAuthenticationResult authenticationResult = validatorWrapper.validateAuthenticationResponse(sessionStatus, authHash);
+        SmartIdAuthenticationResult authenticationResult = validatorWrapper.validateAuthenticationResponse(sessionStatus, authHash, CERTIFICATE_LEVEL);
 
         assertTrue(authenticationResult.getErrors().isEmpty());
         AuthenticationIdentity authIdentity = authenticationResult.getAuthenticationIdentity();
@@ -59,7 +60,7 @@ public class SmartIDAuthenticationValidatorWrapperTest {
     public void getAuthenticationSessionStatus_sessionComplete_endResultUserRefused() {
         SessionStatus sessionStatus = mockCompleteSessionStatus(SessionEndResult.USER_REFUSED);
         expectException(
-                () -> validatorWrapper.validateAuthenticationResponse(sessionStatus, AuthenticationHash.generateRandomHash()),
+                () -> validatorWrapper.validateAuthenticationResponse(sessionStatus, AuthenticationHash.generateRandomHash(), CERTIFICATE_LEVEL),
                 SessionValidationException.class,
                 SmartIDErrorMessage.USER_REFUSED_AUTHENTICATION,
                 "User refused authentication"
@@ -70,7 +71,7 @@ public class SmartIDAuthenticationValidatorWrapperTest {
     public void getAuthenticationSessionStatus_sessionComplete_endResultTimeout() {
         SessionStatus sessionStatus = mockCompleteSessionStatus(SessionEndResult.TIMEOUT);
         expectException(
-                () -> validatorWrapper.validateAuthenticationResponse(sessionStatus, AuthenticationHash.generateRandomHash()),
+                () -> validatorWrapper.validateAuthenticationResponse(sessionStatus, AuthenticationHash.generateRandomHash(), CERTIFICATE_LEVEL),
                 SessionValidationException.class,
                 SmartIDErrorMessage.SESSION_TIMED_OUT,
                 "Authentication session timed out"
@@ -81,7 +82,7 @@ public class SmartIDAuthenticationValidatorWrapperTest {
     public void getAuthenticationSessionStatus_sessionComplete_endResultDocumentUnusable() {
         SessionStatus sessionStatus = mockCompleteSessionStatus(SessionEndResult.DOCUMENT_UNUSABLE);
         expectException(
-                () -> validatorWrapper.validateAuthenticationResponse(sessionStatus, AuthenticationHash.generateRandomHash()),
+                () -> validatorWrapper.validateAuthenticationResponse(sessionStatus, AuthenticationHash.generateRandomHash(), CERTIFICATE_LEVEL),
                 SessionValidationException.class,
                 SmartIDErrorMessage.USER_DOCUMENT_UNUSABLE,
                 "User document is unusable"
@@ -93,7 +94,7 @@ public class SmartIDAuthenticationValidatorWrapperTest {
         SessionStatus sessionStatus = mockCompleteSessionStatus(SessionEndResult.OK);
         sessionStatus.getResult().setEndResult("UNKNOWN_SESSION_END_RESULT");
         expectException(
-                () -> validatorWrapper.validateAuthenticationResponse(sessionStatus, AuthenticationHash.generateRandomHash()),
+                () -> validatorWrapper.validateAuthenticationResponse(sessionStatus, AuthenticationHash.generateRandomHash(), CERTIFICATE_LEVEL),
                 IllegalStateException.class,
                 SmartIDErrorMessage.GENERAL,
                 "Unknown authentication session end result <UNKNOWN_SESSION_END_RESULT>"
@@ -105,7 +106,7 @@ public class SmartIDAuthenticationValidatorWrapperTest {
         SessionStatus sessionStatus = mockCompleteSessionStatus(SessionEndResult.OK);
         sessionStatus.getCertificate().setValue(null);
         expectException(
-                () -> validatorWrapper.validateAuthenticationResponse(sessionStatus, AuthenticationHash.generateRandomHash()),
+                () -> validatorWrapper.validateAuthenticationResponse(sessionStatus, AuthenticationHash.generateRandomHash(), CERTIFICATE_LEVEL),
                 TechnicalErrorException.class,
                 SmartIDErrorMessage.GENERAL,
                 "Certificate is not present in the authentication response"
@@ -117,7 +118,7 @@ public class SmartIDAuthenticationValidatorWrapperTest {
         SessionStatus sessionStatus = mockCompleteSessionStatus(SessionEndResult.OK);
         sessionStatus.getSignature().setValueInBase64(SmartIDMockData.INVALID_SIGNATURE_IN_BASE64);
         expectException(
-                () -> validatorWrapper.validateAuthenticationResponse(sessionStatus, AuthenticationHash.generateRandomHash()),
+                () -> validatorWrapper.validateAuthenticationResponse(sessionStatus, AuthenticationHash.generateRandomHash(), CERTIFICATE_LEVEL),
                 SessionValidationException.class,
                 SmartIDErrorMessage.GENERAL,
                 SmartIdAuthenticationResult.Error.SIGNATURE_VERIFICATION_FAILURE.getMessage()
@@ -129,7 +130,7 @@ public class SmartIDAuthenticationValidatorWrapperTest {
         SessionStatus sessionStatus = mockCompleteSessionStatus(SessionEndResult.OK);
         sessionStatus.getCertificate().setCertificateLevel(CertificateLevel.ADVANCED.name());
         expectException(
-                () -> validatorWrapper.validateAuthenticationResponse(sessionStatus, SmartIDMockData.mockAuthenticationHash()),
+                () -> validatorWrapper.validateAuthenticationResponse(sessionStatus, SmartIDMockData.mockAuthenticationHash(), CERTIFICATE_LEVEL),
                 SessionValidationException.class,
                 SmartIDErrorMessage.GENERAL,
                 SmartIdAuthenticationResult.Error.CERTIFICATE_LEVEL_MISMATCH.getMessage()
@@ -144,7 +145,7 @@ public class SmartIDAuthenticationValidatorWrapperTest {
 
         SessionStatus sessionStatus = mockCompleteSessionStatus(SessionEndResult.OK);
         expectException(
-                () -> validator.validateAuthenticationResponse(sessionStatus, SmartIDMockData.mockAuthenticationHash()),
+                () -> validator.validateAuthenticationResponse(sessionStatus, SmartIDMockData.mockAuthenticationHash(), CERTIFICATE_LEVEL),
                 SessionValidationException.class,
                 SmartIDErrorMessage.GENERAL,
                 SmartIdAuthenticationResult.Error.CERTIFICATE_NOT_TRUSTED.getMessage()
@@ -156,7 +157,7 @@ public class SmartIDAuthenticationValidatorWrapperTest {
         SessionStatus sessionStatus = mockCompleteSessionStatus(SessionEndResult.OK);
         sessionStatus.getCertificate().setValue(SmartIDMockData.EXPIRED_AUTH_CERTIFICATE);
         expectException(
-                () -> validatorWrapper.validateAuthenticationResponse(sessionStatus, SmartIDMockData.mockAuthenticationHash()),
+                () -> validatorWrapper.validateAuthenticationResponse(sessionStatus, SmartIDMockData.mockAuthenticationHash(), CERTIFICATE_LEVEL),
                 SessionValidationException.class,
                 SmartIDErrorMessage.GENERAL,
                 SmartIdAuthenticationResult.Error.SIGNATURE_VERIFICATION_FAILURE.getMessage(),

@@ -28,6 +28,7 @@ public class SmartIDConfigurationProvider {
     private static final int DEFAULT_CONNECTION_TIMEOUT = 5000;
     private static final int DEFAULT_READ_TIMEOUT = 30000;
     private static final int DEFAULT_SESSION_STATUS_SOCKET_OPEN_DURATION = 3000;
+    private static final int DEFAULT_TIMEOUT_BETWEEN_SESSION_STATUS_QUERIES = 3000;
 
     private boolean enabled;
 
@@ -54,6 +55,9 @@ public class SmartIDConfigurationProvider {
 
     @NotNull
     private Integer sessionStatusSocketOpenDuration = DEFAULT_SESSION_STATUS_SOCKET_OPEN_DURATION;
+
+    @NotNull
+    private Integer timeoutBetweenSessionStatusQueries = DEFAULT_TIMEOUT_BETWEEN_SESSION_STATUS_QUERIES;
 
     @NotNull
     private Integer readTimeout = DEFAULT_READ_TIMEOUT;

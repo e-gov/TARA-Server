@@ -41,8 +41,12 @@ public class SmartIDMockData {
     }
 
     public static MockRequestContext mockSessionStatusRequestContext(AuthenticationHash authHash, String sessionId, int sessionStatusCheckCount) {
-        AuthenticationSession authSessionMock = new AuthenticationSession(sessionId, authHash);
-        authSessionMock.setStatusCheckCount(sessionStatusCheckCount);
+        AuthenticationSession authSessionMock = AuthenticationSession.builder()
+                .sessionId(sessionId)
+                .authenticationHash(authHash)
+                .certificateLevel(SmartIDAuthenticationService.DEFAULT_CERTIFICATE_LEVEL)
+                .statusCheckCount(sessionStatusCheckCount)
+                .build();
 
         MockRequestContext requestContext = new MockRequestContext();
         requestContext.getFlowScope().put(Constants.SMART_ID_VERIFICATION_CODE, authHash.calculateVerificationCode());

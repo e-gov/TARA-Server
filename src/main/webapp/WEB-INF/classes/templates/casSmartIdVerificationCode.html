@@ -41,12 +41,11 @@
         </div>
         <script type="text/javascript" src="/js/jquery.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.min.js"></script>
-        <script type="text/javascript">
+        <script th:inline="javascript">
             $(document).ready(function () {
                 setTimeout(function () {
                     $("#smartIdCheckForm").submit();
-                }, 5000);
-
+                }, /*[[${@environment.getProperty('smart-id.pin-querying-refresh-rate')}]]*/ '3000');
             });
         </script>
         <div th:replace="fragments/tarafooter" th:remove="tag">Footer</div>

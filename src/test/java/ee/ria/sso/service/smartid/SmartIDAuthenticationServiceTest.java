@@ -71,7 +71,7 @@ public class SmartIDAuthenticationServiceTest {
     private SmartIDAuthenticationService authenticationService;
 
     @Captor
-    private ArgumentCaptor<AuthenticationHash> authHashArgumentCaptor;
+    private ArgumentCaptor<SmartIDClient.AuthenticationRequest> authenticationRequestCaptor;
 
     @Captor
     private ArgumentCaptor<String> errorMessageKeyCaptor;
@@ -93,7 +93,7 @@ public class SmartIDAuthenticationServiceTest {
         MockRequestContext requestContext = mockAuthInitRequestContext(credential);
 
         String sessionId = UUID.randomUUID().toString();
-        mockSubjectAuthenticationCall(credential, sessionId);
+        mockSubjectAuthenticationCall(sessionId);
 
         Event event = authenticationService.initSmartIdAuthenticationSession(requestContext);
 
@@ -102,6 +102,7 @@ public class SmartIDAuthenticationServiceTest {
         assertVerificationCodeFromSameHashAsInAuthenticationRequest(requestContext);
         assertAuthSessionInFlowContext(requestContext, sessionId, 0);
         assertAuthStartStatisticsCollected(requestContext);
+        assertAuthenticationRequestCreation(credential);
     }
 
     @Test
@@ -159,7 +160,7 @@ public class SmartIDAuthenticationServiceTest {
         MockRequestContext requestContext = mockAuthInitRequestContext(credential);
 
         String sessionId = UUID.randomUUID().toString();
-        mockSubjectAuthenticationCall(credential, sessionId);
+        mockSubjectAuthenticationCall(sessionId);
 
         Event event = authenticationService.initSmartIdAuthenticationSession(requestContext);
 
@@ -168,8 +169,9 @@ public class SmartIDAuthenticationServiceTest {
         assertVerificationCodeFromSameHashAsInAuthenticationRequest(requestContext);
         assertAuthSessionInFlowContext(requestContext, sessionId, 0);
         assertAuthStartStatisticsCollected(requestContext);
+        assertAuthenticationRequestCreation(credential);
 
-        assertEquals(HashType.SHA256, authHashArgumentCaptor.getValue().getHashType());
+        assertEquals(HashType.SHA256, authenticationRequestCaptor.getValue().getAuthenticationHash().getHashType());
     }
 
     @Test
@@ -293,7 +295,7 @@ public class SmartIDAuthenticationServiceTest {
         mockAuthSessionStatusCheckCall(sessionId, sessionStatus);
 
         SessionValidationException expectedException = new SessionValidationException("User refused", SmartIDErrorMessage.USER_REFUSED_AUTHENTICATION);
-        when(authResponseValidator.validateAuthenticationResponse(sessionStatus, authHash))
+        when(authResponseValidator.validateAuthenticationResponse(sessionStatus, authHash, CertificateLevel.QUALIFIED))
                 .thenThrow(expectedException);
 
         assertExceptionThrownDuringAuthSessionStatusCheck(
@@ -314,7 +316,7 @@ public class SmartIDAuthenticationServiceTest {
         mockAuthSessionStatusCheckCall(sessionId, sessionStatus);
 
         IllegalStateException expectedException = new IllegalStateException("Unknown end result");
-        when(authResponseValidator.validateAuthenticationResponse(sessionStatus, authHash))
+        when(authResponseValidator.validateAuthenticationResponse(sessionStatus, authHash, CertificateLevel.QUALIFIED))
                 .thenThrow(expectedException);
 
         assertExceptionThrownDuringAuthSessionStatusCheck(
@@ -335,13 +337,15 @@ public class SmartIDAuthenticationServiceTest {
     private void initAuthSessionAndExpectSmartIdClientException(Exception mockException, String expectedErrorMessageKey) {
         TaraCredential credential = mockCredential();
         MockRequestContext requestContext = mockAuthInitRequestContext(credential);
-        mockSubjectAuthenticationCallException(credential, mockException);
+        mockSubjectAuthenticationCallException(mockException);
 
         assertExceptionThrownDuringAuthSessionInit(
                 requestContext,
                 mockException.getClass(),
                 expectedErrorMessageKey
         );
+
+        assertAuthenticationRequestCreation(credential);
     }
 
     private void assertExceptionThrownDuringAuthSessionInit(MockRequestContext requestContext, Class<? extends Exception> exceptionType, String errorMessageKey) {
@@ -447,10 +451,10 @@ public class SmartIDAuthenticationServiceTest {
     }
 
     private void assertVerificationCodeFromSameHashAsInAuthenticationRequest(MockRequestContext requestContext) {
-        String verificationCodeFromContext = requestContext.getFlowScope().get(Constants.SMART_ID_VERIFICATION_CODE, String.class);
-        verify(smartIdClient).authenticateSubject(any(), any(), authHashArgumentCaptor.capture());
-        String verificationCodeFromRequestHash = authHashArgumentCaptor.getValue().calculateVerificationCode();
-        assertEquals(verificationCodeFromContext, verificationCodeFromRequestHash);
+        String fromContext = requestContext.getFlowScope().get(Constants.SMART_ID_VERIFICATION_CODE, String.class);
+        verify(smartIdClient, times(1)).authenticateSubject(authenticationRequestCaptor.capture());
+        String fromRequestHash = authenticationRequestCaptor.getValue().getAuthenticationHash().calculateVerificationCode();
+        assertEquals(fromContext, fromRequestHash);
     }
 
     private void assertCertPersonCredentialsInFlowContext(MockRequestContext requestContext, AuthenticationIdentity authIdentity) {
@@ -485,22 +489,24 @@ public class SmartIDAuthenticationServiceTest {
                 eq(exceptionMessage));
     }
 
-    private void mockSubjectAuthenticationCall(TaraCredential credential, String sessionId) {
+    private void mockSubjectAuthenticationCall(String sessionId) {
         AuthenticationSessionResponse mockResponse = new AuthenticationSessionResponse();
         mockResponse.setSessionId(sessionId);
-        when(smartIdClient.authenticateSubject(
-                eq(credential.getCountry()),
-                eq(credential.getPrincipalCode()),
-                any()))
+        when(smartIdClient.authenticateSubject(authenticationRequestCaptor.capture()))
                 .thenReturn(mockResponse);
     }
 
-    private void mockSubjectAuthenticationCallException(TaraCredential credential, Exception exception) {
-        when(smartIdClient.authenticateSubject(
-                eq(credential.getCountry()),
-                eq(credential.getPrincipalCode()),
-                any()))
+    private void mockSubjectAuthenticationCallException(Exception exception) {
+        when(smartIdClient.authenticateSubject(authenticationRequestCaptor.capture()))
                 .thenThrow(exception);
+    }
+
+    private void assertAuthenticationRequestCreation(TaraCredential credential) {
+        verify(smartIdClient, times(1)).authenticateSubject(authenticationRequestCaptor.capture());
+        SmartIDClient.AuthenticationRequest authRequest = authenticationRequestCaptor.getValue();
+        assertEquals(credential.getCountry(), authRequest.getPersonCountry());
+        assertEquals(credential.getPrincipalCode(), authRequest.getPersonIdentifier());
+        assertEquals(CertificateLevel.QUALIFIED, authRequest.getCertificateLevel());
     }
 
     private void mockAuthSessionStatusCheckCall(String sessionId, SessionStatus sessionStatus) {
@@ -512,7 +518,7 @@ public class SmartIDAuthenticationServiceTest {
     }
 
     private void mockAuthSessionValidation(SmartIdAuthenticationResult authResult) {
-        when(authResponseValidator.validateAuthenticationResponse(any(), any())).thenReturn(authResult);
+        when(authResponseValidator.validateAuthenticationResponse(any(), any(), any())).thenReturn(authResult);
     }
 
 }

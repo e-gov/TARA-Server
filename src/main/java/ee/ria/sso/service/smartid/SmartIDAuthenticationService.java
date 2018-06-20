@@ -8,6 +8,7 @@ import ee.ria.sso.authentication.credential.TaraCredential;
 import ee.ria.sso.common.AbstractService;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.config.smartid.SmartIDConfigurationProvider;
+import ee.ria.sso.service.smartid.SmartIDClient.AuthenticationRequest;
 import ee.ria.sso.statistics.StatisticsHandler;
 import ee.ria.sso.statistics.StatisticsOperation;
 import ee.sk.smartid.AuthenticationHash;
@@ -34,6 +35,8 @@ import java.time.LocalDateTime;
 @ConditionalOnProperty("smart-id.enabled")
 @Service
 public class SmartIDAuthenticationService extends AbstractService {
+
+    public static final CertificateLevel DEFAULT_CERTIFICATE_LEVEL = CertificateLevel.QUALIFIED;
 
     protected static final String EVENT_SUCCESSFUL = "success";
     protected static final String EVENT_OUTSTANDING = "outstanding";
@@ -71,11 +74,11 @@ public class SmartIDAuthenticationService extends AbstractService {
             collectStatistics(context, StatisticsOperation.START_AUTH);
             validateLoginFields(personIdentifier);
 
-            AuthenticationHash authHash = AuthenticationHash.generateRandomHash(confProvider.getAuthenticationHashType());
-            AuthenticationSessionResponse authResponse = smartIdClient.authenticateSubject(personCountry, personIdentifier, authHash);
+            AuthenticationRequest authRequest = formSubjectAuthenticationRequest(personIdentifier, personCountry);
+            AuthenticationSessionResponse authResponse = smartIdClient.authenticateSubject(authRequest);
 
             LOGGER.info("Authentication response received");
-            writeAuthSessionToFlowContext(context, authHash, authResponse);
+            writeAuthSessionToFlowContext(context, authRequest, authResponse.getSessionId());
             return new Event(this, EVENT_SUCCESSFUL);
         } catch (TaraCredentialsException e) {
             throw handleException(context, e, e.getKey());
@@ -100,7 +103,8 @@ public class SmartIDAuthenticationService extends AbstractService {
             SessionStatus sessionStatus = smartIdClient.getSessionStatus(authSession.getSessionId());
             if (StringUtils.equals(sessionStatus.getState(), SessionState.COMPLETE.name())) {
                 LOGGER.info("Authentication session complete");
-                SmartIdAuthenticationResult validationResult = authResponseValidator.validateAuthenticationResponse(sessionStatus, authSession.getAuthenticationHash());
+                SmartIdAuthenticationResult validationResult = authResponseValidator
+                        .validateAuthenticationResponse(sessionStatus, authSession.getAuthenticationHash(), authSession.getCertificateLevel());
 
                 collectStatistics(context, StatisticsOperation.SUCCESSFUL_AUTH);
                 writePersonDetailsToFlowContext(context, validationResult.getAuthenticationIdentity());
@@ -131,11 +135,24 @@ public class SmartIDAuthenticationService extends AbstractService {
         }
     }
 
-    private void writeAuthSessionToFlowContext(RequestContext context, AuthenticationHash authHash, AuthenticationSessionResponse authResponse) {
-        AuthenticationSession authSession = new AuthenticationSession(authResponse.getSessionId(), authHash);
+    private AuthenticationRequest formSubjectAuthenticationRequest(String personIdentifier, String personCountry) {
+        return AuthenticationRequest.builder()
+                .personIdentifier(personIdentifier)
+                .personCountry(personCountry)
+                .certificateLevel(DEFAULT_CERTIFICATE_LEVEL)
+                .authenticationHash(AuthenticationHash.generateRandomHash(confProvider.getAuthenticationHashType()))
+                .build();
+    }
+
+    private void writeAuthSessionToFlowContext(RequestContext context, AuthenticationRequest authRequest, String sessionId) {
+        AuthenticationSession authSession = AuthenticationSession.builder()
+                .sessionId(sessionId)
+                .authenticationHash(authRequest.getAuthenticationHash())
+                .certificateLevel(authRequest.getCertificateLevel())
+                .build();
 
         MutableAttributeMap<Object> flowScope = context.getFlowScope();
-        flowScope.put(Constants.SMART_ID_VERIFICATION_CODE, authHash.calculateVerificationCode());
+        flowScope.put(Constants.SMART_ID_VERIFICATION_CODE, authRequest.getAuthenticationHash().calculateVerificationCode());
         flowScope.put(Constants.SMART_ID_AUTHENTICATION_SESSION, authSession);
     }
 
@@ -182,6 +199,7 @@ public class SmartIDAuthenticationService extends AbstractService {
                 exception.getClass(),
                 exception.getMessage(),
                 errorMessageKey);
+//        TODO: Speki järgi peaks olema lokaliseeritud veasõnum, äkki peaks olema hoopis veakood?
         collectErrorStatistics(context, exception.getMessage());
         String localizedErrorMessage = getMessage(errorMessageKey);
         return new TaraAuthenticationException(localizedErrorMessage, exception);

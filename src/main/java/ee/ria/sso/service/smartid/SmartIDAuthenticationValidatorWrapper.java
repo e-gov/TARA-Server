@@ -20,9 +20,9 @@ public class SmartIDAuthenticationValidatorWrapper {
 
     private final AuthenticationResponseValidator validator;
 
-    public SmartIdAuthenticationResult validateAuthenticationResponse(SessionStatus sessionStatus, AuthenticationHash authHash) {
+    public SmartIdAuthenticationResult validateAuthenticationResponse(SessionStatus sessionStatus, AuthenticationHash authHash, CertificateLevel certificateLevel) {
         validateSessionEndResult(sessionStatus.getResult().getEndResult());
-        SmartIdAuthenticationResponse authResponse = formAuthenticationResponse(sessionStatus, authHash);
+        SmartIdAuthenticationResponse authResponse = formAuthenticationResponse(sessionStatus, authHash, certificateLevel);
         SmartIdAuthenticationResult validationResult = validator.validate(authResponse);
         if (!validationResult.isValid()) {
             List<String> errors = validationResult.getErrors();
@@ -52,7 +52,7 @@ public class SmartIDAuthenticationValidatorWrapper {
         }
     }
 
-    private SmartIdAuthenticationResponse formAuthenticationResponse(SessionStatus sessionStatus, AuthenticationHash authHash) {
+    private SmartIdAuthenticationResponse formAuthenticationResponse(SessionStatus sessionStatus, AuthenticationHash authHash, CertificateLevel certificateLevel) {
         SessionResult sessionResult = sessionStatus.getResult();
         SessionSignature sessionSignature = sessionStatus.getSignature();
         SessionCertificate certificate = sessionStatus.getCertificate();
@@ -63,7 +63,7 @@ public class SmartIDAuthenticationValidatorWrapper {
         authenticationResponse.setHashType(authHash.getHashType());
         authenticationResponse.setSignatureValueInBase64(sessionSignature.getValueInBase64());
         authenticationResponse.setAlgorithmName(sessionSignature.getAlgorithm());
-        authenticationResponse.setRequestedCertificateLevel(CertificateLevel.QUALIFIED.name());
+        authenticationResponse.setRequestedCertificateLevel(certificateLevel.name());
         if (certificate.getValue() != null) {
             authenticationResponse.setCertificate(CertificateParser.parseX509Certificate(certificate.getValue()));
         }

@@ -11,8 +11,11 @@ public class AuthenticationSessionTest {
 
     @Test
     public void increaseCount() {
-        AuthenticationSession authSession = new AuthenticationSession(UUID.randomUUID().toString(), AuthenticationHash.generateRandomHash());
-        authSession.setStatusCheckCount(0);
+        AuthenticationSession authSession = AuthenticationSession.builder()
+                .sessionId(UUID.randomUUID().toString())
+                .authenticationHash(AuthenticationHash.generateRandomHash())
+                .statusCheckCount(0)
+                .build();
 
         assertSame(0, authSession.getStatusCheckCount());
 
