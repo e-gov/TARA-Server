@@ -1,6 +1,6 @@
 package ee.ria.sso.flow.action;
 
-import ee.ria.sso.service.AuthenticationService;
+import ee.ria.sso.service.banklink.BanklinkAuthenticationService;
 import org.springframework.stereotype.Component;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
@@ -8,9 +8,9 @@ import org.springframework.webflow.execution.RequestContext;
 @Component("BankCheckAuthenticationAction")
 public class BankCheckAuthenticationAction extends AbstractAuthenticationAction {
 
-    private final AuthenticationService authenticationService;
+    private final BanklinkAuthenticationService authenticationService;
 
-    public BankCheckAuthenticationAction(AuthenticationService authenticationService) {
+    public BankCheckAuthenticationAction(BanklinkAuthenticationService authenticationService) {
         this.authenticationService = authenticationService;
     }
 

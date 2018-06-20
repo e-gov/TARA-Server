@@ -38,12 +38,4 @@ public class TestTaraConfiguration {
     protected void init() {
         this.taraProperties.getApplication().setMode(TaraProperties.Mode.development);
     }
-
-    @Bean
-    KeyPair mockBankRsaKeyPair() throws NoSuchAlgorithmException {
-        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-        keyGen.initialize(2048);
-        KeyPair keyPair = keyGen.genKeyPair();
-        return keyPair;
-    }
 }
