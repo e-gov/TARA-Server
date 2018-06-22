@@ -155,23 +155,29 @@ public class SmartIDAuthenticationServiceTest {
 
     @Test
     public void authenticationSessionInitiation_authHash256_Successful() {
-        confProvider.setAuthenticationHashType(HashType.SHA256);
-        TaraCredential credential = mockCredential();
-        MockRequestContext requestContext = mockAuthInitRequestContext(credential);
+        HashType origTestConfHashType = confProvider.getAuthenticationHashType();
+        try {
+            // Override test conf parameter, must switched back after the test run
+            confProvider.setAuthenticationHashType(HashType.SHA256);
+            TaraCredential credential = mockCredential();
+            MockRequestContext requestContext = mockAuthInitRequestContext(credential);
 
-        String sessionId = UUID.randomUUID().toString();
-        mockSubjectAuthenticationCall(sessionId);
+            String sessionId = UUID.randomUUID().toString();
+            mockSubjectAuthenticationCall(sessionId);
 
-        Event event = authenticationService.initSmartIdAuthenticationSession(requestContext);
+            Event event = authenticationService.initSmartIdAuthenticationSession(requestContext);
 
-        assertEventSuccessful(event);
-        assertVerificationCodeInFlowContext(requestContext);
-        assertVerificationCodeFromSameHashAsInAuthenticationRequest(requestContext);
-        assertAuthSessionInFlowContext(requestContext, sessionId, 0);
-        assertAuthStartStatisticsCollected(requestContext);
-        assertAuthenticationRequestCreation(credential);
+            assertEventSuccessful(event);
+            assertVerificationCodeInFlowContext(requestContext);
+            assertVerificationCodeFromSameHashAsInAuthenticationRequest(requestContext);
+            assertAuthSessionInFlowContext(requestContext, sessionId, 0);
+            assertAuthStartStatisticsCollected(requestContext);
+            assertAuthenticationRequestCreation(credential);
 
-        assertEquals(HashType.SHA256, authenticationRequestCaptor.getValue().getAuthenticationHash().getHashType());
+            assertEquals(HashType.SHA256, authenticationRequestCaptor.getValue().getAuthenticationHash().getHashType());
+        } finally {
+            confProvider.setAuthenticationHashType(origTestConfHashType);
+        }
     }
 
     @Test
