@@ -206,4 +206,8 @@ public class TaraProperties {
     public Environment getEnvironment() {
         return environment;
     }
+
+    public String getTestEnvironmentAlertMessageIfAvailable() {
+        return this.environment.getProperty("env.test.message", (String) null);
+    }
 }
