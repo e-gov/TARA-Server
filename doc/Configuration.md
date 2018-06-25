@@ -37,8 +37,8 @@ Table 3 - Bank specific properties
 | `banklinks.bank.{0}.private-key-alias` | N | Private key alias in the keystore. If not defined, `{0}_priv` is used. |
 | `banklinks.bank.{0}.private-key-pass` | N | Private key password in the keystore. Defaults to keystore password when not defined. |
 | `banklinks.bank.{0}.auth-info-parser-class` | N | A class name that allows overriding the bank response parsing. The class must implement the `AuthLinkInfoParser` interface. By default, a standard parser is used. |
-| `banklinks.bank.{0}.try-re-encodes` | N | A comma separated list of standard charset names. When configured with a list of valid character set names, the TARA retries a failing signature validation with reencoded response (usin all the character set's specified).  |
-| `banklinks.bank.{0}.nonce-expires-in-seconds` | N | Specifies the nonce's Time-To-Live in seconds.  |
+| `banklinks.bank.{0}.try-re-encodes` | N | A comma separated list of standard charset names. When configured with a list of valid character set names, the TARA retries a failing signature validation with re-encoded response (using all the character set's specified). By default, only the character set requested in authentication request is used. |
+| `banklinks.bank.{0}.nonce-expires-in-seconds` | N | Specifies the nonce's Time-To-Live in seconds. Defaults to 3600 seconds (1 hour). |
 
 NB! Property placeholder `{0}` refers to a specific bank code (see property description for `banklinks.available-banks`).
 
@@ -80,4 +80,17 @@ Table 5 - Heartbeat endpoints on systems TARA is depending on
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
-| `eidas.heartbeatUrl` | N | Path to eIDAS-client microservice heartbeat URL. |
+| `eidas.heartbeatUrl` | N | Path to eIDAS-client microservice heartbeat URL. If set, the eIDAS-client status affects the overall reported status of TARA-server. |
+
+Example configuration with **heartbeat** endpoint enabled, accessible without authentication and from all IP-addresses, and configure eIDAS-client **heartbeat** URL:
+
+````
+endpoints.heartbeat.enabled=true
+endpoints.heartbeat.sensitive=false
+
+# Allow access from all IP-addresses
+cas.adminPagesSecurity.ip=.+
+
+# Configure eIDAS-client heartbeat url
+eidas.heartbeatUrl=https://<frontendhost/context>/heartbeat
+````
