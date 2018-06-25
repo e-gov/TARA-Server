@@ -1,11 +1,11 @@
 package ee.ria.sso.test;
 
-import java.util.Collection;
-import java.util.function.Predicate;
-
 import org.apereo.cas.authentication.principal.Service;
 import org.apereo.cas.services.RegisteredService;
 import org.apereo.cas.services.ServicesManager;
+
+import java.util.Collection;
+import java.util.function.Predicate;
 
 /**
  * Created by Janar Rahumeel (CGI Estonia)

@@ -18,9 +18,4 @@ public interface AuthenticationService {
     Event startLoginByEidas(RequestContext context);
 
     Event checkLoginForEidas(RequestContext context);
-
-    Event startLoginByBankLink(RequestContext context);
-
-    Event checkLoginForBankLink(RequestContext context);
-
 }

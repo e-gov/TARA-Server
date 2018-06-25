@@ -9,9 +9,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 import javax.annotation.PostConstruct;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
 
 /**
  * @author Janar Rahumeel (CGI Estonia)
@@ -37,13 +34,5 @@ public class TestTaraConfiguration {
     @PostConstruct
     protected void init() {
         this.taraProperties.getApplication().setMode(TaraProperties.Mode.development);
-    }
-
-    @Bean
-    KeyPair mockBankRsaKeyPair() throws NoSuchAlgorithmException {
-        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-        keyGen.initialize(2048);
-        KeyPair keyPair = keyGen.genKeyPair();
-        return keyPair;
     }
 }
