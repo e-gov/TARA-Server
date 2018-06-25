@@ -9,9 +9,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 import javax.annotation.PostConstruct;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
 
 /**
  * @author Janar Rahumeel (CGI Estonia)

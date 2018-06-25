@@ -37,6 +37,7 @@ public class BanklinkConfigurationProvider {
     public static final String BANK_PARAM_URL = "banklinks.bank.{0}.url";
     public static final String BANK_PARAM_RECEIVER_ID = "banklinks.bank.{0}.receiver-id";
     public static final String BANK_PARAM_SENDER_ID = "banklinks.bank.{0}.sender-id";
+    public static final String BANK_PARAM_PUBLIC_KEY_LABEL = "banklinks.bank.{0}.public-key-alias";
     public static final String BANK_PARAM_PRIVATE_KEY_LABEL = "banklinks.bank.{0}.private-key-alias";
     public static final String BANK_PARAM_PRIVATE_KEY_PASS = "banklinks.bank.{0}.private-key-pass";
     public static final String BANK_PARAM_RESPONSE_PARSER_CLASS = "banklinks.bank.{0}.auth-info-parser-class";
@@ -91,6 +92,7 @@ public class BanklinkConfigurationProvider {
         String url = environment.getRequiredProperty(MessageFormat.format(BANK_PARAM_URL, bank.getName()));
         String senderId = environment.getRequiredProperty(MessageFormat.format(BANK_PARAM_SENDER_ID, bank.getName()));
         String receiverId = environment.getRequiredProperty(MessageFormat.format(BANK_PARAM_RECEIVER_ID, bank.getName()));
+        String publicKeyAlias = environment.getProperty(MessageFormat.format(BANK_PARAM_PUBLIC_KEY_LABEL, bank.getName()), bank.getName());
         String privateKeyAlias = environment.getProperty(MessageFormat.format(BANK_PARAM_PRIVATE_KEY_LABEL, bank.getName()), bank.getName() + "_priv");
         String privateKeyPass = environment.getProperty(MessageFormat.format(BANK_PARAM_PRIVATE_KEY_PASS, bank.getName()), getKeystorePass());
         String responseParserClass = environment.getProperty(MessageFormat.format(BANK_PARAM_RESPONSE_PARSER_CLASS, bank.getName()), IPizzaStandardAuthInfoParser.class.getName());
@@ -100,6 +102,7 @@ public class BanklinkConfigurationProvider {
         return new BankConfiguration(
                 url, senderId, receiverId,
                 nonceExpires,
+                publicKeyAlias,
                 privateKeyAlias,
                 privateKeyPass,
                 responseParserClass,
@@ -114,6 +117,7 @@ public class BanklinkConfigurationProvider {
         private final String senderId;
         private final String receiverId;
         private final int nonceExpirationInSeconds;
+        private final String publicKeyAlias;
         private final String privateKeyAlias;
         private final String privateKeyPass;
         private final String responseParserClass;
@@ -125,6 +129,7 @@ public class BanklinkConfigurationProvider {
                     "url='" + url + '\'' +
                     ", senderId='" + senderId + '\'' +
                     ", receiverId='" + receiverId + '\'' +
+                    ", publicKeyAlias='" + publicKeyAlias + '\'' +
                     ", privateKeyAlias='" + privateKeyAlias + '\'' +
                     ", nonceExpirationInSeconds=" + nonceExpirationInSeconds +
                     ", privateKeyPass='*******', responseParserClass='" + responseParserClass + '\'' +

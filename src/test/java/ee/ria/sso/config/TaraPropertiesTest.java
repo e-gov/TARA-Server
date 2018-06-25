@@ -1,10 +1,9 @@
 package ee.ria.sso.config;
 
+import ee.ria.sso.AbstractTest;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import ee.ria.sso.AbstractTest;
 
 /**
  * Created by Janar Rahumeel (CGI Estonia)

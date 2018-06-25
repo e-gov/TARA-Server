@@ -112,13 +112,13 @@ public class BanklinkConfiguration {
                 banklinkConfigurationProvider.getReturnUrl(),
                 bankConfiguration.getSenderId(),
                 bankConfiguration.getReceiverId(),
-                bankPublicKey(bank, keyStore),
+                bankPublicKey(bank, bankConfiguration.getPublicKeyAlias(), keyStore),
                 clientPrivateKey(keyStore, bankConfiguration.getPrivateKeyAlias(), bankConfiguration.getPrivateKeyPass()));
     }
 
-    private PublicKey bankPublicKey(BankEnum bank, KeyStore keyStore) {
+    private PublicKey bankPublicKey(BankEnum bank, String publicKeyAlias, KeyStore keyStore) {
         try {
-            Certificate certificate = keyStore.getCertificate(bank.name().toLowerCase());
+            Certificate certificate = keyStore.getCertificate(publicKeyAlias);
 
             if (certificate == null)
                 throw new KeyStoreException("No certificate with alias " + bank.name().toLowerCase() + " was found in keystore!");

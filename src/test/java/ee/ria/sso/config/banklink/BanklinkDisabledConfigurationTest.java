@@ -1,17 +1,6 @@
 package ee.ria.sso.config.banklink;
 
-import ee.ria.sso.config.smartid.SmartIDConfiguration;
-import ee.ria.sso.config.smartid.SmartIDConfigurationProvider;
-import ee.ria.sso.config.smartid.TestSmartIDConfiguration;
-import ee.ria.sso.flow.action.SmartIDCheckAuthenticationAction;
-import ee.ria.sso.flow.action.SmartIDStartAuthenticationAction;
 import ee.ria.sso.service.banklink.BanklinkAuthenticationService;
-import ee.ria.sso.service.smartid.SmartIDAuthenticationService;
-import ee.ria.sso.service.smartid.SmartIDAuthenticationValidatorWrapper;
-import ee.sk.smartid.AuthenticationResponseValidator;
-import ee.sk.smartid.SmartIdClient;
-import ee.sk.smartid.rest.SmartIdConnector;
-import org.glassfish.jersey.client.ClientConfig;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;

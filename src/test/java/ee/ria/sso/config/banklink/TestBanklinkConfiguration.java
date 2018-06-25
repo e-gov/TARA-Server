@@ -1,13 +1,7 @@
 package ee.ria.sso.config.banklink;
 
-import ee.ria.sso.config.TaraProperties;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
-import ee.ria.sso.flow.action.BankCheckAuthenticationAction;
-import ee.ria.sso.flow.action.BankStartAuthenticationAction;
-import ee.ria.sso.flow.action.SmartIDCheckAuthenticationAction;
-import ee.ria.sso.flow.action.SmartIDStartAuthenticationAction;
 import ee.ria.sso.statistics.StatisticsHandler;
-import org.apereo.cas.configuration.CasConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;

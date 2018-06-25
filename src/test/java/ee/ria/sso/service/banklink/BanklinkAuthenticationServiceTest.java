@@ -47,9 +47,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static ee.ria.sso.config.banklink.BanklinkConfigurationProvider.BANK_PARAM_RECEIVER_ID;
-import static ee.ria.sso.config.banklink.BanklinkConfigurationProvider.BANK_PARAM_SENDER_ID;
-import static ee.ria.sso.config.banklink.BanklinkConfigurationProvider.BANK_PARAM_URL;
+import static ee.ria.sso.config.banklink.BanklinkConfigurationProvider.*;
 
 
 @TestPropertySource(locations= "classpath:application-test.properties")
