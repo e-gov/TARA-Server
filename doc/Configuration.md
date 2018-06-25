@@ -5,7 +5,7 @@
 
 The configuration of the TARA service is managed through a central configuration properties file - `application.properties`. In addition to Apereo CAS configuration properties described [here](https://apereo.github.io/cas/5.1.x/installation/Configuration-Properties.html) the `application.properties` can also include properties for TARA specific features. The following document describes the custom configuration properties available in TARA service.
 
-<a href="banklink"/>
+<a name="banklink"></a>
 ### Estonian banklinks
 
 Table 1 - Enabling banklink feature in TARA
