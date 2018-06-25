@@ -8,7 +8,7 @@
         -->
         <Property name="cas.log.dir" >/etc/cas/logs</Property>
         <!-- To see more CAS specific logging, adjust this property to info or debug or run server with -Dcas.log.leve=debug -->
-        <Property name="cas.log.level" >warn</Property>
+        <Property name="cas.log.level" >DEBUG</Property>
     </Properties>
     <Appenders>
         <Console name="console" target="SYSTEM_OUT">
@@ -101,7 +101,6 @@
         <AsyncLogger name="com.hazelcast" level="warn" />
         <AsyncLogger name="org.jasig.spring" level="warn" />
         <AsyncLogger name="org.hibernate" level="warn" />
-        <AsyncLogger name="ee.sk.smartid.rest.LoggingFilter" level="trace" />
 
         <!-- Log authentication attempts to authentication log -->
         <AsyncLogger name="ee.ria.sso.logging" level="${sys:cas.log.level}" includeLocation="true" additivity="false">
