@@ -63,3 +63,21 @@ banklinks.bank.lhv.sender-id=RIA
 banklinks.bank.lhv.receiver-id=LHV
 banklinks.bank.lhv.url=https://www.testlhv.ee/banklinkurl
 ````
+
+<a name="heartbeat"></a>
+### Heartbeat endpoint
+
+TARA heartbeat endpoint is a Spring Boot Actuator endpoint and thus is configured as described [here](https://docs.spring.io/spring-boot/docs/1.5.3.RELEASE/reference/html/production-ready-endpoints.html), while also taking into consideration CAS specific configuration properties as described [here](https://apereo.github.io/cas/5.1.x/installation/Configuration-Properties.html#spring-boot-endpoints).
+
+Table 4 - Configuring heartbeat endpoint in TARA
+
+| Property        | Mandatory | Description |
+| :---------------- | :---------- | :----------------|
+| `endpoints.heartbeat.*` | N | Spring Boot specific actuator configuration. |
+| `endpoints.heartbeat.timeout` | N | Maximum time to wait on status requests made to systems that TARA is depending on, in seconds. Defaults to 3 seconds. |
+
+Table 5 - Heartbeat endpoints on systems TARA is depending on
+
+| Property        | Mandatory | Description |
+| :---------------- | :---------- | :----------------|
+| `eidas.heartbeatUrl` | N | Path to eIDAS-client microservice heartbeat URL. |
