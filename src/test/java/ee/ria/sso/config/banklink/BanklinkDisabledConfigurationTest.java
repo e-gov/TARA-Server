@@ -1,5 +1,7 @@
 package ee.ria.sso.config.banklink;
 
+import ee.ria.sso.flow.action.BankCheckAuthenticationAction;
+import ee.ria.sso.flow.action.BankStartAuthenticationAction;
 import ee.ria.sso.service.banklink.BanklinkAuthenticationService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,6 +32,8 @@ public class BanklinkDisabledConfigurationTest {
         assertBeanNotInitiated(BanklinkConfiguration.class);
         assertBeanNotInitiated(BanklinkAuthenticationService.class);
         assertBeanNotInitiated(BanklinkConfigurationProvider.class);
+        assertBeanNotInitiated(BankCheckAuthenticationAction.class);
+        assertBeanNotInitiated(BankStartAuthenticationAction.class);
     }
 
     private void assertBeanNotInitiated(Class clazz) {

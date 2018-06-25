@@ -148,7 +148,7 @@
         </div>
 
         <div class="panel" th:if="${(session.taraAuthenticationMethods == null or #lists.contains(session.taraAuthenticationMethods,'BankLink'))
-             and (not #lists.isEmpty(@banklinkConfigurationProvider.getListOfBanks())) and @environment.getProperty('banklinks.enabled') == 'true'}">
+             and @environment.getProperty('banklinks.enabled') == 'true' and (not #lists.isEmpty(@banklinkConfigurationProvider.getListOfBanks()))}">
             <div class="method-block space-top-2 white row accordion-toggle collapsed" role="button"
                  data-toggle="collapse" data-parent="#accordion" href="#collapseBank" aria-expanded="false"
                  aria-controls="collapseBank">
