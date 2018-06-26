@@ -53,6 +53,7 @@ public class BanklinkAuthenticationService extends AbstractService {
             outgoingPacket.setParameter("VK_LANG", LocaleContextHolder.getLocale().getISO3Language().toUpperCase());
             context.getRequestScope().put("packet", outgoingPacket);
             context.getExternalContext().getSessionMap().put(SERVICE_ATTRIBUTE, context.getFlowScope().get(SERVICE_ATTRIBUTE));
+            this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.BankLink, StatisticsOperation.START_AUTH);
 
             return new Event(this, "success");
         } catch (Exception e) {
@@ -73,8 +74,7 @@ public class BanklinkAuthenticationService extends AbstractService {
             TaraCredential credential = new TaraCredential(AuthenticationType.BankLink, principalCode, firstName, lastName);
             context.getFlowExecutionContext().getActiveSession().getScope().put("credential", credential);
             context.getFlowScope().put(SERVICE_ATTRIBUTE, context.getExternalContext().getSessionMap().get(SERVICE_ATTRIBUTE));
-            this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.BankLink,
-                    StatisticsOperation.SUCCESSFUL_AUTH);
+            this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.BankLink, StatisticsOperation.SUCCESSFUL_AUTH);
 
             return new Event(this, "success");
         } catch (Exception e) {
