@@ -94,3 +94,19 @@ cas.adminPagesSecurity.ip=.+
 # Configure eIDAS-client heartbeat url
 eidas.heartbeatUrl=https://<frontendhost/context>/heartbeat
 ````
+
+
+<a name="test_environment_warning"></a>
+### Test environment warning message
+
+Table 6 - Configuring TARA login page to show a warning message about it being run against test services
+
+| Property        | Mandatory | Description |
+| :---------------- | :---------- | :----------------|
+| `env.test.message` | N | Warning message to show. No warning displayed if not set. |
+
+Example:
+
+````
+env.test.message=Tegemist on testkeskkonnaga ja autentimiseks vajalik info on <a href="https://e-gov.github.io/TARA-Doku/Testimine#testimine-testnumbrite-ja-id-kaardiga" class="alert-link">TARA dokumentatsioonis</a>!
+````
