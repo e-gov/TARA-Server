@@ -5,6 +5,11 @@
         </div>
     </noscript>
     <h3 th:text="#{label.choose}"></h3>
+
+    <div class="alert alert-warning" role="alert" th:if="${@taraProperties.getTestEnvironmentAlertMessageIfAvailable() != null}">
+        <strong th:utext="${@taraProperties.getTestEnvironmentAlertMessageIfAvailable()}"></strong>
+    </div>
+
     <div id="accordion" role="tablist" aria-multiselectable="true">
 
         <div class="panel" th:if="${(session.taraAuthenticationMethods == null or #lists.contains(session.taraAuthenticationMethods,'IDCard'))}">
