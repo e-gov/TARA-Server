@@ -1,17 +1,13 @@
 package ee.ria.sso.config;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.stream.Collectors;
-
+import ee.ria.sso.model.EmptyOidcRegisteredService;
+import ee.ria.sso.service.ManagerService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
 import org.apereo.cas.configuration.CasConfigurationProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -25,8 +21,13 @@ import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.webflow.core.collection.ParameterMap;
 import org.springframework.webflow.execution.RequestContextHolder;
 
-import ee.ria.sso.model.EmptyOidcRegisteredService;
-import ee.ria.sso.service.ManagerService;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Janar Rahumeel (CGI Estonia)
@@ -36,6 +37,8 @@ import ee.ria.sso.service.ManagerService;
 @ConfigurationProperties("tara")
 public class TaraProperties {
 
+    private final Logger log = LoggerFactory.getLogger(TaraProperties.class);
+
     private final CasConfigurationProperties casConfigurationProperties;
     private final Environment environment;
     private final ManagerService managerService;
@@ -44,7 +47,7 @@ public class TaraProperties {
     @Autowired
     private TaraResourceBundleMessageSource messageSource;
 
-    @Value("#{'${eidas.client.availableCountries}'.split(',')}")
+    @Value("#{T(ee.ria.sso.config.TaraProperties).parsePropertiesList('${eidas.client.availableCountries:}')}")
     private List<String> eidasClientAvailableCountries;
 
     public TaraProperties(CasConfigurationProperties casConfigurationProperties, Environment environment, ManagerService managerService) {
@@ -94,14 +97,20 @@ public class TaraProperties {
         return "#";
     }
 
-    public String getHomeUrl() throws UnsupportedEncodingException, URISyntaxException {
+    public String getHomeUrl() {
         ParameterMap map = RequestContextHolder.getRequestContext().getRequestParameters();
         if (map.contains("service")) {
-            Optional<NameValuePair> uri = new URIBuilder(URLDecoder.decode(map.getRequired("service"), StandardCharsets.UTF_8.name())).
-                getQueryParams().stream().filter(p -> p.getName().equals("redirect_uri")).findFirst();
+            Optional<NameValuePair> uri;
+            try {
+                uri = new URIBuilder(URLDecoder.decode(map.getRequired("service"), StandardCharsets.UTF_8.name())).
+                        getQueryParams().stream().filter(p -> p.getName().equals("redirect_uri")).findFirst();
+            } catch (URISyntaxException | UnsupportedEncodingException e) {
+                log.error("Failed to parse home url", e);
+                uri = Optional.empty();
+            }
             if (uri.isPresent()) {
                 return this.managerService.getServiceByID(uri.get().getValue()).orElse(new EmptyOidcRegisteredService()).
-                    getInformationUrl();
+                        getInformationUrl();
             }
         }
         return "#";
@@ -195,5 +204,18 @@ public class TaraProperties {
 
             return Objects.hash(code, name);
         }
+    }
+
+    public static List<String> parsePropertiesList(String input) {
+        if (input == null || input.isEmpty()) return Collections.emptyList();
+        return Arrays.asList(input.split(","));
+    }
+
+    public Environment getEnvironment() {
+        return environment;
+    }
+
+    public String getTestEnvironmentAlertMessageIfAvailable() {
+        return this.environment.getProperty("env.test.message", (String) null);
     }
 }

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="99px" height="67px" viewBox="0 0 99 67" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 47.1 (45422) - http://www.bohemiancoding.com/sketch -->
+    <title>Group 4@1x</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="card" transform="scale(1.2, 1.2) translate(5.500000, -5.500000)" fill-rule="nonzero">
+            <path d="M0,16.11 L0,51.89 C0,53.2452563 0.541759451,54.5450048 1.50609746,55.5033157 C2.47043546,56.4616265 3.77835848,57 5.14213836,57 L66.8578616,57 C68.2216415,57 69.5295645,56.4616265 70.4939025,55.5033157 C71.4582405,54.5450048 72,53.2452563 72,51.89 L72,16.11 C72,13.2878249 69.6977862,11 66.8578616,11 L5.14213836,11 C2.30221376,11 0,13.2878249 0,16.11 Z M51.4314465,51.89 L5.14213836,51.89 L5.14213836,16.11 L66.8578616,16.11 L66.8578616,51.89 L51.4314465,51.89 Z" id="Shape" fill="#333333"></path>
+            <rect id="Rectangle-path" fill="#000000" x="49" y="29" width="11" height="11"></rect>
+        </g>
+    </g>
+</svg>

@@ -1,11 +1,6 @@
 package org.apereo.cas.oidc.token;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Optional;
-import java.util.TreeMap;
-import java.util.UUID;
+import java.util.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -132,11 +127,7 @@ public class OidcIdTokenGeneratorService {
             String levelOfAssurance = (String) principal.getAttributes().get("levelOfAssurance");
             if (levelOfAssurance != null) claims.setStringClaim(OidcConstants.ACR, levelOfAssurance);
         }
-        /*if (authentication.getAttributes().containsKey(casProperties.getAuthn().getMfa().getAuthenticationContextAttribute())) {
-            final Collection<Object> val = CollectionUtils.toCollection(
-                authentication.getAttributes().get(casProperties.getAuthn().getMfa().getAuthenticationContextAttribute()));
-            claims.setStringClaim(OidcConstants.ACR, val.iterator().next().toString());
-        }*/
+
         if (authentication.getAttributes().containsKey(AuthenticationHandler.SUCCESSFUL_AUTHENTICATION_HANDLERS)) {
             final Collection<Object> val = CollectionUtils.toCollection(principal.getAttributes().get("authenticationType"));
             claims.setStringListClaim(OidcConstants.AMR, val.toArray(new String[]{}));
@@ -146,36 +137,56 @@ public class OidcIdTokenGeneratorService {
         claims.setClaim(OAuth20Constants.NONCE, authentication.getAttributes().get(OAuth20Constants.NONCE));
         claims.setClaim(OidcConstants.CLAIM_AT_HASH, generateAccessTokenHash(accessTokenId));
 
-		/*principal.getAttributes().entrySet().stream()
-                .filter(entry -> casProperties.getAuthn().getOidc().getClaims().contains(entry.getKey()))
-				.forEach(entry -> claims.setClaim(entry.getKey(), entry.getValue
-				()));*/
-
         return claims;
     }
 
+    private static final Map<String, String> attributeMap = new HashMap<>();
+    static {
+        attributeMap.put("lastName", "family_name");
+        attributeMap.put("firstName", "given_name");
+        attributeMap.put("dateOfBirth", "date_of_birth");
+        attributeMap.put("mobileNumber", "mobile_number");
+    }
+
     private Map<String, Object> filterAttributes(Map<String, Object> inputAttributes) {
-        if (inputAttributes.get("mobileNumber") != null) {
-            return filterMobileIDAttributes(inputAttributes);
-        } else {
-            return filterEidasAttributes(inputAttributes);
+        Map<String, Object> attrs = new TreeMap(String.CASE_INSENSITIVE_ORDER);
+
+        for (String inputAttributeName : inputAttributes.keySet()) {
+            String mappedAttributeName = attributeMap.get(inputAttributeName);
+            if (mappedAttributeName == null) continue;
+
+            attrs.put(mappedAttributeName, inputAttributes.get(inputAttributeName));
         }
-    }
 
-    private Map<String, Object> filterMobileIDAttributes(Map<String, Object> inputAttributes) {
-        Map<String, Object> attrs = new TreeMap(String.CASE_INSENSITIVE_ORDER);
-        attrs.put("mobile_number", inputAttributes.get("mobileNumber"));
-        attrs.put("family_name", inputAttributes.get("lastName"));
-        attrs.put("given_name", inputAttributes.get("firstName"));
+        if (attrs.get("date_of_birth") == null) {
+            String principalCode = (String) inputAttributes.get("principalCode");
+            if (principalCode != null && isEstonianIdCode(principalCode)) {
+                String dateOfBirth = tryToExtractDateOfBirth(principalCode);
+                if (dateOfBirth != null) attrs.put("date_of_birth", dateOfBirth);
+            }
+        }
+
         return attrs;
     }
 
-    private Map<String,Object> filterEidasAttributes(Map<String, Object> inputAttributes) {
-        Map<String, Object> attrs = new TreeMap(String.CASE_INSENSITIVE_ORDER);
-        attrs.put("family_name", inputAttributes.get("lastName"));
-        attrs.put("given_name", inputAttributes.get("firstName"));
-        attrs.put("date_of_birth", inputAttributes.get("dateOfBirth"));
-        return attrs;
+    private boolean isEstonianIdCode(String principalCode) {
+        return principalCode.length() == 13 && principalCode.startsWith("EE");
+    }
+
+    private String tryToExtractDateOfBirth(String estonianIdCode) {
+        int sexAndCentury = Integer.parseUnsignedInt(estonianIdCode.substring(2, 3));
+        if (sexAndCentury < 1 || sexAndCentury > 6) return null;
+
+        int birthYear = Integer.parseUnsignedInt(estonianIdCode.substring(3, 5));
+        birthYear += (1800 + ((sexAndCentury - 1) >>> 1) * 100);
+
+        int birthMonth = Integer.parseUnsignedInt(estonianIdCode.substring(5, 7));
+        if (birthMonth < 1 || birthMonth > 12) return null;
+
+        int birthDay = Integer.parseUnsignedInt(estonianIdCode.substring(7, 9));
+        if (birthDay < 1 || birthDay > 31) return null;
+
+        return String.format("%04d-%02d-%02d", birthYear, birthMonth, birthDay);
     }
 
     private String generateAccessTokenHash(final AccessToken accessTokenId) {

@@ -101,6 +101,7 @@
         <AsyncLogger name="com.hazelcast" level="warn" />
         <AsyncLogger name="org.jasig.spring" level="warn" />
         <AsyncLogger name="org.hibernate" level="warn" />
+        <AsyncLogger name="ee.sk.smartid.rest.LoggingFilter" level="trace" />
 
         <!-- Log authentication attempts to authentication log -->
         <AsyncLogger name="ee.ria.sso.logging" level="${sys:cas.log.level}" includeLocation="true" additivity="false">

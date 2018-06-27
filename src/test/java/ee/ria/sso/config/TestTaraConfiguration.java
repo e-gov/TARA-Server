@@ -1,7 +1,6 @@
 package ee.ria.sso.config;
 
-import javax.annotation.PostConstruct;
-
+import ee.ria.sso.test.TestServicesManager;
 import org.apereo.cas.configuration.CasConfigurationProperties;
 import org.apereo.cas.services.ServicesManager;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
-import ee.ria.sso.test.TestServicesManager;
+import javax.annotation.PostConstruct;
 
 /**
  * @author Janar Rahumeel (CGI Estonia)
@@ -36,5 +35,4 @@ public class TestTaraConfiguration {
     protected void init() {
         this.taraProperties.getApplication().setMode(TaraProperties.Mode.development);
     }
-
 }

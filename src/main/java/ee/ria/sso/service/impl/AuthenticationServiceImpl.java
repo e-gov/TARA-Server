@@ -113,7 +113,7 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
             Principal subjectDN = certificate.getSubjectDN();
             Map<String, String> params = Splitter.on(", ").withKeyValueSeparator("=").split(subjectDN.getName());
             context.getFlowExecutionContext().getActiveSession().getScope()
-                .put("credential", new TaraCredential("EE" + params.get("SERIALNUMBER"), params.get("GIVENNAME"), params.get("SURNAME")));
+                .put("credential", new TaraCredential(AuthenticationType.IDCard, "EE" + params.get("SERIALNUMBER"), params.get("GIVENNAME"), params.get("SURNAME")));
             this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.IDCard, StatisticsOperation.SUCCESSFUL_AUTH);
             return new Event(this, "success");
         } catch (Exception e) {
@@ -304,11 +304,10 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
 
     private X509Certificate readCert(String filename) throws IOException, CertificateException {
         String fullPath = this.ocspCertDirectory + "/" + filename;
-        FileInputStream fis = new FileInputStream(fullPath);
-        CertificateFactory cf = CertificateFactory.getInstance("X.509");
-        X509Certificate cert = (X509Certificate) cf.generateCertificate(fis);
-        fis.close();
-        return cert;
+        try ( FileInputStream fis = new FileInputStream(fullPath) ) {
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            return (X509Certificate) cf.generateCertificate(fis);
+        }
     }
 
     private void clearScope(RequestContext context) {

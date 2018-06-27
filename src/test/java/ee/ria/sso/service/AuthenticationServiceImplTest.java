@@ -1,29 +1,35 @@
 package ee.ria.sso.service;
 
-import java.util.HashMap;
-import java.util.Map;
-
+import ee.ria.sso.AbstractTest;
+import ee.ria.sso.config.TaraProperties;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.webflow.execution.Event;
 
-import ee.ria.sso.AbstractTest;
+import java.util.HashMap;
+import java.util.Map;
 
-/**
- * @author Janar Rahumeel (CGI Estonia)
- */
 
-public class AuthenticationServiceTest extends AbstractTest {
+public class AuthenticationServiceImplTest extends AbstractTest {
+
+    @Rule
+    public ExpectedException expectedEx = ExpectedException.none();
 
     @Autowired
     private AuthenticationService authenticationService;
 
-    @Test(expected = RuntimeException.class)
+    @Autowired
+    private TaraProperties taraProperties;
+
+    @Test
     public void testStartLoginByMobileIDFailed() {
+        expectedEx.expect(RuntimeException.class);
+
         Map<String, String> map = new HashMap<>();
         map.put("mobileNumber", "+37252839476");
         map.put("principalCode", "38882736672");
         Event event = this.authenticationService.startLoginByMobileID(this.getRequestContext(map));
     }
-
 }

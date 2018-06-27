@@ -18,5 +18,4 @@ public interface AuthenticationService {
     Event startLoginByEidas(RequestContext context);
 
     Event checkLoginForEidas(RequestContext context);
-
 }

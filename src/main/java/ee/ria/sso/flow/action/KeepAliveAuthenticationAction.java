@@ -5,8 +5,8 @@ import org.springframework.webflow.action.AbstractAction;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
 
-@Component("EIDASKeepAliveAuthenticationAction")
-public class EidasKeepAliveAuthenticationAction extends AbstractAction {
+@Component("KeepAliveAuthenticationAction")
+public class KeepAliveAuthenticationAction extends AbstractAction {
 
     @Override
     protected Event doExecute(RequestContext context) {

@@ -9,12 +9,12 @@
 	</on-start>
 
 	<action-state id="handleCallbackResultOrStartNewAuthenticationProcess">
-		<evaluate expression="EIDASCallbackAction"/>
+		<evaluate expression="LoginCallbackAction"/>
 		<transition on="login" to="initialAuthenticationRequestValidationCheck" />
 		<transition on="eidasCallback" to="handleEIDASCallBack"/>
+		<transition on="bankCallback" to="handleBankCallBack"/>
 		<transition on="error" to="initializeLoginForm"/>
 	</action-state>
-
 
 	<action-state id="initialAuthenticationRequestValidationCheck">
 		<evaluate expression="initialAuthenticationRequestValidationAction"/>
@@ -39,6 +39,8 @@
 		<transition on="submit" bind="true" validate="false" to="mIDLoginStart" history="invalidate"/>
 		<transition on="idsubmit" bind="true" validate="false" to="IDLoginStart" history="invalidate"/>
 		<transition on="eidassubmit" bind="true" validate="false" to="EIDASLoginStart" history="invalidate"/>
+		<transition on="banksubmit" bind="true" validate="false" to="BankLoginStart" history="invalidate"/>
+		<transition on="smartIdSubmit" bind="true" validate="false" to="smartIdLoginStart" history="invalidate"/>
 	</view-state>
 
 	<action-state id="IDLoginStart">
@@ -64,20 +66,55 @@
 		<transition on="error" to="initializeLoginForm"/>
 	</action-state>
 
-	<action-state id="EIDASLoginStart">
-		<evaluate expression="EIDASStartAuthenticationAction"/>
-		<transition on="success" to="keepEIDASFlowAlive"/>
+	<action-state id="smartIdLoginStart">
+		<evaluate expression="smartIDStartAuthenticationAction"/>
+		<transition on="success" to="viewSmartIDVerificationCode"/>
 		<transition on="error" to="initializeLoginForm"/>
 	</action-state>
 
-	<view-state id="keepEIDASFlowAlive">
+	<view-state id="viewSmartIDVerificationCode" view="casSmartIdVerificationCode" model="credential">
+		<transition on="check" to="checkSmartIDLoginStatus"/>
+	</view-state>
+
+	<action-state id="checkSmartIDLoginStatus">
+		<evaluate expression="smartIDCheckAuthenticationAction"/>
+		<transition on="success" to="realSubmit"/>
+		<transition on="outstanding" to="viewSmartIDVerificationCode"/>
+		<transition on="error" to="initializeLoginForm"/>
+	</action-state>
+
+	<action-state id="EIDASLoginStart">
+		<evaluate expression="EIDASStartAuthenticationAction"/>
+		<transition on="success" to="keepFlowAlive"/>
+		<transition on="error" to="initializeLoginForm"/>
+	</action-state>
+
+	<action-state id="BankLoginStart">
+		<evaluate expression="BankStartAuthenticationAction"/>
+		<transition on="success" to="bankLinkRedirectForm"/>
+		<transition on="error" to="initializeLoginForm"/>
+	</action-state>
+
+	<view-state id="bankLinkRedirectForm" view="casBankRedirectView">
 		<on-entry>
-			<evaluate expression="EIDASKeepAliveAuthenticationAction"></evaluate>
+			<evaluate expression="KeepAliveAuthenticationAction"></evaluate>
+		</on-entry>
+	</view-state>
+
+	<view-state id="keepFlowAlive">
+		<on-entry>
+			<evaluate expression="KeepAliveAuthenticationAction"></evaluate>
 		</on-entry>
 	</view-state>
 
 	<action-state id="handleEIDASCallBack">
 		<evaluate expression="EIDASCheckAuthenticationAction"/>
+		<transition on="success" to="realSubmit"/>
+		<transition on="error" to="initializeLoginForm"/>
+	</action-state>
+
+	<action-state id="handleBankCallBack">
+		<evaluate expression="BankCheckAuthenticationAction"/>
 		<transition on="success" to="realSubmit"/>
 		<transition on="error" to="initializeLoginForm"/>
 	</action-state>

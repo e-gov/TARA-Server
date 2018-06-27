@@ -1,10 +1,9 @@
 package ee.ria.sso.authentication.credential;
 
+import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.LevelOfAssurance;
 import ee.ria.sso.model.AuthenticationResult;
 import org.apereo.cas.authentication.Credential;
-
-import ee.ria.sso.authentication.AuthenticationType;
 
 /**
  * Created by Janar Rahumeel (CGI Estonia)
@@ -50,6 +49,14 @@ public class TaraCredential implements Credential {
 
         String loa = authResult.getLevelOfAssurance();
         if (loa != null) this.levelOfAssurance = LevelOfAssurance.findByFormalName(loa);
+    }
+
+    // TODO refacto needed: use specific credentials for each auth impl
+    public TaraCredential(AuthenticationType authenticationType, String principalCode, String firstName, String lastName) {
+        this.type = authenticationType;
+        this.principalCode = principalCode;
+        this.firstName = firstName;
+        this.lastName = lastName;
     }
 
     @Override

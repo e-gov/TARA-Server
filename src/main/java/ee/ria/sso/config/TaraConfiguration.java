@@ -1,22 +1,31 @@
 package ee.ria.sso.config;
 
-import java.security.SecureRandom;
-
-import javax.annotation.PostConstruct;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-
+import com.nortal.banklink.authentication.AuthLink;
+import com.nortal.banklink.authentication.AuthLinkManager;
+import com.nortal.banklink.authentication.link.AuthLinkManagerImpl;
+import com.nortal.banklink.authentication.link.standard.IPizzaStandardAuthInfoParser;
+import com.nortal.banklink.authentication.link.standard.IPizzaStandardAuthLink;
+import com.nortal.banklink.link.BankLinkConfig;
+import ee.ria.sso.InsecureTrustManager;
+import ee.ria.sso.authentication.BankEnum;
+import ee.ria.sso.service.banklink.HttpSessionNonceManager;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.text.WordUtils;
 import org.apereo.cas.util.AsciiArtUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.EnableAspectJAutoProxy;
-import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.annotation.*;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.util.Assert;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
-import ee.ria.sso.InsecureTrustManager;
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import java.security.*;
+import java.security.cert.Certificate;
+import java.util.Arrays;
 
 /**
  * @author Janar Rahumeel (CGI Estonia)
@@ -36,10 +45,6 @@ public class TaraConfiguration extends WebMvcConfigurerAdapter {
         this.taraProperties = taraProperties;
     }
 
-    /*
-     * RESTRICTED METHODS
-     */
-
     @PostConstruct
     protected void init() throws Exception {
         if (this.taraProperties.getApplication().isDevelopment()) {
@@ -51,5 +56,4 @@ public class TaraConfiguration extends WebMvcConfigurerAdapter {
             AsciiArtUtils.printAsciiArtWarning(this.log, "NB! DEVELOPMENT MODE ACTIVATED", sb.toString());
         }
     }
-
 }
