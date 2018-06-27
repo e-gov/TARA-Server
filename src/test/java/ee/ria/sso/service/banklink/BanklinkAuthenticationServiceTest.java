@@ -12,6 +12,7 @@ import ee.ria.sso.authentication.TaraAuthenticationException;
 import ee.ria.sso.authentication.credential.TaraCredential;
 import ee.ria.sso.config.banklink.BanklinkConfigurationProvider;
 import ee.ria.sso.config.banklink.TestBanklinkConfiguration;
+import ee.ria.sso.test.SimpleTestAppender;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
@@ -48,6 +49,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static ee.ria.sso.config.banklink.BanklinkConfigurationProvider.*;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertThat;
 
 
 @TestPropertySource(locations= "classpath:application-test.properties")
@@ -81,6 +84,7 @@ public class BanklinkAuthenticationServiceTest {
             overrideBankKeys(bank, rsaKeyPair);
         }
 
+        SimpleTestAppender.events.clear();
         MockHttpServletRequest request = new MockHttpServletRequest();
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
     }
@@ -142,7 +146,14 @@ public class BanklinkAuthenticationServiceTest {
         MockHttpServletRequest request = (MockHttpServletRequest)requestContext.getExternalContext().getNativeRequest();
         request.addParameter("VK_SOMETHING", "3013");
 
-        Event event = this.authenticationService.checkLoginForBankLink(requestContext);
+        try {
+            Event event = this.authenticationService.checkLoginForBankLink(requestContext);
+        } catch (Exception e) {
+            SimpleTestAppender.verifyLogEventsExistInOrder(containsString(";openIdDemo;BankLink;ERROR;Banklink 1.1.5.1 cause: Unknown banklink message format"));
+            throw e;
+        }
+
+        Assert.fail("Should not reach this!");
     }
 
 
@@ -161,6 +172,7 @@ public class BanklinkAuthenticationServiceTest {
         Event event = this.authenticationService.checkLoginForBankLink(callbackRequestCtx);
         verifyCredential(callbackRequestCtx);
         verifySuccessEvent(event);
+        SimpleTestAppender.verifyLogEventsExistInOrder(containsString(";openIdDemo;BankLink;START_AUTH;"), containsString(";openIdDemo;BankLink;SUCCESSFUL_AUTH;"));
     }
 
     @Test
@@ -408,6 +420,7 @@ public class BanklinkAuthenticationServiceTest {
 
 
     private void verifyStartLoginByBankLinkSucceeds(BankEnum bank) {
+        SimpleTestAppender.events.clear();
         Locale.setDefault(new Locale("en", "EN"));
         Map<String, String> map = new HashMap<>();
         map.put("bank", bank.getName().toLowerCase());
@@ -420,13 +433,16 @@ public class BanklinkAuthenticationServiceTest {
         verifyNonceStoredInSesssion(requestContext, packet);
         verifyUrl(bank, requestContext);
         verifySuccessEvent(event);
+        SimpleTestAppender.verifyLogEventsExistInOrder(containsString(";openIdDemo;BankLink;START_AUTH;"));
     }
 
     private RequestContext getRequestContext(Map<String, String> parameters) {
         MockRequestContext context = new MockRequestContext();
 
         MockExternalContext mockExternalContext = new MockExternalContext();
-        mockExternalContext.setNativeRequest(new MockHttpServletRequest());
+        MockHttpServletRequest mockHttpServletRequest = new MockHttpServletRequest();
+        mockHttpServletRequest.addParameter("service", "https://cas.test.url.net/oauth2.0/callbackAuthorize?client_name=CasOAuthClient&client_id=openIdDemo&redirect_uri=https://tara-client.arendus.kit:8451/oauth/response");
+        mockExternalContext.setNativeRequest(mockHttpServletRequest);
         context.setExternalContext(mockExternalContext);
 
         MockParameterMap map = (MockParameterMap) context.getExternalContext().getRequestParameterMap();
