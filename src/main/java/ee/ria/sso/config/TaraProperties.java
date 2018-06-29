@@ -1,13 +1,13 @@
 package ee.ria.sso.config;
 
-import ee.ria.sso.authentication.BankEnum;
 import ee.ria.sso.model.EmptyOidcRegisteredService;
 import ee.ria.sso.service.ManagerService;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
 import org.apereo.cas.configuration.CasConfigurationProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -36,6 +36,8 @@ import java.util.stream.Collectors;
 @Component
 @ConfigurationProperties("tara")
 public class TaraProperties {
+
+    private final Logger log = LoggerFactory.getLogger(TaraProperties.class);
 
     private final CasConfigurationProperties casConfigurationProperties;
     private final Environment environment;
@@ -95,14 +97,20 @@ public class TaraProperties {
         return "#";
     }
 
-    public String getHomeUrl() throws UnsupportedEncodingException, URISyntaxException {
+    public String getHomeUrl() {
         ParameterMap map = RequestContextHolder.getRequestContext().getRequestParameters();
         if (map.contains("service")) {
-            Optional<NameValuePair> uri = new URIBuilder(URLDecoder.decode(map.getRequired("service"), StandardCharsets.UTF_8.name())).
-                getQueryParams().stream().filter(p -> p.getName().equals("redirect_uri")).findFirst();
+            Optional<NameValuePair> uri;
+            try {
+                uri = new URIBuilder(URLDecoder.decode(map.getRequired("service"), StandardCharsets.UTF_8.name())).
+                        getQueryParams().stream().filter(p -> p.getName().equals("redirect_uri")).findFirst();
+            } catch (URISyntaxException | UnsupportedEncodingException e) {
+                log.error("Failed to parse home url", e);
+                uri = Optional.empty();
+            }
             if (uri.isPresent()) {
                 return this.managerService.getServiceByID(uri.get().getValue()).orElse(new EmptyOidcRegisteredService()).
-                    getInformationUrl();
+                        getInformationUrl();
             }
         }
         return "#";
