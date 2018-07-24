@@ -1,6 +1,7 @@
 package ee.ria.sso.service.impl;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -203,7 +204,7 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
             validateRelayState(relayState, context);
             byte[] authResultBytes = this.eidasAuthenticator.getAuthenticationResult(request);
             ObjectMapper jacksonObjectMapper = new ObjectMapper();
-            AuthenticationResult authResult = jacksonObjectMapper.readValue(new String(authResultBytes), AuthenticationResult.class);
+            AuthenticationResult authResult = jacksonObjectMapper.readValue(new String(authResultBytes, StandardCharsets.UTF_8), AuthenticationResult.class);
             TaraCredential credential = new TaraCredential(authResult);
             context.getFlowExecutionContext().getActiveSession().getScope().put("credential",
                     credential);
