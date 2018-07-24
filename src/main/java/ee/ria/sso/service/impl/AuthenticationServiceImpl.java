@@ -109,7 +109,8 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
         try {
             this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.IDCard, StatisticsOperation.START_AUTH);
             X509Certificate certificate = map.get(Constants.CERTIFICATE_SESSION_ATTRIBUTE, X509Certificate.class);
-            Assert.notNull(certificate, "Unable to find certificate from session");
+            if (certificate == null)
+                throw new AuthenticationFailedException("message.idc.nocertificate", "Unable to find certificate from session");
             this.checkCert(certificate);
             Principal subjectDN = certificate.getSubjectDN();
             Map<String, String> params = Splitter.on(", ").withKeyValueSeparator("=").split(subjectDN.getName());
@@ -277,6 +278,9 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
             localizedErrorMessage = this.getMessage(messageKey, "message.idc.error");
         } else if (exception instanceof EidasAuthenticationFailedException) {
             localizedErrorMessage = this.getMessage("message.eidas.authfailed", "message.eidas.error");
+        } else if (exception instanceof AuthenticationFailedException) {
+            AuthenticationFailedException authenticationFailedException = (AuthenticationFailedException) exception;
+            localizedErrorMessage = this.getMessage(authenticationFailedException.getErrorMessageKey(), "message.general.error");
         }
         if (StringUtils.isBlank(localizedErrorMessage)) {
             localizedErrorMessage = this.getMessage("message.general.error");
