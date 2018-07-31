@@ -12,7 +12,8 @@
 
     <div id="accordion" role="tablist" aria-multiselectable="true">
 
-        <div class="panel" th:if="${(session.taraAuthenticationMethods == null or #lists.contains(session.taraAuthenticationMethods,'IDCard'))}">
+        <div class="panel" th:if="${(@environment.getProperty('idcard.enabled') == 'true')
+         and (session.taraAuthenticationMethods == null or #lists.contains(session.taraAuthenticationMethods,'IDCard'))}">
             <div class="method-block space-top-2 white row hidden-xs accordion-toggle collapsed" role="button"
                  data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="false"
                  aria-controls="collapseOne">

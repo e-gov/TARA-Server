@@ -103,7 +103,7 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
         this.statistics = statistics;
     }
 
-    @Override
+    //@Override
     public Event loginByIDCard(RequestContext context) {
         SharedAttributeMap<Object> map = this.getSessionMap(context);
         try {

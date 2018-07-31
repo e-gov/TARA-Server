@@ -9,7 +9,7 @@ import org.springframework.webflow.execution.RequestContext;
 
 public interface AuthenticationService {
 
-    Event loginByIDCard(RequestContext context);
+    //Event loginByIDCard(RequestContext context);
 
     Event startLoginByMobileID(RequestContext context);
 

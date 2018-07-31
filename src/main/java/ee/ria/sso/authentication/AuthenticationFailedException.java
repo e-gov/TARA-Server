@@ -18,4 +18,8 @@ public class AuthenticationFailedException extends RuntimeException {
         return errorMessageKey;
     }
 
+    public String getErrorMessageKeyOrDefault(String defaultMesageKey) {
+        return (errorMessageKey != null) ? errorMessageKey : defaultMesageKey;
+    }
+
 }
