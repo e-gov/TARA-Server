@@ -29,6 +29,7 @@ public class StatisticsHandler {
     public static final String CAS_SERVICE_ATTRIBUTE_NAME = "service";
     private final Logger log = LoggerFactory.getLogger(StatisticsHandler.class);
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss");
+    private final TaraStatHandler taraStatHandler = new TaraStatHandler();
 
     public void collect(LocalDateTime time, RequestContext requestContext, AuthenticationType authenticationType,
                         StatisticsOperation operationCode) {
@@ -42,8 +43,10 @@ public class StatisticsHandler {
         Assert.notNull(requestContext, "RequestContext cannot be null!");
         Optional<String> clientId = this.getClientId(requestContext);
         if (clientId.isPresent()) {
-            this.log.info(String.format("%s;%s;%s;%s;%s", this.formatter.format(time), clientId.get(), authenticationType,
+            final String clientIdString = clientId.get();
+            this.log.info(String.format("%s;%s;%s;%s;%s", this.formatter.format(time), clientIdString, authenticationType,
                 operationCode, causeOfError));
+            this.taraStatHandler.collect(time, clientIdString, authenticationType, operationCode, causeOfError);
         }
     }
 
