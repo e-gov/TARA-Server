@@ -18,7 +18,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import ee.ria.sso.EidasAuthenticator;
+import ee.ria.sso.service.eidas.EidasAuthenticator;
 import ee.ria.sso.authentication.*;
 import ee.ria.sso.model.AuthenticationResult;
 import org.apache.commons.lang3.StringUtils;
@@ -26,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.Assert;
 import org.springframework.webflow.core.collection.SharedAttributeMap;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
@@ -36,7 +35,7 @@ import com.codeborne.security.mobileid.MobileIDSession;
 import com.google.common.base.Splitter;
 
 import ee.ria.sso.Constants;
-import ee.ria.sso.MobileIDAuthenticatorWrapper;
+import ee.ria.sso.service.mobileid.MobileIDAuthenticatorWrapper;
 import ee.ria.sso.authentication.credential.TaraCredential;
 import ee.ria.sso.common.AbstractService;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
@@ -125,7 +124,7 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
         }
     }
 
-    @Override
+    //@Override
     public Event startLoginByMobileID(RequestContext context) {
         final TaraCredential credential = context.getFlowExecutionContext().getActiveSession().getScope().get("credential", TaraCredential.class);
         try {
@@ -149,7 +148,7 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
         }
     }
 
-    @Override
+    //@Override
     public Event checkLoginForMobileID(RequestContext context) {
         MobileIDSession session = (MobileIDSession) context.getFlowScope().get(Constants.MOBILE_SESSION);
         int checkCount = context.getFlowScope().get(Constants.AUTH_COUNT, Integer.class);
@@ -171,7 +170,6 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
         }
     }
 
-    @Override
     public Event startLoginByEidas(RequestContext context) {
         final TaraCredential credential = context.getFlowExecutionContext().getActiveSession().getScope().get("credential", TaraCredential.class);
         try {
@@ -197,7 +195,6 @@ public class AuthenticationServiceImpl extends AbstractService implements Authen
         }
     }
 
-    @Override
     public Event checkLoginForEidas(RequestContext context) {
         try {
             HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getNativeRequest();

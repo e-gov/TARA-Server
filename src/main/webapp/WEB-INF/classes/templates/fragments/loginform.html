@@ -12,7 +12,7 @@
 
     <div id="accordion" role="tablist" aria-multiselectable="true">
 
-        <div class="panel" th:if="${(@environment.getProperty('idcard.enabled') == 'true')
+        <div class="panel" th:if="${(@environment.getProperty('id-card.enabled') == 'true')
          and (session.taraAuthenticationMethods == null or #lists.contains(session.taraAuthenticationMethods,'IDCard'))}">
             <div class="method-block space-top-2 white row hidden-xs accordion-toggle collapsed" role="button"
                  data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="false"
@@ -52,7 +52,8 @@
             </div>
         </div>
 
-        <div class="panel" th:if="${(session.taraAuthenticationMethods == null or #lists.contains(session.taraAuthenticationMethods,'MobileID'))}">
+        <div class="panel" th:if="${(@environment.getProperty('mobile-id.enabled') == 'true')
+         and (session.taraAuthenticationMethods == null or #lists.contains(session.taraAuthenticationMethods,'MobileID'))}">
             <div div class="method-block space-top-2 white row accordion-toggle" role="button" data-toggle="collapse"
                  data-parent="#accordion" href="#collapseMob" aria-expanded="true" aria-controls="collapseMob">
                 <div class="col-md-3 col-sm-3 col-xs-3">
@@ -111,7 +112,8 @@
             </div>
         </div>
 
-        <div class="panel" th:if="${(session.taraAuthenticationMethods == null or #lists.contains(session.taraAuthenticationMethods,'eIDAS'))
+        <div class="panel" th:if="${(@environment.getProperty('eidas.enabled') == 'true')
+         and (session.taraAuthenticationMethods == null or #lists.contains(session.taraAuthenticationMethods,'eIDAS'))
          and not #lists.isEmpty(@taraProperties.getListOfCountries(#locale.language))}">
             <div class="method-block space-top-2 white row hidden-xs accordion-toggle collapsed" role="button"
                  data-toggle="collapse" data-parent="#accordion" href="#collapseEidas" aria-expanded="false"

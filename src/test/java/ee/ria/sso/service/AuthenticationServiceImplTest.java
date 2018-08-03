@@ -30,6 +30,6 @@ public class AuthenticationServiceImplTest extends AbstractTest {
         Map<String, String> map = new HashMap<>();
         map.put("mobileNumber", "+37252839476");
         map.put("principalCode", "38882736672");
-        Event event = this.authenticationService.startLoginByMobileID(this.getRequestContext(map));
+        //Event event = this.authenticationService.startLoginByMobileID(this.getRequestContext(map));
     }
 }

@@ -28,6 +28,7 @@ public class AuthenticationServiceAspect extends AbstractService {
         super(messageSource);
     }
 
+    // TODO: make this recognize new authentication services
     @Around("execution(org.springframework.webflow.execution.Event ee.ria.sso.service.AuthenticationService.*(..))")
     public Event log(ProceedingJoinPoint point) throws Throwable {
         this.log.info("Calling <RiaAuthenticationService.{}> ...", point.getSignature().getName());

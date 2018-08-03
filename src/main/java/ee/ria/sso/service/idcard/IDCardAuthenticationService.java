@@ -12,7 +12,10 @@ import ee.ria.sso.config.idcard.IDCardConfigurationProvider;
 import ee.ria.sso.statistics.StatisticsHandler;
 import ee.ria.sso.statistics.StatisticsOperation;
 import ee.ria.sso.utils.X509Utils;
+import ee.ria.sso.validators.OCSPValidationException;
 import ee.ria.sso.validators.OCSPValidator;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.webflow.core.collection.SharedAttributeMap;
@@ -23,8 +26,9 @@ import java.security.cert.X509Certificate;
 import java.time.LocalDateTime;
 import java.util.Map;
 
-@ConditionalOnProperty("idcard.enabled")
+@ConditionalOnProperty("id-card.enabled")
 @Service
+@Slf4j
 public class IDCardAuthenticationService extends AbstractService {
 
     private final StatisticsHandler statistics;
@@ -74,13 +78,21 @@ public class IDCardAuthenticationService extends AbstractService {
         clearFlowScope(context);
         this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.IDCard, StatisticsOperation.ERROR, exception.getMessage());
 
-        String errorMessageKey = "message.general.error";
-        if (exception instanceof AuthenticationFailedException) {
+        String localizedErrorMessage = null;
+
+        if (exception instanceof OCSPValidationException) {
+            String messageKey = String.format("message.idc.%s", ((OCSPValidationException) exception).getStatus().name().toLowerCase());
+            localizedErrorMessage = this.getMessage(messageKey, "message.idc.error");
+        } else if (exception instanceof AuthenticationFailedException) {
             AuthenticationFailedException authenticationFailedException = (AuthenticationFailedException) exception;
-            errorMessageKey = authenticationFailedException.getErrorMessageKeyOrDefault("message.general.error");
+            String messageKey = authenticationFailedException.getErrorMessageKeyOrDefault("message.general.error");
+            localizedErrorMessage = this.getMessage(messageKey, "message.general.error");
         }
 
-        String localizedErrorMessage = this.getMessage(errorMessageKey);
+        if (StringUtils.isBlank(localizedErrorMessage)) {
+            localizedErrorMessage = this.getMessage("message.general.error");
+        }
+
         return new TaraAuthenticationException(localizedErrorMessage, exception);
     }
 
@@ -89,21 +101,20 @@ public class IDCardAuthenticationService extends AbstractService {
         context.getFlowExecutionContext().getActiveSession().getScope().clear();
     }
 
-    // TODO:
 
     private void checkCert(X509Certificate x509Certificate) {
         X509Certificate issuerCert = this.findIssuerCertificate(x509Certificate);
         if (issuerCert != null) {
             this.ocspValidator.validate(x509Certificate, issuerCert, configurationProvider.getOcspUrl());
         } else {
-            //this.log.error("Issuer cert not found");
+            log.error("Issuer cert not found");
             throw new RuntimeException("Issuer cert not found from setup");
         }
     }
 
     private X509Certificate findIssuerCertificate(X509Certificate userCertificate) {
         String issuerCN = X509Utils.getSubjectCNFromCertificate(userCertificate);
-        //log.debug("IssuerCN extracted: {}", issuerCN);
+        log.debug("IssuerCN extracted: {}", issuerCN);
         return configurationProvider.getIssuerCertificates().get(issuerCN);
     }
 

@@ -20,6 +20,9 @@ public class TaraWebflowConfigurer extends DefaultWebflowConfigurer {
         super(flowBuilderServices, flowDefinitionRegistry);
     }
 
+    // TODO: TaraCredential is added to the flow scope here, before any authentication starts
+    // TaraCredential is used to forward pre-authentication data to authentication services
+
     @Override
     protected void createRememberMeAuthnWebflowConfig(Flow flow) {
         if (this.casProperties.getTicket().getTgt().getRememberMe().isEnabled()) {

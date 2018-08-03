@@ -1,5 +1,6 @@
 package ee.ria.sso.config.idcard;
 
+import ee.ria.sso.config.AbstractDisabledConfigurationTest;
 import ee.ria.sso.flow.action.IDCardAuthenticationAction;
 import ee.ria.sso.service.idcard.IDCardAuthenticationService;
 import org.junit.Assert;
@@ -15,15 +16,12 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @TestPropertySource(
         locations= "classpath:application-test.properties",
-        properties = { "idcard.enabled=false" })
+        properties = { "id-card.enabled=false" })
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(
         classes = TestIDCardConfiguration.class,
         initializers = ConfigFileApplicationContextInitializer.class)
-public class IDCardDisabledConfigurationTest {
-
-    @Autowired
-    private ApplicationContext applicationContext;
+public class IDCardDisabledConfigurationTest extends AbstractDisabledConfigurationTest {
 
     @Test
     public void whenIDCardDisabledThenIDCardBeansNotInitiated() {
@@ -31,15 +29,6 @@ public class IDCardDisabledConfigurationTest {
         assertBeanNotInitiated(IDCardAuthenticationService.class);
         assertBeanNotInitiated(IDCardConfigurationProvider.class);
         assertBeanNotInitiated(IDCardAuthenticationAction.class);
-    }
-
-    private void assertBeanNotInitiated(Class clazz) {
-        try {
-            applicationContext.getBean(clazz);
-            Assert.fail("Bean <" + clazz + "> should not be initiated!");
-        } catch (NoSuchBeanDefinitionException e) {
-            e.printStackTrace();
-        }
     }
 
 }

@@ -22,9 +22,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
-@ConditionalOnProperty("idcard.enabled")
+@ConditionalOnProperty("id-card.enabled")
 @Configuration
-@ConfigurationProperties(prefix = "idcard")
+@ConfigurationProperties(prefix = "id-card")
 @Validated
 @Getter
 @Setter

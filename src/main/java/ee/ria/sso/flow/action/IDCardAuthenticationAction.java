@@ -10,7 +10,7 @@ import org.springframework.webflow.execution.RequestContext;
  * @author Janar Rahumeel (CGI Estonia)
  */
 
-@ConditionalOnProperty("idcard.enabled")
+@ConditionalOnProperty("id-card.enabled")
 @Component("idCardAuthenticationAction")
 public class IDCardAuthenticationAction extends AbstractAuthenticationAction {
 
