@@ -19,4 +19,13 @@ public abstract class AbstractDisabledConfigurationTest {
         }
     }
 
+    protected void assertBeanNotInitiated(String name) {
+        try {
+            applicationContext.getBean(name);
+            Assert.fail("Bean <" + name + "> should not be initiated!");
+        } catch (NoSuchBeanDefinitionException e) {
+            e.printStackTrace();
+        }
+    }
+
 }

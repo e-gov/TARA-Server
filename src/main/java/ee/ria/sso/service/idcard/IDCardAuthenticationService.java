@@ -16,7 +16,9 @@ import ee.ria.sso.validators.OCSPValidationException;
 import ee.ria.sso.validators.OCSPValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeansException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.webflow.core.collection.SharedAttributeMap;
 import org.springframework.webflow.execution.Event;
@@ -33,16 +35,23 @@ public class IDCardAuthenticationService extends AbstractService {
 
     private final StatisticsHandler statistics;
     private final IDCardConfigurationProvider configurationProvider;
+    private final Map<String, X509Certificate> issuerCertificates;
     private final OCSPValidator ocspValidator;
 
     public IDCardAuthenticationService(TaraResourceBundleMessageSource messageSource,
                                        StatisticsHandler statistics,
                                        IDCardConfigurationProvider configurationProvider,
+                                       ApplicationContext applicationContext,
                                        OCSPValidator ocspValidator) {
         super(messageSource);
         this.statistics = statistics;
         this.configurationProvider = configurationProvider;
         this.ocspValidator = ocspValidator;
+
+        if (configurationProvider.isOcspEnabled())
+            this.issuerCertificates = applicationContext.getBean("idIssuerCertificatesMap", Map.class);
+        else
+            this.issuerCertificates = null;
     }
 
     public Event loginByIDCard(RequestContext context) {
@@ -97,7 +106,7 @@ public class IDCardAuthenticationService extends AbstractService {
     }
 
     private static void clearFlowScope(RequestContext context) {
-        context.getFlowScope().clear(); // TODO: is this necessary?
+        context.getFlowScope().clear();
         context.getFlowExecutionContext().getActiveSession().getScope().clear();
     }
 
@@ -115,7 +124,7 @@ public class IDCardAuthenticationService extends AbstractService {
     private X509Certificate findIssuerCertificate(X509Certificate userCertificate) {
         String issuerCN = X509Utils.getSubjectCNFromCertificate(userCertificate);
         log.debug("IssuerCN extracted: {}", issuerCN);
-        return configurationProvider.getIssuerCertificates().get(issuerCN);
+        return issuerCertificates.get(issuerCN);
     }
 
 }

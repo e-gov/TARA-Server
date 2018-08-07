@@ -3,6 +3,7 @@ package ee.ria.sso.config.idcard;
 import ee.ria.sso.config.AbstractDisabledConfigurationTest;
 import ee.ria.sso.flow.action.IDCardAuthenticationAction;
 import ee.ria.sso.service.idcard.IDCardAuthenticationService;
+import ee.ria.sso.validators.OCSPValidator;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,6 +30,7 @@ public class IDCardDisabledConfigurationTest extends AbstractDisabledConfigurati
         assertBeanNotInitiated(IDCardAuthenticationService.class);
         assertBeanNotInitiated(IDCardConfigurationProvider.class);
         assertBeanNotInitiated(IDCardAuthenticationAction.class);
+        assertBeanNotInitiated("idIssuerCertificatesMap");
     }
 
 }

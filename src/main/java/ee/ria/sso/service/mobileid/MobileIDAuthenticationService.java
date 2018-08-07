@@ -72,13 +72,16 @@ public class MobileIDAuthenticationService extends AbstractService {
     }
 
     public Event checkLoginForMobileID(RequestContext context) {
-        MobileIDSession session = (MobileIDSession) context.getFlowScope().get(Constants.MOBILE_SESSION);
-        int checkCount = context.getFlowScope().get(Constants.AUTH_COUNT, Integer.class);
-        String mobileNumber = context.getFlowScope().get(Constants.MOBILE_NUMBER, String.class);
-        log.debug("Checking (attempt {}) mobile ID login state with session code {}", checkCount, session.sessCode);
         try {
+            MobileIDSession session = context.getFlowScope().get(Constants.MOBILE_SESSION, MobileIDSession.class);
+            int checkCount = context.getFlowScope().get(Constants.AUTH_COUNT, Integer.class);
+            String mobileNumber = context.getFlowScope().get(Constants.MOBILE_NUMBER, String.class);
+            log.debug("Checking (attempt {}) mobile ID login state with session code {}", checkCount, session.sessCode);
+
             if (this.mobileIDAuthenticator.isLoginComplete(session)) {
-                TaraCredential credential = new TaraCredential("EE" + session.personalCode, session.firstName, session.lastName, getFormattedPhoneNumber(mobileNumber));
+                TaraCredential credential = new TaraCredential(AuthenticationType.MobileID, "EE" + session.personalCode, session.firstName, session.lastName);
+                credential.setMobileNumber(getFormattedPhoneNumber(mobileNumber));
+
                 context.getFlowExecutionContext().getActiveSession().getScope().put("credential", credential);
                 this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.MobileID, StatisticsOperation.SUCCESSFUL_AUTH);
                 return new Event(this, "success");
@@ -86,7 +89,7 @@ public class MobileIDAuthenticationService extends AbstractService {
                 context.getFlowScope().put(Constants.AUTH_COUNT, ++checkCount);
                 return new Event(this, "outstanding");
             }
-        } catch (AuthenticationException e) {
+        } catch (Exception e) {
             throw this.handleException(context, e);
         }
     }
@@ -98,8 +101,7 @@ public class MobileIDAuthenticationService extends AbstractService {
         String localizedErrorMessage = null;
 
         if (exception instanceof TaraCredentialsException) {
-            localizedErrorMessage = this.getMessage(((TaraCredentialsException) exception).getKey(), "message.mid.error",
-                    ((TaraCredentialsException) exception).getValue());
+            localizedErrorMessage = this.getMessage(((TaraCredentialsException) exception).getKey(), "message.mid.error");
         } else if (exception instanceof AuthenticationException) {
             String messageKey = String.format("message.mid.%s", ((AuthenticationException) exception).getCode().name()
                     .toLowerCase().replace("_", ""));
@@ -120,11 +122,9 @@ public class MobileIDAuthenticationService extends AbstractService {
 
     private void validateCredential(TaraCredential credential) {
         if (!StringUtils.isNumeric(credential.getPrincipalCode())) {
-            // TODO: is it actually okay to forward personal ID code here?
             throw new TaraCredentialsException("message.mid.invalidcode", credential.getPrincipalCode());
         }
         if (StringUtils.isBlank(credential.getMobileNumber()) || !credential.getMobileNumber().matches("^\\d+$")) {
-            // TODO: is it actually okay to forward personal ID code here?
             throw new TaraCredentialsException("message.mid.invalidnumber", credential.getMobileNumber());
         }
     }

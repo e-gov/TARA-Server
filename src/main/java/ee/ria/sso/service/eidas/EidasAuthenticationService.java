@@ -21,9 +21,11 @@ import org.springframework.webflow.execution.RequestContext;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 @ConditionalOnProperty("eidas.enabled")
@@ -77,15 +79,15 @@ public class EidasAuthenticationService extends AbstractService {
             HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getNativeRequest();
             String relayState = request.getParameter("RelayState");
             validateRelayState(relayState, context);
-            byte[] authResultBytes = this.eidasAuthenticator.getAuthenticationResult(request);
-            ObjectMapper jacksonObjectMapper = new ObjectMapper();
-            AuthenticationResult authResult = jacksonObjectMapper.readValue(new String(authResultBytes, StandardCharsets.UTF_8), AuthenticationResult.class);
-            TaraCredential credential = new TaraCredential(authResult);
-            context.getFlowExecutionContext().getActiveSession().getScope().put("credential",
-                    credential);
+
+            TaraCredential credential = getCredentialFromAuthResult(
+                    this.eidasAuthenticator.getAuthenticationResult(request)
+            );
+
+            context.getFlowExecutionContext().getActiveSession().getScope().put("credential", credential);
             context.getFlowScope().put("service", context.getExternalContext().getSessionMap().get(relayState));
-            this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.eIDAS,
-                    StatisticsOperation.SUCCESSFUL_AUTH);
+
+            this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.eIDAS, StatisticsOperation.SUCCESSFUL_AUTH);
             return new Event(this, "success");
         } catch (Exception e) {
             throw this.handleException(context, e);
@@ -118,6 +120,30 @@ public class EidasAuthenticationService extends AbstractService {
         if (StringUtils.isEmpty(relayState) || !context.getExternalContext().getSessionMap().contains(relayState)) {
             throw new RuntimeException("SAML response's relay state (" + relayState + ") not found among previously stored relay states!");
         }
+    }
+
+    private TaraCredential getCredentialFromAuthResult(byte[] authResultBytes) throws IOException {
+        AuthenticationResult authResult = new ObjectMapper().readValue(
+                new String(authResultBytes, StandardCharsets.UTF_8), AuthenticationResult.class
+        );
+
+        Map<String, String> authResultAttributes = authResult.getAttributes();
+        String principalCode = getFormattedPersonIdentifier(authResultAttributes.get("PersonIdentifier"));
+        String firstName = authResultAttributes.get("FirstName");
+        String lastName = authResultAttributes.get("FamilyName");
+
+        TaraCredential credential = new TaraCredential(AuthenticationType.eIDAS, principalCode, firstName, lastName);
+        credential.setDateOfBirth(authResultAttributes.get("DateOfBirth"));
+
+        String loa = authResult.getLevelOfAssurance();
+        if (loa != null) credential.setLevelOfAssurance(LevelOfAssurance.findByFormalName(loa));
+
+        return credential;
+    }
+
+    private String getFormattedPersonIdentifier(String personIdentifier) {
+        String[] parts = personIdentifier.split("/");
+        return parts[0] + parts[2];
     }
 
 }

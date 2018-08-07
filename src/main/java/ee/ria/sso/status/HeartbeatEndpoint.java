@@ -2,6 +2,7 @@ package ee.ria.sso.status;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import ee.ria.sso.config.eidas.EidasConfigurationProvider;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -14,6 +15,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.endpoint.AbstractEndpoint;
@@ -69,7 +71,6 @@ public class HeartbeatEndpoint extends AbstractEndpoint<Map<String, Object>> {
     @Autowired
     private ApplicationContext context;
 
-    @Value("${eidas.heartbeatUrl:}")
     private String eidasHeartbeatUrl;
 
     public HeartbeatEndpoint() {
@@ -89,6 +90,7 @@ public class HeartbeatEndpoint extends AbstractEndpoint<Map<String, Object>> {
             LOGGER.error("Failed to initialize application git info", e);
         }
 
+        setEidasHeartbeatUrl();
         startTime = getCurrentTime();
 
         RequestConfig requestConfig = RequestConfig.custom()
@@ -161,6 +163,15 @@ public class HeartbeatEndpoint extends AbstractEndpoint<Map<String, Object>> {
 
         commitId = gitProperties.getCommitId();
         commitBranch = gitProperties.getBranch();
+    }
+
+    private void setEidasHeartbeatUrl() {
+        try {
+            EidasConfigurationProvider eidasConfiguration = context.getBean(EidasConfigurationProvider.class);
+            eidasHeartbeatUrl = eidasConfiguration.getHeartbeatUrl();
+        } catch (RuntimeException ex) {
+            LOGGER.info("No eIDAS configuration: eIDAS-client dependency unavailable.");
+        }
     }
 
     private static Instant getCurrentTime() {

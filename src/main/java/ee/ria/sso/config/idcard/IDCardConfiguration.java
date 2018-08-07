@@ -3,7 +3,18 @@ package ee.ria.sso.config.idcard;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @ConditionalOnProperty("id-card.enabled")
 @Configuration
@@ -11,8 +22,39 @@ import org.springframework.context.annotation.Configuration;
 public class IDCardConfiguration {
 
     @Autowired
-    private IDCardConfigurationProvider idcardConfigurationProvider;
+    private IDCardConfigurationProvider configurationProvider;
 
-    // TODO: this file may not be necessary
+    @Autowired
+    private ResourceLoader resourceLoader;
+
+    @Bean
+    @ConditionalOnProperty("id-card.ocsp-enabled")
+    public Map<String, X509Certificate> idIssuerCertificatesMap() {
+        final Map<String, X509Certificate> issuerCertificates = new LinkedHashMap<>();
+
+        configurationProvider.getOcspCertificates().forEach(ocspCertificate -> {
+            try {
+                String[] certificateFields = ocspCertificate.split(":");
+                issuerCertificates.put(certificateFields[0], readCertFromFile(certificateFields[1]));
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Failed to read certificate " + ocspCertificate, e);
+            }
+        });
+
+        return issuerCertificates;
+    }
+
+    private X509Certificate readCertFromFile(String fileName) throws CertificateException, IOException {
+        String filePath = configurationProvider.getOcspCertificateLocation() + "/" + fileName;
+        Resource file = resourceLoader.getResource(filePath);
+        if (!file.exists()) {
+            throw new IllegalArgumentException("Could not find file " + filePath);
+        }
+
+        try (InputStream inputStream = file.getInputStream()) {
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            return (X509Certificate) cf.generateCertificate(inputStream);
+        }
+    }
 
 }

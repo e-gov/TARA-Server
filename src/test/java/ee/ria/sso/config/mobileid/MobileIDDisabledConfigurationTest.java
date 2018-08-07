@@ -4,6 +4,7 @@ import ee.ria.sso.config.AbstractDisabledConfigurationTest;
 import ee.ria.sso.flow.action.MobileIDCheckAuthenticationAction;
 import ee.ria.sso.flow.action.MobileIDStartAuthenticationAction;
 import ee.ria.sso.service.mobileid.MobileIDAuthenticationService;
+import ee.ria.sso.service.mobileid.MobileIDAuthenticatorWrapper;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
@@ -27,6 +28,7 @@ public class MobileIDDisabledConfigurationTest extends AbstractDisabledConfigura
         assertBeanNotInitiated(MobileIDConfigurationProvider.class);
         assertBeanNotInitiated(MobileIDCheckAuthenticationAction.class);
         assertBeanNotInitiated(MobileIDStartAuthenticationAction.class);
+        assertBeanNotInitiated(MobileIDAuthenticatorWrapper.class);
     }
 
 }
