@@ -62,7 +62,10 @@
         <Root level="INFO">
             <AppenderRef ref="Console"/>
         </Root>
-        <logger name="ee.ria.sso.statistics" additivity="false">
+        <logger name="ee.ria.sso.statistics.StatisticsHandler" additivity="false">
+            <appender-ref ref="TestAppender"/>
+        </logger>
+        <logger name="ee.ria.sso.statistics.TaraStatHandler" additivity="false">
             <appender-ref ref="TestAppender"/>
         </logger>
     </Loggers>

@@ -11,6 +11,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apereo.cas.authentication.principal.WebApplicationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.web.util.UriComponents;
@@ -29,7 +30,9 @@ public class StatisticsHandler {
     public static final String CAS_SERVICE_ATTRIBUTE_NAME = "service";
     private final Logger log = LoggerFactory.getLogger(StatisticsHandler.class);
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss");
-    private final TaraStatHandler taraStatHandler = new TaraStatHandler();
+
+    @Autowired(required=false)
+    private TaraStatHandler taraStatHandler;
 
     public void collect(LocalDateTime time, RequestContext requestContext, AuthenticationType authenticationType,
                         StatisticsOperation operationCode) {
@@ -44,9 +47,9 @@ public class StatisticsHandler {
         Optional<String> clientId = this.getClientId(requestContext);
         if (clientId.isPresent()) {
             final String clientIdString = clientId.get();
-            this.log.info(String.format("%s;%s;%s;%s;%s", this.formatter.format(time), clientIdString, authenticationType,
-                operationCode, causeOfError));
-            this.taraStatHandler.collect(time, clientIdString, authenticationType, operationCode, causeOfError);
+            this.log.info(String.format("%s;%s;%s;%s;%s", this.formatter.format(time), clientIdString, authenticationType, operationCode, causeOfError));
+            if (this.taraStatHandler != null)
+                this.taraStatHandler.collect(time, clientIdString, authenticationType, operationCode, causeOfError);
         }
     }
 

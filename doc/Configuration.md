@@ -214,10 +214,22 @@ eidas.heartbeatUrl=https://<eidas-client-host:port>/heartbeat
 ````
 
 
+<a name="tara_stat"></a>
+### TARA-Stat interfacing
+
+Table 12 - Enabling TARA-Stat statistics logging
+
+| Property        | Mandatory | Description |
+| :---------------- | :---------- | :----------------|
+| `statistics.tara-stat.enabled` | N | Feature toggle for TARA-Stat statistics logging. Enables this feature to be loaded if set to `true`, otherwise disables it. Defaults to `false`, if not specified. |
+
+Additional configuring must be done via logging configuration. For example, if Log4j2 is used, then this can be done in `log4j2.xml` configuration file.
+
+
 <a name="test_environment_warning"></a>
 ### Test environment warning message
 
-Table 12 - Configuring TARA login page to show a warning message about it being run against test services
+Table 13 - Configuring TARA login page to show a warning message about it being run against test services
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|

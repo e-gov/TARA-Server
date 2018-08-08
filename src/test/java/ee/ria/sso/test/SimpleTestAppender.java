@@ -54,4 +54,11 @@ public class SimpleTestAppender extends AbstractAppender {
         List<String> actualItems = SimpleTestAppender.events.stream().map(p -> p.getMessage().getFormattedMessage()).collect(Collectors.toList());
         assertThat(actualItems, IsIterableContainingInOrder.contains(matchers));
     }
+
+    public static void verifyLogEventsExistInOrder(org.hamcrest.Matcher loggerMatcher, int notused, org.hamcrest.Matcher... matchers) {
+        Assert.assertTrue("Log events expected, but none found!", CollectionUtils.isNotEmpty(SimpleTestAppender.events));
+        List<String> actualItems = SimpleTestAppender.events.stream().filter(e -> loggerMatcher.matches(e.getLoggerName()))
+                .map(p -> p.getMessage().getFormattedMessage()).collect(Collectors.toList());
+        assertThat(actualItems, IsIterableContainingInOrder.contains(matchers));
+    }
 }

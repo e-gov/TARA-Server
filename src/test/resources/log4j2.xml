@@ -117,7 +117,7 @@
             <AppenderRef ref="console"/>
         </AsyncRoot>
 
-        <logger name="ee.ria.sso.statistics" additivity="false">
+        <logger name="ee.ria.sso.statistics.StatisticsHandler" additivity="false">
             <level value="info"/>
             <appender-ref ref="statisticsAppender"/>
         </logger>

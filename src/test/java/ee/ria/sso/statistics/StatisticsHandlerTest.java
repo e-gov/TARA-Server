@@ -1,6 +1,7 @@
 package ee.ria.sso.statistics;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
 import ee.ria.sso.authentication.AuthenticationType;
@@ -89,7 +90,9 @@ public class StatisticsHandlerTest {
     private void assertMessageLogged(RequestContext requestContext, AuthenticationType authenticationType, StatisticsOperation operation, String expectedMessage) {
         SimpleTestAppender.events.clear();
         new StatisticsHandler().collect(FIXED_TIME, requestContext, authenticationType, operation);
-        SimpleTestAppender.verifyLogEventsExistInOrder(containsString(expectedMessage));
+        SimpleTestAppender.verifyLogEventsExistInOrder(
+                not(containsString(TaraStatHandler.class.getCanonicalName())),
+                0, containsString(expectedMessage));
     }
 
     private void assertMessagesNotLogged(RequestContext requestContext, AuthenticationType authenticationType, StatisticsOperation operation) {
