@@ -152,7 +152,6 @@ public class BanklinkAuthenticationServiceTest {
             Event event = this.authenticationService.checkLoginForBankLink(requestContext);
         } catch (Exception e) {
             SimpleTestAppender.verifyLogEventsExistInOrder(
-                    not(containsString(TaraStatHandler.class.getCanonicalName())), 0,
                     containsString(";openIdDemo;BankLink;ERROR;Banklink 1.1.5.1 cause: Unknown banklink message format"));
             throw e;
         }
@@ -176,7 +175,7 @@ public class BanklinkAuthenticationServiceTest {
         Event event = this.authenticationService.checkLoginForBankLink(callbackRequestCtx);
         verifyCredential(callbackRequestCtx);
         verifySuccessEvent(event);
-        SimpleTestAppender.verifyLogEventsExistInOrder(not(containsString(TaraStatHandler.class.getCanonicalName())), 0,
+        SimpleTestAppender.verifyLogEventsExistInOrder(
                 containsString(";openIdDemo;BankLink;START_AUTH;"), containsString(";openIdDemo;BankLink;SUCCESSFUL_AUTH;"));
     }
 
@@ -439,9 +438,7 @@ public class BanklinkAuthenticationServiceTest {
         verifyUrl(bank, requestContext);
         verifySuccessEvent(event);
 
-        SimpleTestAppender.verifyLogEventsExistInOrder(
-                not(containsString(TaraStatHandler.class.getCanonicalName())), 0,
-                containsString(";openIdDemo;BankLink;START_AUTH;"));
+        SimpleTestAppender.verifyLogEventsExistInOrder(containsString(";openIdDemo;BankLink;START_AUTH;"));
     }
 
     private RequestContext getRequestContext(Map<String, String> parameters) {

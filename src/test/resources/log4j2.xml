@@ -50,7 +50,7 @@
                 <TimeBasedTriggeringPolicy />
             </Policies>
         </RollingFile>
-        <RollingFile name="statisticsAppender" fileName="${sys:cas.log.dir}/statistics/stats.log" append="true"
+        <RollingFile name="statisticsFileAppender" fileName="${sys:cas.log.dir}/statistics/stats.log" append="true"
                      filePattern="${sys:cas.log.dir}/statistics/stats-%d{yyyy-MM-dd-HH}-%i.log">
             <PatternLayout pattern="%m%n"/>
             <Policies>
@@ -119,7 +119,7 @@
 
         <logger name="ee.ria.sso.statistics.StatisticsHandler" additivity="false">
             <level value="info"/>
-            <appender-ref ref="statisticsAppender"/>
+            <appender-ref ref="statisticsFileAppender"/>
         </logger>
 
     </Loggers>
