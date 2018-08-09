@@ -23,7 +23,6 @@ public class EidasDisabledConfigurationTest extends AbstractDisabledConfiguratio
 
     @Test
     public void whenEidasDisabledThenEidasBeansNotInitiated() {
-        assertBeanNotInitiated(EidasConfiguration.class);
         assertBeanNotInitiated(EidasAuthenticationService.class);
         assertBeanNotInitiated(EidasConfigurationProvider.class);
         assertBeanNotInitiated(EidasCheckAuthenticationAction.class);

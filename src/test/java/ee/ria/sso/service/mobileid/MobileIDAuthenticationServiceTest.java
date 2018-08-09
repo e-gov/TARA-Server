@@ -9,6 +9,9 @@ import ee.ria.sso.authentication.credential.TaraCredential;
 import ee.ria.sso.config.mobileid.MobileIDConfigurationProvider;
 import ee.ria.sso.config.mobileid.TestMobileIDConfiguration;
 import ee.ria.sso.service.AbstractAuthenticationServiceTest;
+import ee.ria.sso.statistics.StatisticsOperation;
+import ee.ria.sso.test.SimpleTestAppender;
+import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
@@ -42,8 +45,9 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
     private MobileIDAuthenticatorWrapper authenticatorMock;
 
     @After
-    public void clearAuthenticatorMock() {
+    public void cleanUp() {
         Mockito.reset(authenticatorMock);
+        SimpleTestAppender.events.clear();
     }
 
     @Test
@@ -102,24 +106,13 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
         Mockito.when(authenticatorMock.startLogin(MOCK_PERSONAL_CODE, configurationProvider.getCountryCode(), MOCK_PHONE_NUMBER))
                 .thenThrow(new AuthenticationException(AuthenticationException.Code.AUTHENTICATION_ERROR));
 
-        Event event = this.authenticationService.startLoginByMobileID(requestContext);
-        Assert.fail("Should not reach this!");
-    }
+        try {
+            Event event = this.authenticationService.startLoginByMobileID(requestContext);
+        } catch (Exception e) {
+            this.verifyLogContentsOnFailure(StatisticsOperation.START_AUTH, "AUTHENTICATION_ERROR");
+            throw e;
+        }
 
-    @Test
-    public void startLoginByMobileIDShouldFailWhenMobileIDAuthenticatorStartLoginReturnsNull() {
-        expectedEx.expect(TaraAuthenticationException.class);
-        expectedEx.expectMessage("java.lang.NullPointerException");
-
-        RequestContext requestContext = this.getRequestContext(null);
-        requestContext.getFlowExecutionContext().getActiveSession().getScope().put(
-                "credential", createCredentialWithIdAndNumber()
-        );
-
-        Mockito.when(authenticatorMock.startLogin(MOCK_PERSONAL_CODE, configurationProvider.getCountryCode(), MOCK_PHONE_NUMBER))
-                .thenReturn(null);
-
-        Event event = this.authenticationService.startLoginByMobileID(requestContext);
         Assert.fail("Should not reach this!");
     }
 
@@ -141,6 +134,8 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
         Assert.assertEquals(MOCK_PHONE_NUMBER, requestContext.getFlowScope().get(Constants.MOBILE_NUMBER));
         Assert.assertEquals(mobileIDSession, requestContext.getFlowScope().get(Constants.MOBILE_SESSION));
         Assert.assertEquals(0, requestContext.getFlowScope().get(Constants.AUTH_COUNT));
+
+        this.verifyLogContents(StatisticsOperation.START_AUTH);
     }
 
     @Test
@@ -155,6 +150,7 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
         Assert.assertEquals("outstanding", event.getId());
 
         Assert.assertEquals(new Integer(1), requestContext.getFlowScope().getInteger(Constants.AUTH_COUNT));
+        SimpleTestAppender.verifyNoLogEventsExist(Matchers.any(String.class));
     }
 
     @Test
@@ -170,6 +166,8 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
 
         TaraCredential credential = (TaraCredential) requestContext.getFlowExecutionContext().getActiveSession().getScope().get("credential");
         this.validateUserCredential(credential);
+
+        this.verifyLogContents(StatisticsOperation.SUCCESSFUL_AUTH);
     }
 
     private TaraCredential createCredentialWithIdAndNumber() {
@@ -204,6 +202,23 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
         Assert.assertEquals(MOCK_FIRST_NAME, credential.getFirstName());
         Assert.assertEquals(MOCK_LAST_NAME, credential.getLastName());
         Assert.assertEquals("+372" + MOCK_PHONE_NUMBER, credential.getMobileNumber());
+    }
+
+    private void verifyLogContents(StatisticsOperation statisticsOperation) {
+        AuthenticationType authenticationType = AuthenticationType.MobileID;
+
+        SimpleTestAppender.verifyLogEventsExistInOrder(
+                Matchers.containsString(String.format(";openIdDemo;%s;%s;", authenticationType, statisticsOperation))
+        );
+    }
+
+    private void verifyLogContentsOnFailure(StatisticsOperation precedingOperation, String errorMessage) {
+        AuthenticationType authenticationType = AuthenticationType.MobileID;
+
+        SimpleTestAppender.verifyLogEventsExistInOrder(
+                Matchers.containsString(String.format(";openIdDemo;%s;%s;", authenticationType, precedingOperation)),
+                Matchers.containsString(String.format(";openIdDemo;%s;%s;%s", authenticationType, StatisticsOperation.ERROR, errorMessage))
+        );
     }
 
 }

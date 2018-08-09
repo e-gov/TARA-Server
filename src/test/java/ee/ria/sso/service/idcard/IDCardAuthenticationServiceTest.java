@@ -7,23 +7,22 @@ import ee.ria.sso.authentication.credential.TaraCredential;
 import ee.ria.sso.config.idcard.IDCardConfigurationProvider;
 import ee.ria.sso.config.idcard.TestIDCardConfiguration;
 import ee.ria.sso.service.AbstractAuthenticationServiceTest;
+import ee.ria.sso.statistics.StatisticsOperation;
+import ee.ria.sso.test.SimpleTestAppender;
 import ee.ria.sso.validators.OCSPValidationException;
 import ee.ria.sso.validators.OCSPValidator;
+import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
 
-import java.security.Principal;
 import java.security.cert.X509Certificate;
 import java.util.Map;
 
@@ -54,9 +53,12 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
     @Autowired
     private OCSPValidator ocspValidatorMock;
 
+
+
     @After
-    public void clearOCSPValidatorMock() {
+    public void cleanUp() {
         Mockito.reset(ocspValidatorMock);
+        SimpleTestAppender.events.clear();
     }
 
     @Test
@@ -64,7 +66,13 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
         expectedEx.expect(TaraAuthenticationException.class);
         expectedEx.expectMessage("Unable to find certificate from session");
 
-        Event event = this.authenticationService.loginByIDCard(this.getRequestContext(null));
+        try {
+            Event event = this.authenticationService.loginByIDCard(this.getRequestContext(null));
+        } catch (Exception e) {
+            this.verifyLogContentsOnUnsuccessfulAuthentication("Unable to find certificate from session");
+            throw e;
+        }
+
         Assert.fail("Should not reach this!");
     }
 
@@ -84,7 +92,13 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
         Mockito.doThrow(new TaraAuthenticationException(message, cause)).when(ocspValidatorMock)
                 .validate(mockUserCertificate, issuerCertificates.get("TEST of ESTEID-SK 2011"), configurationProvider.getOcspUrl());
 
-        Event event = this.authenticationService.loginByIDCard(requestContext);
+        try {
+            Event event = this.authenticationService.loginByIDCard(requestContext);
+        } catch (Exception e) {
+            this.verifyLogContentsOnUnsuccessfulAuthentication(new TaraAuthenticationException(message, cause).getMessage());
+            throw e;
+        }
+
         Assert.fail("Should not reach this!");
     }
 
@@ -101,6 +115,8 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
 
         TaraCredential credential = (TaraCredential) requestContext.getFlowExecutionContext().getActiveSession().getScope().get("credential");
         this.validateUserCredential(credential);
+
+        this.verifyLogContentsOnSuccessfulAuthentication();
     }
 
     private void validateUserCredential(TaraCredential credential) {
@@ -110,6 +126,24 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
         Assert.assertEquals("EE" + MOCK_SERIAL_NUMBER, credential.getId());
         Assert.assertEquals(MOCK_GIVEN_NAME, credential.getFirstName());
         Assert.assertEquals(MOCK_SURNAME, credential.getLastName());
+    }
+
+    private void verifyLogContentsOnSuccessfulAuthentication() {
+        AuthenticationType authenticationType = AuthenticationType.IDCard;
+
+        SimpleTestAppender.verifyLogEventsExistInOrder(
+                Matchers.containsString(String.format(";openIdDemo;%s;%s;", authenticationType, StatisticsOperation.START_AUTH)),
+                Matchers.containsString(String.format(";openIdDemo;%s;%s;", authenticationType, StatisticsOperation.SUCCESSFUL_AUTH))
+        );
+    }
+
+    private void verifyLogContentsOnUnsuccessfulAuthentication(String errorMessage) {
+        AuthenticationType authenticationType = AuthenticationType.IDCard;
+
+        SimpleTestAppender.verifyLogEventsExistInOrder(
+                Matchers.containsString(String.format(";openIdDemo;%s;%s;", authenticationType, StatisticsOperation.START_AUTH)),
+                Matchers.containsString(String.format(";openIdDemo;%s;%s;%s", authenticationType, StatisticsOperation.ERROR, errorMessage))
+        );
     }
 
 }

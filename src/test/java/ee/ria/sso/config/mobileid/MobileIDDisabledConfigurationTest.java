@@ -23,7 +23,6 @@ public class MobileIDDisabledConfigurationTest extends AbstractDisabledConfigura
 
     @Test
     public void whenMobileIDDisabledThenMobileIDBeansNotInitiated() {
-        assertBeanNotInitiated(MobileIDConfiguration.class);
         assertBeanNotInitiated(MobileIDAuthenticationService.class);
         assertBeanNotInitiated(MobileIDConfigurationProvider.class);
         assertBeanNotInitiated(MobileIDCheckAuthenticationAction.class);

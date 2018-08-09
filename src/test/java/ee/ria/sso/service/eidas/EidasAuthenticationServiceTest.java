@@ -10,12 +10,15 @@ import ee.ria.sso.config.eidas.EidasConfigurationProvider;
 import ee.ria.sso.config.eidas.TestEidasConfiguration;
 import ee.ria.sso.model.AuthenticationResult;
 import ee.ria.sso.service.AbstractAuthenticationServiceTest;
+import ee.ria.sso.statistics.StatisticsOperation;
+import ee.ria.sso.test.SimpleTestAppender;
 import org.junit.*;
 import org.mockito.AdditionalMatchers;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
@@ -60,6 +63,11 @@ public class EidasAuthenticationServiceTest extends AbstractAuthenticationServic
         wireMockServer.stop();
     }
 
+    @After
+    public void cleanUp() {
+        SimpleTestAppender.events.clear();
+    }
+
     @Test
     public void startLoginByEidasShouldFailWhenNoCredentialPresent() {
         expectedEx.expect(TaraAuthenticationException.class);
@@ -86,7 +94,14 @@ public class EidasAuthenticationServiceTest extends AbstractAuthenticationServic
                 .withQueryParam("Country", WireMock.equalTo("null"))
                 .willReturn(WireMock.aResponse().withStatus(400).withBody("BAD REQUEST"))
         );
-        Event event = this.authenticationService.startLoginByEidas(requestContext);
+
+        try {
+            Event event = this.authenticationService.startLoginByEidas(requestContext);
+        } catch (Exception e) {
+            this.verifyLogContentsOnFailure(StatisticsOperation.START_AUTH, "eIDAS-Client responded with 400 HTTP status code");
+            throw e;
+        }
+
         Assert.fail("Should not reach this!");
     }
 
@@ -111,6 +126,7 @@ public class EidasAuthenticationServiceTest extends AbstractAuthenticationServic
 
         Assert.assertEquals("success", event.getId());
         Assert.assertArrayEquals(eidasResponse.getBytes(StandardCharsets.UTF_8), stream.getWrittenContent());
+        this.verifyLogContents(StatisticsOperation.START_AUTH);
     }
 
     private MockServletOutputStream addMockHttpServletResponseToRequestContextExternalContext(RequestContext requestContext) {
@@ -148,22 +164,33 @@ public class EidasAuthenticationServiceTest extends AbstractAuthenticationServic
         expectedEx.expect(TaraAuthenticationException.class);
         expectedEx.expectMessage("java.lang.RuntimeException: SAML response's relay state (someRelayState) not found among previously stored relay states!");
 
-        RequestContext requestContext = this.getRequestContext(null,
-                Collections.singletonMap("RelayState", "someRelayState"));
+        RequestContext requestContext = this.getRequestContext(null);
+        ((MockHttpServletRequest) (requestContext.getExternalContext().getNativeRequest()))
+                .addParameter("RelayState", "someRelayState");
 
-        Event event = this.authenticationService.checkLoginForEidas(requestContext);
+        try {
+            Event event = this.authenticationService.checkLoginForEidas(requestContext);
+        } catch (Exception e) {
+            SimpleTestAppender.verifyLogEventsExistInOrder(
+                    org.hamcrest.Matchers.containsString(String.format(";openIdDemo;%s;%s;", AuthenticationType.eIDAS, StatisticsOperation.ERROR,
+                            "SAML response's relay state (someRelayState) not found among previously stored relay states!"))
+            );
+            throw e;
+        }
+
         Assert.fail("Should not reach this!");
     }
 
     @Test
     public void checkLoginForEidasSucceeds() {
         String relayState = UUID.randomUUID().toString();
-        Map<String, String> externalRequestParameters = new HashMap<>();
-        externalRequestParameters.put("SAMLResponse", "someSamlResponse");
-        externalRequestParameters.put("RelayState", relayState);
+        RequestContext requestContext = this.getRequestContext(null);
+        ((MockHttpServletRequest) (requestContext.getExternalContext().getNativeRequest()))
+                .addParameter("SAMLResponse", "someSamlResponse");
+        ((MockHttpServletRequest) (requestContext.getExternalContext().getNativeRequest()))
+                .addParameter("RelayState", relayState);
 
         String serviceValueStoredAsRelayState = "someServiceValueStoreadAsRelayState";
-        RequestContext requestContext = this.getRequestContext(null, externalRequestParameters);
         requestContext.getExternalContext().getSessionMap().put(relayState, serviceValueStoredAsRelayState);
 
         String eidasResponse = createMockAuthenticationResultString();
@@ -177,6 +204,8 @@ public class EidasAuthenticationServiceTest extends AbstractAuthenticationServic
 
         validateUserCredential((TaraCredential) requestContext.getFlowExecutionContext().getActiveSession().getScope().get("credential"));
         Assert.assertEquals(serviceValueStoredAsRelayState, requestContext.getFlowScope().get("service"));
+
+        this.verifyLogContents(StatisticsOperation.SUCCESSFUL_AUTH);
     }
 
     private String createMockAuthenticationResultString() {
@@ -204,6 +233,23 @@ public class EidasAuthenticationServiceTest extends AbstractAuthenticationServic
         Assert.assertEquals(MOCK_FIRST_NAME, credential.getFirstName());
         Assert.assertEquals(MOCK_LAST_NAME, credential.getLastName());
         Assert.assertEquals(MOCK_DATE_OF_BIRTH, credential.getDateOfBirth());
+    }
+
+    private void verifyLogContents(StatisticsOperation statisticsOperation) {
+        AuthenticationType authenticationType = AuthenticationType.eIDAS;
+
+        SimpleTestAppender.verifyLogEventsExistInOrder(
+                org.hamcrest.Matchers.containsString(String.format(";openIdDemo;%s;%s;", authenticationType, statisticsOperation))
+        );
+    }
+
+    private void verifyLogContentsOnFailure(StatisticsOperation precedingOperation, String errorMessage) {
+        AuthenticationType authenticationType = AuthenticationType.eIDAS;
+
+        SimpleTestAppender.verifyLogEventsExistInOrder(
+                org.hamcrest.Matchers.containsString(String.format(";openIdDemo;%s;%s;", authenticationType, precedingOperation)),
+                org.hamcrest.Matchers.containsString(String.format(";openIdDemo;%s;%s;%s", authenticationType, StatisticsOperation.ERROR, errorMessage))
+        );
     }
 
 }

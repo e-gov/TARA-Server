@@ -15,10 +15,7 @@ import ee.ria.sso.config.banklink.TestBanklinkConfiguration;
 import ee.ria.sso.test.SimpleTestAppender;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,6 +84,11 @@ public class BanklinkAuthenticationServiceTest {
         SimpleTestAppender.events.clear();
         MockHttpServletRequest request = new MockHttpServletRequest();
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+    }
+
+    @After
+    public void cleanUp() {
+        SimpleTestAppender.events.clear();
     }
 
     @Test
