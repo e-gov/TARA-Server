@@ -1,7 +1,6 @@
 package ee.ria.sso.statistics;
 
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertThat;
 
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.test.SimpleTestAppender;

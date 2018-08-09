@@ -54,4 +54,5 @@ public class SimpleTestAppender extends AbstractAppender {
         List<String> actualItems = SimpleTestAppender.events.stream().map(p -> p.getMessage().getFormattedMessage()).collect(Collectors.toList());
         assertThat(actualItems, IsIterableContainingInOrder.contains(matchers));
     }
+
 }
