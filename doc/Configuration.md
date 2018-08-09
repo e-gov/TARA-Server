@@ -235,10 +235,44 @@ eidas.heartbeat-url=https://<eidas-client-host:port>/heartbeat
 ````
 
 
+<a name="tara_stat"></a>
+### TARA-Stat interfacing
+
+The TARA-Stat service (see https://e-gov.github.io/TARA-Stat/Dokumentatsioon for details) can be used as one of the receivers of TARA statistics.
+
+Table 15 - Enabling TARA-Stat statistics logging
+
+| Property        | Mandatory | Description |
+| :---------------- | :---------- | :----------------|
+| `statistics.tara-stat.enabled` | N | Feature toggle for logging statistics info to the TARA-Stat service. Enables this feature to be loaded if set to `true`, otherwise disables it. Defaults to `false`, if not specified. |
+
+NB! When enabled, additional logger and appender must be configured to send the statistics to the external service (in `log4j2.xml`).
+
+Example log4j2 configuration for sendind statictics over TCP in syslog format:
+
+````
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+   <Appenders>
+      ... additional appenders ...
+      <Syslog name="taraStatServiceAppender" host="tara-stat.dev" port="5000" protocol="TCP" charset="UTF-8" facility="AUTH" />
+   </Appenders>
+
+   <Loggers>
+
+      ... additional loggers ...
+      <AsyncLogger name="ee.ria.sso.statistics.TaraStatHandler" level="info" additivity="false">
+         <AppenderRef ref="taraStatServiceAppender"/>
+      </AsyncLogger>
+   </Loggers>
+</Configuration>
+````
+
+
 <a name="test_environment_warning"></a>
 ### Test environment warning message
 
-Table 15 - Configuring TARA login page to show a warning message about it being run against test services
+Table 16 - Configuring TARA login page to show a warning message about it being run against test services
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
