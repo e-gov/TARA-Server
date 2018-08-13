@@ -1,14 +1,14 @@
 package ee.ria.sso.service.eidas;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.EidasAuthenticationFailedException;
 import ee.ria.sso.authentication.LevelOfAssurance;
 import ee.ria.sso.authentication.TaraAuthenticationException;
 import ee.ria.sso.authentication.credential.TaraCredential;
-import ee.ria.sso.common.AbstractService;
+import ee.ria.sso.service.AbstractService;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
-import ee.ria.sso.config.eidas.EidasConfigurationProvider;
 import ee.ria.sso.model.AuthenticationResult;
 import ee.ria.sso.statistics.StatisticsHandler;
 import ee.ria.sso.statistics.StatisticsOperation;
@@ -34,19 +34,14 @@ import java.util.UUID;
 public class EidasAuthenticationService extends AbstractService {
 
     private final StatisticsHandler statistics;
-    private final EidasConfigurationProvider configurationProvider;
     private final EidasAuthenticator eidasAuthenticator;
 
     public EidasAuthenticationService(TaraResourceBundleMessageSource messageSource,
                                       StatisticsHandler statistics,
-                                      EidasConfigurationProvider configurationProvider,
                                       EidasAuthenticator eidasAuthenticator) {
         super(messageSource);
         this.statistics = statistics;
-        this.configurationProvider = configurationProvider;
         this.eidasAuthenticator = eidasAuthenticator;
-
-        this.eidasAuthenticator.setEidasClientUrl(configurationProvider.getServiceUrl());
     }
 
     public Event startLoginByEidas(RequestContext context) {
@@ -105,7 +100,7 @@ public class EidasAuthenticationService extends AbstractService {
         }
 
         if (StringUtils.isEmpty(localizedErrorMessage)) {
-            localizedErrorMessage = this.getMessage("message.general.error");
+            localizedErrorMessage = this.getMessage(Constants.MESSAGE_KEY_GENERAL_ERROR);
         }
 
         return new TaraAuthenticationException(localizedErrorMessage, exception);
@@ -118,7 +113,7 @@ public class EidasAuthenticationService extends AbstractService {
 
     private void validateRelayState(String relayState, RequestContext context) {
         if (StringUtils.isEmpty(relayState) || !context.getExternalContext().getSessionMap().contains(relayState)) {
-            throw new RuntimeException("SAML response's relay state (" + relayState + ") not found among previously stored relay states!");
+            throw new IllegalStateException("SAML response's relay state (" + relayState + ") not found among previously stored relay states!");
         }
     }
 

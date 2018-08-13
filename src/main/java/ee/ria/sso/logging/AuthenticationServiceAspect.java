@@ -12,7 +12,7 @@ import org.springframework.webflow.execution.RequestContext;
 
 import ee.ria.sso.authentication.TaraAuthenticationException;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
-import ee.ria.sso.common.AbstractService;
+import ee.ria.sso.service.AbstractService;
 
 /**
  * @author Janar Rahumeel (CGI Estonia)
@@ -35,13 +35,12 @@ public class AuthenticationServiceAspect extends AbstractService {
         Event event;
         try {
             event = (Event) point.proceed();
+        } catch (TaraAuthenticationException e) {
+            this.logException(e);
+            throw e;
         } catch (Exception e) {
             this.logException(e);
-            if (e instanceof TaraAuthenticationException) {
-                throw e;
-            } else {
-                throw new TaraAuthenticationException(this.getMessage("message.auth.error"), e);
-            }
+            throw new TaraAuthenticationException(this.getMessage("message.auth.error"), e);
         }
         this.log.info("Event of <{}> has been triggered", event.getId());
         return event;

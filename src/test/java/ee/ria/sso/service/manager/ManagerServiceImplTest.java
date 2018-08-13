@@ -1,7 +1,7 @@
 package ee.ria.sso.service.impl;
 
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
-import ee.ria.sso.service.ManagerService;
+import ee.ria.sso.service.manager.ManagerService;
 import org.apereo.cas.services.OidcRegisteredService;
 import org.apereo.cas.services.ServicesManager;
 import org.junit.Assert;

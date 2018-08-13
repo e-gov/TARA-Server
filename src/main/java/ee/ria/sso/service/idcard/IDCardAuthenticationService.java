@@ -6,7 +6,7 @@ import ee.ria.sso.authentication.AuthenticationFailedException;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.TaraAuthenticationException;
 import ee.ria.sso.authentication.credential.TaraCredential;
-import ee.ria.sso.common.AbstractService;
+import ee.ria.sso.service.AbstractService;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.config.idcard.IDCardConfigurationProvider;
 import ee.ria.sso.statistics.StatisticsHandler;
@@ -93,12 +93,12 @@ public class IDCardAuthenticationService extends AbstractService {
             localizedErrorMessage = this.getMessage(messageKey, "message.idc.error");
         } else if (exception instanceof AuthenticationFailedException) {
             AuthenticationFailedException authenticationFailedException = (AuthenticationFailedException) exception;
-            String messageKey = authenticationFailedException.getErrorMessageKeyOrDefault("message.general.error");
-            localizedErrorMessage = this.getMessage(messageKey, "message.general.error");
+            String messageKey = authenticationFailedException.getErrorMessageKeyOrDefault(Constants.MESSAGE_KEY_GENERAL_ERROR);
+            localizedErrorMessage = this.getMessage(messageKey, Constants.MESSAGE_KEY_GENERAL_ERROR);
         }
 
         if (StringUtils.isBlank(localizedErrorMessage)) {
-            localizedErrorMessage = this.getMessage("message.general.error");
+            localizedErrorMessage = this.getMessage(Constants.MESSAGE_KEY_GENERAL_ERROR);
         }
 
         return new TaraAuthenticationException(localizedErrorMessage, exception);
@@ -116,7 +116,7 @@ public class IDCardAuthenticationService extends AbstractService {
             this.ocspValidator.validate(x509Certificate, issuerCert, configurationProvider.getOcspUrl());
         } else {
             log.error("Issuer cert not found");
-            throw new RuntimeException("Issuer cert not found from setup");
+            throw new IllegalStateException("Issuer cert not found from setup");
         }
     }
 
