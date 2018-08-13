@@ -12,6 +12,7 @@ import ee.ria.sso.config.eidas.EidasConfigurationProvider;
 import ee.ria.sso.model.AuthenticationResult;
 import ee.ria.sso.statistics.StatisticsHandler;
 import ee.ria.sso.statistics.StatisticsOperation;
+import ee.ria.sso.statistics.StatisticsRecord;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -52,10 +53,12 @@ public class EidasAuthenticationService extends AbstractService {
     public Event startLoginByEidas(RequestContext context) {
         final TaraCredential credential = context.getFlowExecutionContext().getActiveSession().getScope().get("credential", TaraCredential.class);
         try {
+            this.statistics.collect(new StatisticsRecord(
+                    LocalDateTime.now(), getServiceClientId(context), AuthenticationType.eIDAS, StatisticsOperation.START_AUTH
+            ));
             if (log.isDebugEnabled()) {
                 log.debug("Starting eIDAS login: <country:{}>", credential.getCountry());
             }
-            this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.eIDAS, StatisticsOperation.START_AUTH);
 
             String relayState = UUID.randomUUID().toString();
             context.getExternalContext().getSessionMap().put(relayState, context.getFlowScope().get("service"));
@@ -87,7 +90,10 @@ public class EidasAuthenticationService extends AbstractService {
             context.getFlowExecutionContext().getActiveSession().getScope().put("credential", credential);
             context.getFlowScope().put("service", context.getExternalContext().getSessionMap().get(relayState));
 
-            this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.eIDAS, StatisticsOperation.SUCCESSFUL_AUTH);
+            this.statistics.collect(new StatisticsRecord(
+                    LocalDateTime.now(), getServiceClientId(context), AuthenticationType.eIDAS, StatisticsOperation.SUCCESSFUL_AUTH
+            ));
+
             return new Event(this, "success");
         } catch (Exception e) {
             throw this.handleException(context, e);
@@ -96,7 +102,9 @@ public class EidasAuthenticationService extends AbstractService {
 
     private RuntimeException handleException(RequestContext context, Exception exception) {
         clearFlowScope(context);
-        this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.eIDAS, StatisticsOperation.ERROR, exception.getMessage());
+        this.statistics.collect(new StatisticsRecord(
+                LocalDateTime.now(), getServiceClientId(context), AuthenticationType.eIDAS, exception.getMessage()
+        ));
 
         String localizedErrorMessage = null;
 

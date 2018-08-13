@@ -10,6 +10,7 @@ import ee.ria.sso.config.smartid.SmartIDConfigurationProvider;
 import ee.ria.sso.config.smartid.TestSmartIDConfiguration;
 import ee.ria.sso.statistics.StatisticsHandler;
 import ee.ria.sso.statistics.StatisticsOperation;
+import ee.ria.sso.statistics.StatisticsRecord;
 import ee.sk.smartid.AuthenticationHash;
 import ee.sk.smartid.AuthenticationIdentity;
 import ee.sk.smartid.HashType;
@@ -20,6 +21,7 @@ import ee.sk.smartid.exception.UserAccountNotFoundException;
 import ee.sk.smartid.rest.dao.AuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import org.apache.commons.lang3.StringUtils;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -471,28 +473,36 @@ public class SmartIDAuthenticationServiceTest {
     }
 
     private void assertAuthStartStatisticsCollected(MockRequestContext requestContext) {
-        verify(statisticsHandler, times(1)).collect(
-                any(),
-                eq(requestContext),
-                eq(AuthenticationType.SmartID),
-                eq(StatisticsOperation.START_AUTH));
+        ArgumentCaptor<StatisticsRecord> argument = ArgumentCaptor.forClass(StatisticsRecord.class);
+        verify(statisticsHandler, times(1)).collect(argument.capture());
+
+        Assert.assertEquals("clientId", argument.getValue().getClientId());
+        Assert.assertEquals(AuthenticationType.SmartID.getAmrName(), argument.getValue().getMethod());
+        Assert.assertEquals(StatisticsOperation.START_AUTH.name(), argument.getValue().getOperation());
+        Assert.assertEquals(null, argument.getValue().getError());
+        Assert.assertEquals(null, argument.getValue().getBank());
     }
 
     private void assertSuccessfulAuthStatisticsCollected(MockRequestContext requestContext) {
-        verify(statisticsHandler, times(1)).collect(
-                any(),
-                eq(requestContext),
-                eq(AuthenticationType.SmartID),
-                eq(StatisticsOperation.SUCCESSFUL_AUTH));
+        ArgumentCaptor<StatisticsRecord> argument = ArgumentCaptor.forClass(StatisticsRecord.class);
+        verify(statisticsHandler, times(1)).collect(argument.capture());
+
+        Assert.assertEquals("clientId", argument.getValue().getClientId());
+        Assert.assertEquals(AuthenticationType.SmartID.getAmrName(), argument.getValue().getMethod());
+        Assert.assertEquals(StatisticsOperation.SUCCESSFUL_AUTH.name(), argument.getValue().getOperation());
+        Assert.assertEquals(null, argument.getValue().getError());
+        Assert.assertEquals(null, argument.getValue().getBank());
     }
 
     private void assertErrorStatisticsCollected(MockRequestContext requestContext, String exceptionMessage) {
-        verify(statisticsHandler, times(1)).collect(
-                any(),
-                eq(requestContext),
-                eq(AuthenticationType.SmartID),
-                eq(StatisticsOperation.ERROR),
-                eq(exceptionMessage));
+        ArgumentCaptor<StatisticsRecord> argument = ArgumentCaptor.forClass(StatisticsRecord.class);
+        verify(statisticsHandler, times(1)).collect(argument.capture());
+
+        Assert.assertEquals("clientId", argument.getValue().getClientId());
+        Assert.assertEquals(AuthenticationType.SmartID.getAmrName(), argument.getValue().getMethod());
+        Assert.assertEquals(StatisticsOperation.ERROR.name(), argument.getValue().getOperation());
+        Assert.assertEquals(exceptionMessage, argument.getValue().getError());
+        Assert.assertEquals(null, argument.getValue().getBank());
     }
 
     private void mockSubjectAuthenticationCall(String sessionId) {

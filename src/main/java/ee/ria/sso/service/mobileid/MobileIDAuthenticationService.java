@@ -12,6 +12,7 @@ import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.config.mobileid.MobileIDConfigurationProvider;
 import ee.ria.sso.statistics.StatisticsHandler;
 import ee.ria.sso.statistics.StatisticsOperation;
+import ee.ria.sso.statistics.StatisticsRecord;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -51,10 +52,13 @@ public class MobileIDAuthenticationService extends AbstractService {
     public Event startLoginByMobileID(RequestContext context) {
         final TaraCredential credential = context.getFlowExecutionContext().getActiveSession().getScope().get("credential", TaraCredential.class);
         try {
+            this.statistics.collect(new StatisticsRecord(
+                    LocalDateTime.now(), getServiceClientId(context), AuthenticationType.MobileID, StatisticsOperation.START_AUTH
+            ));
             if (log.isDebugEnabled()) {
                 log.debug("Starting mobile ID login: <number:{}>, <ssn:{}>", credential.getMobileNumber(), credential.getPrincipalCode());
             }
-            this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.MobileID, StatisticsOperation.START_AUTH);
+
             this.validateCredential(credential);
             MobileIDSession mobileIDSession = this.mobileIDAuthenticator.startLogin(credential.getPrincipalCode(),
                     this.configurationProvider.getCountryCode(), credential.getMobileNumber());
@@ -65,6 +69,7 @@ public class MobileIDAuthenticationService extends AbstractService {
             context.getFlowScope().put(Constants.MOBILE_NUMBER, credential.getMobileNumber());
             context.getFlowScope().put(Constants.MOBILE_SESSION, mobileIDSession);
             context.getFlowScope().put(Constants.AUTH_COUNT, 0);
+
             return new Event(this, "success");
         } catch (Exception e) {
             throw this.handleException(context, e);
@@ -83,7 +88,10 @@ public class MobileIDAuthenticationService extends AbstractService {
                 credential.setMobileNumber(getFormattedPhoneNumber(mobileNumber));
 
                 context.getFlowExecutionContext().getActiveSession().getScope().put("credential", credential);
-                this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.MobileID, StatisticsOperation.SUCCESSFUL_AUTH);
+                this.statistics.collect(new StatisticsRecord(
+                        LocalDateTime.now(), getServiceClientId(context), AuthenticationType.MobileID, StatisticsOperation.SUCCESSFUL_AUTH
+                ));
+
                 return new Event(this, "success");
             } else {
                 context.getFlowScope().put(Constants.AUTH_COUNT, ++checkCount);
@@ -96,7 +104,9 @@ public class MobileIDAuthenticationService extends AbstractService {
 
     private RuntimeException handleException(RequestContext context, Exception exception) {
         clearFlowScope(context);
-        this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.MobileID, StatisticsOperation.ERROR, exception.getMessage());
+        this.statistics.collect(new StatisticsRecord(
+                LocalDateTime.now(), getServiceClientId(context), AuthenticationType.MobileID, exception.getMessage()
+        ));
 
         String localizedErrorMessage = null;
 

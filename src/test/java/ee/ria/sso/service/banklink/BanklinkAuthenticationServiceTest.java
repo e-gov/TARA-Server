@@ -147,14 +147,7 @@ public class BanklinkAuthenticationServiceTest {
         MockHttpServletRequest request = (MockHttpServletRequest)requestContext.getExternalContext().getNativeRequest();
         request.addParameter("VK_SOMETHING", "3013");
 
-        try {
-            Event event = this.authenticationService.checkLoginForBankLink(requestContext);
-        } catch (Exception e) {
-            SimpleTestAppender.verifyLogEventsExistInOrder(
-                    containsString(";openIdDemo;BankLink;ERROR;Banklink 1.1.5.1 cause: Unknown banklink message format"));
-            throw e;
-        }
-
+        Event event = this.authenticationService.checkLoginForBankLink(requestContext);
         Assert.fail("Should not reach this!");
     }
 
@@ -168,14 +161,16 @@ public class BanklinkAuthenticationServiceTest {
 
 
         Packet responsePacket = buildResponsePacket(BankEnum.SEB, vkNonce);
-        RequestContext callbackRequestCtx = buildMockResponseContext(responsePacket);
+        RequestContext callbackRequestCtx = buildMockResponseContext(responsePacket, startLoginRequestCtx);
         addMockNonceToSession(callbackRequestCtx, vkNonce);
 
         Event event = this.authenticationService.checkLoginForBankLink(callbackRequestCtx);
         verifyCredential(callbackRequestCtx);
         verifySuccessEvent(event);
         SimpleTestAppender.verifyLogEventsExistInOrder(
-                containsString(";openIdDemo;BankLink;START_AUTH;"), containsString(";openIdDemo;BankLink;SUCCESSFUL_AUTH;"));
+                containsString(String.format(";openIdDemo;BankLink/%s;START_AUTH;", "seb")),
+                containsString(String.format(";openIdDemo;BankLink/%s;SUCCESSFUL_AUTH;", "seb"))
+        );
     }
 
     @Test
@@ -185,7 +180,7 @@ public class BanklinkAuthenticationServiceTest {
         String vkNonce = packet.getParameterValue("VK_NONCE");
 
         Packet responsePacket = buildResponsePacket(BankEnum.LHV, new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(new Date()), "Leopoldšö Tiiger", vkNonce);
-        RequestContext callbackRequestCtx = buildMockResponseContext(responsePacket);
+        RequestContext callbackRequestCtx = buildMockResponseContext(responsePacket, startLoginRequestCtx);
         addMockNonceToSession(callbackRequestCtx, vkNonce);
 
         Event event = this.authenticationService.checkLoginForBankLink(callbackRequestCtx);
@@ -214,7 +209,7 @@ public class BanklinkAuthenticationServiceTest {
 
         String vkNonce = "invalidNonce....";
         Packet responsePacket = buildResponsePacket(BankEnum.SEB, vkNonce);
-        RequestContext callbackRequestCtx = buildMockResponseContext(responsePacket);
+        RequestContext callbackRequestCtx = buildMockResponseContext(responsePacket, null);
         addMockNonceToSession(callbackRequestCtx, vkNonce);
 
         this.authenticationService.checkLoginForBankLink(callbackRequestCtx);
@@ -233,7 +228,7 @@ public class BanklinkAuthenticationServiceTest {
                 Date.from(Instant.now().minus(Duration.ofHours(1)))
         );
         Packet responsePacket = buildResponsePacket(BankEnum.SEB, vkDateTime, "TIIGER , LEOPOLD&Scaron;&Ouml;", vkNonce);
-        RequestContext callbackRequestCtx = buildMockResponseContext(responsePacket);
+        RequestContext callbackRequestCtx = buildMockResponseContext(responsePacket, startLoginRequestCtx);
         addMockNonceToSession(callbackRequestCtx, packet.getParameterValue("VK_NONCE"));
 
         this.authenticationService.checkLoginForBankLink(callbackRequestCtx);
@@ -252,7 +247,7 @@ public class BanklinkAuthenticationServiceTest {
                 Date.from(Instant.now().plus(Duration.ofMinutes(10)))
         );
         Packet responsePacket = buildResponsePacket(BankEnum.SEB, vkDateTime, "TIIGER , LEOPOLD&Scaron;&Ouml;", vkNonce);
-        RequestContext callbackRequestCtx = buildMockResponseContext(responsePacket);
+        RequestContext callbackRequestCtx = buildMockResponseContext(responsePacket, startLoginRequestCtx);
 
         addMockNonceToSession(callbackRequestCtx, packet.getParameterValue("VK_NONCE"));
 
@@ -363,11 +358,14 @@ public class BanklinkAuthenticationServiceTest {
         Assert.assertNotNull("No session entry was found with key: " + packet.getParameterValue("VK_NONCE") ,requestContext.getExternalContext().getSessionMap().contains(packet.getParameterValue("VK_NONCE")));
     }
 
-    private RequestContext buildMockResponseContext(Packet packet) {
+    private RequestContext buildMockResponseContext(Packet packet, RequestContext initialRequest) {
         RequestContext requestContext = this.getRequestContext(new HashMap<>());
         MockHttpServletRequest request = (MockHttpServletRequest)requestContext.getExternalContext().getNativeRequest();
         for (PacketParameter param : Collections.list(packet.parameters())) {
             request.addParameter(param.getName(), param.getValue());
+        }
+        if (initialRequest != null) {
+            requestContext.getFlowScope().putAll(initialRequest.getFlowScope());
         }
         return requestContext;
     }
@@ -437,7 +435,9 @@ public class BanklinkAuthenticationServiceTest {
         verifyUrl(bank, requestContext);
         verifySuccessEvent(event);
 
-        SimpleTestAppender.verifyLogEventsExistInOrder(containsString(";openIdDemo;BankLink;START_AUTH;"));
+        SimpleTestAppender.verifyLogEventsExistInOrder(containsString(
+                String.format(";openIdDemo;BankLink/%s;START_AUTH;", bank.getName())
+        ));
     }
 
     private RequestContext getRequestContext(Map<String, String> parameters) {

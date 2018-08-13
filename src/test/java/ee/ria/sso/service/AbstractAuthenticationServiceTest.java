@@ -1,5 +1,6 @@
 package ee.ria.sso.service;
 
+import ee.ria.sso.Constants;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
@@ -25,12 +26,12 @@ public abstract class AbstractAuthenticationServiceTest {
     @Autowired
     protected Environment environment;
 
-    protected RequestContext getRequestContext(Map<String, String> requestParameters) {
+    protected RequestContext getMockRequestContext(Map<String, String> requestParameters) {
         MockRequestContext context = new MockRequestContext();
 
         MockExternalContext mockExternalContext = new MockExternalContext();
         MockHttpServletRequest mockHttpServletRequest = new MockHttpServletRequest();
-        mockHttpServletRequest.addParameter("service",
+        mockHttpServletRequest.addParameter(Constants.CAS_SERVICE_ATTRIBUTE_NAME,
                 "https://cas.test.url.net/oauth2.0/callbackAuthorize?client_name=CasOAuthClient&client_id=openIdDemo&redirect_uri=https://tara-client.arendus.kit:8451/oauth/response");
         mockExternalContext.setNativeRequest(mockHttpServletRequest);
         context.setExternalContext(mockExternalContext);
