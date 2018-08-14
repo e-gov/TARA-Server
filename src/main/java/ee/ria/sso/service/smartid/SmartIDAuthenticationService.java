@@ -172,19 +172,15 @@ public class SmartIDAuthenticationService extends AbstractService {
     }
 
     private void collectStatistics(RequestContext context, StatisticsOperation statisticsOperation) {
-        StatisticsRecord statisticsRecord = new StatisticsRecord(
+        statisticsHandler.collect(new StatisticsRecord(
                 LocalDateTime.now(), getServiceClientId(context), AUTHENTICATION_TYPE, statisticsOperation
-        );
-        System.out.println(statisticsRecord);
-        statisticsHandler.collect(statisticsRecord);
+        ));
     }
 
     private void collectErrorStatistics(RequestContext context, String exceptionMessage) {
-        StatisticsRecord statisticsRecord = new StatisticsRecord(
+        statisticsHandler.collect(new StatisticsRecord(
                 LocalDateTime.now(), getServiceClientId(context), AUTHENTICATION_TYPE, exceptionMessage
-        );
-        System.out.println(statisticsRecord);
-        statisticsHandler.collect(statisticsRecord);
+        ));
     }
 
     private RuntimeException handleSmartIDClientException(RequestContext context, ClientErrorException e) {

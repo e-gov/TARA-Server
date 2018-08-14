@@ -365,7 +365,9 @@ public class BanklinkAuthenticationServiceTest {
             request.addParameter(param.getName(), param.getValue());
         }
         if (initialRequest != null) {
-            requestContext.getFlowScope().putAll(initialRequest.getFlowScope());
+            requestContext.getExternalContext().getSessionMap().putAll(
+                    initialRequest.getExternalContext().getSessionMap()
+            );
         }
         return requestContext;
     }

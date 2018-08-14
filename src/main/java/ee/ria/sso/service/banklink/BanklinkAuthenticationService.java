@@ -49,7 +49,7 @@ public class BanklinkAuthenticationService extends AbstractService {
             }
 
             BankEnum bankEnum = BankEnum.valueOf(bankCode.toUpperCase());
-            context.getFlowScope().put(BANK_ENUM_ATTRIBUTE, bankEnum);
+            context.getExternalContext().getSessionMap().put(BANK_ENUM_ATTRIBUTE, bankEnum);
 
             AuthLink banklink = authLinkManager.getBankLink(bankEnum.getAuthLinkBank());
             context.getRequestScope().put("url", banklink.getUrl());
@@ -108,7 +108,7 @@ public class BanklinkAuthenticationService extends AbstractService {
     }
 
     private static BankEnum getBankEnum(RequestContext context) {
-        return context.getFlowScope().get(BANK_ENUM_ATTRIBUTE, BankEnum.class);
+        return context.getExternalContext().getSessionMap().get(BANK_ENUM_ATTRIBUTE, BankEnum.class);
     }
 
     private static void clearFlowScope(RequestContext context) {
