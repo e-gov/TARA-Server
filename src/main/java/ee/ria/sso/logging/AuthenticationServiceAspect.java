@@ -51,11 +51,9 @@ public class AuthenticationServiceAspect extends AbstractService {
      */
 
     private void logArguments(Object... arguments) {
-        if (ArrayUtils.isNotEmpty(arguments)) {
-            if (arguments[0] != null) {
-                RequestContext context = (RequestContext) arguments[0];
-                this.log.info("Request: {}", context.getExternalContext().getRequestParameterMap());
-            }
+        if (ArrayUtils.isNotEmpty(arguments) && arguments[0] != null) {
+            RequestContext context = (RequestContext) arguments[0];
+            this.log.info("Request: {}", context.getExternalContext().getRequestParameterMap());
         }
     }
 
