@@ -1,4 +1,4 @@
-package ee.ria.sso.service;
+package ee.ria.sso.service.manager;
 
 import java.util.Optional;
 

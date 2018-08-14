@@ -1,21 +1,22 @@
 package ee.ria.sso.flow.action;
 
+import ee.ria.sso.service.idcard.IDCardAuthenticationService;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
-
-import ee.ria.sso.service.AuthenticationService;
 
 /**
  * @author Janar Rahumeel (CGI Estonia)
  */
 
+@ConditionalOnProperty("id-card.enabled")
 @Component("idCardAuthenticationAction")
 public class IDCardAuthenticationAction extends AbstractAuthenticationAction {
 
-    private final AuthenticationService authenticationService;
+    private final IDCardAuthenticationService authenticationService;
 
-    public IDCardAuthenticationAction(AuthenticationService authenticationService) {
+    public IDCardAuthenticationAction(IDCardAuthenticationService authenticationService) {
         this.authenticationService = authenticationService;
     }
 

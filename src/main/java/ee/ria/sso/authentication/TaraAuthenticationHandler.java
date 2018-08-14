@@ -34,6 +34,8 @@ public class TaraAuthenticationHandler extends AbstractPreAndPostProcessingAuthe
      * RESTRICTED METHODS
      */
 
+    // TODO: this class extracts attributes from TaraCredential and inserts them into a map
+
     @Override
     protected HandlerResult doAuthentication(Credential credential) throws GeneralSecurityException, PreventedException {
         final Map<String, Object> map = new LinkedHashMap<>();
