@@ -32,7 +32,7 @@ public class StatisticsRecordMatcher extends ArgumentMatcher<StatisticsRecord> {
 
     @Override
     public boolean matches(Object actual) {
-        if (actual == null || !StatisticsRecord.class.isInstance(actual))
+        if (!StatisticsRecord.class.isInstance(actual))
             return false;
 
         StatisticsRecord statisticsRecord = (StatisticsRecord) actual;

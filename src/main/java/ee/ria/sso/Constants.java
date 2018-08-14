@@ -20,4 +20,6 @@ public final class Constants {
 
     public static final String SMART_ID_VERIFICATION_CODE = "smartIdVerificationCode";
     public static final String SMART_ID_AUTHENTICATION_SESSION = "smartIdAuthenticationSession";
+
+    public static final String MESSAGE_KEY_GENERAL_ERROR = "message.general.error";
 }

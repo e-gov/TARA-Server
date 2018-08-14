@@ -6,7 +6,6 @@
 package org.apereo.cas.oidc.web.flow;
 
 import java.util.*;
-import java.util.function.Predicate;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.apereo.cas.CentralAuthenticationService;

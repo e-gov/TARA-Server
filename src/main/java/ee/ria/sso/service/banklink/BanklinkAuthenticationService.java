@@ -4,11 +4,12 @@ import com.nortal.banklink.authentication.AuthLink;
 import com.nortal.banklink.authentication.AuthLinkInfo;
 import com.nortal.banklink.authentication.AuthLinkManager;
 import com.nortal.banklink.core.packet.Packet;
+import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.BankEnum;
 import ee.ria.sso.authentication.TaraAuthenticationException;
 import ee.ria.sso.authentication.credential.TaraCredential;
-import ee.ria.sso.common.AbstractService;
+import ee.ria.sso.service.AbstractService;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.statistics.StatisticsHandler;
 import ee.ria.sso.statistics.StatisticsOperation;
@@ -102,7 +103,7 @@ public class BanklinkAuthenticationService extends AbstractService {
             ));
         }
 
-        String localizedErrorMessage = this.getMessage("message.general.error");
+        String localizedErrorMessage = this.getMessage(Constants.MESSAGE_KEY_GENERAL_ERROR);
         return new TaraAuthenticationException(localizedErrorMessage, exception);
     }
 

@@ -1,4 +1,4 @@
-package ee.ria.sso.common;
+package ee.ria.sso.service;
 
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import org.apereo.cas.authentication.principal.AbstractWebApplicationService;

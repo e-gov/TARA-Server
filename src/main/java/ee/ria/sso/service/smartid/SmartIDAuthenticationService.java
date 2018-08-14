@@ -5,7 +5,7 @@ import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.TaraAuthenticationException;
 import ee.ria.sso.authentication.TaraCredentialsException;
 import ee.ria.sso.authentication.credential.TaraCredential;
-import ee.ria.sso.common.AbstractService;
+import ee.ria.sso.service.AbstractService;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.config.smartid.SmartIDConfigurationProvider;
 import ee.ria.sso.service.smartid.SmartIDClient.AuthenticationRequest;

@@ -7,8 +7,6 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apereo.cas.authentication.principal.Principal;
 import org.apereo.cas.authentication.principal.PrincipalFactory;
 
-import ee.ria.sso.authentication.TaraAuthenticationException;
-
 /**
  * Created by Janar Rahumeel (CGI Estonia)
  */

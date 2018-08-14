@@ -35,7 +35,7 @@ public class IDCardConfiguration {
         configurationProvider.getOcspCertificates().forEach(ocspCertificate -> {
             try {
                 String[] certificateFields = ocspCertificate.split(":");
-                issuerCertificates.put(certificateFields[0], readCertFromFile(certificateFields[1]));
+                issuerCertificates.put(certificateFields[0], readCertFromResource(certificateFields[1]));
             } catch (Exception e) {
                 throw new IllegalArgumentException("Failed to read certificate " + ocspCertificate, e);
             }
@@ -44,14 +44,14 @@ public class IDCardConfiguration {
         return issuerCertificates;
     }
 
-    private X509Certificate readCertFromFile(String fileName) throws CertificateException, IOException {
-        String filePath = configurationProvider.getOcspCertificateLocation() + "/" + fileName;
-        Resource file = resourceLoader.getResource(filePath);
-        if (!file.exists()) {
-            throw new IllegalArgumentException("Could not find file " + filePath);
+    private X509Certificate readCertFromResource(String resourceName) throws CertificateException, IOException {
+        String resourcePath = configurationProvider.getOcspCertificateLocation() + "/" + resourceName;
+        Resource resource = resourceLoader.getResource(resourcePath);
+        if (!resource.exists()) {
+            throw new IllegalArgumentException("Could not find resource " + resourcePath);
         }
 
-        try (InputStream inputStream = file.getInputStream()) {
+        try (InputStream inputStream = resource.getInputStream()) {
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
             return (X509Certificate) cf.generateCertificate(inputStream);
         }

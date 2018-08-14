@@ -1,7 +1,7 @@
 package ee.ria.sso.config;
 
 import ee.ria.sso.model.EmptyOidcRegisteredService;
-import ee.ria.sso.service.ManagerService;
+import ee.ria.sso.service.manager.ManagerService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;

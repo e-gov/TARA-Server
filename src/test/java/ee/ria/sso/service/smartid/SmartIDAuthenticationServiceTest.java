@@ -46,7 +46,6 @@ import java.util.concurrent.Callable;
 
 import static ee.ria.sso.service.smartid.SmartIDMockData.*;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
 @TestPropertySource(locations= "classpath:application-test.properties")
@@ -104,7 +103,7 @@ public class SmartIDAuthenticationServiceTest {
         assertVerificationCodeInFlowContext(requestContext);
         assertVerificationCodeFromSameHashAsInAuthenticationRequest(requestContext);
         assertAuthSessionInFlowContext(requestContext, sessionId, 0);
-        assertAuthStartStatisticsCollected(requestContext);
+        assertAuthStartStatisticsCollected();
         assertAuthenticationRequestCreation(credential);
     }
 
@@ -174,7 +173,7 @@ public class SmartIDAuthenticationServiceTest {
             assertVerificationCodeInFlowContext(requestContext);
             assertVerificationCodeFromSameHashAsInAuthenticationRequest(requestContext);
             assertAuthSessionInFlowContext(requestContext, sessionId, 0);
-            assertAuthStartStatisticsCollected(requestContext);
+            assertAuthStartStatisticsCollected();
             assertAuthenticationRequestCreation(credential);
 
             assertEquals(HashType.SHA256, authenticationRequestCaptor.getValue().getAuthenticationHash().getHashType());
@@ -249,7 +248,7 @@ public class SmartIDAuthenticationServiceTest {
         Event event = authenticationService.checkSmartIdAuthenticationSessionStatus(requestContext);
 
         assertEventSuccessful(event);
-        assertSuccessfulAuthStatisticsCollected(requestContext);
+        assertSuccessfulAuthStatisticsCollected();
         assertCertPersonCredentialsInFlowContext(requestContext, authenticationResult.getAuthenticationIdentity());
     }
 
@@ -365,7 +364,7 @@ public class SmartIDAuthenticationServiceTest {
                 exceptionType,
                 errorMessageKey);
 
-        assertAuthStartStatisticsCollected(requestContext);
+        assertAuthStartStatisticsCollected();
     }
 
     private void getAuthSessionStatusAndExpectSmartIdClientException(Exception mockException, String expectedErrorMessageKey) {
@@ -424,7 +423,7 @@ public class SmartIDAuthenticationServiceTest {
             }
 
             assertContextCleared(requestContext);
-            assertErrorStatisticsCollected(requestContext, cause.getMessage());
+            assertErrorStatisticsCollected(cause.getMessage());
             assertErrorMessage(errorMessageKey);
         }
     }
@@ -474,7 +473,7 @@ public class SmartIDAuthenticationServiceTest {
         assertEquals(authIdentity.getSurName(), credential.getLastName());
     }
 
-    private void assertAuthStartStatisticsCollected(MockRequestContext requestContext) {
+    private void assertAuthStartStatisticsCollected() {
         verify(statisticsHandler, times(1)).collect(argThat(
                 new StatisticsRecordMatcher(
                         Matchers.any(LocalDateTime.class),
@@ -487,7 +486,7 @@ public class SmartIDAuthenticationServiceTest {
         ));
     }
 
-    private void assertSuccessfulAuthStatisticsCollected(MockRequestContext requestContext) {
+    private void assertSuccessfulAuthStatisticsCollected() {
         verify(statisticsHandler, times(1)).collect(argThat(
                 new StatisticsRecordMatcher(
                         Matchers.any(LocalDateTime.class),
@@ -500,7 +499,7 @@ public class SmartIDAuthenticationServiceTest {
         ));
     }
 
-    private void assertErrorStatisticsCollected(MockRequestContext requestContext, String exceptionMessage) {
+    private void assertErrorStatisticsCollected(String exceptionMessage) {
         verify(statisticsHandler, times(1)).collect(argThat(
                 new StatisticsRecordMatcher(
                         Matchers.any(LocalDateTime.class),
