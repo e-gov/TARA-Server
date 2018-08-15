@@ -1,7 +1,7 @@
 package ee.ria.sso.config;
 
 import ee.ria.sso.AbstractTest;
-import ee.ria.sso.service.ManagerService;
+import ee.ria.sso.service.manager.ManagerService;
 import org.apereo.cas.services.OidcRegisteredService;
 import org.junit.Assert;
 import org.junit.Test;

@@ -1,21 +1,22 @@
 package ee.ria.sso.flow.action;
 
+import ee.ria.sso.service.mobileid.MobileIDAuthenticationService;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
-
-import ee.ria.sso.service.AuthenticationService;
 
 /**
  * @author Janar Rahumeel (CGI Estonia)
  */
 
+@ConditionalOnProperty("mobile-id.enabled")
 @Component
 public class MobileIDCheckAuthenticationAction extends AbstractAuthenticationAction {
 
-    private final AuthenticationService authenticationService;
+    private final MobileIDAuthenticationService authenticationService;
 
-    public MobileIDCheckAuthenticationAction(AuthenticationService authenticationService) {
+    public MobileIDCheckAuthenticationAction(MobileIDAuthenticationService authenticationService) {
         this.authenticationService = authenticationService;
     }
 

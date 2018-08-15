@@ -4,14 +4,16 @@ import com.nortal.banklink.authentication.AuthLink;
 import com.nortal.banklink.authentication.AuthLinkInfo;
 import com.nortal.banklink.authentication.AuthLinkManager;
 import com.nortal.banklink.core.packet.Packet;
+import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.BankEnum;
 import ee.ria.sso.authentication.TaraAuthenticationException;
 import ee.ria.sso.authentication.credential.TaraCredential;
-import ee.ria.sso.common.AbstractService;
+import ee.ria.sso.service.AbstractService;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.statistics.StatisticsHandler;
 import ee.ria.sso.statistics.StatisticsOperation;
+import ee.ria.sso.statistics.StatisticsRecord;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -28,6 +30,7 @@ import java.time.LocalDateTime;
 public class BanklinkAuthenticationService extends AbstractService {
 
     private static final String SERVICE_ATTRIBUTE = "service";
+    private static final String BANK_ENUM_ATTRIBUTE = "banklinkBankEnum";
 
     private final StatisticsHandler statistics;
     private final AuthLinkManager authLinkManager;
@@ -46,6 +49,8 @@ public class BanklinkAuthenticationService extends AbstractService {
             }
 
             BankEnum bankEnum = BankEnum.valueOf(bankCode.toUpperCase());
+            context.getExternalContext().getSessionMap().put(BANK_ENUM_ATTRIBUTE, bankEnum);
+
             AuthLink banklink = authLinkManager.getBankLink(bankEnum.getAuthLinkBank());
             context.getRequestScope().put("url", banklink.getUrl());
 
@@ -53,11 +58,14 @@ public class BanklinkAuthenticationService extends AbstractService {
             outgoingPacket.setParameter("VK_LANG", LocaleContextHolder.getLocale().getISO3Language().toUpperCase());
             context.getRequestScope().put("packet", outgoingPacket);
             context.getExternalContext().getSessionMap().put(SERVICE_ATTRIBUTE, context.getFlowScope().get(SERVICE_ATTRIBUTE));
-            this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.BankLink, StatisticsOperation.START_AUTH);
+
+            this.statistics.collect(new StatisticsRecord(
+                    LocalDateTime.now(), getServiceClientId(context), bankEnum, StatisticsOperation.START_AUTH
+            ));
 
             return new Event(this, "success");
         } catch (Exception e) {
-            throw this.handleException(context, AuthenticationType.BankLink, e);
+            throw this.handleException(context, e);
         }
     }
 
@@ -74,19 +82,33 @@ public class BanklinkAuthenticationService extends AbstractService {
             TaraCredential credential = new TaraCredential(AuthenticationType.BankLink, principalCode, firstName, lastName);
             context.getFlowExecutionContext().getActiveSession().getScope().put("credential", credential);
             context.getFlowScope().put(SERVICE_ATTRIBUTE, context.getExternalContext().getSessionMap().get(SERVICE_ATTRIBUTE));
-            this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.BankLink, StatisticsOperation.SUCCESSFUL_AUTH);
+
+            this.statistics.collect(new StatisticsRecord(
+                    LocalDateTime.now(), getServiceClientId(context), getBankEnum(context), StatisticsOperation.SUCCESSFUL_AUTH
+            ));
 
             return new Event(this, "success");
         } catch (Exception e) {
-            throw this.handleException(context, AuthenticationType.BankLink, e);
+            throw this.handleException(context, e);
         }
     }
 
-    private RuntimeException handleException(RequestContext context, AuthenticationType type, Exception exception) {
+    private RuntimeException handleException(RequestContext context, Exception exception) {
         clearFlowScope(context);
-        this.statistics.collect(LocalDateTime.now(), context, type, StatisticsOperation.ERROR, exception.getMessage());
-        String localizedErrorMessage = this.getMessage("message.general.error");
+
+        BankEnum bankEnum = getBankEnum(context);
+        if (bankEnum != null) {
+            this.statistics.collect(new StatisticsRecord(
+                    LocalDateTime.now(), getServiceClientId(context), bankEnum, exception.getMessage()
+            ));
+        }
+
+        String localizedErrorMessage = this.getMessage(Constants.MESSAGE_KEY_GENERAL_ERROR);
         return new TaraAuthenticationException(localizedErrorMessage, exception);
+    }
+
+    private static BankEnum getBankEnum(RequestContext context) {
+        return context.getExternalContext().getSessionMap().get(BANK_ENUM_ATTRIBUTE, BankEnum.class);
     }
 
     private static void clearFlowScope(RequestContext context) {

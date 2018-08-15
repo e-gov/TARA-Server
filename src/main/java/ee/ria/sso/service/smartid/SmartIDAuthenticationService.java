@@ -5,12 +5,13 @@ import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.TaraAuthenticationException;
 import ee.ria.sso.authentication.TaraCredentialsException;
 import ee.ria.sso.authentication.credential.TaraCredential;
-import ee.ria.sso.common.AbstractService;
+import ee.ria.sso.service.AbstractService;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.config.smartid.SmartIDConfigurationProvider;
 import ee.ria.sso.service.smartid.SmartIDClient.AuthenticationRequest;
 import ee.ria.sso.statistics.StatisticsHandler;
 import ee.ria.sso.statistics.StatisticsOperation;
+import ee.ria.sso.statistics.StatisticsRecord;
 import ee.sk.smartid.AuthenticationHash;
 import ee.sk.smartid.AuthenticationIdentity;
 import ee.sk.smartid.SmartIdAuthenticationResult;
@@ -171,11 +172,15 @@ public class SmartIDAuthenticationService extends AbstractService {
     }
 
     private void collectStatistics(RequestContext context, StatisticsOperation statisticsOperation) {
-        statisticsHandler.collect(LocalDateTime.now(), context, AUTHENTICATION_TYPE, statisticsOperation);
+        statisticsHandler.collect(new StatisticsRecord(
+                LocalDateTime.now(), getServiceClientId(context), AUTHENTICATION_TYPE, statisticsOperation
+        ));
     }
 
     private void collectErrorStatistics(RequestContext context, String exceptionMessage) {
-        statisticsHandler.collect(LocalDateTime.now(), context, AUTHENTICATION_TYPE, StatisticsOperation.ERROR, exceptionMessage);
+        statisticsHandler.collect(new StatisticsRecord(
+                LocalDateTime.now(), getServiceClientId(context), AUTHENTICATION_TYPE, exceptionMessage
+        ));
     }
 
     private RuntimeException handleSmartIDClientException(RequestContext context, ClientErrorException e) {

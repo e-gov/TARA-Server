@@ -9,95 +9,116 @@ The configuration of the TARA service is managed through a central configuration
 <a name="id_card"></a>
 ### ID-card authentication
 
-Table 1 - Enabling ID-card certificate validation
+Table 1 - Enabling ID-card authentication feature in TARA
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
-| `ocsp.enabled` | N | Enables ID-card certificate validation if set to `true`, otherwise ignores all other ocsp related configuration. Defaults to `false`, if not specified. |
+| `id-card.enabled` | N | Feature toggle for authentication with ID-card in TARA. Enables this feature to be loaded if set to `true`, otherwise ignores all other ID-card related configuration. Defaults to `false`, if not specified. |
 
-Table 2 - Configuring ID-card OCSP 
+Table 2 - Enabling ID-card certificate validation
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
-| `ocsp.url` | N | HTTP URL of the OCSP service. Defaults to `http://demo.sk.ee/ocsp`, if not specified. |
-| `ocsp.certificateDirectory` | N | Path to the directory of trusted CA certificates. Defaults to blank, if not specified. |
-| `ocsp.certificates` | N | A comma separated list of trusted CA certificates in the form of `<common_name>:<file_name>`. Defaults to empty list, if not specified. |
+| `id-card.ocsp-enabled` | N | Enables ID-card certificate validation if set to `true`, otherwise ignores all other ocsp related configuration. Defaults to `false`, if not specified. |
+
+Table 3 - Configuring ID-card OCSP 
+
+| Property        | Mandatory | Description |
+| :---------------- | :---------- | :----------------|
+| `id-card.ocsp-url` | N | HTTP URL of the OCSP service. Defaults to `http://demo.sk.ee/ocsp`, if not specified. |
+| `id-card.ocsp-certificate-location` | Y | Path to the location of the trusted CA certificates. In case the certificate files are to be loaded from classpath, this path should be prefixed with `classpath:`. In case the certificate files are to be loaded from disk, this path should be prefixed with `file:`. |
+| `id-card.ocsp-certificates` | Y | A comma separated list of trusted CA certificates in the form of `<common_name>:<file_name>`. |
 
 Example:
 
 ````
-ocsp.url=http://demo.sk.ee/ocsp
-ocsp.certificateDirectory=/etc/ocspcerts/test
-ocsp.certificates=TEST of ESTEID-SK 2011:TEST_of_ESTEID-SK_2011.crt,TEST of ESTEID-SK 2015:TEST_of_ESTEID-SK_2015.crt
-ocsp.enabled=true
+id-card.enabled = true
+id-card.ocsp-enabled=true
+id-card.ocsp-url=http://demo.sk.ee/ocsp
+id-card.ocsp-certificate-location=file:/etc/ocspcerts/test
+id-card.ocsp-certificates=TEST of ESTEID-SK 2011:TEST_of_ESTEID-SK_2011.crt,TEST of ESTEID-SK 2015:TEST_of_ESTEID-SK_2015.crt
 ````
 
 
 <a name="mobile_id"></a>
 ### Mobile-ID authentication
 
-Table 3 - Configuring Mobile-ID
+Table 4 - Enabling mobile-ID authentication feature in TARA
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
-| `mobileID.countryCode` | N | Country of origin. ISO 3166-type 2-character country codes are used. Defaults to `EE`, if not specified.<br>For more information, see `CountryCode` query parameter in [DigiDocService Specification](http://sk-eid.github.io/dds-documentation/api/api_docs/#mobileauthenticate). |
-| `mobileID.language` | N | Language for user dialog in mobile phone. 3-letters capitalized acronyms are used. Possible values: <ul><li>`EST`</li><li>`ENG`</li><li>`RUS`</li><li>`LIT`</li></ul> Defaults to `EST`, if not specified.<br>For more information, see `Language` query parameter in [DigiDocService Specification](http://sk-eid.github.io/dds-documentation/api/api_docs/#mobileauthenticate). |
-| `mobileID.serviceName` | N | Name of the service – previously agreed with Application Provider and DigiDocService operator. Maximum length – 20 chars. Defaults to `Testimine`, if not specified.<br>For more information, see `ServiceName` query parameter in [DigiDocService Specification](http://sk-eid.github.io/dds-documentation/api/api_docs/#mobileauthenticate). |
-| `mobileID.messageToDisplay` | N | Text displayed in addition to ServiceName and before asking authentication PIN. Maximum length is 40 bytes. In case of Latin letters, this means also a 40 character long text, but Cyrillic characters may be encoded by two bytes and you will not be able to send more than 20 symbols. Defaults to `''`, if not specified.<br>For more information, see `MessageToDisplay` query parameter in [DigiDocService Specification](http://sk-eid.github.io/dds-documentation/api/api_docs/#mobileauthenticate). |
-| `mobileID.serviceUrl` | N | HTTP URL of the DigiDocService operator. Defaults to `https://tsp.demo.sk.ee`, if not specified. |
+| `mobile-id.enabled` | N | Feature toggle for authentication with mobile-ID in TARA. Enables this feature to be loaded if set to `true`, otherwise ignores all other mobile-ID related configuration. Defaults to `false`, if not specified. |
+
+Table 5 - Configuring Mobile-ID authentication
+
+| Property        | Mandatory | Description |
+| :---------------- | :---------- | :----------------|
+| `mobile-id.country-code` | N | Country of origin. ISO 3166-type 2-character country codes are used. Defaults to `EE`, if not specified.<br>For more information, see `CountryCode` query parameter in [DigiDocService Specification](http://sk-eid.github.io/dds-documentation/api/api_docs/#mobileauthenticate). |
+| `mobile-id.language` | N | Language for user dialog in mobile phone. 3-letters capitalized acronyms are used. Possible values: <ul><li>`EST`</li><li>`ENG`</li><li>`RUS`</li><li>`LIT`</li></ul> Defaults to `EST`, if not specified.<br>For more information, see `Language` query parameter in [DigiDocService Specification](http://sk-eid.github.io/dds-documentation/api/api_docs/#mobileauthenticate). |
+| `mobile-id.service-name` | N | Name of the service – previously agreed with Application Provider and DigiDocService operator. Maximum length – 20 chars. Defaults to `Testimine`, if not specified.<br>For more information, see `ServiceName` query parameter in [DigiDocService Specification](http://sk-eid.github.io/dds-documentation/api/api_docs/#mobileauthenticate). |
+| `mobile-id.message-to-display` | N | Text displayed in addition to ServiceName and before asking authentication PIN. Maximum length is 40 bytes. In case of Latin letters, this means also a 40 character long text, but Cyrillic characters may be encoded by two bytes and you will not be able to send more than 20 symbols. Defaults to `''`, if not specified.<br>For more information, see `MessageToDisplay` query parameter in [DigiDocService Specification](http://sk-eid.github.io/dds-documentation/api/api_docs/#mobileauthenticate). |
+| `mobile-id.service-url` | N | HTTP URL of the DigiDocService operator. Defaults to `https://tsp.demo.sk.ee`, if not specified. |
 
 Example:
 
 ````
-mobileID.countryCode=EE
-mobileID.language=EST
-mobileID.serviceName=Testimine
-mobileID.messageToDisplay=Näita siin
-mobileID.serviceUrl=https://tsp.demo.sk.ee
+mobile-id.enabled=true
+mobile-id.country-code=EE
+mobile-id.language=EST
+mobile-id.service-name=Testimine
+mobile-id.message-to-display=Näita siin
+mobile-id.service-url=https://tsp.demo.sk.ee
 ````
 
 
 <a name="eidas"></a>
 ### eIDAS authentication
 
-Table 4 - Configuring eIDAS authentication
+Table 6 - Enabling eIDAS authentication feature in TARA
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
-| `eidas.serviceUrl` | N | HTTP base URL of the eIDAS-client microservice. Defaults to `http://localhost:8889`, if not specified. |
-| `eidas.heartbeatUrl` | N | HTTP URL of the eIDAS-client microservice heartbeat endpoint. Affects TARA [heartbeat endpoint](#heartbeat). |
-| `eidas.client.availableCountries` | N | A comma separated list of ISO 3166-1 alpha-2 country codes that determine which countries are displayed on the login page. If not set or if the list is empty, then the eIDAS authentication option is not displayed on the login page. |
+| `eidas.enabled` | N | Feature toggle for authentication with eIDAS in TARA. Enables this feature to be loaded if set to `true`, otherwise ignores all other eIDAS related configuration. Defaults to `false`, if not specified. |
+
+Table 7 - Configuring eIDAS authentication
+
+| Property        | Mandatory | Description |
+| :---------------- | :---------- | :----------------|
+| `eidas.service-url` | Y | HTTP base URL of the eIDAS-client microservice. |
+| `eidas.heartbeat-url` | N | HTTP URL of the eIDAS-client microservice heartbeat endpoint. Affects TARA [heartbeat endpoint](#heartbeat). |
+| `eidas.available-countries` | Y | A comma separated list of ISO 3166-1 alpha-2 country codes that determine which countries are displayed on the login page. |
 
 Example:
 
 ````
-eidas.serviceUrl=https://<eidas-client-host:port>
-eidas.heartbeatUrl=https://<eidas-client-host:port>/heartbeat
-eidas.client.availableCountries=EE,LT,LV,FI,NO,IT,IE
+eidas.enabled=true
+eidas.service-url=https://<eidas-client-host:port>
+eidas.heartbeat-url=https://<eidas-client-host:port>/heartbeat
+eidas.available-countries=EE,LT,LV,FI,NO,IT,IE
 ````
 
 
 <a name="banklink"></a>
 ### Estonian banklinks
 
-Table 5 - Enabling banklink feature in TARA
+Table 8 - Enabling banklink feature in TARA
 
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
 | `banklinks.enabled` | N | Feature toggle for banklink functionality in TARA. Enables banklinks feature to be loaded when set to `true`, otherwise ignores all other banklink related configuration. Defaults to `false`, if not specified. |
 
-Table 6 - Generic banklink properties
+Table 9 - Generic banklink properties
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
-| `banklinks.available-banks` | Y | A comma separated list of bank codes that determine which bank link(s) are displayed on the login page. Supported values in the list are: <ul><li>`seb`</li><li>`luminor`</li><li>`coop`</li><li>`swedbank`</li><li>`lhv`</li><li>`danske`</ul> For example:`seb,lhv,luminor`. <br>Note that adding a bank to this list, requires further bank specific property configuration (see Table 7 for details) |
+| `banklinks.available-banks` | Y | A comma separated list of bank codes that determine which bank link(s) are displayed on the login page. Supported values in the list are: <ul><li>`seb`</li><li>`luminor`</li><li>`coop`</li><li>`swedbank`</li><li>`lhv`</li><li>`danske`</ul> For example:`seb,lhv,luminor`. <br>Note that adding a bank to this list, requires further bank specific property configuration (see Table 10 for details) |
 | `banklinks.keystore` | Y | Path to the keystore that holds bank keys. For example: `classpath:banklinkKeystore.p12`, when the file is to be accessed from the classpath or `file:/etc/cas/banklinkKeystore.p12` when the file is referenced in the local filesystem.  |
 | `banklinks.keystore-type` | N | Keystore type. Defaults to `PKCS12` |
 | `banklinks.keystore-pass` | Y | Keystore password. |
 | `banklinks.return-url` | Y | HTTP URL for accepting the bank authentication response. Must reference the publicly available TARA `/login` url. |
 
-Table 7 - Bank specific properties
+Table 10 - Bank specific properties
 
 
 | Property        | Mandatory | Description |
@@ -140,13 +161,13 @@ banklinks.bank.lhv.url=https://www.testlhv.ee/banklinkurl
 <a name="smart-id"></a>
 ### Estonian Smart-ID
 
-Table 8 - Enabling Smart-ID authentication feature in TARA
+Table 11 - Enabling Smart-ID authentication feature in TARA
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
 | `smart-id.enabled` | N | Feature toggle for authentication with Smart-ID in TARA. Enables this feature to be loaded if set to `true`, otherwise ignores all other Smart-ID related configuration. Defaults to `false`, if not specified. |
 
-Table 9 - Other Smart-ID configuration properties (if Smart-ID is enabled)
+Table 12 - Other Smart-ID configuration properties (if Smart-ID is enabled)
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
@@ -187,18 +208,18 @@ More information about Estonian Smart-ID can be obtained from [here](https://git
 
 TARA heartbeat endpoint is a Spring Boot Actuator endpoint and thus is configured as described [here](https://docs.spring.io/spring-boot/docs/1.5.3.RELEASE/reference/html/production-ready-endpoints.html), while also taking into consideration CAS specific configuration properties as described [here](https://apereo.github.io/cas/5.1.x/installation/Configuration-Properties.html#spring-boot-endpoints).
 
-Table 10 - Configuring heartbeat endpoint in TARA
+Table 13 - Configuring heartbeat endpoint in TARA
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
 | `endpoints.heartbeat.*` | N | Spring Boot specific actuator configuration. |
 | `endpoints.heartbeat.timeout` | N | Maximum time to wait on status requests made to systems that TARA is depending on, in seconds. Defaults to 3 seconds. |
 
-Table 11 - Heartbeat endpoints on systems TARA is depending on
+Table 14 - Heartbeat endpoints on systems TARA is depending on
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
-| `eidas.heartbeatUrl` | N | HTTP URL of the eIDAS-client microservice heartbeat endpoint. If set, the eIDAS-client status affects the overall reported status of TARA-server. |
+| `eidas.heartbeat-url` | N | HTTP URL of the eIDAS-client microservice heartbeat endpoint. If set, the eIDAS-client status affects the overall reported status of TARA-server. |
 
 Example configuration with **heartbeat** endpoint enabled, accessible without authentication and from all IP-addresses, and configure eIDAS-client **heartbeat** URL:
 
@@ -210,14 +231,48 @@ endpoints.heartbeat.sensitive=false
 cas.adminPagesSecurity.ip=.+
 
 # Configure eIDAS-client heartbeat url
-eidas.heartbeatUrl=https://<eidas-client-host:port>/heartbeat
+eidas.heartbeat-url=https://<eidas-client-host:port>/heartbeat
+````
+
+
+<a name="tara_stat"></a>
+### TARA-Stat interfacing
+
+The TARA-Stat service (see https://e-gov.github.io/TARA-Stat/Dokumentatsioon for details) can be used as one of the receivers of TARA statistics.
+
+Table 15 - Enabling TARA-Stat statistics logging
+
+| Property        | Mandatory | Description |
+| :---------------- | :---------- | :----------------|
+| `statistics.tara-stat.enabled` | N | Feature toggle for logging statistics info to the TARA-Stat service. Enables this feature to be loaded if set to `true`, otherwise disables it. Defaults to `false`, if not specified. |
+
+NB! When enabled, additional logger and appender must be configured to send the statistics to the external service (in `log4j2.xml`).
+
+Example log4j2 configuration for sendind statictics over TCP in syslog format:
+
+````
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+   <Appenders>
+      ... additional appenders ...
+      <Syslog name="taraStatServiceAppender" host="tara-stat.dev" port="5000" protocol="TCP" charset="UTF-8" facility="AUTH" />
+   </Appenders>
+
+   <Loggers>
+
+      ... additional loggers ...
+      <AsyncLogger name="ee.ria.sso.statistics.TaraStatHandler" level="info" additivity="false">
+         <AppenderRef ref="taraStatServiceAppender"/>
+      </AsyncLogger>
+   </Loggers>
+</Configuration>
 ````
 
 
 <a name="test_environment_warning"></a>
 ### Test environment warning message
 
-Table 12 - Configuring TARA login page to show a warning message about it being run against test services
+Table 16 - Configuring TARA login page to show a warning message about it being run against test services
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|

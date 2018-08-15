@@ -1,7 +1,8 @@
-package ee.ria.sso;
+package ee.ria.sso.service.eidas;
 
 import ee.ria.sso.authentication.EidasAuthenticationFailedException;
 import ee.ria.sso.authentication.LevelOfAssurance;
+import ee.ria.sso.config.eidas.EidasConfigurationProvider;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -17,33 +18,29 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
+@ConditionalOnProperty("eidas.enabled")
 @Component
 public class EidasAuthenticator {
 
     private final Logger log = LoggerFactory.getLogger(EidasAuthenticator.class);
 
-    private CloseableHttpClient httpClient;
+    private final CloseableHttpClient httpClient;
 
-    private String eidasClientUrl;
+    private final String eidasClientUrl;
 
-    public EidasAuthenticator() {
+    public EidasAuthenticator(EidasConfigurationProvider configurationProvider) {
         httpClient = HttpClients.createDefault();
-    }
-
-    public void setEidasClientUrl(String eidasClientUrl) {
-        this.eidasClientUrl = eidasClientUrl;
+        eidasClientUrl = configurationProvider.getServiceUrl();
     }
 
     public byte[] authenticate(String country, String relayState, LevelOfAssurance loa) throws IOException {

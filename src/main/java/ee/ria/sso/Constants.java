@@ -16,6 +16,10 @@ public final class Constants {
     public static final String ERROR_MESSAGE = "TARA_ERROR_MESSAGE";
     public static final String CREDENTIAL = "credential";
 
+    public static final String CAS_SERVICE_ATTRIBUTE_NAME = "service";
+
     public static final String SMART_ID_VERIFICATION_CODE = "smartIdVerificationCode";
     public static final String SMART_ID_AUTHENTICATION_SESSION = "smartIdAuthenticationSession";
+
+    public static final String MESSAGE_KEY_GENERAL_ERROR = "message.general.error";
 }
