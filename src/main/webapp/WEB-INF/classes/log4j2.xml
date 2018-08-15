@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Specify the refresh internal in seconds. -->
+<Configuration monitorInterval="5" packages="org.apereo.cas.logging">
+    <Properties>
+        <!-- Default log directory can be overridden with -Dcas.log.dir=<logdir> -->
+        <Property name="cas.log.dir">/var/log/cas</Property>
+        <!-- To see more CAS specific logging, adjust this property to info or debug or run server with -Dcas.log.level=debug -->
+        <Property name="cas.log.level">info</Property>
+    </Properties>
+    <Appenders>
+        <Console name="console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%highlight{%d %-5level %X{requestId}/%X{sessionId} %logger{1.} [%thread] ---  &lt;%m&gt;%throwable%n}"/>
+        </Console>
+
+
+        <RollingFile name="statisticsFileAppender" fileName="${sys:cas.log.dir}/statistics/stats.log" append="true"
+                     filePattern="${sys:cas.log.dir}/statistics/stats-%d{yyyy-MM-dd-HH}-%i.log">
+            <PatternLayout pattern="%m%n"/>
+            <Policies>
+                <OnStartupTriggeringPolicy/>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+            </Policies>
+        </RollingFile>
+		
+		<Syslog name="taraStatServiceAppender" 
+			host="tara-stat-rakendus.ci.kit" port="5000" protocol="TCP"
+            charset="UTF-8" facility="AUTH" />
+
+        <RollingFile name="file" fileName="${sys:cas.log.dir}/cas.log" append="true"
+                     filePattern="${sys:cas.log.dir}/cas-%d{yyyy-MM-dd-HH}-%i.log">
+            <PatternLayout pattern="%d %-5level %X{requestId}/%X{sessionId} %logger [%thread] ---  &lt;%m&gt;%throwable%n"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+                <TimeBasedTriggeringPolicy />
+            </Policies>
+        </RollingFile>        
+        <RollingFile name="auditlogfile" fileName="${sys:cas.log.dir}/cas_audit.log" append="true"
+                     filePattern="${sys:cas.log.dir}/cas_audit-%d{yyyy-MM-dd-HH}-%i.log">
+            <PatternLayout pattern="%d %X{requestId}/%X{sessionId} %p [%c] - %m%n"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+                <TimeBasedTriggeringPolicy />
+            </Policies>
+        </RollingFile>
+        <RollingFile name="perfFileAppender" fileName="${sys:cas.log.dir}/perfStats.log" append="true"
+                     filePattern="${sys:cas.log.dir}/perfStats-%d{yyyy-MM-dd-HH}-%i.log">
+            <PatternLayout pattern="%m%n"/>
+            <Policies>
+                <OnStartupTriggeringPolicy />
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+                <TimeBasedTriggeringPolicy />
+            </Policies>
+        </RollingFile>
+		
+        <CasAppender name="casAudit">
+            <AppenderRef ref="auditlogfile" />
+        </CasAppender>
+        <CasAppender name="casFile">
+            <AppenderRef ref="file" />
+        </CasAppender>
+        <CasAppender name="casConsole">
+            <AppenderRef ref="console" />
+        </CasAppender>
+        <CasAppender name="casPerf">
+            <AppenderRef ref="perfFileAppender" />
+        </CasAppender>
+    </Appenders>
+    <Loggers>
+        <!-- If adding a Logger with level set higher than warn, make category as selective as possible -->
+        <!-- Loggers inherit appenders from Root Logger unless additivity is false -->
+        <AsyncLogger name="org.apereo" level="warn" />
+        <AsyncLogger name="org.apereo.services.persondir" level="warn" />
+        <AsyncLogger name="org.apereo.cas.web.flow" level="warn" />
+        <AsyncLogger name="org.apache" level="warn" />
+        <AsyncLogger name="org.apache.http" level="warn" />
+        <AsyncLogger name="org.springframework" level="warn" />
+        <AsyncLogger name="org.springframework.cloud.server" level="warn" />
+        <AsyncLogger name="org.springframework.cloud.client" level="warn" />
+        <AsyncLogger name="org.springframework.cloud.bus" level="warn" />
+        <AsyncLogger name="org.springframework.aop" level="warn" />
+        <AsyncLogger name="org.springframework.boot" level="warn" />
+        <AsyncLogger name="org.springframework.boot.actuate.autoconfigure" level="warn" />
+        <AsyncLogger name="org.springframework.webflow" level="warn" />
+        <AsyncLogger name="org.springframework.session" level="warn" />
+        <AsyncLogger name="org.springframework.amqp" level="error" />
+        <AsyncLogger name="org.springframework.integration" level="warn" />
+        <AsyncLogger name="org.springframework.messaging" level="warn" />
+        <AsyncLogger name="org.springframework.web" level="warn" />
+        <AsyncLogger name="org.springframework.orm.jpa" level="warn" />
+        <AsyncLogger name="org.springframework.scheduling" level="warn" />
+        <AsyncLogger name="org.springframework.context.annotation" level="error" />
+        <AsyncLogger name="org.springframework.boot.devtools" level="error" />
+        <AsyncLogger name="org.springframework.web.socket" level="warn" />
+        <AsyncLogger name="org.thymeleaf" level="warn" />
+        <AsyncLogger name="org.pac4j" level="warn" />
+        <AsyncLogger name="org.opensaml" level="warn"/>
+        <AsyncLogger name="net.sf.ehcache" level="warn" />
+        <AsyncLogger name="com.couchbase" level="warn" />
+        <AsyncLogger name="com.ryantenney.metrics" level="warn" />
+        <AsyncLogger name="net.jradius" level="warn" />
+        <AsyncLogger name="org.openid4java" level="warn" />
+        <AsyncLogger name="org.ldaptive" level="warn" />
+        <AsyncLogger name="com.hazelcast" level="warn" />
+        <AsyncLogger name="org.jasig.spring" level="warn" />
+        <AsyncLogger name="org.hibernate" level="warn" />
+		<AsyncLogger name="com.zaxxer.hikari" level="warn" />
+        <AsyncLogger name="com.codeborne.security" level="${sys:cas.log.level}" />
+        <AsyncLogger name="com.brsanthu.googleanalytics" level="${sys:cas.log.level}" />
+        <AsyncLogger name="ee.ria" level="${sys:cas.log.level}" />
+		<AsyncLogger name="perfStatsLogger" level="warn" />
+		        
+        <!-- System log stream - All Loggers inherit appenders specified here, unless additivity="false" on the Logger -->
+        <AsyncRoot level="info">
+            <AppenderRef ref="casFile" />
+            <!-- 
+                 For deployment to an application server running as service, 
+                 delete the casConsole appender below
+            -->
+            <AppenderRef ref="casConsole"/>
+        </AsyncRoot>
+
+		<!-- Statistics (to file) -->
+        <AsyncLogger name="ee.ria.sso.statistics.StatisticsHandler" level="info" additivity="false">
+			<AppenderRef ref="statisticsFileAppender"/>
+		</AsyncLogger>
+		<!-- (Optional) Statistics (to Tara-Stat microservice) -->
+		<!--AsyncLogger name="ee.ria.sso.statistics.TaraStatHandler" level="info" additivity="false">
+			<AppenderRef ref="taraStatServiceAppender"/>
+		</AsyncLogger-->
+				
+        <!-- Audit logs (to file) -->
+        <AsyncLogger name="org.apereo.inspektr.audit.support" level="${sys:cas.log.level}" additivity="false">
+            <AppenderRef ref="casAudit"/>
+        </AsyncLogger>
+		
+		<!-- (Optional) -->		
+		<!-- Periodically emits very verbose performance information about heap and thread usage to a log file (use with caution in production) -->
+        <!--AsyncLogger name="perfStatsLogger" level="info" additivity="false">
+            <AppenderRef ref="casPerf"/>
+        </AsyncLogger-->
+		
+    </Loggers>
+</Configuration>

@@ -1,5 +1,50 @@
 # Integrators guide
 
+## Logging
+
+### The configuration file
+
+Logging in TARA is handled by [Log4j2 framework](https://logging.apache.org/log4j/2.x/index.html) which can be configured by using an [xml configuration file](https://logging.apache.org/log4j/2.x/manual/configuration.html) (`log4j2.xml`).
+
+TARA provides a [default configuration](src/main/webapp/WEB-INF/classes/log4j2.xml) that can be overridden by providing a custom configuration file.
+
+You can override the default log configuration in the `application.properties` by using the property `logging.config` (see CAS documentation for further logging implementation [details](https://apereo.github.io/cas/5.1.x/installation/Logging.html).)
+
+Example:
+````
+logging.config=file:/etc/cas/config/log4j2.xml
+````
+
+### Log verbosity level
+
+By default all TARA specific logs are logged at the `INFO` level. This behaviour can be overridden in `log4j2.xml` file by the `cas.log.level` property. The configuration file will be reloaded by TARA upon configuration change detection.
+
+Example:
+````
+<?xml version="1.0" encoding="UTF-8" ?>
+<Configuration monitorInterval="5" packages="org.apereo.cas.logging">
+    <Properties>
+        ...
+        <Property name="cas.log.level">warn</Property>
+    </Properties>
+    ...
+````
+
+### Default loggers setup
+
+TARA comes with the default `log4j2.xml` configuration that has the following set of preconfigured loggers:
+
+| Type of log        | Contents description | Output | Enabled by default |
+| :---------------- | :---------- | :---------- | :----------------|
+| [**Cas log**](Configuration.md#cas_log) | TARA's main log event stream that contains all authentication and system events. | `cas.log`, console | Y |
+| [**Audit log**](Configuration.md#cas_audit_log) | CAS authentication events (see list of events [here](https://apereo.github.io/cas/5.1.x/installation/Audits.html#audit-events)). For further configuration details, see the [CAS documentation](https://apereo.github.io/cas/5.1.x/installation/Configuration-Properties.html#audits). | `cas_audit.log` |  Y |
+| [**Statistics log**](Configuration.md#stats_file_log) | Simplified CSV formatted authentication statistics according to the [statistics specification](https://e-gov.github.io/TARA-Doku/Statistika) | `statistics/stats.log` | Y |
+| [**Tara-Stat service log**](Configuration.md#tara_stat_log) | JSON formatted authentication statistics for the [Tara-Stat service](https://e-gov.github.io/TARA-Stat/Dokumentatsioon). Needs to be explicitly enabled in `application.properties` and requires additional appender configuration (see [Tara-Stat configuration](Configuration.md/tara_stat) for further details) | syslog over tcp | N |
+| [**Performance log**](Configuration.md#perf_log) | Performance metrics. Periodically prints report that consists of brief memory, thread allocation and ticket stats.  | `perfStats.log` | N |
+
+NB! By default, all log files are written to `/var/log/cas` in the local filesystem. The location can be overridden either by providing a parameter `-Dcas.log.dir=<logdir>` during TARA startup or overriding the `log4j2.xml` file.
+
+
 ## Configuration parameters
 --------------------
 
