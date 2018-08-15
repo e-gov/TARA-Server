@@ -168,8 +168,8 @@ public class BanklinkAuthenticationServiceTest {
         verifyCredential(callbackRequestCtx);
         verifySuccessEvent(event);
         SimpleTestAppender.verifyLogEventsExistInOrder(
-                containsString(String.format(";openIdDemo;BankLink/%s;START_AUTH;", "seb")),
-                containsString(String.format(";openIdDemo;BankLink/%s;SUCCESSFUL_AUTH;", "seb"))
+                containsString(String.format(";openIdDemo;BankLink/%s;START_AUTH;", "SEB")),
+                containsString(String.format(";openIdDemo;BankLink/%s;SUCCESSFUL_AUTH;", "SEB"))
         );
     }
 
@@ -426,7 +426,7 @@ public class BanklinkAuthenticationServiceTest {
         SimpleTestAppender.events.clear();
         Locale.setDefault(new Locale("en", "EN"));
         Map<String, String> map = new HashMap<>();
-        map.put("bank", bank.getName().toLowerCase());
+        map.put("bank", bank.getName());
         RequestContext requestContext = this.getRequestContext(map);
 
         Event event = this.authenticationService.startLoginByBankLink(requestContext);
@@ -438,7 +438,7 @@ public class BanklinkAuthenticationServiceTest {
         verifySuccessEvent(event);
 
         SimpleTestAppender.verifyLogEventsExistInOrder(containsString(
-                String.format(";openIdDemo;BankLink/%s;START_AUTH;", bank.getName())
+                String.format(";openIdDemo;BankLink/%s;START_AUTH;", bank.getName().toUpperCase())
         ));
     }
 

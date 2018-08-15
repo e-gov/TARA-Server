@@ -109,7 +109,7 @@ public class TaraStatHandlerTest {
                 time.toString(),
                 clientId,
                 AuthenticationType.BankLink.getAmrName(),
-                bank.getName(),
+                bank.getName().toUpperCase(),
                 operationCode.name()
         )));
     }
@@ -127,7 +127,7 @@ public class TaraStatHandlerTest {
                 time.toString(),
                 clientId,
                 AuthenticationType.BankLink.getAmrName(),
-                bank.getName(),
+                bank.getName().toUpperCase(),
                 operationCode.name()
         )));
     }
@@ -146,7 +146,7 @@ public class TaraStatHandlerTest {
                 time.toString(),
                 clientId,
                 AuthenticationType.BankLink.getAmrName(),
-                bank.getName(),
+                bank.getName().toUpperCase(),
                 operationCode.name(),
                 causeOfError
         )));
