@@ -55,7 +55,7 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
         expectedEx.expect(TaraAuthenticationException.class);
         expectedEx.expectMessage("java.lang.NullPointerException");
 
-        Event event = this.authenticationService.startLoginByMobileID(this.getRequestContext(null));
+        Event event = this.authenticationService.startLoginByMobileID(this.getMockRequestContext(null));
         Assert.fail("Should not reach this!");
     }
 
@@ -67,7 +67,7 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
         TaraCredential credential = createCredentialWithIdAndNumber();
         credential.setMobileNumber(null);
 
-        RequestContext requestContext = this.getRequestContext(null);
+        RequestContext requestContext = this.getMockRequestContext(null);
         requestContext.getFlowExecutionContext().getActiveSession().getScope().put(
                 "credential", credential
         );
@@ -84,7 +84,7 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
         TaraCredential credential = createCredentialWithIdAndNumber();
         credential.setPrincipalCode(null);
 
-        RequestContext requestContext = this.getRequestContext(null);
+        RequestContext requestContext = this.getMockRequestContext(null);
         requestContext.getFlowExecutionContext().getActiveSession().getScope().put(
                 "credential", credential
         );
@@ -98,7 +98,7 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
         expectedEx.expect(TaraAuthenticationException.class);
         expectedEx.expectMessage("com.codeborne.security.AuthenticationException: AUTHENTICATION_ERROR");
 
-        RequestContext requestContext = this.getRequestContext(null);
+        RequestContext requestContext = this.getMockRequestContext(null);
         requestContext.getFlowExecutionContext().getActiveSession().getScope().put(
                 "credential", createCredentialWithIdAndNumber()
         );
@@ -118,7 +118,7 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
 
     @Test
     public void startLoginByMobileIDSucceeds() {
-        RequestContext requestContext = this.getRequestContext(null);
+        RequestContext requestContext = this.getMockRequestContext(null);
         requestContext.getFlowExecutionContext().getActiveSession().getScope().put(
                 "credential", createCredentialWithIdAndNumber()
         );
@@ -140,7 +140,7 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
 
     @Test
     public void checkLoginForMobileIDSucceedsAsOutstanding() {
-        final RequestContext requestContext = this.getRequestContext(null);
+        final RequestContext requestContext = this.getMockRequestContext(null);
         final MobileIDSession mobileIDSession = createMobileIDSession();
 
         fillRequestContextFlowScope(requestContext, mobileIDSession, 0);
@@ -155,7 +155,7 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
 
     @Test
     public void checkLoginForMobileIDSucceeds() {
-        RequestContext requestContext = this.getRequestContext(null);
+        RequestContext requestContext = this.getMockRequestContext(null);
         final MobileIDSession mobileIDSession = createMobileIDSession();
 
         fillRequestContextFlowScope(requestContext, mobileIDSession, 0);

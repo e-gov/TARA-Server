@@ -46,7 +46,7 @@ public class IDCardAuthenticationServiceTestWithoutCACerts extends AbstractAuthe
         expectedEx.expect(TaraAuthenticationException.class);
         expectedEx.expectMessage("Issuer cert not found from setup");
 
-        RequestContext requestContext = this.getRequestContext(null);
+        RequestContext requestContext = this.getMockRequestContext(null);
         requestContext.getExternalContext().getSessionMap().put(
                 Constants.CERTIFICATE_SESSION_ATTRIBUTE,
                 mockUserCertificate

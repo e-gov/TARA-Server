@@ -1,6 +1,7 @@
 package ee.ria.sso.statistics;
 
 import ee.ria.sso.authentication.AuthenticationType;
+import ee.ria.sso.authentication.BankEnum;
 import ee.ria.sso.test.SimpleTestAppender;
 import org.hamcrest.Matchers;
 import org.junit.*;
@@ -35,13 +36,21 @@ public class TaraStatHandlerTest {
     }
 
     @Test
+    public void collectWithMissingStatisticsRecordShouldFail() {
+        expectedEx.expect(IllegalArgumentException.class);
+        expectedEx.expectMessage("StatisticsRecord cannot be null!");
+
+        taraStatHandler.collect(null);
+    }
+
+    @Test
     public void collectWithStartAuthShouldSucceed() {
         final LocalDateTime time = LocalDateTime.now();
         final String clientId = "clientIdString";
         final AuthenticationType authenticationType = AuthenticationType.IDCard;
         final StatisticsOperation operationCode = StatisticsOperation.START_AUTH;
 
-        taraStatHandler.collect(time, clientId, authenticationType, operationCode, null);
+        taraStatHandler.collect(new StatisticsRecord(time, clientId, authenticationType, operationCode));
         SimpleTestAppender.verifyLogEventsExistInOrder(Matchers.containsString(String.format(
                 "{\"time\":\"%s\",\"clientId\":\"%s\",\"method\":\"%s\",\"operation\":\"%s\"}",
                 time.toString(),
@@ -58,7 +67,7 @@ public class TaraStatHandlerTest {
         final AuthenticationType authenticationType = AuthenticationType.IDCard;
         final StatisticsOperation operationCode = StatisticsOperation.SUCCESSFUL_AUTH;
 
-        taraStatHandler.collect(time, clientId, authenticationType, operationCode, null);
+        taraStatHandler.collect(new StatisticsRecord(time, clientId, authenticationType, operationCode));
         SimpleTestAppender.verifyLogEventsExistInOrder(Matchers.containsString(String.format(
                 "{\"time\":\"%s\",\"clientId\":\"%s\",\"method\":\"%s\",\"operation\":\"%s\"}",
                 time.toString(),
@@ -76,12 +85,68 @@ public class TaraStatHandlerTest {
         final StatisticsOperation operationCode = StatisticsOperation.ERROR;
         final String causeOfError = "Cause of error.";
 
-        taraStatHandler.collect(time, clientId, authenticationType, operationCode, causeOfError);
+        taraStatHandler.collect(new StatisticsRecord(time, clientId, authenticationType, causeOfError));
         SimpleTestAppender.verifyLogEventsExistInOrder(Matchers.containsString(String.format(
                 "{\"time\":\"%s\",\"clientId\":\"%s\",\"method\":\"%s\",\"operation\":\"%s\",\"error\":\"%s\"}",
                 time.toString(),
                 clientId,
                 authenticationType.getAmrName(),
+                operationCode.name(),
+                causeOfError
+        )));
+    }
+
+    @Test
+    public void collectWithStartAuthAndBankShouldSucceed() {
+        final LocalDateTime time = LocalDateTime.now();
+        final String clientId = "clientIdString";
+        final StatisticsOperation operationCode = StatisticsOperation.START_AUTH;
+        final BankEnum bank = BankEnum.SEB;
+
+        taraStatHandler.collect(new StatisticsRecord(time, clientId, bank, operationCode));
+        SimpleTestAppender.verifyLogEventsExistInOrder(Matchers.containsString(String.format(
+                "{\"time\":\"%s\",\"clientId\":\"%s\",\"method\":\"%s\",\"bank\":\"%s\",\"operation\":\"%s\"}",
+                time.toString(),
+                clientId,
+                AuthenticationType.BankLink.getAmrName(),
+                bank.getName(),
+                operationCode.name()
+        )));
+    }
+
+    @Test
+    public void collectWithSuccessfulAuthAndBankShouldSucceed() {
+        final LocalDateTime time = LocalDateTime.now();
+        final String clientId = "clientIdString";
+        final StatisticsOperation operationCode = StatisticsOperation.SUCCESSFUL_AUTH;
+        final BankEnum bank = BankEnum.SEB;
+
+        taraStatHandler.collect(new StatisticsRecord(time, clientId, bank, operationCode));
+        SimpleTestAppender.verifyLogEventsExistInOrder(Matchers.containsString(String.format(
+                "{\"time\":\"%s\",\"clientId\":\"%s\",\"method\":\"%s\",\"bank\":\"%s\",\"operation\":\"%s\"}",
+                time.toString(),
+                clientId,
+                AuthenticationType.BankLink.getAmrName(),
+                bank.getName(),
+                operationCode.name()
+        )));
+    }
+
+    @Test
+    public void collectWithAuthErrorAndBankShouldSucceed() {
+        final LocalDateTime time = LocalDateTime.now();
+        final String clientId = "clientIdString";
+        final StatisticsOperation operationCode = StatisticsOperation.ERROR;
+        final String causeOfError = "Cause of error.";
+        final BankEnum bank = BankEnum.SEB;
+
+        taraStatHandler.collect(new StatisticsRecord(time, clientId, bank, causeOfError));
+        SimpleTestAppender.verifyLogEventsExistInOrder(Matchers.containsString(String.format(
+                "{\"time\":\"%s\",\"clientId\":\"%s\",\"method\":\"%s\",\"bank\":\"%s\",\"operation\":\"%s\",\"error\":\"%s\"}",
+                time.toString(),
+                clientId,
+                AuthenticationType.BankLink.getAmrName(),
+                bank.getName(),
                 operationCode.name(),
                 causeOfError
         )));

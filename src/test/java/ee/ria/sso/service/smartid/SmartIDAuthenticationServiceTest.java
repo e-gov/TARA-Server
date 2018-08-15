@@ -10,6 +10,7 @@ import ee.ria.sso.config.smartid.SmartIDConfigurationProvider;
 import ee.ria.sso.config.smartid.TestSmartIDConfiguration;
 import ee.ria.sso.statistics.StatisticsHandler;
 import ee.ria.sso.statistics.StatisticsOperation;
+import ee.ria.sso.statistics.StatisticsRecordMatcher;
 import ee.sk.smartid.AuthenticationHash;
 import ee.sk.smartid.AuthenticationIdentity;
 import ee.sk.smartid.HashType;
@@ -20,12 +21,14 @@ import ee.sk.smartid.exception.UserAccountNotFoundException;
 import ee.sk.smartid.rest.dao.AuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import org.apache.commons.lang3.StringUtils;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
 import org.springframework.test.context.ContextConfiguration;
@@ -35,6 +38,7 @@ import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.test.MockRequestContext;
 
 import javax.ws.rs.ClientErrorException;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -99,7 +103,7 @@ public class SmartIDAuthenticationServiceTest {
         assertVerificationCodeInFlowContext(requestContext);
         assertVerificationCodeFromSameHashAsInAuthenticationRequest(requestContext);
         assertAuthSessionInFlowContext(requestContext, sessionId, 0);
-        assertAuthStartStatisticsCollected(requestContext);
+        assertAuthStartStatisticsCollected();
         assertAuthenticationRequestCreation(credential);
     }
 
@@ -169,7 +173,7 @@ public class SmartIDAuthenticationServiceTest {
             assertVerificationCodeInFlowContext(requestContext);
             assertVerificationCodeFromSameHashAsInAuthenticationRequest(requestContext);
             assertAuthSessionInFlowContext(requestContext, sessionId, 0);
-            assertAuthStartStatisticsCollected(requestContext);
+            assertAuthStartStatisticsCollected();
             assertAuthenticationRequestCreation(credential);
 
             assertEquals(HashType.SHA256, authenticationRequestCaptor.getValue().getAuthenticationHash().getHashType());
@@ -197,6 +201,7 @@ public class SmartIDAuthenticationServiceTest {
                     TaraCredentialsException.class,
                     SmartIDErrorMessage.INVALID_PERSON_IDENTIFIER
             );
+            Mockito.reset(statisticsHandler);
         });
     }
 
@@ -243,7 +248,7 @@ public class SmartIDAuthenticationServiceTest {
         Event event = authenticationService.checkSmartIdAuthenticationSessionStatus(requestContext);
 
         assertEventSuccessful(event);
-        assertSuccessfulAuthStatisticsCollected(requestContext);
+        assertSuccessfulAuthStatisticsCollected();
         assertCertPersonCredentialsInFlowContext(requestContext, authenticationResult.getAuthenticationIdentity());
     }
 
@@ -359,7 +364,7 @@ public class SmartIDAuthenticationServiceTest {
                 exceptionType,
                 errorMessageKey);
 
-        assertAuthStartStatisticsCollected(requestContext);
+        assertAuthStartStatisticsCollected();
     }
 
     private void getAuthSessionStatusAndExpectSmartIdClientException(Exception mockException, String expectedErrorMessageKey) {
@@ -418,7 +423,7 @@ public class SmartIDAuthenticationServiceTest {
             }
 
             assertContextCleared(requestContext);
-            assertErrorStatisticsCollected(requestContext, cause.getMessage());
+            assertErrorStatisticsCollected(cause.getMessage());
             assertErrorMessage(errorMessageKey);
         }
     }
@@ -468,29 +473,43 @@ public class SmartIDAuthenticationServiceTest {
         assertEquals(authIdentity.getSurName(), credential.getLastName());
     }
 
-    private void assertAuthStartStatisticsCollected(MockRequestContext requestContext) {
-        verify(statisticsHandler, times(1)).collect(
-                any(),
-                eq(requestContext),
-                eq(AuthenticationType.SmartID),
-                eq(StatisticsOperation.START_AUTH));
+    private void assertAuthStartStatisticsCollected() {
+        verify(statisticsHandler, times(1)).collect(argThat(
+                new StatisticsRecordMatcher(
+                        Matchers.any(LocalDateTime.class),
+                        Matchers.equalTo("clientId"),
+                        Matchers.equalTo(AuthenticationType.SmartID),
+                        Matchers.equalTo(StatisticsOperation.START_AUTH),
+                        Matchers.nullValue(String.class),
+                        Matchers.nullValue(String.class)
+                )
+        ));
     }
 
-    private void assertSuccessfulAuthStatisticsCollected(MockRequestContext requestContext) {
-        verify(statisticsHandler, times(1)).collect(
-                any(),
-                eq(requestContext),
-                eq(AuthenticationType.SmartID),
-                eq(StatisticsOperation.SUCCESSFUL_AUTH));
+    private void assertSuccessfulAuthStatisticsCollected() {
+        verify(statisticsHandler, times(1)).collect(argThat(
+                new StatisticsRecordMatcher(
+                        Matchers.any(LocalDateTime.class),
+                        Matchers.equalTo("clientId"),
+                        Matchers.equalTo(AuthenticationType.SmartID),
+                        Matchers.equalTo(StatisticsOperation.SUCCESSFUL_AUTH),
+                        Matchers.nullValue(String.class),
+                        Matchers.nullValue(String.class)
+                )
+        ));
     }
 
-    private void assertErrorStatisticsCollected(MockRequestContext requestContext, String exceptionMessage) {
-        verify(statisticsHandler, times(1)).collect(
-                any(),
-                eq(requestContext),
-                eq(AuthenticationType.SmartID),
-                eq(StatisticsOperation.ERROR),
-                eq(exceptionMessage));
+    private void assertErrorStatisticsCollected(String exceptionMessage) {
+        verify(statisticsHandler, times(1)).collect(argThat(
+                new StatisticsRecordMatcher(
+                        Matchers.any(LocalDateTime.class),
+                        Matchers.equalTo("clientId"),
+                        Matchers.equalTo(AuthenticationType.SmartID),
+                        Matchers.equalTo(StatisticsOperation.ERROR),
+                        exceptionMessage == null ? Matchers.isEmptyOrNullString() : Matchers.equalTo(exceptionMessage),
+                        Matchers.nullValue(String.class)
+                )
+        ));
     }
 
     private void mockSubjectAuthenticationCall(String sessionId) {

@@ -11,6 +11,7 @@ import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.config.idcard.IDCardConfigurationProvider;
 import ee.ria.sso.statistics.StatisticsHandler;
 import ee.ria.sso.statistics.StatisticsOperation;
+import ee.ria.sso.statistics.StatisticsRecord;
 import ee.ria.sso.utils.X509Utils;
 import ee.ria.sso.validators.OCSPValidationException;
 import ee.ria.sso.validators.OCSPValidator;
@@ -56,7 +57,9 @@ public class IDCardAuthenticationService extends AbstractService {
     public Event loginByIDCard(RequestContext context) {
         SharedAttributeMap<Object> sessionMap = this.getSessionMap(context);
         try {
-            this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.IDCard, StatisticsOperation.START_AUTH);
+            this.statistics.collect(new StatisticsRecord(
+                    LocalDateTime.now(), getServiceClientId(context), AuthenticationType.IDCard, StatisticsOperation.START_AUTH
+            ));
 
             X509Certificate certificate = sessionMap.get(Constants.CERTIFICATE_SESSION_ATTRIBUTE, X509Certificate.class);
             if (certificate == null)
@@ -72,7 +75,9 @@ public class IDCardAuthenticationService extends AbstractService {
             TaraCredential credential = new TaraCredential(AuthenticationType.IDCard, principalCode, firstName, lastName);
             context.getFlowExecutionContext().getActiveSession().getScope().put("credential", credential);
 
-            this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.IDCard, StatisticsOperation.SUCCESSFUL_AUTH);
+            this.statistics.collect(new StatisticsRecord(
+                    LocalDateTime.now(), getServiceClientId(context), AuthenticationType.IDCard, StatisticsOperation.SUCCESSFUL_AUTH
+            ));
 
             return new Event(this, "success");
         } catch (Exception e) {
@@ -84,7 +89,9 @@ public class IDCardAuthenticationService extends AbstractService {
 
     private RuntimeException handleException(RequestContext context, Exception exception) {
         clearFlowScope(context);
-        this.statistics.collect(LocalDateTime.now(), context, AuthenticationType.IDCard, StatisticsOperation.ERROR, exception.getMessage());
+        this.statistics.collect(new StatisticsRecord(
+                LocalDateTime.now(), getServiceClientId(context), AuthenticationType.IDCard, exception.getMessage()
+        ));
 
         String localizedErrorMessage = null;
 

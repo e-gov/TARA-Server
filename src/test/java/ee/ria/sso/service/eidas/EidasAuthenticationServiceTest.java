@@ -73,7 +73,7 @@ public class EidasAuthenticationServiceTest extends AbstractAuthenticationServic
         expectedEx.expect(TaraAuthenticationException.class);
         expectedEx.expectMessage("java.lang.NullPointerException");
 
-        Event event = this.authenticationService.startLoginByEidas(this.getRequestContext(null));
+        Event event = this.authenticationService.startLoginByEidas(this.getMockRequestContext(null));
         Assert.fail("Should not reach this!");
     }
 
@@ -85,7 +85,7 @@ public class EidasAuthenticationServiceTest extends AbstractAuthenticationServic
         TaraCredential credential = new TaraCredential();
         credential.setCountry(null);
 
-        RequestContext requestContext = this.getRequestContext(null);
+        RequestContext requestContext = this.getMockRequestContext(null);
         requestContext.getFlowExecutionContext().getActiveSession().getScope().put(
                 "credential", credential
         );
@@ -110,7 +110,7 @@ public class EidasAuthenticationServiceTest extends AbstractAuthenticationServic
         TaraCredential credential = new TaraCredential();
         credential.setCountry("EE");
 
-        RequestContext requestContext = this.getRequestContext(null);
+        RequestContext requestContext = this.getMockRequestContext(null);
         MockServletOutputStream stream = addMockHttpServletResponseToRequestContextExternalContext(requestContext);
         requestContext.getFlowExecutionContext().getActiveSession().getScope().put(
                 "credential", credential
@@ -154,7 +154,7 @@ public class EidasAuthenticationServiceTest extends AbstractAuthenticationServic
         expectedEx.expect(TaraAuthenticationException.class);
         expectedEx.expectMessage("java.lang.IllegalStateException: SAML response's relay state (null) not found among previously stored relay states!");
 
-        RequestContext requestContext = this.getRequestContext(null);
+        RequestContext requestContext = this.getMockRequestContext(null);
         Event event = this.authenticationService.checkLoginForEidas(requestContext);
         Assert.fail("Should not reach this!");
     }
@@ -164,7 +164,7 @@ public class EidasAuthenticationServiceTest extends AbstractAuthenticationServic
         expectedEx.expect(TaraAuthenticationException.class);
         expectedEx.expectMessage("java.lang.IllegalStateException: SAML response's relay state (someRelayState) not found among previously stored relay states!");
 
-        RequestContext requestContext = this.getRequestContext(null);
+        RequestContext requestContext = this.getMockRequestContext(null);
         ((MockHttpServletRequest) (requestContext.getExternalContext().getNativeRequest()))
                 .addParameter("RelayState", "someRelayState");
 
@@ -184,7 +184,7 @@ public class EidasAuthenticationServiceTest extends AbstractAuthenticationServic
     @Test
     public void checkLoginForEidasSucceeds() {
         String relayState = UUID.randomUUID().toString();
-        RequestContext requestContext = this.getRequestContext(null);
+        RequestContext requestContext = this.getMockRequestContext(null);
         ((MockHttpServletRequest) (requestContext.getExternalContext().getNativeRequest()))
                 .addParameter("SAMLResponse", "someSamlResponse");
         ((MockHttpServletRequest) (requestContext.getExternalContext().getNativeRequest()))

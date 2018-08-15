@@ -67,7 +67,7 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
         expectedEx.expectMessage("Unable to find certificate from session");
 
         try {
-            Event event = this.authenticationService.loginByIDCard(this.getRequestContext(null));
+            Event event = this.authenticationService.loginByIDCard(this.getMockRequestContext(null));
         } catch (Exception e) {
             this.verifyLogContentsOnUnsuccessfulAuthentication("Unable to find certificate from session");
             throw e;
@@ -81,7 +81,7 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
         expectedEx.expect(TaraAuthenticationException.class);
         expectedEx.expectMessage("Validation failed!");
 
-        RequestContext requestContext = this.getRequestContext(null);
+        RequestContext requestContext = this.getMockRequestContext(null);
         requestContext.getExternalContext().getSessionMap().put(
                 Constants.CERTIFICATE_SESSION_ATTRIBUTE,
                 mockUserCertificate
@@ -104,7 +104,7 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
 
     @Test
     public void loginByIDCardSucceeds() {
-        RequestContext requestContext = this.getRequestContext(null);
+        RequestContext requestContext = this.getMockRequestContext(null);
         requestContext.getExternalContext().getSessionMap().put(
                 Constants.CERTIFICATE_SESSION_ATTRIBUTE,
                 mockUserCertificate

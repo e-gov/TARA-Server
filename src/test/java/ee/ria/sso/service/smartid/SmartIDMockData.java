@@ -10,6 +10,8 @@ import ee.sk.smartid.rest.dao.SessionCertificate;
 import ee.sk.smartid.rest.dao.SessionResult;
 import ee.sk.smartid.rest.dao.SessionSignature;
 import ee.sk.smartid.rest.dao.SessionStatus;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.webflow.test.MockExternalContext;
 import org.springframework.webflow.test.MockRequestContext;
 
 public class SmartIDMockData {
@@ -36,6 +38,7 @@ public class SmartIDMockData {
 
     public static MockRequestContext mockAuthInitRequestContext(TaraCredential credential) {
         MockRequestContext requestContext = new MockRequestContext();
+        setMockContextExternalContext(requestContext);
         requestContext.getFlowExecutionContext().getActiveSession().getScope().put(Constants.CREDENTIAL, credential);
         return requestContext;
     }
@@ -49,9 +52,19 @@ public class SmartIDMockData {
                 .build();
 
         MockRequestContext requestContext = new MockRequestContext();
+        setMockContextExternalContext(requestContext);
         requestContext.getFlowScope().put(Constants.SMART_ID_VERIFICATION_CODE, authHash.calculateVerificationCode());
         requestContext.getFlowScope().put(Constants.SMART_ID_AUTHENTICATION_SESSION, authSessionMock);
         return requestContext;
+    }
+
+    private static void setMockContextExternalContext(MockRequestContext requestContext) {
+        MockExternalContext mockExternalContext = new MockExternalContext();
+        MockHttpServletRequest mockHttpServletRequest = new MockHttpServletRequest();
+        mockHttpServletRequest.addParameter(Constants.CAS_SERVICE_ATTRIBUTE_NAME,
+                "https://cas.test.url.net/oauth2.0/callbackAuthorize?client_name=CasOAuthClient&client_id=clientId&redirect_uri=https://tara-client.arendus.kit:8451/oauth/response");
+        mockExternalContext.setNativeRequest(mockHttpServletRequest);
+        requestContext.setExternalContext(mockExternalContext);
     }
     
     public static SessionStatus mockRunningSessionStatus() {
