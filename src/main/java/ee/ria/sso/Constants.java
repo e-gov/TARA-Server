@@ -22,4 +22,7 @@ public final class Constants {
     public static final String SMART_ID_AUTHENTICATION_SESSION = "smartIdAuthenticationSession";
 
     public static final String MESSAGE_KEY_GENERAL_ERROR = "message.general.error";
+
+    public static final String MDC_ATTRIBUTE_REQUEST_ID = "requestId";
+    public static final String MDC_ATTRIBUTE_SESSION_ID = "sessionId";
 }

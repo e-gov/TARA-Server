@@ -2,7 +2,7 @@
     <div class="header-bar">
         <div class="container">
             <!-- <button type="button" name="button">Ligipääsetavus</button> -->
-            <div class="pull-right">
+            <div th:if="not ${hideHeaderLanguageSelection}" class="pull-right">
                 <a th:if="${@taraProperties.isNotLocale('ru', #locale)}" th:href="${@taraProperties.getLocaleUrl('ru')}" th:text="#{label.ru.name}"></a>
                 <a th:if="${@taraProperties.isNotLocale('en', #locale)}" th:href="${@taraProperties.getLocaleUrl('en')}" th:text="#{label.en.name}"></a>
                 <a th:if="${@taraProperties.isNotLocale('et', #locale)}" th:href="${@taraProperties.getLocaleUrl('et')}" th:text="#{label.et.name}"></a>

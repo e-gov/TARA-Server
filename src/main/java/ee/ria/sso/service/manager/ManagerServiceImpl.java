@@ -1,4 +1,4 @@
-package ee.ria.sso.service.impl;
+package ee.ria.sso.service.manager;
 
 import java.util.Optional;
 
@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 
 import ee.ria.sso.service.AbstractService;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
-import ee.ria.sso.service.manager.ManagerService;
 
 /**
  * Created by Janar Rahumeel (CGI Estonia)
