@@ -2,6 +2,7 @@ package ee.ria.sso.service;
 
 import ee.ria.sso.Constants;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apereo.cas.authentication.principal.WebApplicationService;
 import org.springframework.web.util.UriComponents;
@@ -15,6 +16,7 @@ import javax.servlet.http.HttpServletRequest;
  * @author Janar Rahumeel (CGI Estonia)
  */
 
+@Slf4j
 public class AbstractService {
 
     private final TaraResourceBundleMessageSource messageSource;
@@ -50,10 +52,12 @@ public class AbstractService {
     }
 
     private String getClientIdParameterValue(String serviceParameter) {
-        UriComponents serviceUri = UriComponentsBuilder.fromUriString(serviceParameter).build();
         try {
+            UriComponents serviceUri = UriComponentsBuilder.fromUriString(serviceParameter).build();
             return serviceUri.getQueryParams().get("client_id").get(0);
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            log.error("Failed to get client_id from service parameter!", e);
+
             return null;
         }
     }

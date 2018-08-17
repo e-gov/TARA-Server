@@ -14,6 +14,7 @@ import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.statistics.StatisticsHandler;
 import ee.ria.sso.statistics.StatisticsOperation;
 import ee.ria.sso.statistics.StatisticsRecord;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -27,6 +28,7 @@ import java.time.LocalDateTime;
 
 @ConditionalOnProperty("banklinks.enabled")
 @Service
+@Slf4j
 public class BanklinkAuthenticationService extends AbstractService {
 
     private static final String SERVICE_ATTRIBUTE = "service";
@@ -72,6 +74,7 @@ public class BanklinkAuthenticationService extends AbstractService {
     public Event checkLoginForBankLink(RequestContext context) {
         try {
             HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getNativeRequest();
+            context.getFlowScope().put(SERVICE_ATTRIBUTE, context.getExternalContext().getSessionMap().get(SERVICE_ATTRIBUTE));
 
             AuthLinkInfo authInfo = authLinkManager.getPacketInfo(request);
 
@@ -81,7 +84,6 @@ public class BanklinkAuthenticationService extends AbstractService {
 
             TaraCredential credential = new TaraCredential(AuthenticationType.BankLink, principalCode, firstName, lastName);
             context.getFlowExecutionContext().getActiveSession().getScope().put("credential", credential);
-            context.getFlowScope().put(SERVICE_ATTRIBUTE, context.getExternalContext().getSessionMap().get(SERVICE_ATTRIBUTE));
 
             this.statistics.collect(new StatisticsRecord(
                     LocalDateTime.now(), getServiceClientId(context), getBankEnum(context), StatisticsOperation.SUCCESSFUL_AUTH
@@ -94,17 +96,21 @@ public class BanklinkAuthenticationService extends AbstractService {
     }
 
     private RuntimeException handleException(RequestContext context, Exception exception) {
-        clearFlowScope(context);
+        try {
+            try {
+                BankEnum bankEnum = getBankEnum(context);
+                if (bankEnum != null)
+                    this.statistics.collect(new StatisticsRecord(
+                            LocalDateTime.now(), getServiceClientId(context), bankEnum, exception.getMessage()));
+            } catch (Exception e) {
+                log.error("Failed to collect error statistics!", e);
+            }
 
-        BankEnum bankEnum = getBankEnum(context);
-        if (bankEnum != null) {
-            this.statistics.collect(new StatisticsRecord(
-                    LocalDateTime.now(), getServiceClientId(context), bankEnum, exception.getMessage()
-            ));
+            String localizedErrorMessage = this.getMessage(Constants.MESSAGE_KEY_GENERAL_ERROR);
+            return new TaraAuthenticationException(localizedErrorMessage, exception);
+        } finally {
+            clearFlowScope(context);
         }
-
-        String localizedErrorMessage = this.getMessage(Constants.MESSAGE_KEY_GENERAL_ERROR);
-        return new TaraAuthenticationException(localizedErrorMessage, exception);
     }
 
     private static BankEnum getBankEnum(RequestContext context) {

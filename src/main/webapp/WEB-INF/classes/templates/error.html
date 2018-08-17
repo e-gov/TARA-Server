@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout">
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout" th:with="hideHeaderLanguageSelection=true">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE9">
@@ -19,9 +19,9 @@
     <script src="/js/respond.min.js"></script>
     <![endif]-->
 </head>
-<div th:replace="fragments/taraheader" th:remove="tag">Header</div>
+<div th:replace="fragments/taraheader(hideHeaderLanguageSelection=true)" th:remove="tag">Header</div>
 <body>
-<div layout:fragment="content" th:remove="tag">
+<div layout:fragment="content" th:with="hideHeaderLanguageSelection=true" th:remove="tag">
     <div class="container">
         <a th:href="${@taraProperties.getBackUrl(session.pac4jRequestedUrl, #locale)}" class="text-black back-link icon-link">
             <i class="fa fa-chevron-left fa-fw"></i><span th:text="#{label.back}" th:remove="tag"></span>
@@ -32,6 +32,10 @@
                                                                                      th:remove="tag"></span></h4>
                 <p th:if="${TARA_ERROR_MESSAGE != null}" th:text="${TARA_ERROR_MESSAGE}"></p>
                 <p th:unless="${TARA_ERROR_MESSAGE != null}" th:text="#{message.auth.error}"></p>
+                <p th:if="${@taraProperties.getCurrentRequestIdentifier() != null}">
+                    <span th:text="#{label.incident.number}"></span>
+                    <span th:text="${@taraProperties.getCurrentRequestIdentifier()}"></span>
+                </p>
             </div>
         </div>
     </div>
