@@ -210,8 +210,8 @@ public class StatisticsRecordTest {
         String compoundMethod = method.name();
 
         if (bank != null) {
-            Assert.assertEquals(bank.getName(), statisticsRecord.getBank());
-            compoundMethod += (METHOD_BANK_SEPARATOR + bank.getName());
+            Assert.assertEquals(bank.getName().toUpperCase(), statisticsRecord.getBank());
+            compoundMethod += (METHOD_BANK_SEPARATOR + bank.getName().toUpperCase());
         } else {
             Assert.assertNull(statisticsRecord.getBank());
         }
@@ -234,8 +234,8 @@ public class StatisticsRecordTest {
         String compoundMethod = method.name();
 
         if (bank != null) {
-            Assert.assertEquals(bank.getName(), statisticsRecord.getBank());
-            compoundMethod += (METHOD_BANK_SEPARATOR + bank.getName());
+            Assert.assertEquals(bank.getName().toUpperCase(), statisticsRecord.getBank());
+            compoundMethod += (METHOD_BANK_SEPARATOR + bank.getName().toUpperCase());
         } else {
             Assert.assertNull(statisticsRecord.getBank());
         }

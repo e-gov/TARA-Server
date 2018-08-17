@@ -52,11 +52,11 @@ public class StatisticsRecord {
     }
 
     public StatisticsRecord(LocalDateTime time, String clientId, BankEnum bank, StatisticsOperation operation) {
-        this(time, clientId, AuthenticationType.BankLink, operation, null, bank.getName());
+        this(time, clientId, AuthenticationType.BankLink, operation, null, bank.getName().toUpperCase());
     }
 
     public StatisticsRecord(LocalDateTime time, String clientId, BankEnum bank, String errorDescription) {
-        this(time, clientId, AuthenticationType.BankLink, StatisticsOperation.ERROR, errorDescription != null ? errorDescription : "", bank.getName());
+        this(time, clientId, AuthenticationType.BankLink, StatisticsOperation.ERROR, errorDescription != null ? errorDescription : "", bank.getName().toUpperCase());
     }
 
     public String getTime() {
