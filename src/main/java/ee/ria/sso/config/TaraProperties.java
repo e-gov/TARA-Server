@@ -1,5 +1,6 @@
 package ee.ria.sso.config;
 
+import ee.ria.sso.Constants;
 import ee.ria.sso.model.EmptyOidcRegisteredService;
 import ee.ria.sso.service.manager.ManagerService;
 import org.apache.commons.lang3.StringUtils;
@@ -8,6 +9,7 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apereo.cas.configuration.CasConfigurationProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.env.Environment;
@@ -108,6 +110,15 @@ public class TaraProperties {
             }
         }
         return "#";
+    }
+
+    public String getCurrentRequestIdentifier() {
+        try {
+            return MDC.get(Constants.MDC_ATTRIBUTE_REQUEST_ID);
+        } catch (Exception e) {
+            log.error("Failed to retrieve current request identifier!", e);
+            return null;
+        }
     }
 
     public Application getApplication() {
