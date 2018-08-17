@@ -88,27 +88,33 @@ public class IDCardAuthenticationService extends AbstractService {
     }
 
     private RuntimeException handleException(RequestContext context, Exception exception) {
-        clearFlowScope(context);
-        this.statistics.collect(new StatisticsRecord(
-                LocalDateTime.now(), getServiceClientId(context), AuthenticationType.IDCard, exception.getMessage()
-        ));
+        try {
+            try {
+                this.statistics.collect(new StatisticsRecord(
+                        LocalDateTime.now(), getServiceClientId(context), AuthenticationType.IDCard, exception.getMessage()));
+            } catch (Exception e) {
+                log.error("Failed to collect error statistics!", e);
+            }
 
-        String localizedErrorMessage = null;
+            String localizedErrorMessage = null;
 
-        if (exception instanceof OCSPValidationException) {
-            String messageKey = String.format("message.idc.%s", ((OCSPValidationException) exception).getStatus().name().toLowerCase());
-            localizedErrorMessage = this.getMessage(messageKey, "message.idc.error");
-        } else if (exception instanceof AuthenticationFailedException) {
-            AuthenticationFailedException authenticationFailedException = (AuthenticationFailedException) exception;
-            String messageKey = authenticationFailedException.getErrorMessageKeyOrDefault(Constants.MESSAGE_KEY_GENERAL_ERROR);
-            localizedErrorMessage = this.getMessage(messageKey, Constants.MESSAGE_KEY_GENERAL_ERROR);
+            if (exception instanceof OCSPValidationException) {
+                String messageKey = String.format("message.idc.%s", ((OCSPValidationException) exception).getStatus().name().toLowerCase());
+                localizedErrorMessage = this.getMessage(messageKey, "message.idc.error");
+            } else if (exception instanceof AuthenticationFailedException) {
+                AuthenticationFailedException authenticationFailedException = (AuthenticationFailedException) exception;
+                String messageKey = authenticationFailedException.getErrorMessageKeyOrDefault(Constants.MESSAGE_KEY_GENERAL_ERROR);
+                localizedErrorMessage = this.getMessage(messageKey, Constants.MESSAGE_KEY_GENERAL_ERROR);
+            }
+
+            if (StringUtils.isBlank(localizedErrorMessage)) {
+                localizedErrorMessage = this.getMessage(Constants.MESSAGE_KEY_GENERAL_ERROR);
+            }
+
+            return new TaraAuthenticationException(localizedErrorMessage, exception);
+        } finally {
+            clearFlowScope(context);
         }
-
-        if (StringUtils.isBlank(localizedErrorMessage)) {
-            localizedErrorMessage = this.getMessage(Constants.MESSAGE_KEY_GENERAL_ERROR);
-        }
-
-        return new TaraAuthenticationException(localizedErrorMessage, exception);
     }
 
     private static void clearFlowScope(RequestContext context) {

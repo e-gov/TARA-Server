@@ -96,22 +96,28 @@ public class EidasAuthenticationService extends AbstractService {
     }
 
     private RuntimeException handleException(RequestContext context, Exception exception) {
-        clearFlowScope(context);
-        this.statistics.collect(new StatisticsRecord(
-                LocalDateTime.now(), getServiceClientId(context), AuthenticationType.eIDAS, exception.getMessage()
-        ));
+        try {
+            try {
+                this.statistics.collect(new StatisticsRecord(
+                        LocalDateTime.now(), getServiceClientId(context), AuthenticationType.eIDAS, exception.getMessage()));
+            } catch (Exception e) {
+                log.error("Failed to collect error statistics!", e);
+            }
 
-        String localizedErrorMessage = null;
+            String localizedErrorMessage = null;
 
-        if (exception instanceof EidasAuthenticationFailedException) {
-            localizedErrorMessage = this.getMessage("message.eidas.authfailed", "message.eidas.error");
+            if (exception instanceof EidasAuthenticationFailedException) {
+                localizedErrorMessage = this.getMessage("message.eidas.authfailed", "message.eidas.error");
+            }
+
+            if (StringUtils.isEmpty(localizedErrorMessage)) {
+                localizedErrorMessage = this.getMessage(Constants.MESSAGE_KEY_GENERAL_ERROR);
+            }
+
+            return new TaraAuthenticationException(localizedErrorMessage, exception);
+        } finally {
+            clearFlowScope(context);
         }
-
-        if (StringUtils.isEmpty(localizedErrorMessage)) {
-            localizedErrorMessage = this.getMessage(Constants.MESSAGE_KEY_GENERAL_ERROR);
-        }
-
-        return new TaraAuthenticationException(localizedErrorMessage, exception);
     }
 
     private static void clearFlowScope(RequestContext context) {

@@ -199,15 +199,22 @@ public class SmartIDAuthenticationService extends AbstractService {
     }
 
     private RuntimeException handleException(RequestContext context, Exception exception, String errorMessageKey) {
-        clearFlowScope(context);
-        LOGGER.info("Process failed due to exception of type <{}> with message <{}> and errorMessageKey <{}>",
-                exception.getClass(),
-                exception.getMessage(),
-                errorMessageKey);
-//        TODO: Speki järgi peaks olema lokaliseeritud veasõnum, äkki peaks olema hoopis veakood?
-        collectErrorStatistics(context, exception.getMessage());
-        String localizedErrorMessage = getMessage(errorMessageKey);
-        return new TaraAuthenticationException(localizedErrorMessage, exception);
+        try {
+            LOGGER.info("Process failed due to exception of type <{}> with message <{}> and errorMessageKey <{}>",
+                    exception.getClass(),
+                    exception.getMessage(),
+                    errorMessageKey);
+
+            try {
+                collectErrorStatistics(context, exception.getMessage());
+            } catch (Exception e) {
+                LOGGER.error("Failed to collect error statistics!", e);
+            }
+            String localizedErrorMessage = getMessage(errorMessageKey);
+            return new TaraAuthenticationException(localizedErrorMessage, exception);
+        } finally {
+            clearFlowScope(context);
+        }
     }
 
     private static void clearFlowScope(RequestContext context) {
