@@ -22,11 +22,6 @@ public class TestTaraConfiguration {
     private TaraProperties taraProperties;
 
     @Bean
-    public CasConfigurationProperties casConfigurationProperties() {
-        return new CasConfigurationProperties();
-    }
-
-    @Bean
     public ServicesManager testServicesManager() {
         return new TestServicesManager();
     }

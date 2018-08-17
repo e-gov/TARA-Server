@@ -35,12 +35,7 @@ public class AcceptUsersAuthenticationEventExecutionPlanConfiguration implements
 
 	@Override
 	public void configureAuthenticationExecutionPlan(final AuthenticationEventExecutionPlan plan) {
-		final String header = ""
-				+ "-----------------------------------------------------------------------"
-				+ "Authentication Execution Plan of RIIGI INFOSÜSTEEMI AMET has been loaded"
-				+ "-----------------------------------------------------------------------";
-
-		AsciiArtUtils.printAsciiArtWarning(LOGGER, "RIIGI INFOSÜSTEEMI AMET", header);
+		LOGGER.info("Authentication Execution Plan of RIIGI INFOSÜSTEEMI AMET has been loaded");
 		plan.registerAuthenticationHandlerWithPrincipalResolver(this.taraAuthenticationHandler, this.taraPrincipalResolver);
 	}
 
