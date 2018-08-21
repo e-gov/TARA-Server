@@ -81,7 +81,7 @@ public class EidasAuthenticationService extends AbstractService {
     @Audit(
             action = "EIDAS_AUTHENTICATION_CALLBACK",
             actionResolverName = "AUTHENTICATION_RESOLVER",
-            resourceResolverName = "AUTHENTICATION_RESOURCE_RESOLVER"
+            resourceResolverName = "TARA_AUTHENTICATION_RESOURCE_RESOLVER"
     )
     public Event checkLoginForEidas(RequestContext context) {
         try {

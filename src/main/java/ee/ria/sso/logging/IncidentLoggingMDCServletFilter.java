@@ -48,7 +48,7 @@ public class IncidentLoggingMDCServletFilter implements Filter {
     }
 
     private static String generateSessionIdHash(HttpServletRequest request) {
-        String requestedSessionId = request.getRequestedSessionId();
+        String requestedSessionId = request.getSession(true).getId();
         if (requestedSessionId != null)
             return getBase64(DigestUtils.sha256(requestedSessionId));
         else
