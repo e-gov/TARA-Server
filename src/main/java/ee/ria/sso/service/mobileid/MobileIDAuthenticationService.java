@@ -15,6 +15,7 @@ import ee.ria.sso.statistics.StatisticsOperation;
 import ee.ria.sso.statistics.StatisticsRecord;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apereo.inspektr.audit.annotation.Audit;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.webflow.execution.Event;
@@ -49,6 +50,11 @@ public class MobileIDAuthenticationService extends AbstractService {
         this.mobileIDAuthenticator.setServiceName(configurationProvider.getServiceName());
     }
 
+    @Audit(
+            action = "MID_AUTHENTICATION_INIT",
+            actionResolverName = "AUTHENTICATION_RESOLVER",
+            resourceResolverName = "TARA_AUTHENTICATION_RESOURCE_RESOLVER"
+    )
     public Event startLoginByMobileID(RequestContext context) {
         final TaraCredential credential = context.getFlowExecutionContext().getActiveSession().getScope().get("credential", TaraCredential.class);
         try {
@@ -76,6 +82,11 @@ public class MobileIDAuthenticationService extends AbstractService {
         }
     }
 
+    @Audit(
+            action = "MID_AUTHENTICATION_STATUS_POLL",
+            actionResolverName = "AUTHENTICATION_RESOLVER",
+            resourceResolverName = "TARA_AUTHENTICATION_RESOURCE_RESOLVER"
+    )
     public Event checkLoginForMobileID(RequestContext context) {
         try {
             MobileIDSession session = context.getFlowScope().get(Constants.MOBILE_SESSION, MobileIDSession.class);

@@ -38,9 +38,9 @@ public class FlowExecutionExceptionResolver implements HandlerExceptionResolver 
             return new ModelAndView(new RedirectView(urlToRedirectTo), model);
         } else if (exception instanceof AbstractFlowExecutionException) {
             if (log.isDebugEnabled()) {
-                log.error("Flow execution error", exception);
+                log.trace("Flow execution error", exception);
             } else {
-                log.error("Flow execution error: {}", exception.getMessage());
+                log.debug("Flow execution error: {}", exception.getMessage());
             }
             return ((AbstractFlowExecutionException) exception).getModelAndView();
         } else {

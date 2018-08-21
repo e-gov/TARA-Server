@@ -15,7 +15,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
         "ee.ria.sso.config"
 })
 @ContextConfiguration(
-        classes = IncidentLoggingConfiguration.class,
+        classes = TaraLoggingConfiguration.class,
         initializers = ConfigFileApplicationContextInitializer.class)
 public class IncidentLoggingConfigurationTest {
 

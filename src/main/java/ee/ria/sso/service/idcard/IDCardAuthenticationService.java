@@ -17,6 +17,7 @@ import ee.ria.sso.validators.OCSPValidationException;
 import ee.ria.sso.validators.OCSPValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apereo.inspektr.audit.annotation.Audit;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
@@ -54,6 +55,11 @@ public class IDCardAuthenticationService extends AbstractService {
             this.issuerCertificates = null;
     }
 
+    @Audit(
+            action = "ESTEID_AUTHENTICATION",
+            actionResolverName = "AUTHENTICATION_RESOLVER",
+            resourceResolverName = "TARA_AUTHENTICATION_RESOURCE_RESOLVER"
+    )
     public Event loginByIDCard(RequestContext context) {
         SharedAttributeMap<Object> sessionMap = this.getSessionMap(context);
         try {

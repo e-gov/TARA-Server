@@ -21,6 +21,7 @@ import ee.sk.smartid.exception.UserAccountNotFoundException;
 import ee.sk.smartid.rest.dao.AuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import org.apache.commons.lang3.StringUtils;
+import org.apereo.inspektr.audit.annotation.Audit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,6 +64,11 @@ public class SmartIDAuthenticationService extends AbstractService {
         this.authResponseValidator = authResponseValidator;
     }
 
+    @Audit(
+            action = "SMARTID_AUTHENTICATION_INIT",
+            actionResolverName = "AUTHENTICATION_RESOLVER",
+            resourceResolverName = "TARA_AUTHENTICATION_RESOURCE_RESOLVER"
+    )
     public Event initSmartIdAuthenticationSession(RequestContext context) {
         final TaraCredential credential = context.getFlowExecutionContext().getActiveSession().getScope().get(Constants.CREDENTIAL, TaraCredential.class);
         final String personIdentifier = credential.getPrincipalCode();
@@ -94,6 +100,11 @@ public class SmartIDAuthenticationService extends AbstractService {
         }
     }
 
+    @Audit(
+            action = "SMARTID_AUTHENTICATION_STATUS_POLL",
+            actionResolverName = "AUTHENTICATION_RESOLVER",
+            resourceResolverName = "TARA_AUTHENTICATION_RESOURCE_RESOLVER"
+    )
     public Event checkSmartIdAuthenticationSessionStatus(RequestContext context) {
         AuthenticationSession authSession =
                 context.getFlowScope().get(Constants.SMART_ID_AUTHENTICATION_SESSION, AuthenticationSession.class);

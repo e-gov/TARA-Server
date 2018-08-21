@@ -152,6 +152,12 @@
             <version>${cas.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.apereo.cas</groupId>
+            <artifactId>cas-server-core-audit</artifactId>
+            <version>${cas.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-aspects</artifactId>
             <version>${spring.version}</version>

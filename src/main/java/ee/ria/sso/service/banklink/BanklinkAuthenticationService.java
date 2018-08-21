@@ -17,6 +17,7 @@ import ee.ria.sso.statistics.StatisticsRecord;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apereo.inspektr.audit.annotation.Audit;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
@@ -43,6 +44,11 @@ public class BanklinkAuthenticationService extends AbstractService {
         this.authLinkManager = authLinkManager;
     }
 
+    @Audit(
+            action = "BANKLINK_AUTHENTICATION_INIT",
+            actionResolverName = "AUTHENTICATION_RESOLVER",
+            resourceResolverName = "TARA_AUTHENTICATION_RESOURCE_RESOLVER"
+    )
     public Event startLoginByBankLink(RequestContext context) {
         try {
             String bankCode = context.getRequestParameters().get("bank");
@@ -71,6 +77,11 @@ public class BanklinkAuthenticationService extends AbstractService {
         }
     }
 
+    @Audit(
+            action = "BANKLINK_AUTHENTICATION_CALLBACK",
+            actionResolverName = "AUTHENTICATION_RESOLVER",
+            resourceResolverName = "TARA_AUTHENTICATION_RESOURCE_RESOLVER"
+    )
     public Event checkLoginForBankLink(RequestContext context) {
         try {
             HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getNativeRequest();
