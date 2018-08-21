@@ -24,8 +24,8 @@ Log files are rolled over hourly or when the size cap for a file is reached or t
 
 List of log files created by TARA on initialization:
 
-| Type of log        | Contents description |
-| :---------------- | :---------- | :---------- |
+| **Type of log**        | **Contents description** |
+| :---------------- | :---------- |
 | **[cas.log](Configuration.md#cas_log)** | TARA's main log event stream that contains all authentication attempts and general system events (session expirations and cleanup events, etc).  |
 | **[cas_error.log](Configuration.md#cas_error_log)** | Errors with technical and detailed stack traces. |
 | **[cas_audit.log](Configuration.md#cas_audit_log)** | Pre-defined events derived from user actions to be audited for security purposes. |
