@@ -11,6 +11,8 @@ import org.mockito.stubbing.Answer;
 import org.slf4j.MDC;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.mock.web.MockHttpSession;
+import org.springframework.mock.web.MockServletContext;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -23,6 +25,7 @@ import java.util.Base64;
 public class IncidentLoggingMDCServletFilterTest {
 
     private static final String REQUEST_ID_REGEX = "[A-Z0-9]{16}";
+    public static final String MOCK_SESSION_ID = "123456abcde";
 
     @Rule
     public ExpectedException expectedEx = ExpectedException.none();
@@ -68,21 +71,8 @@ public class IncidentLoggingMDCServletFilterTest {
     }
 
     @Test
-    public void doFilterShouldSucceedWhenSessionIdIsMissing() throws IOException, ServletException {
-        ServletRequest servletRequest = createMockHttpServletRequest(null);
-        ServletResponse servletResponse = createMockHttpServletResponse();
-        FilterChain filterChain = createMockFilterChain(servletRequest, servletResponse);
-
-        servletFilter.doFilter(servletRequest, servletResponse, filterChain);
-        Mockito.verify(filterChain, Mockito.times(1)).doFilter(servletRequest, servletResponse);
-        verifyMDCIsEmpty();
-    }
-
-    @Test
     public void doFilterShouldSucceedWhenSessionIdIsPresent() throws IOException, ServletException {
-        String sessionId = "sessionIdString";
-
-        ServletRequest servletRequest = createMockHttpServletRequest(sessionId);
+        ServletRequest servletRequest = createMockHttpServletRequest(MOCK_SESSION_ID);
         ServletResponse servletResponse = createMockHttpServletResponse();
         FilterChain filterChain = createMockFilterChain(servletRequest, servletResponse);
 
@@ -100,8 +90,7 @@ public class IncidentLoggingMDCServletFilterTest {
 
     private MockHttpServletRequest createMockHttpServletRequest(String sessionId) {
         MockHttpServletRequest mockRequest = new MockHttpServletRequest();
-        mockRequest.setRequestedSessionId(sessionId);
-
+        mockRequest.setSession(new MockHttpSession(new MockServletContext(), sessionId));
         return mockRequest;
     }
 
@@ -112,20 +101,23 @@ public class IncidentLoggingMDCServletFilterTest {
     private FilterChain createMockFilterChain(ServletRequest request, ServletResponse response) throws IOException, ServletException {
         FilterChain filterChain = Mockito.mock(FilterChain.class);
 
-        final String realSessionId = ((HttpServletRequest) request).getRequestedSessionId();
-        final String sessionIdHash = realSessionId == null ? null :
-                Base64.getUrlEncoder().encodeToString(DigestUtils.sha256(realSessionId));
-
         Mockito.doAnswer((Answer) invocation -> {
-            String requestId = MDC.get("requestId");
-            Assert.assertNotNull("Expected requestId, but found nothing!", requestId);
-            Assert.assertTrue(
-                    String.format("Expected requestId to match \"%s\", but found \"%s\"!", REQUEST_ID_REGEX, requestId),
-                    requestId.matches(REQUEST_ID_REGEX));
 
-            String sessionId = MDC.get("sessionId");
-            if (realSessionId == null) Assert.assertNull(sessionId);
-            else Assert.assertEquals(sessionIdHash, sessionId);
+            final String expectedSessionId = ((HttpServletRequest) request).getSession(true).getId();
+            final String expectedSessionIdHash = expectedSessionId == null ? null :
+                    Base64.getUrlEncoder().encodeToString(DigestUtils.sha256(MOCK_SESSION_ID));
+
+            String actualRequestId = MDC.get("requestId");
+            Assert.assertNotNull("Expected requestId, but found nothing!", actualRequestId);
+            Assert.assertTrue(
+                    String.format("Expected requestId to match \"%s\", but found \"%s\"!", REQUEST_ID_REGEX, actualRequestId),
+                    actualRequestId.matches(REQUEST_ID_REGEX));
+
+            String actualSessionIdHash = MDC.get("sessionId");
+            if (expectedSessionId == null)
+                Assert.assertNull(actualSessionIdHash);
+            else
+                Assert.assertEquals(expectedSessionIdHash, actualSessionIdHash);
 
             return null;
         }).when(filterChain).doFilter(request, response);
