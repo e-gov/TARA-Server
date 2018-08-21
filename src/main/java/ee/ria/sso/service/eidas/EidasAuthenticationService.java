@@ -15,6 +15,7 @@ import ee.ria.sso.statistics.StatisticsOperation;
 import ee.ria.sso.statistics.StatisticsRecord;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apereo.inspektr.audit.annotation.Audit;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.webflow.execution.Event;
@@ -45,6 +46,11 @@ public class EidasAuthenticationService extends AbstractService {
         this.eidasAuthenticator = eidasAuthenticator;
     }
 
+    @Audit(
+            action = "EIDAS_AUTHENTICATION_INIT",
+            actionResolverName = "AUTHENTICATION_RESOLVER",
+            resourceResolverName = "TARA_AUTHENTICATION_RESOURCE_RESOLVER"
+    )
     public Event startLoginByEidas(RequestContext context) {
         final TaraCredential credential = context.getFlowExecutionContext().getActiveSession().getScope().get("credential", TaraCredential.class);
         try {
@@ -72,6 +78,11 @@ public class EidasAuthenticationService extends AbstractService {
         }
     }
 
+    @Audit(
+            action = "EIDAS_AUTHENTICATION_CALLBACK",
+            actionResolverName = "AUTHENTICATION_RESOLVER",
+            resourceResolverName = "TARA_AUTHENTICATION_RESOURCE_RESOLVER"
+    )
     public Event checkLoginForEidas(RequestContext context) {
         try {
             HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getNativeRequest();

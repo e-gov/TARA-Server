@@ -110,4 +110,17 @@ public class TaraCredential implements Credential {
         this.levelOfAssurance = levelOfAssurance;
     }
 
+    @Override
+    public String toString() {
+        return "TaraCredential{" +
+                "type=" + type +
+                ", principalCode='" + principalCode + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", mobileNumber='" + mobileNumber + '\'' +
+                ", country='" + country + '\'' +
+                ", dateOfBirth='" + dateOfBirth + '\'' +
+                ", levelOfAssurance=" + levelOfAssurance +
+                '}';
+    }
 }
