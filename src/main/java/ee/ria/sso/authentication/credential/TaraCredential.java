@@ -2,7 +2,6 @@ package ee.ria.sso.authentication.credential;
 
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.LevelOfAssurance;
-import ee.ria.sso.model.AuthenticationResult;
 import org.apereo.cas.authentication.Credential;
 
 /**
@@ -22,33 +21,6 @@ public class TaraCredential implements Credential {
 
     public TaraCredential() {
         this.type = AuthenticationType.Default;
-    }
-
-    public TaraCredential(String principalCode, String firstName, String lastName) {
-        this.type = AuthenticationType.IDCard;
-        this.principalCode = principalCode;
-        this.firstName = firstName;
-        this.lastName = lastName;
-
-    }
-
-    public TaraCredential(String principalCode, String firstName, String lastName, String mobileNumber) {
-        this.type = AuthenticationType.MobileID;
-        this.principalCode = principalCode;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.mobileNumber = mobileNumber;
-    }
-
-    public TaraCredential(AuthenticationResult authResult) {
-        this.type = AuthenticationType.eIDAS;
-        this.principalCode = getFormattedPersonIdentifier(authResult.getAttributes().get("PersonIdentifier"));
-        this.firstName = authResult.getAttributes().get("FirstName");
-        this.lastName = authResult.getAttributes().get("FamilyName");
-        this.dateOfBirth = authResult.getAttributes().get("DateOfBirth");
-
-        String loa = authResult.getLevelOfAssurance();
-        if (loa != null) this.levelOfAssurance = LevelOfAssurance.findByFormalName(loa);
     }
 
     // TODO refacto needed: use specific credentials for each auth impl
@@ -138,8 +110,17 @@ public class TaraCredential implements Credential {
         this.levelOfAssurance = levelOfAssurance;
     }
 
-    private String getFormattedPersonIdentifier(String personIdentifier) {
-        String[] parts = personIdentifier.split("/");
-        return parts[0] + parts[2];
+    @Override
+    public String toString() {
+        return "TaraCredential{" +
+                "type=" + type +
+                ", principalCode='" + principalCode + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", mobileNumber='" + mobileNumber + '\'' +
+                ", country='" + country + '\'' +
+                ", dateOfBirth='" + dateOfBirth + '\'' +
+                ", levelOfAssurance=" + levelOfAssurance +
+                '}';
     }
 }

@@ -1,4 +1,4 @@
-package ee.ria.sso.service.impl;
+package ee.ria.sso.service.manager;
 
 import java.util.Optional;
 
@@ -8,9 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import ee.ria.sso.common.AbstractService;
+import ee.ria.sso.service.AbstractService;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
-import ee.ria.sso.service.ManagerService;
 
 /**
  * Created by Janar Rahumeel (CGI Estonia)

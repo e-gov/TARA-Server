@@ -13,7 +13,6 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.json.MappingJackson2JsonView;
 
 import ee.ria.sso.Constants;
-import ee.ria.sso.statistics.StatisticsHandler;
 import ee.ria.sso.utils.X509Utils;
 
 /**

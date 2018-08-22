@@ -58,6 +58,7 @@ function APP() {
             console.log('Error', error.message);
         }
         console.log(error.config);
+        this.submitIDCardForm();
     }
 }
 

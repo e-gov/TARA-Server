@@ -1,17 +1,17 @@
 package ee.ria.sso.config;
 
+import ee.ria.sso.Constants;
 import ee.ria.sso.model.EmptyOidcRegisteredService;
-import ee.ria.sso.service.ManagerService;
+import ee.ria.sso.service.manager.ManagerService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
 import org.apereo.cas.configuration.CasConfigurationProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestAttributes;
@@ -27,7 +27,6 @@ import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author Janar Rahumeel (CGI Estonia)
@@ -46,9 +45,6 @@ public class TaraProperties {
 
     @Autowired
     private TaraResourceBundleMessageSource messageSource;
-
-    @Value("#{T(ee.ria.sso.config.TaraProperties).parsePropertiesList('${eidas.client.availableCountries:}')}")
-    private List<String> eidasClientAvailableCountries;
 
     public TaraProperties(CasConfigurationProperties casConfigurationProperties, Environment environment, ManagerService managerService) {
         this.casConfigurationProperties = casConfigurationProperties;
@@ -116,20 +112,13 @@ public class TaraProperties {
         return "#";
     }
 
-    public List<String> getListOfCountries(String locale) {
-        return getSortedByLocaleNameList(locale == null ? LocaleContextHolder.getLocale() : new Locale(locale));
-    }
-
-    private List<String> getSortedByLocaleNameList(Locale locale) {
-        return eidasClientAvailableCountries.stream()
-                .map(c -> new Country(c, getCountryTranslation(locale, c)))
-                .sorted()
-                .map(Country::getCode)
-                .collect(Collectors.toList());
-    }
-
-    private String getCountryTranslation(Locale locale, String c) {
-        return messageSource.getMessage("label.country." + c.toUpperCase(), null, null, locale);
+    public String getCurrentRequestIdentifier() {
+        try {
+            return MDC.get(Constants.MDC_ATTRIBUTE_REQUEST_ID);
+        } catch (Exception e) {
+            log.error("Failed to retrieve current request identifier!", e);
+            return null;
+        }
     }
 
     public Application getApplication() {
@@ -165,50 +154,6 @@ public class TaraProperties {
             this.digestAlgorithm = digestAlgorithm;
         }
 
-    }
-
-    public class Country implements Comparable<Country> {
-
-        private final String code;
-        private final String name;
-
-        public Country(String code, String name) {
-            this.code = code;
-            this.name = name;
-        }
-
-        public String getCode() {
-            return code;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        @Override
-        public int compareTo(Country o) {
-            return this.getName().compareTo(o.getName());
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof Country)) return false;
-            Country country = (Country) o;
-            return Objects.equals(code, country.code) &&
-                    Objects.equals(name, country.name);
-        }
-
-        @Override
-        public int hashCode() {
-
-            return Objects.hash(code, name);
-        }
-    }
-
-    public static List<String> parsePropertiesList(String input) {
-        if (input == null || input.isEmpty()) return Collections.emptyList();
-        return Arrays.asList(input.split(","));
     }
 
     public Environment getEnvironment() {

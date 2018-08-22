@@ -14,6 +14,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -54,7 +55,7 @@ public class SmartIDConfiguration {
         confProvider.getTrustedCaCertificates().forEach(certificateName ->
                 {
                     try {
-                        X509Certificate certificate = readCertFromFile(certificateName);
+                        X509Certificate certificate = readCertFromResource(certificateName);
                         authResponseValidator.addTrustedCACertificate(certificate);
                     } catch (CertificateException | IOException e) {
                         throw new IllegalArgumentException("Failed to read certificate from file " + certificateName);
@@ -63,14 +64,16 @@ public class SmartIDConfiguration {
         );
     }
 
-    private X509Certificate readCertFromFile(String fileName) throws IOException, CertificateException {
-        String filePath = confProvider.getTrustedCaCertificatesLocation() + "/" + fileName;
-        Resource file = resourceLoader.getResource(filePath);
-        if (!file.exists()) {
-            throw new IllegalArgumentException("Could not find file " + filePath);
+    private X509Certificate readCertFromResource(String resourceName) throws IOException, CertificateException {
+        String resourcePath = confProvider.getTrustedCaCertificatesLocation() + "/" + resourceName;
+        Resource resource = resourceLoader.getResource(resourcePath);
+        if (!resource.exists()) {
+            throw new IllegalArgumentException("Could not find resource " + resourcePath);
         }
 
-        CertificateFactory cf = CertificateFactory.getInstance("X.509");
-        return (X509Certificate) cf.generateCertificate(file.getInputStream());
+        try (InputStream inputStream = resource.getInputStream()) {
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            return (X509Certificate) cf.generateCertificate(inputStream);
+        }
     }
 }

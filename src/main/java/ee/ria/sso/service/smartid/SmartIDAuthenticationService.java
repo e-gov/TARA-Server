@@ -5,12 +5,13 @@ import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.TaraAuthenticationException;
 import ee.ria.sso.authentication.TaraCredentialsException;
 import ee.ria.sso.authentication.credential.TaraCredential;
-import ee.ria.sso.common.AbstractService;
+import ee.ria.sso.service.AbstractService;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.config.smartid.SmartIDConfigurationProvider;
 import ee.ria.sso.service.smartid.SmartIDClient.AuthenticationRequest;
 import ee.ria.sso.statistics.StatisticsHandler;
 import ee.ria.sso.statistics.StatisticsOperation;
+import ee.ria.sso.statistics.StatisticsRecord;
 import ee.sk.smartid.AuthenticationHash;
 import ee.sk.smartid.AuthenticationIdentity;
 import ee.sk.smartid.SmartIdAuthenticationResult;
@@ -20,6 +21,7 @@ import ee.sk.smartid.exception.UserAccountNotFoundException;
 import ee.sk.smartid.rest.dao.AuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import org.apache.commons.lang3.StringUtils;
+import org.apereo.inspektr.audit.annotation.Audit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,6 +64,11 @@ public class SmartIDAuthenticationService extends AbstractService {
         this.authResponseValidator = authResponseValidator;
     }
 
+    @Audit(
+            action = "SMARTID_AUTHENTICATION_INIT",
+            actionResolverName = "AUTHENTICATION_RESOLVER",
+            resourceResolverName = "TARA_AUTHENTICATION_RESOURCE_RESOLVER"
+    )
     public Event initSmartIdAuthenticationSession(RequestContext context) {
         final TaraCredential credential = context.getFlowExecutionContext().getActiveSession().getScope().get(Constants.CREDENTIAL, TaraCredential.class);
         final String personIdentifier = credential.getPrincipalCode();
@@ -93,6 +100,11 @@ public class SmartIDAuthenticationService extends AbstractService {
         }
     }
 
+    @Audit(
+            action = "SMARTID_AUTHENTICATION_STATUS_POLL",
+            actionResolverName = "AUTHENTICATION_RESOLVER",
+            resourceResolverName = "TARA_AUTHENTICATION_RESOURCE_RESOLVER"
+    )
     public Event checkSmartIdAuthenticationSessionStatus(RequestContext context) {
         AuthenticationSession authSession =
                 context.getFlowScope().get(Constants.SMART_ID_AUTHENTICATION_SESSION, AuthenticationSession.class);
@@ -171,11 +183,15 @@ public class SmartIDAuthenticationService extends AbstractService {
     }
 
     private void collectStatistics(RequestContext context, StatisticsOperation statisticsOperation) {
-        statisticsHandler.collect(LocalDateTime.now(), context, AUTHENTICATION_TYPE, statisticsOperation);
+        statisticsHandler.collect(new StatisticsRecord(
+                LocalDateTime.now(), getServiceClientId(context), AUTHENTICATION_TYPE, statisticsOperation
+        ));
     }
 
     private void collectErrorStatistics(RequestContext context, String exceptionMessage) {
-        statisticsHandler.collect(LocalDateTime.now(), context, AUTHENTICATION_TYPE, StatisticsOperation.ERROR, exceptionMessage);
+        statisticsHandler.collect(new StatisticsRecord(
+                LocalDateTime.now(), getServiceClientId(context), AUTHENTICATION_TYPE, exceptionMessage
+        ));
     }
 
     private RuntimeException handleSmartIDClientException(RequestContext context, ClientErrorException e) {
@@ -194,15 +210,22 @@ public class SmartIDAuthenticationService extends AbstractService {
     }
 
     private RuntimeException handleException(RequestContext context, Exception exception, String errorMessageKey) {
-        clearFlowScope(context);
-        LOGGER.info("Process failed due to exception of type <{}> with message <{}> and errorMessageKey <{}>",
-                exception.getClass(),
-                exception.getMessage(),
-                errorMessageKey);
-//        TODO: Speki järgi peaks olema lokaliseeritud veasõnum, äkki peaks olema hoopis veakood?
-        collectErrorStatistics(context, exception.getMessage());
-        String localizedErrorMessage = getMessage(errorMessageKey);
-        return new TaraAuthenticationException(localizedErrorMessage, exception);
+        try {
+            LOGGER.info("Process failed due to exception of type <{}> with message <{}> and errorMessageKey <{}>",
+                    exception.getClass(),
+                    exception.getMessage(),
+                    errorMessageKey);
+
+            try {
+                collectErrorStatistics(context, exception.getMessage());
+            } catch (Exception e) {
+                LOGGER.error("Failed to collect error statistics!", e);
+            }
+            String localizedErrorMessage = getMessage(errorMessageKey);
+            return new TaraAuthenticationException(localizedErrorMessage, exception);
+        } finally {
+            clearFlowScope(context);
+        }
     }
 
     private static void clearFlowScope(RequestContext context) {
