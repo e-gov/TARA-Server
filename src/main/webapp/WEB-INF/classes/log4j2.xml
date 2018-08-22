@@ -16,7 +16,7 @@
         <Property name="cas.audit_log.pattern">{&quot;requestId&quot;:&quot;%X{requestId}&quot;, &quot;sessionId&quot;:&quot;%X{sessionId}&quot;, &quot;msg&quot;:&quot;%enc{%m}{JSON}&quot;}%n</Property>
 
         <!-- The default log verbosity level for cas.log -->
-        <Property name="cas.log.level">debug</Property>
+        <Property name="cas.log.level">info</Property>
 
         <!-- The default log verbosity level for console -->
         <Property name="cas.console.level">off</Property>
