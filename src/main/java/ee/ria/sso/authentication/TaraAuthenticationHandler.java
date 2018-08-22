@@ -45,13 +45,21 @@ public class TaraAuthenticationHandler extends AbstractPreAndPostProcessingAuthe
             this.putIfNotEmpty(map, "firstName", taraCredential.getFirstName());
             this.putIfNotEmpty(map, "lastName", taraCredential.getLastName());
             this.putIfNotEmpty(map, "authenticationType", taraCredential.getType().getAmrName());
-            if (AuthenticationType.MobileID.equals(taraCredential.getType())) {
-                this.putIfNotEmpty(map, "mobileNumber", taraCredential.getMobileNumber());
-            }
-            if (AuthenticationType.eIDAS.equals(taraCredential.getType())) {
-                this.putIfNotEmpty(map, "dateOfBirth", taraCredential.getDateOfBirth());
-                if (taraCredential.getLevelOfAssurance() != null)
-                    map.put("levelOfAssurance", taraCredential.getLevelOfAssurance().getAcrName());
+            switch (taraCredential.getType()) {
+                case MobileID:
+                    this.putIfNotEmpty(map, "mobileNumber", taraCredential.getMobileNumber());
+                    break;
+
+                case eIDAS:
+                    this.putIfNotEmpty(map, "dateOfBirth", taraCredential.getDateOfBirth());
+                    if (taraCredential.getLevelOfAssurance() != null)
+                        map.put("levelOfAssurance", taraCredential.getLevelOfAssurance().getAcrName());
+                    break;
+
+                case BankLink:
+                    if (taraCredential.getBanklinkType() != null)
+                        map.put("banklinkType", taraCredential.getBanklinkType().getName().toUpperCase());
+                    break;
             }
             return this.createHandlerResult(credential, this.principalFactory
                 .createPrincipal(taraCredential.getId(), map), new ArrayList<>());

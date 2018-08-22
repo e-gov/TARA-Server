@@ -3,6 +3,7 @@ package ee.ria.sso.service.eidas;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import ee.ria.sso.CommonConstants;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.TaraAuthenticationException;
 import ee.ria.sso.authentication.credential.TaraCredential;
@@ -36,7 +37,6 @@ import java.util.*;
 )
 public class EidasAuthenticationServiceTest extends AbstractAuthenticationServiceTest {
 
-    private static final String UUID_REGEX = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$";
     private static final String MOCK_PERSON_IDENTIFIER = "60001019906";
     private static final String MOCK_FIRST_NAME = "MARY ÄNN";
     private static final String MOCK_LAST_NAME = "O’CONNEŽ-ŠUSLIK";
@@ -119,7 +119,7 @@ public class EidasAuthenticationServiceTest extends AbstractAuthenticationServic
         String eidasResponse = "OK";
         wireMockServer.stubFor(WireMock.get(WireMock.urlPathEqualTo("/login"))
                 .withQueryParam("Country", WireMock.equalTo("EE"))
-                .withQueryParam("RelayState", WireMock.matching(UUID_REGEX))
+                .withQueryParam("RelayState", WireMock.matching(CommonConstants.UUID_REGEX))
                 .willReturn(WireMock.aResponse().withStatus(200).withBody(eidasResponse))
         );
         Event event = this.authenticationService.startLoginByEidas(requestContext);

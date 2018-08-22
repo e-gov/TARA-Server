@@ -6,6 +6,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import ee.ria.sso.authentication.AuthenticationType;
+import ee.ria.sso.utils.EstonianIdCodeUtil;
 import org.apache.commons.codec.digest.MessageDigestAlgorithms;
 import org.apereo.cas.authentication.Authentication;
 import org.apereo.cas.authentication.AuthenticationHandler;
@@ -121,16 +122,21 @@ public class OidcIdTokenGeneratorService {
         claims.setIssuedAtToNow();
         claims.setNotBeforeMinutesInThePast(this.skew);
         claims.setSubject(principal.getId());
-        claims.setClaim("profile_attributes", filterAttributes(principal.getAttributes()));
-
-        if (AuthenticationType.eIDAS.name().equals(principal.getAttributes().get("authenticationType"))) {
-            String levelOfAssurance = (String) principal.getAttributes().get("levelOfAssurance");
-            if (levelOfAssurance != null) claims.setStringClaim(OidcConstants.ACR, levelOfAssurance);
-        }
+        claims.setClaim("profile_attributes", filterProfileAttributes(principal.getAttributes()));
 
         if (authentication.getAttributes().containsKey(AuthenticationHandler.SUCCESSFUL_AUTHENTICATION_HANDLERS)) {
-            final Collection<Object> val = CollectionUtils.toCollection(principal.getAttributes().get("authenticationType"));
-            claims.setStringListClaim(OidcConstants.AMR, val.toArray(new String[]{}));
+            final Object authenticationType = principal.getAttributes().get("authenticationType");
+            final List<Object> amrValues = CollectionUtils.wrap(authenticationType);
+
+            if (AuthenticationType.eIDAS.getAmrName().equals(authenticationType)) {
+                String levelOfAssurance = (String) principal.getAttributes().get("levelOfAssurance");
+                if (levelOfAssurance != null) claims.setStringClaim(OidcConstants.ACR, levelOfAssurance);
+            } else if (AuthenticationType.BankLink.getAmrName().equals(authenticationType)) {
+                String banklinkType = (String) principal.getAttributes().get("banklinkType");
+                if (banklinkType != null) amrValues.add(banklinkType);
+            }
+
+            claims.setStringListClaim(OidcConstants.AMR, amrValues.toArray(new String[]{}));
         }
 
         claims.setClaim(OAuth20Constants.STATE, authentication.getAttributes().get(OAuth20Constants.STATE));
@@ -148,7 +154,7 @@ public class OidcIdTokenGeneratorService {
         attributeMap.put("mobileNumber", "mobile_number");
     }
 
-    private Map<String, Object> filterAttributes(Map<String, Object> inputAttributes) {
+    private Map<String, Object> filterProfileAttributes(Map<String, Object> inputAttributes) {
         Map<String, Object> attrs = new TreeMap(String.CASE_INSENSITIVE_ORDER);
 
         for (String inputAttributeName : inputAttributes.keySet()) {
@@ -160,33 +166,12 @@ public class OidcIdTokenGeneratorService {
 
         if (attrs.get("date_of_birth") == null) {
             String principalCode = (String) inputAttributes.get("principalCode");
-            if (principalCode != null && isEstonianIdCode(principalCode)) {
-                String dateOfBirth = tryToExtractDateOfBirth(principalCode);
-                if (dateOfBirth != null) attrs.put("date_of_birth", dateOfBirth);
+            if (principalCode != null && EstonianIdCodeUtil.isEstonianIdCode(principalCode)) {
+                attrs.put("date_of_birth", EstonianIdCodeUtil.extractDateOfBirthFromEstonianIdCode(principalCode));
             }
         }
 
         return attrs;
-    }
-
-    private boolean isEstonianIdCode(String principalCode) {
-        return principalCode.length() == 13 && principalCode.startsWith("EE");
-    }
-
-    private String tryToExtractDateOfBirth(String estonianIdCode) {
-        int sexAndCentury = Integer.parseUnsignedInt(estonianIdCode.substring(2, 3));
-        if (sexAndCentury < 1 || sexAndCentury > 6) return null;
-
-        int birthYear = Integer.parseUnsignedInt(estonianIdCode.substring(3, 5));
-        birthYear += (1800 + ((sexAndCentury - 1) >>> 1) * 100);
-
-        int birthMonth = Integer.parseUnsignedInt(estonianIdCode.substring(5, 7));
-        if (birthMonth < 1 || birthMonth > 12) return null;
-
-        int birthDay = Integer.parseUnsignedInt(estonianIdCode.substring(7, 9));
-        if (birthDay < 1 || birthDay > 31) return null;
-
-        return String.format("%04d-%02d-%02d", birthYear, birthMonth, birthDay);
     }
 
     private String generateAccessTokenHash(final AccessToken accessTokenId) {
