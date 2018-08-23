@@ -7,16 +7,16 @@
         <Property name="cas.log.dir">/var/log/cas</Property>
 
         <!-- Log record format: -->
-        <Property name="cas.log.pattern">{&quot;date&quot;:&quot;%d{ISO8601}&quot;, &quot;level&quot;:&quot;%level&quot;, &quot;requestId&quot;:&quot;%X{requestId}&quot;, &quot;sessionId&quot;:&quot;%X{sessionId}&quot;, &quot;logger&quot;:&quot;%logger&quot;, &quot;thread&quot;:&quot;%thread&quot;, &quot;msg&quot;:&quot;%enc{%m}{JSON}&quot;}%n</Property>
+        <Property name="cas.log.pattern">{&quot;date&quot;:&quot;%d{yyyy-MM-dd'T'HH:mm:ss,SSSZ}&quot;, &quot;level&quot;:&quot;%level&quot;, &quot;requestId&quot;:&quot;%X{requestId}&quot;, &quot;sessionId&quot;:&quot;%X{sessionId}&quot;, &quot;logger&quot;:&quot;%logger&quot;, &quot;thread&quot;:&quot;%thread&quot;, &quot;msg&quot;:&quot;%enc{%m}{JSON}&quot;}%n</Property>
 
         <!-- Log record format: error details -->
-        <Property name="cas.error_details_log.pattern">{&quot;date&quot;:&quot;%d{ISO8601}&quot;, &quot;level&quot;:&quot;%level&quot;, &quot;requestId&quot;:&quot;%X{requestId}&quot;, &quot;sessionId&quot;:&quot;%X{sessionId}&quot;, &quot;throwable&quot;:&quot;%enc{%throwable}{JSON}&quot;}%n</Property>
+        <Property name="cas.error_details_log.pattern">{&quot;date&quot;:&quot;%d{yyyy-MM-dd'T'HH:mm:ss,SSSZ}&quot;, &quot;level&quot;:&quot;%level&quot;, &quot;requestId&quot;:&quot;%X{requestId}&quot;, &quot;sessionId&quot;:&quot;%X{sessionId}&quot;, &quot;throwable&quot;:&quot;%enc{%throwable}{JSON}&quot;}%n</Property>
 
         <!-- Log record format: cas_audit.log -->
         <Property name="cas.audit_log.pattern">{&quot;requestId&quot;:&quot;%X{requestId}&quot;, &quot;sessionId&quot;:&quot;%X{sessionId}&quot;, &quot;msg&quot;:&quot;%enc{%m}{JSON}&quot;}%n</Property>
 
         <!-- The default log verbosity level for cas.log -->
-        <Property name="cas.log.level">debug</Property>
+        <Property name="cas.log.level">info</Property>
 
         <!-- The default log verbosity level for console -->
         <Property name="cas.console.level">off</Property>
