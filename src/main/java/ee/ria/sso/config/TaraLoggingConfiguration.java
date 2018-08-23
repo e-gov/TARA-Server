@@ -65,7 +65,7 @@ public class TaraLoggingConfiguration {
     private class TaraSlf4jLoggingAuditTrailManager extends Slf4jLoggingAuditTrailManager {
 
         private final Logger log = LoggerFactory.getLogger("auditLog");
-        private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss,SSS");
+        private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss,SSSZ");
 
         public void record(final AuditActionContext auditActionContext) {
 
