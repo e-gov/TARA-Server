@@ -25,6 +25,8 @@ import org.springframework.webflow.core.collection.SharedAttributeMap;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
 
+import java.security.cert.CertificateExpiredException;
+import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -70,6 +72,8 @@ public class IDCardAuthenticationService extends AbstractService {
             X509Certificate certificate = sessionMap.get(Constants.CERTIFICATE_SESSION_ATTRIBUTE, X509Certificate.class);
             if (certificate == null)
                 throw new AuthenticationFailedException("message.idc.nocertificate", "Unable to find certificate from session");
+            this.validateUserCert(certificate);
+
             if (this.configurationProvider.isOcspEnabled())
                 this.checkCert(certificate);
 
@@ -128,6 +132,18 @@ public class IDCardAuthenticationService extends AbstractService {
         context.getFlowExecutionContext().getActiveSession().getScope().clear();
     }
 
+
+    private void validateUserCert(X509Certificate x509Certificate) {
+        try {
+            x509Certificate.checkValidity();
+        } catch (CertificateNotYetValidException e) {
+            throw new AuthenticationFailedException("message.idc.certnotyetvalid",
+                    "User certificate is not yet valid!", e);
+        } catch (CertificateExpiredException e) {
+            throw new AuthenticationFailedException("message.idc.certexpired",
+                    "User certificate is expired!", e);
+        }
+    }
 
     private void checkCert(X509Certificate x509Certificate) {
         X509Certificate issuerCert = this.findIssuerCertificate(x509Certificate);

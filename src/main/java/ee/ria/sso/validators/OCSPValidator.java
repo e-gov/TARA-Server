@@ -6,10 +6,7 @@ import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.Security;
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
+import java.security.cert.*;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
@@ -27,6 +24,7 @@ import org.bouncycastle.cert.ocsp.OCSPResp;
 import org.bouncycastle.cert.ocsp.RevokedStatus;
 import org.bouncycastle.cert.ocsp.SingleResp;
 import org.bouncycastle.cert.ocsp.UnknownStatus;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.ContentVerifierProvider;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentVerifierProviderBuilder;
@@ -44,6 +42,10 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class OCSPValidator {
+
+    static {
+        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+    }
 
     private final Logger log = LoggerFactory.getLogger(OCSPValidator.class);
 
@@ -114,28 +116,35 @@ public class OCSPValidator {
     }
 
     private CertificateID generateCertificateIdForRequest(BigInteger userCertSerialNumber, X509Certificate issuerCert)
-        throws OperatorCreationException, CertificateEncodingException, OCSPException {
-        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+            throws OperatorCreationException, CertificateEncodingException, OCSPException {
         return new CertificateID(
             new JcaDigestCalculatorProviderBuilder().build().get(CertificateID.HASH_SHA1),
             new JcaX509CertificateHolder(issuerCert), userCertSerialNumber);
     }
 
-    private void validateResponseSignature(BasicOCSPResp response, Map<String, X509Certificate> issuerCertificates) throws OCSPException, OperatorCreationException {
-        RDN cn = response.getResponderId().toASN1Primitive().getName().getRDNs(BCStyle.CN)[0];
-        String responderCN = IETFUtils.valueToString(cn.getFirst().getValue());
-
-        X509Certificate certificate = issuerCertificates.get(responderCN);
+    private void validateResponseSignature(BasicOCSPResp response, Map<String, X509Certificate> issuerCertificates)
+            throws OCSPException, OperatorCreationException, CertificateNotYetValidException, CertificateExpiredException {
+        X509Certificate certificate = issuerCertificates.get(getResponderCN(response));
         if (certificate == null) {
-            log.error("OCSP cert not found");
             throw new IllegalStateException("OCSP cert not found from setup");
         }
+        certificate.checkValidity();
 
-        ContentVerifierProvider verifierProvider = new JcaContentVerifierProviderBuilder().setProvider("BC")
+        ContentVerifierProvider verifierProvider = new JcaContentVerifierProviderBuilder()
+                .setProvider(BouncyCastleProvider.PROVIDER_NAME)
                 .build(certificate.getPublicKey());
 
         if (!response.isSignatureValid(verifierProvider))
             throw new IllegalStateException("OCSP response signature is not valid!");
+    }
+
+    private String getResponderCN(BasicOCSPResp response) {
+        try {
+            RDN cn = response.getResponderId().toASN1Primitive().getName().getRDNs(BCStyle.CN)[0];
+            return IETFUtils.valueToString(cn.getFirst().getValue());
+        } catch (Exception e) {
+            throw new IllegalStateException("Unable to find responder CN from OCSP response!", e);
+        }
     }
 
 }
