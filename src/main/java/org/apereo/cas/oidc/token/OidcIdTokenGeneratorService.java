@@ -40,6 +40,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 public class OidcIdTokenGeneratorService {
     private static final Logger LOGGER = LoggerFactory.getLogger(OidcIdTokenGeneratorService.class);
+    private static final List<String> validProfileAttributes = Arrays.asList(
+            "family_name", "given_name", "date_of_birth", "mobile_number"
+    );
 
     @Autowired
     private CasConfigurationProperties casProperties;
@@ -122,21 +125,13 @@ public class OidcIdTokenGeneratorService {
         claims.setIssuedAtToNow();
         claims.setNotBeforeMinutesInThePast(this.skew);
         claims.setSubject(principal.getId());
-        claims.setClaim("profile_attributes", filterProfileAttributes(principal.getAttributes()));
 
-        if (authentication.getAttributes().containsKey(AuthenticationHandler.SUCCESSFUL_AUTHENTICATION_HANDLERS)) {
-            final Object authenticationType = principal.getAttributes().get("authenticationType");
-            final List<Object> amrValues = CollectionUtils.wrap(authenticationType);
+        claims.setClaim("profile_attributes", getProfileAttributesMap(principal));
+        claims.setStringListClaim(OidcConstants.AMR, getAmrValuesList(principal).toArray(new String[]{}));
 
-            if (AuthenticationType.eIDAS.getAmrName().equals(authenticationType)) {
-                String levelOfAssurance = (String) principal.getAttributes().get("levelOfAssurance");
-                if (levelOfAssurance != null) claims.setStringClaim(OidcConstants.ACR, levelOfAssurance);
-            } else if (AuthenticationType.BankLink.getAmrName().equals(authenticationType)) {
-                String banklinkType = (String) principal.getAttributes().get("banklinkType");
-                if (banklinkType != null) amrValues.add(banklinkType);
-            }
-
-            claims.setStringListClaim(OidcConstants.AMR, amrValues.toArray(new String[]{}));
+        if (isOfAuthenticationType(principal, AuthenticationType.eIDAS)) {
+            String levelOfAssurance = (String) principal.getAttributes().get("level_of_assurance");
+            if (levelOfAssurance != null) claims.setStringClaim(OidcConstants.ACR, levelOfAssurance);
         }
 
         claims.setClaim(OAuth20Constants.STATE, authentication.getAttributes().get(OAuth20Constants.STATE));
@@ -146,32 +141,42 @@ public class OidcIdTokenGeneratorService {
         return claims;
     }
 
-    private static final Map<String, String> attributeMap = new HashMap<>();
-    static {
-        attributeMap.put("lastName", "family_name");
-        attributeMap.put("firstName", "given_name");
-        attributeMap.put("dateOfBirth", "date_of_birth");
-        attributeMap.put("mobileNumber", "mobile_number");
+    private static Object getAuthenticationType(Principal principal) {
+        return principal.getAttributes().get("authentication_type");
     }
 
-    private Map<String, Object> filterProfileAttributes(Map<String, Object> inputAttributes) {
-        Map<String, Object> attrs = new TreeMap(String.CASE_INSENSITIVE_ORDER);
+    private static boolean isOfAuthenticationType(Principal principal, AuthenticationType type) {
+        return type.getAmrName().equals(getAuthenticationType(principal));
+    }
 
-        for (String inputAttributeName : inputAttributes.keySet()) {
-            String mappedAttributeName = attributeMap.get(inputAttributeName);
-            if (mappedAttributeName == null) continue;
+    private Map<String, Object> getProfileAttributesMap(Principal principal) {
+        final Map<String, Object> principalAttributes = principal.getAttributes();
+        final Map<String, Object> profileAttributes = new TreeMap(String.CASE_INSENSITIVE_ORDER);
 
-            attrs.put(mappedAttributeName, inputAttributes.get(inputAttributeName));
-        }
+        validProfileAttributes.forEach(key -> {
+            Object value = principalAttributes.get(key);
+            if (value != null) profileAttributes.put(key, value);
+        });
 
-        if (attrs.get("date_of_birth") == null) {
-            String principalCode = (String) inputAttributes.get("principalCode");
+        if (profileAttributes.get("date_of_birth") == null) {
+            String principalCode = (String) principalAttributes.get("principal_code");
             if (principalCode != null && EstonianIdCodeUtil.isEstonianIdCode(principalCode)) {
-                attrs.put("date_of_birth", EstonianIdCodeUtil.extractDateOfBirthFromEstonianIdCode(principalCode));
+                profileAttributes.put("date_of_birth", EstonianIdCodeUtil.extractDateOfBirthFromEstonianIdCode(principalCode));
             }
         }
 
-        return attrs;
+        return profileAttributes;
+    }
+
+    private List<Object> getAmrValuesList(Principal principal) {
+        final List<Object> amrValues = CollectionUtils.wrap(getAuthenticationType(principal));
+
+        if (isOfAuthenticationType(principal, AuthenticationType.BankLink)) {
+            String banklinkType = (String) principal.getAttributes().get("banklink_type");
+            if (banklinkType != null) amrValues.add(banklinkType);
+        }
+
+        return amrValues;
     }
 
     private String generateAccessTokenHash(final AccessToken accessTokenId) {

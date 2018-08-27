@@ -34,31 +34,29 @@ public class TaraAuthenticationHandler extends AbstractPreAndPostProcessingAuthe
      * RESTRICTED METHODS
      */
 
-    // TODO: this class extracts attributes from TaraCredential and inserts them into a map
-
     @Override
     protected HandlerResult doAuthentication(Credential credential) throws GeneralSecurityException, PreventedException {
         final Map<String, Object> map = new LinkedHashMap<>();
         if (credential instanceof TaraCredential) {
             TaraCredential taraCredential = (TaraCredential) credential;
-            this.putIfNotEmpty(map, "principalCode", taraCredential.getPrincipalCode());
-            this.putIfNotEmpty(map, "firstName", taraCredential.getFirstName());
-            this.putIfNotEmpty(map, "lastName", taraCredential.getLastName());
-            this.putIfNotEmpty(map, "authenticationType", taraCredential.getType().getAmrName());
+            this.putIfNotEmpty(map, "principal_code", taraCredential.getPrincipalCode());
+            this.putIfNotEmpty(map, "given_name", taraCredential.getFirstName());
+            this.putIfNotEmpty(map, "family_name", taraCredential.getLastName());
+            this.putIfNotEmpty(map, "authentication_type", taraCredential.getType().getAmrName());
             switch (taraCredential.getType()) {
                 case MobileID:
-                    this.putIfNotEmpty(map, "mobileNumber", taraCredential.getMobileNumber());
+                    this.putIfNotEmpty(map, "mobile_number", taraCredential.getMobileNumber());
                     break;
 
                 case eIDAS:
-                    this.putIfNotEmpty(map, "dateOfBirth", taraCredential.getDateOfBirth());
+                    this.putIfNotEmpty(map, "date_of_birth", taraCredential.getDateOfBirth());
                     if (taraCredential.getLevelOfAssurance() != null)
-                        map.put("levelOfAssurance", taraCredential.getLevelOfAssurance().getAcrName());
+                        map.put("level_of_assurance", taraCredential.getLevelOfAssurance().getAcrName());
                     break;
 
                 case BankLink:
                     if (taraCredential.getBanklinkType() != null)
-                        map.put("banklinkType", taraCredential.getBanklinkType().getName().toUpperCase());
+                        map.put("banklink_type", taraCredential.getBanklinkType().getName().toUpperCase());
                     break;
             }
             return this.createHandlerResult(credential, this.principalFactory
