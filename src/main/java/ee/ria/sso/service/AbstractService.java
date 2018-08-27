@@ -5,6 +5,7 @@ import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apereo.cas.authentication.principal.WebApplicationService;
+import org.apereo.cas.util.EncodingUtils;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.webflow.core.collection.SharedAttributeMap;
@@ -54,11 +55,13 @@ public class AbstractService {
     private String getClientIdParameterValue(String serviceParameter) {
         try {
             UriComponents serviceUri = UriComponentsBuilder.fromUriString(serviceParameter).build();
-            return serviceUri.getQueryParams().get("client_id").get(0);
+            String clientId = serviceUri.getQueryParams().getFirst("client_id");
+            if (clientId == null)
+                throw new IllegalStateException("No client_id found among query parameters!");
+            return clientId;
         } catch (Exception e) {
-            log.error("Failed to get client_id from service parameter!", e);
-
-            return null;
+            log.warn("Failed to get client_id from service parameter: " + e.getMessage());
+            return EncodingUtils.urlEncode(serviceParameter);
         }
     }
 
