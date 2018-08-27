@@ -89,8 +89,9 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
 
         String message = "Validation failed!";
         Exception cause = OCSPValidationException.of(new RuntimeException(message));
-        Mockito.doThrow(cause).when(ocspValidatorMock)
-                .validate(mockUserCertificate, issuerCertificates.get("TEST of ESTEID-SK 2011"), configurationProvider.getOcspUrl());
+        //Mockito.doThrow(cause).when(ocspValidatorMock)
+        //        .validate(mockUserCertificate, issuerCertificates.get("TEST of ESTEID-SK 2011"), configurationProvider.getOcspUrl());
+        // TODO
 
         try {
             Event event = this.authenticationService.loginByIDCard(requestContext);

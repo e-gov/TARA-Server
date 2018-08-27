@@ -132,7 +132,7 @@ public class IDCardAuthenticationService extends AbstractService {
     private void checkCert(X509Certificate x509Certificate) {
         X509Certificate issuerCert = this.findIssuerCertificate(x509Certificate);
         if (issuerCert != null) {
-            this.ocspValidator.validate(x509Certificate, issuerCert, configurationProvider.getOcspUrl());
+            this.ocspValidator.validate(x509Certificate, issuerCert, configurationProvider.getOcspUrl(), issuerCertificates);
         } else {
             log.error("Issuer cert not found");
             throw new IllegalStateException("Issuer cert not found from setup");
