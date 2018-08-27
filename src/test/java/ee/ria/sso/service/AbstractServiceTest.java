@@ -12,6 +12,8 @@ import org.springframework.webflow.test.MockExternalContext;
 import org.springframework.webflow.test.MockParameterMap;
 import org.springframework.webflow.test.MockRequestContext;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,12 +30,22 @@ public class AbstractServiceTest {
     }
 
     @Test
-    public void getServiceClientIdShouldReturnNullWhenMalformedServiceUrl() {
+    public void getServiceClientIdShouldReturnServiceUrlWhenMalformedServiceUrl() {
         RequestContext requestContext = getMockRequestContext(new HashMap<>());
         ((MockHttpServletRequest) requestContext.getExternalContext().getNativeRequest()).addParameter("service", "invalidUrl");
 
         String clientId = abstractService.getServiceClientId(requestContext);
-        Assert.assertEquals(null, clientId);
+        Assert.assertEquals("invalidUrl", clientId);
+    }
+
+    @Test
+    public void getServiceClientIdShouldReturnServiceUrlWhenMalformedServiceUrl2() throws UnsupportedEncodingException {
+        String serviceParameter = createStringFromRangeOfValues('\0', '\u007F');
+        RequestContext requestContext = getMockRequestContext(new HashMap<>());
+        ((MockHttpServletRequest) requestContext.getExternalContext().getNativeRequest()).addParameter("service", serviceParameter);
+
+        String clientId = abstractService.getServiceClientId(requestContext);
+        Assert.assertEquals(URLEncoder.encode(serviceParameter, "UTF-8"), clientId);
     }
 
     @Test
@@ -75,6 +87,17 @@ public class AbstractServiceTest {
         );
 
         return context;
+    }
+
+    private String createStringFromRangeOfValues(char min, char max) {
+        final int length = (max - min) + 1;
+        char[] values = new char[length];
+
+        for (int i = 0; i < length; ++i) {
+            values[i] = (char) (min + i);
+        }
+
+        return new String(values);
     }
 
 }
