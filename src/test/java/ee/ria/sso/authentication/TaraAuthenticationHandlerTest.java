@@ -83,7 +83,7 @@ public class TaraAuthenticationHandlerTest {
         HandlerResult handlerResult = authenticationHandler.doAuthentication(credential);
 
         Map<String, Object> expectedAttributes = buildCommonExpectedAttributesMap(AuthenticationType.MobileID);
-        expectedAttributes.put("mobileNumber", MOCK_MOBILE_NUMBER);
+        expectedAttributes.put("mobile_number", MOCK_MOBILE_NUMBER);
         verifyHandlerResult(handlerResult, expectedAttributes);
     }
 
@@ -96,8 +96,8 @@ public class TaraAuthenticationHandlerTest {
         HandlerResult handlerResult = authenticationHandler.doAuthentication(credential);
 
         Map<String, Object> expectedAttributes = buildCommonExpectedAttributesMap(AuthenticationType.eIDAS);
-        expectedAttributes.put("dateOfBirth", MOCK_DATE_OF_BIRTH);
-        expectedAttributes.put("levelOfAssurance", LevelOfAssurance.SUBSTANTIAL.getAcrName());
+        expectedAttributes.put("date_of_birth", MOCK_DATE_OF_BIRTH);
+        expectedAttributes.put("level_of_assurance", LevelOfAssurance.SUBSTANTIAL.getAcrName());
         verifyHandlerResult(handlerResult, expectedAttributes);
     }
 
@@ -109,7 +109,7 @@ public class TaraAuthenticationHandlerTest {
         HandlerResult handlerResult = authenticationHandler.doAuthentication(credential);
 
         Map<String, Object> expectedAttributes = buildCommonExpectedAttributesMap(AuthenticationType.BankLink);
-        expectedAttributes.put("banklinkType", BankEnum.SEB.getName().toUpperCase());
+        expectedAttributes.put("banklink_type", BankEnum.SEB.getName().toUpperCase());
         verifyHandlerResult(handlerResult, expectedAttributes);
     }
 
@@ -136,10 +136,10 @@ public class TaraAuthenticationHandlerTest {
 
     private Map<String, Object> buildCommonExpectedAttributesMap(AuthenticationType type) {
         Map<String, Object> expectedAttributes = new HashMap<>();
-        expectedAttributes.put("authenticationType", type.getAmrName());
-        expectedAttributes.put("principalCode", MOCK_PRINCIPAL_CODE);
-        expectedAttributes.put("firstName", MOCK_FIRST_NAME);
-        expectedAttributes.put("lastName", MOCK_LAST_NAME);
+        expectedAttributes.put("authentication_type", type.getAmrName());
+        expectedAttributes.put("principal_code", MOCK_PRINCIPAL_CODE);
+        expectedAttributes.put("given_name", MOCK_FIRST_NAME);
+        expectedAttributes.put("family_name", MOCK_LAST_NAME);
         return expectedAttributes;
     }
 

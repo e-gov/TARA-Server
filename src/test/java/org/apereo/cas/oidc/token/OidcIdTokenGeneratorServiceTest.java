@@ -110,7 +110,7 @@ public class OidcIdTokenGeneratorServiceTest {
         mapFirstName("SomeFirstName", expectedProfileAttributes, principalAttributes);
         mapLastName("SomeLastName", expectedProfileAttributes, principalAttributes);
         mapDateOfBirth("2018-08-22", expectedProfileAttributes, principalAttributes);
-        principalAttributes.put("levelOfAssurance", LevelOfAssurance.SUBSTANTIAL.getAcrName());
+        principalAttributes.put("level_of_assurance", LevelOfAssurance.SUBSTANTIAL.getAcrName());
 
         JwtClaims jwtClaims = callProduceIdTokenClaims(mockAuthentication(
                 createDefaultAuthenticationAttributesMap(), mockPrincipal(identifier, principalAttributes)
@@ -129,7 +129,7 @@ public class OidcIdTokenGeneratorServiceTest {
         String identifier = mapPrincipalCode("abcd1234", principalAttributes);
         mapFirstName("SomeFirstName", expectedProfileAttributes, principalAttributes);
         mapLastName("SomeLastName", expectedProfileAttributes, principalAttributes);
-        principalAttributes.put("banklinkType", BankEnum.SEB.getName().toUpperCase());
+        principalAttributes.put("banklink_type", BankEnum.SEB.getName().toUpperCase());
 
         JwtClaims jwtClaims = callProduceIdTokenClaims(mockAuthentication(
                 createDefaultAuthenticationAttributesMap(), mockPrincipal(identifier, principalAttributes)
@@ -280,33 +280,33 @@ public class OidcIdTokenGeneratorServiceTest {
     }
 
     private String mapAuthenticationType(AuthenticationType type, Map<String, Object> principalAttributes) {
-        if (principalAttributes != null) principalAttributes.put("authenticationType", type.getAmrName());
+        if (principalAttributes != null) principalAttributes.put("authentication_type", type.getAmrName());
         return type.getAmrName();
     }
 
     private String mapPrincipalCode(String principalCode, Map<String, Object> principalAttributes) {
-        if (principalAttributes != null) principalAttributes.put("principalCode", principalCode);
+        if (principalAttributes != null) principalAttributes.put("principal_code", principalCode);
         return principalCode;
     }
 
     private void mapFirstName(String firstName, Map<String, Object> expectedProfileAttributes, Map<String, Object> principalAttributes) {
         if (expectedProfileAttributes != null) expectedProfileAttributes.put("given_name", firstName);
-        if (principalAttributes != null) principalAttributes.put("firstName", firstName);
+        if (principalAttributes != null) principalAttributes.put("given_name", firstName);
     }
 
     private void mapLastName(String lastName, Map<String, Object> expectedProfileAttributes, Map<String, Object> principalAttributes) {
         if (expectedProfileAttributes != null) expectedProfileAttributes.put("family_name", lastName);
-        if (principalAttributes != null) principalAttributes.put("lastName", lastName);
+        if (principalAttributes != null) principalAttributes.put("family_name", lastName);
     }
 
     private void mapMobileNumber(String mobileNumber, Map<String, Object> expectedProfileAttributes, Map<String, Object> principalAttributes) {
         if (expectedProfileAttributes != null) expectedProfileAttributes.put("mobile_number", mobileNumber);
-        if (principalAttributes != null) principalAttributes.put("mobileNumber", mobileNumber);
+        if (principalAttributes != null) principalAttributes.put("mobile_number", mobileNumber);
     }
 
     private void mapDateOfBirth(String dateOfBirth, Map<String, Object> expectedProfileAttributes, Map<String, Object> principalAttributes) {
         if (expectedProfileAttributes != null) expectedProfileAttributes.put("date_of_birth", dateOfBirth);
-        if (principalAttributes != null) principalAttributes.put("dateOfBirth", dateOfBirth);
+        if (principalAttributes != null) principalAttributes.put("date_of_birth", dateOfBirth);
     }
 
 }
