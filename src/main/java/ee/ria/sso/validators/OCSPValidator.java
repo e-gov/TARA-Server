@@ -29,10 +29,8 @@ import org.bouncycastle.operator.ContentVerifierProvider;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentVerifierProviderBuilder;
 import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
-import org.bouncycastle.util.encoders.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 
@@ -64,7 +62,7 @@ public class OCSPValidator {
             Optional<SingleResp> singleResponse = Arrays.stream(basicOCSPResponse.getResponses())
                 .filter(singleResp -> singleResp.getCertID().equals(certID)).findFirst();
             if (!singleResponse.isPresent()) {
-                throw new RuntimeException("No OCSP response is present");
+                throw new IllegalStateException("No OCSP response is present");
             }
 
             org.bouncycastle.cert.ocsp.CertificateStatus status = singleResponse.get().getCertStatus();
@@ -106,8 +104,9 @@ public class OCSPValidator {
 
         if (connection.getResponseCode() != 200) {
             this.log.error("OCSP request has been failed (HTTP {}) - {}",
-                    connection.getResponseCode(),
-                    connection.getResponseMessage());
+                    connection.getResponseCode(), connection.getResponseMessage());
+            throw new IllegalStateException(String.format("OCSP request failed with status code %d!",
+                    connection.getResponseCode()));
         }
 
         try (InputStream in = (InputStream) connection.getContent()) {

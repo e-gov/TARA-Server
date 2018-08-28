@@ -79,7 +79,7 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
     @Test
     public void loginByIDCardShouldFailWhenOCSPValidatorThrowsException() {
         expectedEx.expect(TaraAuthenticationException.class);
-        expectedEx.expectMessage("Validation failed!");
+        expectedEx.expectMessage("OCSP validation failed!");
 
         RequestContext requestContext = this.getMockRequestContext(null);
         requestContext.getExternalContext().getSessionMap().put(
@@ -87,8 +87,7 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
                 mockUserCertificate
         );
 
-        String message = "Validation failed!";
-        Exception cause = OCSPValidationException.of(new RuntimeException(message));
+        Exception cause = OCSPValidationException.of(new RuntimeException());
         Mockito.doThrow(cause).when(ocspValidatorMock).validate(mockUserCertificate,
                 issuerCertificates.get("TEST of ESTEID-SK 2011"),
                 configurationProvider.getOcspUrl(),
@@ -98,7 +97,7 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
         try {
             Event event = this.authenticationService.loginByIDCard(requestContext);
         } catch (Exception e) {
-            this.verifyLogContentsOnUnsuccessfulAuthentication(cause.getMessage());
+            this.verifyLogContentsOnUnsuccessfulAuthentication("OCSP validation failed!");
             throw e;
         }
 

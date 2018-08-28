@@ -16,7 +16,6 @@ import ee.ria.sso.utils.X509Utils;
 import ee.ria.sso.validators.OCSPValidationException;
 import ee.ria.sso.validators.OCSPValidator;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.apereo.inspektr.audit.annotation.Audit;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
@@ -106,19 +105,12 @@ public class IDCardAuthenticationService extends AbstractService {
                 log.error("Failed to collect error statistics!", e);
             }
 
-            String localizedErrorMessage = null;
+            String localizedErrorMessage = this.getMessage(Constants.MESSAGE_KEY_GENERAL_ERROR);
 
-            if (exception instanceof OCSPValidationException) {
-                String messageKey = String.format("message.idc.%s", ((OCSPValidationException) exception).getStatus().name().toLowerCase());
-                localizedErrorMessage = this.getMessage(messageKey, "message.idc.error");
-            } else if (exception instanceof AuthenticationFailedException) {
+            if (exception instanceof AuthenticationFailedException) {
                 AuthenticationFailedException authenticationFailedException = (AuthenticationFailedException) exception;
                 String messageKey = authenticationFailedException.getErrorMessageKeyOrDefault(Constants.MESSAGE_KEY_GENERAL_ERROR);
                 localizedErrorMessage = this.getMessage(messageKey, Constants.MESSAGE_KEY_GENERAL_ERROR);
-            }
-
-            if (StringUtils.isBlank(localizedErrorMessage)) {
-                localizedErrorMessage = this.getMessage(Constants.MESSAGE_KEY_GENERAL_ERROR);
             }
 
             return new TaraAuthenticationException(localizedErrorMessage, exception);
@@ -147,11 +139,18 @@ public class IDCardAuthenticationService extends AbstractService {
 
     private void checkCert(X509Certificate x509Certificate) {
         X509Certificate issuerCert = this.findIssuerCertificate(x509Certificate);
-        if (issuerCert != null) {
-            this.ocspValidator.validate(x509Certificate, issuerCert, configurationProvider.getOcspUrl(), issuerCertificates);
-        } else {
+
+        if (issuerCert == null) {
             log.error("Issuer cert not found");
             throw new IllegalStateException("Issuer cert not found from setup");
+        }
+
+        try {
+            this.ocspValidator.validate(x509Certificate, issuerCert, configurationProvider.getOcspUrl(), issuerCertificates);
+        } catch (OCSPValidationException e) {
+            String errorMessageKey = "message.idc.error";
+            if (e.getCause() != null) errorMessageKey = String.format("message.idc.%s", e.getStatus().name().toLowerCase());
+            throw new AuthenticationFailedException(errorMessageKey, "OCSP validation failed!", e);
         }
     }
 
