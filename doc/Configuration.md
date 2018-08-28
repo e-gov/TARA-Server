@@ -129,6 +129,8 @@ The following is a complete list of TARA specific audit events:
 
 | **Event** | **Description** |
 | :---------------- | :---------- |
+| `CLIENT_CERT_HANDLING_SUCCESS` | Initial ID-Card certificate header verification was successful. |
+| `CLIENT_CERT_HANDLING_FAILURE` | Initial ID-Card certificate header verification has failed. |
 | `ESTEID_AUTHENTICATION_SUCCESS` | A successful ID-Card authentication procedure has been completed. |
 | `ESTEID_AUTHENTICATION_FAILURE` | ID-Card authentication has failed. |
 | `MID_AUTHENTICATION_INIT_SUCCESS` | Estonian Mobile-ID init request successful. |

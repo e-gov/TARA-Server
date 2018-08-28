@@ -5,6 +5,7 @@ import org.apereo.inspektr.audit.spi.AuditResourceResolver;
 import org.aspectj.lang.JoinPoint;
 import org.springframework.webflow.execution.RequestContext;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 
 
@@ -27,6 +28,8 @@ public class RequestContextAsFirstParameterResourceResolver implements AuditReso
         if (object instanceof RequestContext) {
             final RequestContext requestContext = RequestContext.class.cast(object);
             return new String[] {SUPPLIED_PARAMETERS + requestContext.getExternalContext().getRequestParameterMap()};
+        } else if (object instanceof HttpServletRequest) {
+            return new String[] {SUPPLIED_PARAMETERS + ((HttpServletRequest)object).getParameterMap()};
         }
         return new String[] {SUPPLIED_PARAMETERS + Arrays.asList((Object[]) object)};
     }
