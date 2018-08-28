@@ -1,5 +1,6 @@
 package ee.ria.sso.service.banklink;
 
+import ee.ria.sso.CommonConstants;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -74,7 +75,7 @@ public class HttpSessionNonceManagerTest {
     private void verifyNonceGenerated(String nonce) {
         Assert.assertTrue("Invalid nonce generated!",
                 Pattern.matches(
-                        "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+                        CommonConstants.UUID_REGEX,
                         nonce
                 )
         );

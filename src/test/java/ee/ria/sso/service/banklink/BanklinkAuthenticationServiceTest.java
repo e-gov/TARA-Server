@@ -7,6 +7,7 @@ import com.nortal.banklink.core.packet.Packet;
 import com.nortal.banklink.core.packet.PacketFactory;
 import com.nortal.banklink.core.packet.param.PacketParameter;
 import com.nortal.banklink.link.BankLinkConfig;
+import ee.ria.sso.CommonConstants;
 import ee.ria.sso.authentication.BankEnum;
 import ee.ria.sso.authentication.TaraAuthenticationException;
 import ee.ria.sso.authentication.credential.TaraCredential;
@@ -165,7 +166,7 @@ public class BanklinkAuthenticationServiceTest {
         addMockNonceToSession(callbackRequestCtx, vkNonce);
 
         Event event = this.authenticationService.checkLoginForBankLink(callbackRequestCtx);
-        verifyCredential(callbackRequestCtx);
+        verifyCredential(callbackRequestCtx, BankEnum.SEB);
         verifySuccessEvent(event);
         SimpleTestAppender.verifyLogEventsExistInOrder(
                 containsString(String.format(";openIdDemo;BankLink/%s;START_AUTH;", "SEB")),
@@ -184,7 +185,7 @@ public class BanklinkAuthenticationServiceTest {
         addMockNonceToSession(callbackRequestCtx, vkNonce);
 
         Event event = this.authenticationService.checkLoginForBankLink(callbackRequestCtx);
-        verifyCredential(callbackRequestCtx);
+        verifyCredential(callbackRequestCtx, BankEnum.LHV);
         verifySuccessEvent(event);
     }
 
@@ -254,7 +255,7 @@ public class BanklinkAuthenticationServiceTest {
         this.authenticationService.checkLoginForBankLink(callbackRequestCtx);
     }
 
-    private void verifyCredential(RequestContext callbackRequestCtx) {
+    private void verifyCredential(RequestContext callbackRequestCtx, BankEnum bankEnum) {
         TaraCredential credential = (TaraCredential) callbackRequestCtx.getFlowExecutionContext().getActiveSession().getScope().get("credential");
         Assert.assertNotNull("No credential in session!", credential);
 
@@ -262,6 +263,7 @@ public class BanklinkAuthenticationServiceTest {
         Assert.assertEquals("Invalid principal code name in credential!", "EE47302200234", credential.getPrincipalCode());
         Assert.assertEquals("Invalid first name in credential!", "LEOPOLDŠÖ", credential.getFirstName());
         Assert.assertEquals("Invalid last name in credential!", "TIIGER", credential.getLastName());
+        Assert.assertEquals("Invalid bank in credential!", bankEnum, credential.getBanklinkType());
     }
 
     private void addMockNonceToSession(RequestContext callbackRequestCtx, String vk_nonce) {
@@ -293,7 +295,7 @@ public class BanklinkAuthenticationServiceTest {
         );
         Assert.assertTrue("Invalid VK_NONCE!",
                 Pattern.matches(
-                        "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+                        CommonConstants.UUID_REGEX,
                         packet.getParameterValue("VK_NONCE")
                 )
         );
