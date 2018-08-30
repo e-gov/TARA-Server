@@ -17,6 +17,7 @@ import ee.ria.sso.validators.OCSPValidationException;
 import ee.ria.sso.validators.OCSPValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.apereo.inspektr.audit.annotation.Audit;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,11 @@ import org.springframework.webflow.core.collection.SharedAttributeMap;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
 
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.SignatureException;
+import java.security.cert.CertificateException;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
@@ -76,12 +82,7 @@ public class IDCardAuthenticationService extends AbstractService {
             if (this.configurationProvider.isOcspEnabled())
                 this.checkCert(certificate);
 
-            Map<String, String> params = Splitter.on(", ").withKeyValueSeparator("=").split(certificate.getSubjectDN().getName());
-            String principalCode = "EE" + params.get("SERIALNUMBER");
-            String firstName = params.get("GIVENNAME");
-            String lastName = params.get("SURNAME");
-
-            TaraCredential credential = new TaraCredential(AuthenticationType.IDCard, principalCode, firstName, lastName);
+            TaraCredential credential = createUserCredential(certificate);
             context.getFlowExecutionContext().getActiveSession().getScope().put("credential", credential);
 
             this.statistics.collect(new StatisticsRecord(
@@ -130,10 +131,10 @@ public class IDCardAuthenticationService extends AbstractService {
             x509Certificate.checkValidity();
         } catch (CertificateNotYetValidException e) {
             throw new AuthenticationFailedException("message.idc.certnotyetvalid",
-                    "User certificate is not yet valid!", e);
+                    "User certificate is not yet valid", e);
         } catch (CertificateExpiredException e) {
             throw new AuthenticationFailedException("message.idc.certexpired",
-                    "User certificate is expired!", e);
+                    "User certificate is expired", e);
         }
     }
 
@@ -146,11 +147,17 @@ public class IDCardAuthenticationService extends AbstractService {
         }
 
         try {
+            x509Certificate.verify(issuerCert.getPublicKey(), BouncyCastleProvider.PROVIDER_NAME);
+        } catch (CertificateException | InvalidKeyException | NoSuchAlgorithmException | NoSuchProviderException | SignatureException e) {
+            throw new IllegalStateException("Failed to verify user certificate", e);
+        }
+
+        try {
             this.ocspValidator.validate(x509Certificate, issuerCert, configurationProvider.getOcspUrl(), issuerCertificates);
         } catch (OCSPValidationException e) {
             String errorMessageKey = "message.idc.error";
             if (e.getCause() != null) errorMessageKey = String.format("message.idc.%s", e.getStatus().name().toLowerCase());
-            throw new AuthenticationFailedException(errorMessageKey, "OCSP validation failed!", e);
+            throw new AuthenticationFailedException(errorMessageKey, "OCSP validation failed", e);
         }
     }
 
@@ -158,6 +165,19 @@ public class IDCardAuthenticationService extends AbstractService {
         String issuerCN = X509Utils.getSubjectCNFromCertificate(userCertificate);
         log.debug("IssuerCN extracted: {}", issuerCN);
         return issuerCertificates.get(issuerCN);
+    }
+
+    private TaraCredential createUserCredential(X509Certificate userCertificate) {
+        Map<String, String> params = Splitter.on(", ").withKeyValueSeparator("=").split(
+                userCertificate.getSubjectDN().getName()
+        );
+
+        return new TaraCredential(
+                AuthenticationType.IDCard,
+                "EE" + params.get("SERIALNUMBER"),
+                params.get("GIVENNAME"),
+                params.get("SURNAME")
+        );
     }
 
 }
