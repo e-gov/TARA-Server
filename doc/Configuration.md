@@ -493,3 +493,70 @@ cas.audit.appCode=TARA-INSTANCE-1
 ````
 
 NB! Note that audit logging can be further customized by CAS configuration parameters (see [CAS documentation](https://apereo.github.io/cas/5.1.x/installation/Configuration-Properties.html#audits)).
+
+
+<a name="tara_truststore"></a>
+## TARA truststore
+------------------
+
+In order to make TARA more secure, a dedicated truststore should be used instead of the default Java VM truststore. This can be achieved with Java command-line options (either directly or via environment variable `JAVA_OPTS`).
+
+Example:
+
+````
+-Djavax.net.ssl.trustStore=/truststore_location/tara.truststore -Djavax.net.ssl.trustStorePassword=changeit -Djavax.net.ssl.trustStoreType=jks
+````
+
+The previous example assumes a truststore file `tara.truststore`, located at `/truststore_location/`, having `changeit` as its password and being in the JKS format.
+
+
+### DigiDocService trusted certificates
+
+In order to be able to use Mobile-ID authentication in TARA, a relevant DigiDocService certificate must be added to TARA truststore.
+
+#### Live environment
+
+TARA is configured against the live environment of DigiDocService if `mobile-id.service-url` in `application.properties` is set to `https://digidocservice.sk.ee` (see [Mobile-ID authentication](#mobile_id)).
+The SSL certificate of the live environment of DigiDocService is available at the Estonian Certification Centre [certificate repository](https://www.sk.ee/en/repository/certs/) under the name of `digidocservice.sk.ee`.
+
+An example of adding DigiDocService SSL certificate to TARA truststore:
+````
+keytool -importcert -keystore tara.truststore -storepass changeit -file digidocservice.sk.ee_2016.pem.crt -alias digidocserviceskee -noprompt
+````
+
+#### Demo environment
+
+TARA is configured against the demo environment of DigiDocService if `mobile-id.service-url` in `application.properties` is set to `https://tsp.demo.sk.ee` (see [Mobile-ID authentication](#mobile_id)).
+
+An example of obtaining DigiDocService SSL certificate with an `openssl` command:
+````
+openssl s_client -connect tsp.demo.sk.ee:443 -showcerts
+````
+The relevant certificate is displayed at depth 0 of the certificate chain in the command output.
+After copying the certificate into a file, it can be imported into TARA truststore the same way as shown for the live certificate.
+
+
+### Smart-ID
+
+In order to be able to use Smart-ID authentication in TARA, a relevant Smart-ID service certificate must be added to TARA truststore.
+
+#### Live environment
+
+TARA is configured against the live environment of Smart-ID service if `smart-id.host-url` in `application.properties` is set to `https://rp-api.smart-id.com/v1/` (see [Estonian Smart-ID](#smart-id)).
+The SSL certificate of the live environment of Smart-ID service is available at the Estonian Certification Centre [certificate repository](https://www.sk.ee/en/repository/certs/) under the name of `rp-api.smart-id.com`.
+
+An example of adding Smart-ID service SSL certificate to TARA truststore:
+````
+keytool -importcert -keystore tara.truststore -storepass changeit -file rp-api.smart-id.com.pem.cer -alias rpapismartidcom -noprompt
+````
+
+#### Demo environment
+
+TARA is configured against the demo environment of Smart-ID service if `smart-id.host-url` in `application.properties` is set to `https://sid.demo.sk.ee/smart-id-rp/v1/` (see [Estonian Smart-ID](#smart-id)).
+
+An example of obtaining Smart-ID service SSL certificate with an `openssl` command:
+````
+openssl s_client -connect sid.demo.sk.ee:443 -showcerts
+````
+The relevant certificate is displayed at depth 0 of the certificate chain in the command output.
+After copying the certificate into a file, it can be imported into TARA truststore the same way as shown for the live certificate.
