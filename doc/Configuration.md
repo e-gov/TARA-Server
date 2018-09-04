@@ -1,5 +1,23 @@
 # Integrators guide
 
+- [Logging](#logging)
+  * [Log files](#log_files)
+  * [TARA audit trail events](#audit_events)
+  * [Tara-Stat](#tara_stat_log)
+- [Configuration parameters](#configuration_parameters)
+  * [ID-Card authentication](#id_card)
+  * [Mobile-ID authentication](#mobile_id)
+  * [eIDAS authentication](#eidas)
+  * [Banklink authentication](#banklink)
+  * [Smart-ID authentication](#smart-id)
+  * [Heartbeat endpoint](#heartbeat)
+  * [Tara-Stat service](#tara_stat)
+  * [Test environment warning message](#test_environment_warning)
+  * [Audit logging](#audit_logging)
+- [TARA truststore](#tara_truststore)
+  * [DigiDocService CA certs](#dds_ca_certs)
+  * [Smart-ID CA certs](#smart-id_ca_certs)
+
 <a name="logging"></a>
 ## Logging
 
@@ -16,6 +34,7 @@ Example:
 logging.config=file:/etc/cas/config/log4j2.xml
 ````
 
+<a name="log_files"></a>
 ### Log files
 
 By default, all log files are written to the local filesystem `/var/log/cas`. The location can be overridden either by providing a parameter `-Dcas.log.dir=<logdir>` during TARA startup or overriding the `log4j2.xml` file.
@@ -34,7 +53,7 @@ List of log files created by TARA on initialization:
 
 
 <a name="cas_log"></a>
-### cas.log
+#### cas.log
 
 Events are recorded in the json format, separated by the newline character `\n`.
 
@@ -57,7 +76,7 @@ Example:
 ````
 
 <a name="cas_error_log"></a>
-### cas_error.log
+#### cas_error.log
 
 Events are recorded in the json format, separated by the newline character `\n`.
 
@@ -81,7 +100,7 @@ Example:
 
 
 <a name="cas_audit_log"></a>
-### cas_audit.log
+#### cas_audit.log
 
 Events are recorded in the json format, separated by the newline character `\n`.
 
@@ -183,7 +202,7 @@ Example:
 export JAVA_OPTS="-Dcas.log.level=debug -Dcas.console.level=off"
 ````
 
-
+<a name="tara_stat_log"></a>
 ### Interfacing with Tara-Stat
 
 TARA can also send statistics as JSON formatted event stream to the [Tara-Stat service](https://e-gov.github.io/TARA-Stat/Dokumentatsioon).
