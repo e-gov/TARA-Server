@@ -8,6 +8,7 @@ import org.slf4j.MDC;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.Base64;
 
@@ -25,7 +26,7 @@ public class IncidentLoggingMDCServletFilter implements Filter {
             final HttpServletRequest request = (HttpServletRequest) servletRequest;
 
             addContextAttribute(Constants.MDC_ATTRIBUTE_REQUEST_ID, generateUniqueRequestId(request));
-            addContextAttribute(Constants.MDC_ATTRIBUTE_SESSION_ID, generateSessionIdHash(request));
+            addContextAttribute(Constants.MDC_ATTRIBUTE_SESSION_ID, getRequestSessionId(request));
 
             filterChain.doFilter(servletRequest, servletResponse);
         } finally {
@@ -47,12 +48,21 @@ public class IncidentLoggingMDCServletFilter implements Filter {
         return RandomStringUtils.random(16, REQUEST_ID_CHARACTER_SET);
     }
 
-    private static String generateSessionIdHash(HttpServletRequest request) {
-        String requestedSessionId = request.getSession(true).getId();
-        if (requestedSessionId != null)
-            return getBase64(DigestUtils.sha256(requestedSessionId));
-        else
-            return null;
+    private static String getRequestSessionId(HttpServletRequest request) {
+        final HttpSession session = request.getSession(true);
+        return getSessionIdentifier(session).getSessionId();
+    }
+
+    private static TaraSessionIdentifier getSessionIdentifier(HttpSession session) {
+        Object attribute = session.getAttribute(TaraSessionIdentifier.TARA_SESSION_IDENTIFIER_KEY);
+        if (attribute != null && attribute instanceof TaraSessionIdentifier)
+            return (TaraSessionIdentifier) attribute;
+
+        String sessionId = getBase64(DigestUtils.sha256(session.getId()));
+        TaraSessionIdentifier sessionIdentifier = new TaraSessionIdentifier(sessionId);
+        session.setAttribute(TaraSessionIdentifier.TARA_SESSION_IDENTIFIER_KEY, sessionIdentifier);
+
+        return sessionIdentifier;
     }
 
     private static String getBase64(byte[] bytes) {

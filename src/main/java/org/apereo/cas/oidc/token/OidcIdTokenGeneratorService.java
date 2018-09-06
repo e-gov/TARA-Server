@@ -9,7 +9,6 @@ import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.utils.EstonianIdCodeUtil;
 import org.apache.commons.codec.digest.MessageDigestAlgorithms;
 import org.apereo.cas.authentication.Authentication;
-import org.apereo.cas.authentication.AuthenticationHandler;
 import org.apereo.cas.authentication.principal.Principal;
 import org.apereo.cas.configuration.CasConfigurationProperties;
 import org.apereo.cas.oidc.OidcConstants;
@@ -89,7 +88,12 @@ public class OidcIdTokenGeneratorService {
             oidcRegisteredService, profile.get(), context, responseType);
         LOGGER.debug("Produce claims for the id token [{}] as [{}]", accessTokenId, claims);
 
-        return this.signingService.encode(oidcRegisteredService, claims);
+        String encodedIdToken = this.signingService.encode(oidcRegisteredService, claims);
+
+        // Needed for audit log (see "TARA_ID_TOKEN_REQUEST_RESOURCE_RESOLVER")
+        request.setAttribute("generatedAndEncodedIdTokenString", encodedIdToken);
+
+        return encodedIdToken;
     }
 
     /**

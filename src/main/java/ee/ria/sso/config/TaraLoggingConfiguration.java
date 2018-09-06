@@ -1,7 +1,6 @@
 package ee.ria.sso.config;
 
-import ee.ria.sso.logging.IncidentLoggingMDCServletFilter;
-import ee.ria.sso.logging.RequestContextAsFirstParameterResourceResolver;
+import ee.ria.sso.logging.*;
 import org.apereo.cas.audit.spi.DefaultDelegatingAuditTrailManager;
 import org.apereo.cas.audit.spi.DelegatingAuditTrailManager;
 import org.apereo.cas.audit.spi.config.CasCoreAuditConfiguration;
@@ -23,7 +22,6 @@ import org.springframework.core.Ordered;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,6 +45,7 @@ public class TaraLoggingConfiguration {
     public Map<String, AuditResourceResolver> auditResourceResolverMap() {
         final Map<String, AuditResourceResolver> map = new CasCoreAuditConfiguration().auditResourceResolverMap();
         map.put("TARA_AUTHENTICATION_RESOURCE_RESOLVER", new RequestContextAsFirstParameterResourceResolver());
+        map.put("TARA_ID_TOKEN_REQUEST_RESOURCE_RESOLVER", new IdTokenRequestResourceResolver());
         return map;
     }
 
