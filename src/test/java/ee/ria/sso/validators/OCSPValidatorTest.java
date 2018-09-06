@@ -9,7 +9,9 @@ import com.github.tomakehurst.wiremock.extension.ResponseTransformer;
 import com.github.tomakehurst.wiremock.http.Request;
 import com.github.tomakehurst.wiremock.http.Response;
 import lombok.Setter;
+import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.ocsp.OCSPObjectIdentifiers;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -311,6 +313,16 @@ public class OCSPValidatorTest {
         );
     }
 
+    private static void validateNonceDerOctetString(DEROctetString nonceDerOctetString) {
+        try (ASN1InputStream asn1InputStream = new ASN1InputStream(nonceDerOctetString.getOctetStream())) {
+            ASN1Primitive asn1Primitive = asn1InputStream.readObject();
+            if (!DEROctetString.class.isInstance(asn1Primitive))
+                throw new IllegalStateException("Nonce must be doubly wrapped in octet string");
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to extract an octet string from nonce octet string", e);
+        }
+    }
+
     @Setter
     public static class OcspResponseTransformer extends ResponseTransformer {
 
@@ -330,6 +342,7 @@ public class OCSPValidatorTest {
                 Assert.assertEquals(1, ocspReq.getRequestList().length);
 
                 DEROctetString nonce = (DEROctetString) ocspReq.getExtension(OCSPObjectIdentifiers.id_pkix_ocsp_nonce).getExtnValue();
+                validateNonceDerOctetString(nonce);
                 if (this.nonceResolver != null) nonce = this.nonceResolver.apply(nonce);
 
                 BasicOCSPResp basicOCSPResp = mockOcspResponse(
