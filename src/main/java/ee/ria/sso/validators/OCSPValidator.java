@@ -160,9 +160,9 @@ public class OCSPValidator {
         );
     }
 
-    private DEROctetString generateDerOctetStringForNonce(UUID uuid) {
+    private DEROctetString generateDerOctetStringForNonce(UUID uuid) throws IOException {
         byte[] uuidBytes = Conversion.uuidToByteArray(uuid, new byte[16], 0, 16);
-        return new DEROctetString(uuidBytes);
+        return new DEROctetString(new DEROctetString(uuidBytes));
     }
 
     private void validateResponseNonce(BasicOCSPResp response, DEROctetString nonce) {
