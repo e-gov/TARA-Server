@@ -1,5 +1,23 @@
 # Integrators guide
 
+- [Logging](#logging)
+  * [Log files](#log_files)
+  * [TARA audit trail events](#audit_events)
+  * [Tara-Stat](#tara_stat_log)
+- [Configuration parameters](#configuration_parameters)
+  * [ID-Card authentication](#id_card)
+  * [Mobile-ID authentication](#mobile_id)
+  * [eIDAS authentication](#eidas)
+  * [Banklink authentication](#banklink)
+  * [Smart-ID authentication](#smart-id)
+  * [Heartbeat endpoint](#heartbeat)
+  * [Tara-Stat service](#tara_stat)
+  * [Test environment warning message](#test_environment_warning)
+  * [Audit logging](#audit_logging)
+- [TARA truststore](#tara_truststore)
+  * [DigiDocService CA certs](#dds_ca_certs)
+  * [Smart-ID CA certs](#smart-id_ca_certs)
+
 <a name="logging"></a>
 ## Logging
 
@@ -16,6 +34,7 @@ Example:
 logging.config=file:/etc/cas/config/log4j2.xml
 ````
 
+<a name="log_files"></a>
 ### Log files
 
 By default, all log files are written to the local filesystem `/var/log/cas`. The location can be overridden either by providing a parameter `-Dcas.log.dir=<logdir>` during TARA startup or overriding the `log4j2.xml` file.
@@ -34,7 +53,7 @@ List of log files created by TARA on initialization:
 
 
 <a name="cas_log"></a>
-### cas.log
+#### cas.log
 
 Events are recorded in the json format, separated by the newline character `\n`.
 
@@ -57,7 +76,7 @@ Example:
 ````
 
 <a name="cas_error_log"></a>
-### cas_error.log
+#### cas_error.log
 
 Events are recorded in the json format, separated by the newline character `\n`.
 
@@ -81,7 +100,7 @@ Example:
 
 
 <a name="cas_audit_log"></a>
-### cas_audit.log
+#### cas_audit.log
 
 Events are recorded in the json format, separated by the newline character `\n`.
 
@@ -189,7 +208,7 @@ Example:
 export JAVA_OPTS="-Dcas.log.level=debug -Dcas.console.level=off"
 ````
 
-
+<a name="tara_stat_log"></a>
 ### Interfacing with Tara-Stat
 
 TARA can also send statistics as JSON formatted event stream to the [Tara-Stat service](https://e-gov.github.io/TARA-Stat/Dokumentatsioon).
@@ -499,3 +518,70 @@ cas.audit.appCode=TARA-INSTANCE-1
 ````
 
 NB! Note that audit logging can be further customized by CAS configuration parameters (see [CAS documentation](https://apereo.github.io/cas/5.1.x/installation/Configuration-Properties.html#audits)).
+
+
+<a name="tara_truststore"></a>
+## TARA truststore
+------------------
+
+In order to make TARA more secure, a dedicated truststore should be used instead of the default Java VM truststore. This can be achieved with Java command-line options (either directly or via environment variable `JAVA_OPTS`).
+
+Example:
+
+````
+-Djavax.net.ssl.trustStore=/truststore_location/tara.truststore -Djavax.net.ssl.trustStorePassword=changeit -Djavax.net.ssl.trustStoreType=jks
+````
+
+The previous example assumes a truststore file `tara.truststore`, located at `/truststore_location/`, having `changeit` as its password and being in the JKS format.
+
+
+### DigiDocService trusted certificates
+
+In order to be able to use Mobile-ID authentication in TARA, a relevant DigiDocService certificate must be added to TARA truststore.
+
+#### Live environment
+
+TARA is configured against the live environment of DigiDocService if `mobile-id.service-url` in `application.properties` is set to `https://digidocservice.sk.ee` (see [Mobile-ID authentication](#mobile_id)).
+The SSL certificate of the live environment of DigiDocService is available at the Estonian Certification Centre [certificate repository](https://www.sk.ee/en/repository/certs/) under the name of `digidocservice.sk.ee`.
+
+An example of adding DigiDocService SSL certificate to TARA truststore:
+````
+keytool -importcert -keystore tara.truststore -storepass changeit -file digidocservice.sk.ee_2016.pem.crt -alias digidocserviceskee -noprompt
+````
+
+#### Demo environment
+
+TARA is configured against the demo environment of DigiDocService if `mobile-id.service-url` in `application.properties` is set to `https://tsp.demo.sk.ee` (see [Mobile-ID authentication](#mobile_id)).
+
+An example of obtaining DigiDocService SSL certificate with an `openssl` command:
+````
+openssl s_client -connect tsp.demo.sk.ee:443 -showcerts
+````
+The relevant certificate is displayed at depth 0 of the certificate chain in the command output.
+After copying the certificate into a file, it can be imported into TARA truststore the same way as shown for the live certificate.
+
+
+### Smart-ID
+
+In order to be able to use Smart-ID authentication in TARA, a relevant Smart-ID service certificate must be added to TARA truststore.
+
+#### Live environment
+
+TARA is configured against the live environment of Smart-ID service if `smart-id.host-url` in `application.properties` is set to `https://rp-api.smart-id.com/v1/` (see [Estonian Smart-ID](#smart-id)).
+The SSL certificate of the live environment of Smart-ID service is available at the Estonian Certification Centre [certificate repository](https://www.sk.ee/en/repository/certs/) under the name of `rp-api.smart-id.com`.
+
+An example of adding Smart-ID service SSL certificate to TARA truststore:
+````
+keytool -importcert -keystore tara.truststore -storepass changeit -file rp-api.smart-id.com.pem.cer -alias rpapismartidcom -noprompt
+````
+
+#### Demo environment
+
+TARA is configured against the demo environment of Smart-ID service if `smart-id.host-url` in `application.properties` is set to `https://sid.demo.sk.ee/smart-id-rp/v1/` (see [Estonian Smart-ID](#smart-id)).
+
+An example of obtaining Smart-ID service SSL certificate with an `openssl` command:
+````
+openssl s_client -connect sid.demo.sk.ee:443 -showcerts
+````
+The relevant certificate is displayed at depth 0 of the certificate chain in the command output.
+After copying the certificate into a file, it can be imported into TARA truststore the same way as shown for the live certificate.
