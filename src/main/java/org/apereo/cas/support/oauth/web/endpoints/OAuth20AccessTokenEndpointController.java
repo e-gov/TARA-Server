@@ -100,8 +100,6 @@ public class OAuth20AccessTokenEndpointController extends BaseOAuth20Controller 
                     new RuntimeException("Access token request verification failed"));
             } else {
                 AccessTokenRequestDataHolder responseHolder = this.generateAccessTokeRequestDataHolder(request, response);
-                request.setAttribute("accessTokenTicketGrantingTicketIdentifier", responseHolder.getTicketGrantingTicket().toString());
-
                 J2EContext context = WebUtils.getPac4jJ2EContext(request, response);
                 AccessToken accessToken = this.generateAccessToken(responseHolder);
                 LOGGER.debug("Access token generated is: [{}]", accessToken);
