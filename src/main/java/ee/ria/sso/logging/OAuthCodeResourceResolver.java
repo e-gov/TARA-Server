@@ -40,7 +40,11 @@ public class OAuthCodeResourceResolver implements AuditResourceResolver {
 
     @Override
     public String[] resolveFrom(JoinPoint target, Exception exception) {
-        return new String[0];
+        final String message = exception.getMessage();
+        if (message != null) {
+            return new String[] {message};
+        }
+        return new String[] {exception.toString()};
     }
 
 }

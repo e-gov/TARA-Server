@@ -1,6 +1,9 @@
 package ee.ria.sso.logging;
 
 import ee.ria.sso.Constants;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NonNull;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -67,6 +70,17 @@ public class IncidentLoggingMDCServletFilter implements Filter {
 
     private static String getBase64(byte[] bytes) {
         return Base64.getUrlEncoder().encodeToString(bytes);
+    }
+
+    @Getter
+    @AllArgsConstructor
+    public static class TaraSessionIdentifier {
+
+        public static final String TARA_SESSION_IDENTIFIER_KEY = TaraSessionIdentifier.class.getName();
+
+        @NonNull
+        private final String sessionId;
+
     }
 
 }

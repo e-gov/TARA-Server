@@ -84,9 +84,9 @@ public class OAuth20AccessTokenEndpointController extends BaseOAuth20Controller 
     }
 
     @Audit(
-            action = "ID_TOKEN_REQUEST_HANDLING",
+            action = "ACCESS_TOKEN_REQUEST_HANDLING",
             actionResolverName = "AUTHENTICATION_RESOLVER",
-            resourceResolverName = "TARA_ID_TOKEN_REQUEST_RESOURCE_RESOLVER"
+            resourceResolverName = "TARA_ACCESS_TOKEN_REQUEST_RESOURCE_RESOLVER"
     )
     @PostMapping(
         path = {"/oauth2.0/accessToken"}

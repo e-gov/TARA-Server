@@ -45,9 +45,9 @@ public class OidcAccessTokenEndpointController extends OAuth20AccessTokenEndpoin
     }
 
     @Audit(
-            action = "ID_TOKEN_REQUEST_HANDLING",
+            action = "ACCESS_TOKEN_REQUEST_HANDLING",
             actionResolverName = "AUTHENTICATION_RESOLVER",
-            resourceResolverName = "TARA_ID_TOKEN_REQUEST_RESOURCE_RESOLVER"
+            resourceResolverName = "TARA_ACCESS_TOKEN_REQUEST_RESOURCE_RESOLVER"
     )
     @PostMapping(value = {'/' + OidcConstants.BASE_OIDC_URL + '/' + OAuth20Constants.ACCESS_TOKEN_URL,
             '/' + OidcConstants.BASE_OIDC_URL + '/' + OAuth20Constants.TOKEN_URL})

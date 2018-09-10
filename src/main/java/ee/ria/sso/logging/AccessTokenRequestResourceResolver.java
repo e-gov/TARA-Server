@@ -1,6 +1,5 @@
 package ee.ria.sso.logging;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apereo.cas.support.oauth.OAuth20Constants;
 import org.apereo.cas.util.AopUtils;
@@ -12,7 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class IdTokenRequestResourceResolver implements AuditResourceResolver {
+public class AccessTokenRequestResourceResolver implements AuditResourceResolver {
 
     @Override
     public String[] resolveFrom(JoinPoint target, Object returnValue) {

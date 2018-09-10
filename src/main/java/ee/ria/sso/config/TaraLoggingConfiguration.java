@@ -45,8 +45,8 @@ public class TaraLoggingConfiguration {
     public Map<String, AuditResourceResolver> auditResourceResolverMap() {
         final Map<String, AuditResourceResolver> map = new CasCoreAuditConfiguration().auditResourceResolverMap();
         map.put("TARA_AUTHENTICATION_RESOURCE_RESOLVER", new RequestContextAsFirstParameterResourceResolver());
-        map.put("TARA_ID_TOKEN_REQUEST_RESOURCE_RESOLVER", new IdTokenRequestResourceResolver());
-        map.put("CREATE_OAUTH_CODE_RESOURCE_RESOLVER", new OAuthCodeResourceResolver());
+        map.put("TARA_ACCESS_TOKEN_REQUEST_RESOURCE_RESOLVER", new AccessTokenRequestResourceResolver());
+        map.put("TARA_CREATE_OAUTH_CODE_RESOURCE_RESOLVER", new OAuthCodeResourceResolver());
         return map;
     }
 

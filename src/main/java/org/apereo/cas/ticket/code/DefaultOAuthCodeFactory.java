@@ -28,7 +28,7 @@ public class DefaultOAuthCodeFactory implements OAuthCodeFactory {
     @Audit(
             action = "OAUTH_CODE",
             actionResolverName = "CREATE_TICKET_GRANTING_TICKET_RESOLVER",
-            resourceResolverName = "CREATE_OAUTH_CODE_RESOURCE_RESOLVER"
+            resourceResolverName = "TARA_CREATE_OAUTH_CODE_RESOURCE_RESOLVER"
     )
     @Override
     public OAuthCode create(final Service service, final Authentication authentication, final TicketGrantingTicket ticketGrantingTicket) {
