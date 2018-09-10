@@ -36,6 +36,7 @@ import org.apereo.cas.ticket.refreshtoken.RefreshTokenFactory;
 import org.apereo.cas.ticket.registry.TicketRegistry;
 import org.apereo.cas.web.support.CookieRetrievingCookieGenerator;
 import org.apereo.cas.web.support.WebUtils;
+import org.apereo.inspektr.audit.annotation.Audit;
 import org.pac4j.core.context.J2EContext;
 import org.pac4j.core.profile.ProfileManager;
 import org.pac4j.core.profile.UserProfile;
@@ -82,6 +83,11 @@ public class OAuth20AccessTokenEndpointController extends BaseOAuth20Controller 
         this.centralAuthenticationService = centralAuthenticationService;
     }
 
+    @Audit(
+            action = "ACCESS_TOKEN_REQUEST_HANDLING",
+            actionResolverName = "AUTHENTICATION_RESOLVER",
+            resourceResolverName = "TARA_ACCESS_TOKEN_REQUEST_RESOURCE_RESOLVER"
+    )
     @PostMapping(
         path = {"/oauth2.0/accessToken"}
     )
@@ -93,17 +99,11 @@ public class OAuth20AccessTokenEndpointController extends BaseOAuth20Controller 
                 throw JSONFlowExecutionException.ofBadRequest(Collections.singletonMap("error", "invalid_request"),
                     new RuntimeException("Access token request verification failed"));
             } else {
-                AccessTokenRequestDataHolder responseHolder;
-                try {
-                    responseHolder = this.examineAndExtractAccessTokenGrantRequest(request, response);
-                    LOGGER.debug("Creating access token for [{}]", responseHolder);
-                } catch (Exception e) {
-                    throw JSONFlowExecutionException.ofBadRequest(Collections.singletonMap("error", "invalid_grant"),
-                        new RuntimeException("Could not identify and extract access token request", e));
-                }
+                AccessTokenRequestDataHolder responseHolder = this.generateAccessTokeRequestDataHolder(request, response);
                 J2EContext context = WebUtils.getPac4jJ2EContext(request, response);
                 AccessToken accessToken = this.generateAccessToken(responseHolder);
                 LOGGER.debug("Access token generated is: [{}]", accessToken);
+
                 RefreshToken refreshToken = null;
                 if (responseHolder.isGenerateRefreshToken()) {
                     refreshToken = this.generateRefreshToken(responseHolder);
@@ -111,6 +111,7 @@ public class OAuth20AccessTokenEndpointController extends BaseOAuth20Controller 
                 } else {
                     LOGGER.debug("Service [{}] is not able/allowed to receive refresh tokens", responseHolder.getService());
                 }
+
                 this.generateAccessTokenResponse(request, response, responseHolder, context, accessToken, refreshToken);
                 response.setStatus(200);
             }
@@ -119,6 +120,17 @@ public class OAuth20AccessTokenEndpointController extends BaseOAuth20Controller 
         } catch (Exception var8) {
             LOGGER.error(var8.getMessage(), var8);
             throw Throwables.propagate(var8);
+        }
+    }
+
+    private AccessTokenRequestDataHolder generateAccessTokeRequestDataHolder(HttpServletRequest request, HttpServletResponse response) {
+        try {
+            AccessTokenRequestDataHolder accessTokenRequestDataHolder = this.examineAndExtractAccessTokenGrantRequest(request, response);
+            LOGGER.debug("Creating access token for [{}]", accessTokenRequestDataHolder);
+            return accessTokenRequestDataHolder;
+        } catch (Exception e) {
+            throw JSONFlowExecutionException.ofBadRequest(Collections.singletonMap("error", "invalid_grant"),
+                    new RuntimeException("Could not identify and extract access token request", e));
         }
     }
 

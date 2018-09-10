@@ -3,6 +3,7 @@ package ee.ria.sso.logging;
 import org.apereo.cas.util.AopUtils;
 import org.apereo.inspektr.audit.spi.AuditResourceResolver;
 import org.aspectj.lang.JoinPoint;
+import org.springframework.core.style.StylerUtils;
 import org.springframework.webflow.execution.RequestContext;
 
 import javax.servlet.http.HttpServletRequest;
@@ -27,9 +28,9 @@ public class RequestContextAsFirstParameterResourceResolver implements AuditReso
         final Object object = args[0];
         if (object instanceof RequestContext) {
             final RequestContext requestContext = RequestContext.class.cast(object);
-            return new String[] {SUPPLIED_PARAMETERS + requestContext.getExternalContext().getRequestParameterMap()};
+            return new String[] {SUPPLIED_PARAMETERS + StylerUtils.style(requestContext.getExternalContext().getRequestParameterMap())};
         } else if (object instanceof HttpServletRequest) {
-            return new String[] {SUPPLIED_PARAMETERS + ((HttpServletRequest)object).getParameterMap()};
+            return new String[] {SUPPLIED_PARAMETERS + StylerUtils.style(((HttpServletRequest)object).getParameterMap())};
         }
         return new String[] {SUPPLIED_PARAMETERS + Arrays.asList((Object[]) object)};
     }
