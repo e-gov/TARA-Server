@@ -11,6 +11,7 @@ import org.springframework.webflow.test.MockExternalContext;
 import org.springframework.webflow.test.MockParameterMap;
 import org.springframework.webflow.test.MockRequestContext;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -21,7 +22,7 @@ import java.util.Map;
 @ContextConfiguration(classes = {TestTaraConfiguration.class})
 public abstract class AbstractTest {
 
-    protected RequestContext getRequestContext(Map<String, String> parameters) {
+    public static RequestContext getRequestContext(Map<String, String> parameters) {
         MockRequestContext context = new MockRequestContext();
 
         MockExternalContext mockExternalContext = new MockExternalContext();
@@ -34,6 +35,10 @@ public abstract class AbstractTest {
         );
 
         return context;
+    }
+
+    public static RequestContext getRequestContext() {
+        return getRequestContext(new HashMap<>());
     }
 
 }
