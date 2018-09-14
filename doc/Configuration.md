@@ -1,9 +1,9 @@
+_CAS tarkvaras tehtud kohanduste ja täienduste kirjeldus._
+
 # Integrator's guide
 
 <a name="logging"></a>
 ## Logging
-
-_CAS tarkvaras tehtud kohanduste ja täienduste kirjeldus._
 
 ### The configuration file
 
