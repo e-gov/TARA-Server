@@ -1,4 +1,4 @@
-# Integrators guide
+# Integrator's guide
 
 <a name="logging"></a>
 ## Logging
