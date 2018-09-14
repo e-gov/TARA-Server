@@ -3,6 +3,8 @@
 <a name="logging"></a>
 ## Logging
 
+_CAS tarkvaras tehtud kohanduste ja täienduste kirjeldus._
+
 ### The configuration file
 
 Logging in TARA is handled by [Log4j2 framework](https://logging.apache.org/log4j/2.x/index.html) which can be configured by using an [xml configuration file](https://logging.apache.org/log4j/2.x/manual/configuration.html) (`log4j2.xml`).
