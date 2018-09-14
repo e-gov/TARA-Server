@@ -1,4 +1,4 @@
-# Integrators guide
+# Integrator's guide
 
 - [Logging](#logging)
   * [Log files](#log_files)
