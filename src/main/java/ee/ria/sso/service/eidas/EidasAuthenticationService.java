@@ -62,7 +62,8 @@ public class EidasAuthenticationService extends AbstractService {
             }
 
             String relayState = UUID.randomUUID().toString();
-            context.getExternalContext().getSessionMap().put(relayState, context.getFlowScope().get("service"));
+            context.getExternalContext().getSessionMap().put("service", context.getFlowScope().get("service"));
+            context.getExternalContext().getSessionMap().put("relayState", relayState);
             LevelOfAssurance loa = (LevelOfAssurance) context.getExternalContext().getSessionMap().get("taraAuthorizeRequestLevelOfAssurance");
             byte[] authnRequest = this.eidasAuthenticator.authenticate(credential.getCountry(), relayState, loa);
             HttpServletResponse response = (HttpServletResponse) context.getExternalContext().getNativeResponse();
@@ -86,15 +87,14 @@ public class EidasAuthenticationService extends AbstractService {
     public Event checkLoginForEidas(RequestContext context) {
         try {
             HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getNativeRequest();
-            String relayState = request.getParameter("RelayState");
-            validateRelayState(relayState, context);
+            validateRelayState(context);
 
             TaraCredential credential = getCredentialFromAuthResult(
                     this.eidasAuthenticator.getAuthenticationResult(request)
             );
 
             context.getFlowExecutionContext().getActiveSession().getScope().put("credential", credential);
-            context.getFlowScope().put("service", context.getExternalContext().getSessionMap().get(relayState));
+            context.getFlowScope().put("service", context.getExternalContext().getSessionMap().get("service"));
 
             this.statistics.collect(new StatisticsRecord(
                     LocalDateTime.now(), getServiceClientId(context), AuthenticationType.eIDAS, StatisticsOperation.SUCCESSFUL_AUTH
@@ -136,8 +136,12 @@ public class EidasAuthenticationService extends AbstractService {
         context.getFlowExecutionContext().getActiveSession().getScope().clear();
     }
 
-    private void validateRelayState(String relayState, RequestContext context) {
-        if (StringUtils.isEmpty(relayState) || !context.getExternalContext().getSessionMap().contains(relayState)) {
+    private void validateRelayState(RequestContext context) {
+        String relayState = ((HttpServletRequest)context.getExternalContext().getNativeRequest()).getParameter("RelayState");
+
+        if (context.getExternalContext().getSessionMap().contains("relayState") && context.getExternalContext().getSessionMap().get("relayState").equals(relayState)) {
+            context.getExternalContext().getSessionMap().remove("relayState");
+        } else {
             throw new IllegalStateException("SAML response's relay state (" + relayState + ") not found among previously stored relay states!");
         }
     }

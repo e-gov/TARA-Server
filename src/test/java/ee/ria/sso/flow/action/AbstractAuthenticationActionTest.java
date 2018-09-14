@@ -4,6 +4,7 @@ import ee.ria.sso.AbstractTest;
 import ee.ria.sso.Constants;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.flow.AuthenticationFlowExecutionException;
+import org.apereo.cas.authentication.principal.AbstractWebApplicationService;
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
 import org.junit.Before;
@@ -18,7 +19,6 @@ import org.springframework.webflow.execution.RequestContext;
 
 public abstract class AbstractAuthenticationActionTest {
 
-
     @Mock
     private TaraResourceBundleMessageSource messageSource;
 
@@ -32,7 +32,29 @@ public abstract class AbstractAuthenticationActionTest {
     @Before
     public void setUp() {
         requestContext = AbstractTest.getRequestContext();
-        requestContext.getExternalContext().getSessionMap().put(Pac4jConstants.REQUESTED_URL, "http://someurl");
+        requestContext.getFlowScope().put(Constants.CAS_SERVICE_ATTRIBUTE_NAME, new AbstractWebApplicationService("id", "https://cas.server.url/oauth2.0/callbackAuthorize?client_name=CasOAuthClient&client_id=openIdDemo&redirect_uri=https://tara-client.arendus.kit:8451/response", "artifactId") {});
+        requestContext.getExternalContext().getSessionMap().put(Pac4jConstants.REQUESTED_URL, "https://localhost:8451/response");
+    }
+
+    @Test
+    public void successWhenValidServicePresentButNotUsingCasOauthClient() throws Exception {
+        requestContext.getFlowScope().put(Constants.CAS_SERVICE_ATTRIBUTE_NAME, new AbstractWebApplicationService("id", "https://cas.server.url/cas-management/manage.html", "artifactId") {});
+        getAction().doExecute(requestContext);
+    }
+
+    @Test
+    public void successWhenValidServiceMissingFromFlowContextAndPresentInSession() throws Exception {
+        requestContext.getExternalContext().getSessionMap().put(Constants.CAS_SERVICE_ATTRIBUTE_NAME, new AbstractWebApplicationService("id", "https://cas.server.url/cas-management/manage.html", "artifactId") {});
+        requestContext.getFlowScope().remove(Constants.CAS_SERVICE_ATTRIBUTE_NAME);
+        requestContext.getExternalContext().getSessionMap().put(Pac4jConstants.REQUESTED_URL, "https://localhost:8451/response");
+
+        getAction().doExecute(requestContext);
+    }
+
+    @Test
+    public void invalidOriginalUrlInService() throws Exception {
+        requestContext.getFlowScope().put(Constants.CAS_SERVICE_ATTRIBUTE_NAME, new AbstractWebApplicationService("id", null, "artifactId") {});
+        getAction().doExecute(requestContext);
     }
 
     @Test
@@ -51,14 +73,30 @@ public abstract class AbstractAuthenticationActionTest {
     }
 
     @Test
-    public void callbackUrlMissingTest() throws Exception {
+    public void exceptionWhenServiceMissingFromFlowContextAndSession() throws Exception {
+        expectedEx.expect(AuthenticationFlowExecutionException.class);
+        expectedEx.expect(new ExceptionCodeMatches(401, "error", "Session expired"));
+
+        Mockito.when(messageSource.getMessage(Constants.MESSAGE_KEY_SESSION_EXPIRED)).thenReturn("Session expired");
+
+        requestContext.getExternalContext().getSessionMap().remove(Constants.CAS_SERVICE_ATTRIBUTE_NAME);
+        requestContext.getFlowScope().remove(Constants.CAS_SERVICE_ATTRIBUTE_NAME);
+
+        getAction().doExecute(requestContext);
+
+    }
+
+    @Test
+    public void errorWhenValidServicePresentAndUsinCasOauthClientIsMissingCallbackUrl() throws Exception {
         Mockito.when(messageSource.getMessage(Constants.MESSAGE_KEY_SESSION_EXPIRED)).thenReturn("Session expired");
 
         expectedEx.expect(AuthenticationFlowExecutionException.class);
         expectedEx.expect(new ExceptionCodeMatches(401, "error", "Session expired"));
 
-        getAction().doExecute(AbstractTest.getRequestContext());
+        requestContext.getExternalContext().getSessionMap().remove(Pac4jConstants.REQUESTED_URL);
+        getAction().doExecute(requestContext);
     }
+
 
     class ExceptionCodeMatches extends TypeSafeMatcher<AuthenticationFlowExecutionException> {
         private int code;
