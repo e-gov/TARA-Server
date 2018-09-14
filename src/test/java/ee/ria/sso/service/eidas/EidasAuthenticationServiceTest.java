@@ -191,7 +191,8 @@ public class EidasAuthenticationServiceTest extends AbstractAuthenticationServic
                 .addParameter("RelayState", relayState);
 
         String serviceValueStoredAsRelayState = "someServiceValueStoreadAsRelayState";
-        requestContext.getExternalContext().getSessionMap().put(relayState, serviceValueStoredAsRelayState);
+        requestContext.getExternalContext().getSessionMap().put("service", serviceValueStoredAsRelayState);
+        requestContext.getExternalContext().getSessionMap().put("relayState", relayState);
 
         String eidasResponse = createMockAuthenticationResultString();
         wireMockServer.stubFor(WireMock.post(WireMock.urlPathEqualTo("/returnUrl"))
@@ -204,6 +205,7 @@ public class EidasAuthenticationServiceTest extends AbstractAuthenticationServic
 
         validateUserCredential((TaraCredential) requestContext.getFlowExecutionContext().getActiveSession().getScope().get("credential"));
         Assert.assertEquals(serviceValueStoredAsRelayState, requestContext.getFlowScope().get("service"));
+        Assert.assertNull("RelayState not deleted after successful verification", requestContext.getExternalContext().getSessionMap().get("relayState"));
 
         this.verifyLogContents(StatisticsOperation.SUCCESSFUL_AUTH);
     }
