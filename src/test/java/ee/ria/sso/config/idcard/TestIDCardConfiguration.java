@@ -34,13 +34,13 @@ public class TestIDCardConfiguration {
     private ResourceLoader resourceLoader;
 
     @Bean
-    X509Certificate mockIDCardUserCertificate2011() throws CertificateException, IOException {
-        return loadCertificate("classpath:id-card/47101010033.pem");
+    X509Certificate mockIDCardUserCertificate2015() throws CertificateException, IOException {
+        return loadCertificate("classpath:id-card/47101010033(TEST_of_ESTEID-SK_2015).pem");
     }
 
     @Bean
     X509Certificate mockIDCardUserCertificate2018() throws CertificateException, IOException {
-        return loadCertificate("classpath:id-card/38001085718.pem");
+        return loadCertificate("classpath:id-card/38001085718(TEST_of_ESTEID2018).pem");
     }
 
     private X509Certificate loadCertificate(String resourcePath) throws CertificateException, IOException {

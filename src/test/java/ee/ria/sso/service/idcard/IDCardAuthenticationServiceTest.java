@@ -46,8 +46,8 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
     private Map<String, X509Certificate> issuerCertificates;
 
     @Autowired
-    @Qualifier("mockIDCardUserCertificate2011")
-    private X509Certificate mockUserCertificate2011;
+    @Qualifier("mockIDCardUserCertificate2015")
+    private X509Certificate mockUserCertificate2015;
 
     @Autowired
     @Qualifier("mockIDCardUserCertificate2018")
@@ -120,11 +120,11 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
         expectedEx.expect(TaraAuthenticationException.class);
         expectedEx.expectMessage("OCSP validation failed");
 
-        RequestContext requestContext = this.getMockRequestContextWith(null, mockUserCertificate2011);
+        RequestContext requestContext = this.getMockRequestContextWith(null, mockUserCertificate2015);
         Exception cause = OCSPValidationException.of(new RuntimeException());
 
-        Mockito.doThrow(cause).when(ocspValidatorMock).validate(mockUserCertificate2011,
-                issuerCertificates.get("TEST of ESTEID-SK 2011"),
+        Mockito.doThrow(cause).when(ocspValidatorMock).validate(mockUserCertificate2015,
+                issuerCertificates.get("TEST of ESTEID-SK 2015"),
                 configurationProvider.getOcspUrl(),
                 issuerCertificates
         );
@@ -140,8 +140,8 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
     }
 
     @Test
-    public void loginByIDCard2011Succeeds() {
-        RequestContext requestContext = this.getMockRequestContextWith(null, mockUserCertificate2011);
+    public void loginByIDCard2015Succeeds() {
+        RequestContext requestContext = this.getMockRequestContextWith(null, mockUserCertificate2015);
 
         Event event = this.authenticationService.loginByIDCard(requestContext);
         Assert.assertEquals("success", event.getId());
