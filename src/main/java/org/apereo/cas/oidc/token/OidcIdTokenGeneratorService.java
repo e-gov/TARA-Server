@@ -164,8 +164,8 @@ public class OidcIdTokenGeneratorService {
 
         if (profileAttributes.get("date_of_birth") == null) {
             String principalCode = (String) principalAttributes.get("principal_code");
-            if (principalCode != null && EstonianIdCodeUtil.isEstonianIdCode(principalCode)) {
-                profileAttributes.put("date_of_birth", EstonianIdCodeUtil.extractDateOfBirthFromEstonianIdCode(principalCode));
+            if (principalCode != null && EstonianIdCodeUtil.isEEPrefixedEstonianIdCode(principalCode)) {
+                profileAttributes.put("date_of_birth", EstonianIdCodeUtil.extractDateOfBirthFromEEPrefixedEstonianIdCode(principalCode));
             }
         }
 
