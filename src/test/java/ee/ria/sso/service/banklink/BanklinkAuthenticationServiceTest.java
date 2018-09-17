@@ -166,7 +166,7 @@ public class BanklinkAuthenticationServiceTest {
         addMockNonceToSession(callbackRequestCtx, vkNonce);
 
         Event event = this.authenticationService.checkLoginForBankLink(callbackRequestCtx);
-        verifyCredential(callbackRequestCtx, BankEnum.SEB);
+        verifyCredential(callbackRequestCtx);
         verifySuccessEvent(event);
         SimpleTestAppender.verifyLogEventsExistInOrder(
                 containsString(String.format(";openIdDemo;BankLink/%s;START_AUTH;", "SEB")),
@@ -185,7 +185,7 @@ public class BanklinkAuthenticationServiceTest {
         addMockNonceToSession(callbackRequestCtx, vkNonce);
 
         Event event = this.authenticationService.checkLoginForBankLink(callbackRequestCtx);
-        verifyCredential(callbackRequestCtx, BankEnum.LHV);
+        verifyCredential(callbackRequestCtx);
         verifySuccessEvent(event);
     }
 
@@ -255,7 +255,7 @@ public class BanklinkAuthenticationServiceTest {
         this.authenticationService.checkLoginForBankLink(callbackRequestCtx);
     }
 
-    private void verifyCredential(RequestContext callbackRequestCtx, BankEnum bankEnum) {
+    private void verifyCredential(RequestContext callbackRequestCtx) {
         TaraCredential credential = (TaraCredential) callbackRequestCtx.getFlowExecutionContext().getActiveSession().getScope().get("credential");
         Assert.assertNotNull("No credential in session!", credential);
 
@@ -263,7 +263,6 @@ public class BanklinkAuthenticationServiceTest {
         Assert.assertEquals("Invalid principal code name in credential!", "EE47302200234", credential.getPrincipalCode());
         Assert.assertEquals("Invalid first name in credential!", "LEOPOLDŠÖ", credential.getFirstName());
         Assert.assertEquals("Invalid last name in credential!", "TIIGER", credential.getLastName());
-        Assert.assertEquals("Invalid bank in credential!", bankEnum, credential.getBanklinkType());
     }
 
     private void addMockNonceToSession(RequestContext callbackRequestCtx, String vk_nonce) {

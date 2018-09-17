@@ -1,7 +1,6 @@
 package ee.ria.sso.authentication.credential;
 
 import ee.ria.sso.authentication.AuthenticationType;
-import ee.ria.sso.authentication.BankEnum;
 import ee.ria.sso.authentication.LevelOfAssurance;
 import org.apereo.cas.authentication.Credential;
 
@@ -19,7 +18,6 @@ public class TaraCredential implements Credential {
     private String country;
     private String dateOfBirth;
     private LevelOfAssurance levelOfAssurance;
-    private BankEnum banklinkType;
 
     public TaraCredential() {
         this.type = AuthenticationType.Default;
@@ -112,14 +110,6 @@ public class TaraCredential implements Credential {
         this.levelOfAssurance = levelOfAssurance;
     }
 
-    public BankEnum getBanklinkType() {
-        return banklinkType;
-    }
-
-    public void setBanklinkType(BankEnum banklinkType) {
-        this.banklinkType = banklinkType;
-    }
-
     @Override
     public String toString() {
         return "TaraCredential{" +
@@ -131,7 +121,6 @@ public class TaraCredential implements Credential {
                 ", country='" + country + '\'' +
                 ", dateOfBirth='" + dateOfBirth + '\'' +
                 ", levelOfAssurance=" + levelOfAssurance +
-                ", banklinkType=" + banklinkType +
                 '}';
     }
 }
