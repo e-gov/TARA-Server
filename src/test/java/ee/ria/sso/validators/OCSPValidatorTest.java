@@ -58,8 +58,8 @@ public class OCSPValidatorTest {
             WireMockConfiguration.wireMockConfig().dynamicPort().extensions(ocspResponseTransformer)
     );
 
-    private static final String MOCK_ISSUER_CERT_PATH = "classpath:ocsp/TEST_of_ESTEID-SK_2011.crt";
-    private static final String MOCK_USER_CERT_PATH = "classpath:id-card/47101010033.pem";
+    private static final String MOCK_ISSUER_CERT_PATH = "classpath:ocsp/TEST_of_ESTEID-SK_2015.crt";
+    private static final String MOCK_USER_CERT_PATH = "classpath:id-card/47101010033(TEST_of_ESTEID-SK_2015).pem";
 
     @Rule
     public ExpectedException expectedEx = ExpectedException.none();

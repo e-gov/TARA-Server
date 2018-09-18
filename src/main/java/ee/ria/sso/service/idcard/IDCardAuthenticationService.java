@@ -12,6 +12,7 @@ import ee.ria.sso.config.idcard.IDCardConfigurationProvider;
 import ee.ria.sso.statistics.StatisticsHandler;
 import ee.ria.sso.statistics.StatisticsOperation;
 import ee.ria.sso.statistics.StatisticsRecord;
+import ee.ria.sso.utils.EstonianIdCodeUtil;
 import ee.ria.sso.utils.X509Utils;
 import ee.ria.sso.validators.OCSPValidationException;
 import ee.ria.sso.validators.OCSPValidator;
@@ -174,7 +175,7 @@ public class IDCardAuthenticationService extends AbstractService {
 
         return new TaraCredential(
                 AuthenticationType.IDCard,
-                "EE" + params.get("SERIALNUMBER"),
+                EstonianIdCodeUtil.getEEPrefixedEstonianIdCode(params.get("SERIALNUMBER")),
                 params.get("GIVENNAME"),
                 params.get("SURNAME")
         );

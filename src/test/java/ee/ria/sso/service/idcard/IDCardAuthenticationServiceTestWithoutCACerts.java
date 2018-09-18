@@ -33,7 +33,7 @@ public class IDCardAuthenticationServiceTestWithoutCACerts extends AbstractAuthe
     private IDCardAuthenticationService authenticationService;
 
     @Autowired
-    @Qualifier("mockIDCardUserCertificate")
+    @Qualifier("mockIDCardUserCertificate2015")
     private X509Certificate mockUserCertificate;
 
     @After

@@ -1,7 +1,9 @@
 package ee.ria.sso.utils;
 
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -10,11 +12,14 @@ import java.util.Map;
 
 public class EstonianIdCodeUtilTest {
 
+    @Rule
+    public ExpectedException expectedEx = ExpectedException.none();
+
     @Test
     public void testValidEstonianIdCodeVerification() {
         Assert.assertTrue(
                 "Failed to verify EE32307130002 as an Estonian ID code",
-                EstonianIdCodeUtil.isEstonianIdCode("EE32307130002")
+                EstonianIdCodeUtil.isEEPrefixedEstonianIdCode("EE32307130002")
         );
     }
 
@@ -35,7 +40,7 @@ public class EstonianIdCodeUtilTest {
         for (String idCode : list) {
             Assert.assertFalse(
                     String.format("Verified %s as a valid Estonian ID code", idCode),
-                    EstonianIdCodeUtil.isEstonianIdCode(idCode)
+                    EstonianIdCodeUtil.isEEPrefixedEstonianIdCode(idCode)
             );
         }
     }
@@ -53,11 +58,11 @@ public class EstonianIdCodeUtilTest {
         for (String idCode : map.keySet()) {
             Assert.assertTrue(
                     String.format("Didn't verify %s as a valid Estonian identity code", idCode),
-                    EstonianIdCodeUtil.isEstonianIdCode(idCode)
+                    EstonianIdCodeUtil.isEEPrefixedEstonianIdCode(idCode)
             );
 
             String expectedDateOfBirth = map.get(idCode);
-            String extractedDateOfBirth = EstonianIdCodeUtil.extractDateOfBirthFromEstonianIdCode(idCode);
+            String extractedDateOfBirth = EstonianIdCodeUtil.extractDateOfBirthFromEEPrefixedEstonianIdCode(idCode);
 
             Assert.assertEquals(
                     String.format(
@@ -67,6 +72,27 @@ public class EstonianIdCodeUtilTest {
                     expectedDateOfBirth, extractedDateOfBirth
             );
         }
+    }
+
+    @Test
+    public void testGetEEPrefixedEstonianIdCodeWithSupportedEstonianIdentityCodeFormats() {
+        final String[] identityCodePrefixes = {"", "EE", "PNOEE-"};
+        final String identityCode = "69612310256";
+
+        for (String prefix : identityCodePrefixes) {
+            String prefixedIdentityCode = EstonianIdCodeUtil.getEEPrefixedEstonianIdCode(prefix + identityCode);
+            Assert.assertEquals("EE" + identityCode, prefixedIdentityCode);
+        }
+    }
+
+    @Test
+    public void testGetEEPrefixedEstonianIdCodeWithInvalidEstonianIdentityCode() {
+        final String prefixedIdentityCode = "PREFIX69612310256";
+
+        expectedEx.expect(IllegalArgumentException.class);
+        expectedEx.expectMessage("Invalid Estonian identity code");
+
+        EstonianIdCodeUtil.getEEPrefixedEstonianIdCode(prefixedIdentityCode);
     }
 
 }
