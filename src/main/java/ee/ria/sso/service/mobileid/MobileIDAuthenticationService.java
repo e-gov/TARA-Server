@@ -72,7 +72,6 @@ public class MobileIDAuthenticationService extends AbstractService {
                 log.debug("Login response received ...");
             }
             context.getFlowScope().put(Constants.MOBILE_CHALLENGE, mobileIDSession.challenge);
-            context.getFlowScope().put(Constants.MOBILE_NUMBER, credential.getMobileNumber());
             context.getFlowScope().put(Constants.MOBILE_SESSION, mobileIDSession);
             context.getFlowScope().put(Constants.AUTH_COUNT, 0);
 
@@ -91,13 +90,11 @@ public class MobileIDAuthenticationService extends AbstractService {
         try {
             MobileIDSession session = context.getFlowScope().get(Constants.MOBILE_SESSION, MobileIDSession.class);
             int checkCount = context.getFlowScope().get(Constants.AUTH_COUNT, Integer.class);
-            String mobileNumber = context.getFlowScope().get(Constants.MOBILE_NUMBER, String.class);
+
             log.debug("Checking (attempt {}) mobile ID login state with session code {}", checkCount, session.sessCode);
 
             if (this.mobileIDAuthenticator.isLoginComplete(session)) {
                 TaraCredential credential = new TaraCredential(AuthenticationType.MobileID, "EE" + session.personalCode, session.firstName, session.lastName);
-                credential.setMobileNumber(getFormattedPhoneNumber(mobileNumber));
-
                 context.getFlowExecutionContext().getActiveSession().getScope().put("credential", credential);
                 this.statistics.collect(new StatisticsRecord(
                         LocalDateTime.now(), getServiceClientId(context), AuthenticationType.MobileID, StatisticsOperation.SUCCESSFUL_AUTH
@@ -154,13 +151,6 @@ public class MobileIDAuthenticationService extends AbstractService {
         if (StringUtils.isBlank(credential.getMobileNumber()) || !credential.getMobileNumber().matches("^\\d+$")) {
             throw new TaraCredentialsException("message.mid.invalidnumber", credential.getMobileNumber());
         }
-    }
-
-    private String getFormattedPhoneNumber(String mobileNumber) {
-        if (mobileNumber.startsWith("372")) {
-            return "+" + mobileNumber;
-        }
-        return "+372" + mobileNumber;
     }
 
 }

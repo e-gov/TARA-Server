@@ -18,7 +18,6 @@ public class TaraAuthenticationHandlerTest {
     private static final String MOCK_PRINCIPAL_CODE = "principalCode";
     private static final String MOCK_FIRST_NAME = "First-Name";
     private static final String MOCK_LAST_NAME = "Surname";
-    private static final String MOCK_MOBILE_NUMBER = "87654321";
     private static final String MOCK_DATE_OF_BIRTH = "2018-08-22";
 
     private TaraAuthenticationHandler authenticationHandler;
@@ -67,7 +66,7 @@ public class TaraAuthenticationHandlerTest {
     }
 
     @Test
-    public void doAuthenticationShouldReturnValidResultWhenPrincipalCodeAndNamesArePresent() throws GeneralSecurityException, PreventedException {
+    public void doAuthenticationShouldReturnValidResultForValidIdCardCredential() throws GeneralSecurityException, PreventedException {
         TaraCredential credential = new TaraCredential(AuthenticationType.IDCard, MOCK_PRINCIPAL_CODE, MOCK_FIRST_NAME, MOCK_LAST_NAME);
         HandlerResult handlerResult = authenticationHandler.doAuthentication(credential);
 
@@ -76,19 +75,28 @@ public class TaraAuthenticationHandlerTest {
     }
 
     @Test
-    public void doAuthenticationShouldReturnValidResultWhenPrincipalCodeAndNamesAndMobileNumberArePresent() throws GeneralSecurityException, PreventedException {
+    public void doAuthenticationShouldReturnValidResultForValidMobileIdCredential() throws GeneralSecurityException, PreventedException {
         TaraCredential credential = new TaraCredential(AuthenticationType.MobileID, MOCK_PRINCIPAL_CODE, MOCK_FIRST_NAME, MOCK_LAST_NAME);
-        credential.setMobileNumber(MOCK_MOBILE_NUMBER);
-
         HandlerResult handlerResult = authenticationHandler.doAuthentication(credential);
 
         Map<String, Object> expectedAttributes = buildCommonExpectedAttributesMap(AuthenticationType.MobileID);
-        expectedAttributes.put("mobile_number", MOCK_MOBILE_NUMBER);
         verifyHandlerResult(handlerResult, expectedAttributes);
     }
 
     @Test
-    public void doAuthenticationShouldReturnValidResultWhenPrincipalCodeAndNamesAndBirthDateAndLoaArePresent() throws GeneralSecurityException, PreventedException {
+    public void doAuthenticationShouldReturnValidResultForValidEidasCredentialWithoutLoA() throws GeneralSecurityException, PreventedException {
+        TaraCredential credential = new TaraCredential(AuthenticationType.eIDAS, MOCK_PRINCIPAL_CODE, MOCK_FIRST_NAME, MOCK_LAST_NAME);
+        credential.setDateOfBirth(MOCK_DATE_OF_BIRTH);
+
+        HandlerResult handlerResult = authenticationHandler.doAuthentication(credential);
+
+        Map<String, Object> expectedAttributes = buildCommonExpectedAttributesMap(AuthenticationType.eIDAS);
+        expectedAttributes.put("date_of_birth", MOCK_DATE_OF_BIRTH);
+        verifyHandlerResult(handlerResult, expectedAttributes);
+    }
+
+    @Test
+    public void doAuthenticationShouldReturnValidResultForValidEidasCredentialWithLoA() throws GeneralSecurityException, PreventedException {
         TaraCredential credential = new TaraCredential(AuthenticationType.eIDAS, MOCK_PRINCIPAL_CODE, MOCK_FIRST_NAME, MOCK_LAST_NAME);
         credential.setDateOfBirth(MOCK_DATE_OF_BIRTH);
         credential.setLevelOfAssurance(LevelOfAssurance.SUBSTANTIAL);
@@ -102,19 +110,16 @@ public class TaraAuthenticationHandlerTest {
     }
 
     @Test
-    public void doAuthenticationShouldReturnValidResultWhenPrincipalCodeAndNamesAndBankArePresent() throws GeneralSecurityException, PreventedException {
+    public void doAuthenticationShouldReturnValidResultForValidBanklinkCredential() throws GeneralSecurityException, PreventedException {
         TaraCredential credential = new TaraCredential(AuthenticationType.BankLink, MOCK_PRINCIPAL_CODE, MOCK_FIRST_NAME, MOCK_LAST_NAME);
-        credential.setBanklinkType(BankEnum.SEB);
-
         HandlerResult handlerResult = authenticationHandler.doAuthentication(credential);
 
         Map<String, Object> expectedAttributes = buildCommonExpectedAttributesMap(AuthenticationType.BankLink);
-        expectedAttributes.put("banklink_type", BankEnum.SEB.getName().toUpperCase());
         verifyHandlerResult(handlerResult, expectedAttributes);
     }
 
     @Test
-    public void doAuthenticationShouldReturnValidResultWhenPrincipalCodeAndNamesArePresent2() throws GeneralSecurityException, PreventedException {
+    public void doAuthenticationShouldReturnValidResultForValidSmartIdCredential() throws GeneralSecurityException, PreventedException {
         TaraCredential credential = new TaraCredential(AuthenticationType.SmartID, MOCK_PRINCIPAL_CODE, MOCK_FIRST_NAME, MOCK_LAST_NAME);
         HandlerResult handlerResult = authenticationHandler.doAuthentication(credential);
 

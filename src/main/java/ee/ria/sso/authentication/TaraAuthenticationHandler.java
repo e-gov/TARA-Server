@@ -44,19 +44,10 @@ public class TaraAuthenticationHandler extends AbstractPreAndPostProcessingAuthe
             this.putIfNotEmpty(map, "family_name", taraCredential.getLastName());
             this.putIfNotEmpty(map, "authentication_type", taraCredential.getType().getAmrName());
             switch (taraCredential.getType()) {
-                case MobileID:
-                    this.putIfNotEmpty(map, "mobile_number", taraCredential.getMobileNumber());
-                    break;
-
                 case eIDAS:
                     this.putIfNotEmpty(map, "date_of_birth", taraCredential.getDateOfBirth());
                     if (taraCredential.getLevelOfAssurance() != null)
                         map.put("level_of_assurance", taraCredential.getLevelOfAssurance().getAcrName());
-                    break;
-
-                case BankLink:
-                    if (taraCredential.getBanklinkType() != null)
-                        map.put("banklink_type", taraCredential.getBanklinkType().getName().toUpperCase());
                     break;
             }
             return this.createHandlerResult(credential, this.principalFactory

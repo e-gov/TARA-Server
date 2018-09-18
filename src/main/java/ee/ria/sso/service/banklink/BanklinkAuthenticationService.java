@@ -92,15 +92,12 @@ public class BanklinkAuthenticationService extends AbstractService {
             String principalCode = authInfo.getCountry() + authInfo.getCode();
             String firstName = getUnescapedNameField(authInfo.getFirstName());
             String lastName = getUnescapedNameField(authInfo.getLastName());
-            BankEnum bankEnum = getBankEnum(context);
 
             TaraCredential credential = new TaraCredential(AuthenticationType.BankLink, principalCode, firstName, lastName);
-            credential.setBanklinkType(bankEnum);
-
             context.getFlowExecutionContext().getActiveSession().getScope().put("credential", credential);
 
             this.statistics.collect(new StatisticsRecord(
-                    LocalDateTime.now(), getServiceClientId(context), bankEnum, StatisticsOperation.SUCCESSFUL_AUTH
+                    LocalDateTime.now(), getServiceClientId(context), getBankEnum(context), StatisticsOperation.SUCCESSFUL_AUTH
             ));
 
             return new Event(this, "success");

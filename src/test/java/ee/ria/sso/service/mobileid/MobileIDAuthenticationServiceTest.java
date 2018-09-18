@@ -131,7 +131,6 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
         Assert.assertEquals("success", event.getId());
 
         Assert.assertEquals(MOCK_CHALLENGE, requestContext.getFlowScope().get(Constants.MOBILE_CHALLENGE));
-        Assert.assertEquals(MOCK_PHONE_NUMBER, requestContext.getFlowScope().get(Constants.MOBILE_NUMBER));
         Assert.assertEquals(mobileIDSession, requestContext.getFlowScope().get(Constants.MOBILE_SESSION));
         Assert.assertEquals(0, requestContext.getFlowScope().get(Constants.AUTH_COUNT));
 
@@ -189,7 +188,6 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
 
     private void fillRequestContextFlowScope(RequestContext requestContext, MobileIDSession mobileIDSession, int authCount) {
         requestContext.getFlowScope().put(Constants.MOBILE_CHALLENGE, mobileIDSession.challenge);
-        requestContext.getFlowScope().put(Constants.MOBILE_NUMBER, MOCK_PHONE_NUMBER);
         requestContext.getFlowScope().put(Constants.MOBILE_SESSION, mobileIDSession);
         requestContext.getFlowScope().put(Constants.AUTH_COUNT, authCount);
     }
@@ -201,7 +199,6 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
         Assert.assertEquals("EE" + MOCK_PERSONAL_CODE, credential.getId());
         Assert.assertEquals(MOCK_FIRST_NAME, credential.getFirstName());
         Assert.assertEquals(MOCK_LAST_NAME, credential.getLastName());
-        Assert.assertEquals("+372" + MOCK_PHONE_NUMBER, credential.getMobileNumber());
     }
 
     private void verifyLogContents(StatisticsOperation statisticsOperation) {
