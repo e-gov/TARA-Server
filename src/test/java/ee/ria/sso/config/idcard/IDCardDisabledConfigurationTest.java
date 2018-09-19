@@ -25,7 +25,7 @@ public class IDCardDisabledConfigurationTest extends AbstractDisabledConfigurati
         assertBeanNotInitiated(IDCardAuthenticationService.class);
         assertBeanNotInitiated(IDCardConfigurationProvider.class);
         assertBeanNotInitiated(IDCardAuthenticationAction.class);
-        assertBeanNotInitiated("idIssuerCertificatesMap");
+        assertBeanNotInitiated("idCardTrustedCertificatesMap");
     }
 
 }

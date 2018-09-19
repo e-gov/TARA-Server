@@ -1,7 +1,6 @@
-package ee.ria.sso.config.mobileid;
+package ee.ria.sso.config.idcard;
 
 import ee.ria.sso.config.AbstractDisabledConfigurationTest;
-import ee.ria.sso.config.idcard.TestIDCardConfiguration;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
@@ -20,7 +19,7 @@ public class IDCardOCSPDisabledConfigurationTest extends AbstractDisabledConfigu
 
     @Test
     public void whenIDCardDisabledThenIDCardBeansNotInitiated() {
-        assertBeanNotInitiated("idIssuerCertificatesMap");
+        assertBeanNotInitiated("idCardTrustedCertificatesMap");
     }
 
 }

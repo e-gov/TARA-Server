@@ -1,6 +1,5 @@
 package ee.ria.sso.validators;
 
-
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -13,17 +12,16 @@ import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.time.Instant;
+import java.util.*;
 
+import ee.ria.sso.utils.X509Utils;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NonNull;
 import org.apache.commons.lang3.Conversion;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.ocsp.OCSPObjectIdentifiers;
-import org.bouncycastle.asn1.x500.RDN;
-import org.bouncycastle.asn1.x500.style.BCStyle;
-import org.bouncycastle.asn1.x500.style.IETFUtils;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.Extensions;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
@@ -46,6 +44,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
+import javax.validation.constraints.Min;
+
 
 /**
  * Created by serkp on 7.10.2017.
@@ -60,11 +60,10 @@ public class OCSPValidator {
 
     private final Logger log = LoggerFactory.getLogger(OCSPValidator.class);
 
-    public void validate(X509Certificate userCert, X509Certificate issuerCert, String url, Map<String, X509Certificate> trustedCertificates) {
+    public void validate(X509Certificate userCert, X509Certificate issuerCert, OCSPConfiguration ocsp) {
         Assert.notNull(userCert, "User certificate cannot be null!");
         Assert.notNull(issuerCert, "Issuer certificate cannot be null!");
-        Assert.notNull(url, "OCSP URL cannot be null!");
-        Assert.notNull(trustedCertificates, "Map of trusted certificates cannot be null!");
+        Assert.notNull(ocsp, "OCSP configuration cannot be null!");
 
         this.log.debug("OCSP certificate validation called for userCert: {}, issuerCert: {}, certID: {}",
             userCert.getSubjectDN().getName(), issuerCert.getSubjectDN().getName(), userCert.getSerialNumber());
@@ -73,11 +72,12 @@ public class OCSPValidator {
             CertificateID certificateID = this.generateCertificateIdForRequest(userCert, issuerCert);
             DEROctetString nonce = this.generateDerOctetStringForNonce(UUID.randomUUID());
 
-            OCSPResp response = this.sendOCSPReq(buildOCSPReq(certificateID, nonce), url);
+            OCSPResp response = this.sendOCSPReq(buildOCSPReq(certificateID, nonce), ocsp.getServiceUrl());
             BasicOCSPResp basicOCSPResponse = (BasicOCSPResp) response.getResponseObject();
 
             validateResponseNonce(basicOCSPResponse, nonce);
-            validateResponseSignature(basicOCSPResponse, trustedCertificates);
+            validateResponseProducedAt(basicOCSPResponse, ocsp.getAcceptedClockSkew(), ocsp.getResponseLifetime());
+            validateResponseSignature(basicOCSPResponse, ocsp.getTrustedCertificates());
 
             SingleResp singleResponse = getSingleResp(basicOCSPResponse, certificateID);
             org.bouncycastle.cert.ocsp.CertificateStatus status = singleResponse.getCertStatus();
@@ -175,6 +175,16 @@ public class OCSPValidator {
             throw new IllegalStateException("Invalid OCSP response nonce");
     }
 
+    private void validateResponseProducedAt(BasicOCSPResp response, long acceptedClockSkew, long responseLifetime) {
+        final Instant producedAt = response.getProducedAt().toInstant();
+        final Instant now = Instant.now();
+
+        if (producedAt.isBefore(now.minusSeconds(acceptedClockSkew + responseLifetime)))
+            throw new IllegalStateException("OCSP response was older than accepted");
+        if (producedAt.isAfter(now.plusSeconds(acceptedClockSkew)))
+            throw new IllegalStateException("OCSP response cannot be produced in the future");
+    }
+
     private void validateResponseSignature(BasicOCSPResp response, Map<String, X509Certificate> trustedCertificates)
             throws OCSPException, OperatorCreationException, CertificateNotYetValidException, CertificateExpiredException {
         X509Certificate certificate = trustedCertificates.get(getResponderCN(response));
@@ -193,11 +203,26 @@ public class OCSPValidator {
 
     private String getResponderCN(BasicOCSPResp response) {
         try {
-            RDN cn = response.getResponderId().toASN1Primitive().getName().getRDNs(BCStyle.CN)[0];
-            return IETFUtils.valueToString(cn.getFirst().getValue());
+            return X509Utils.getFirstCNFromX500Name(
+                    response.getResponderId().toASN1Primitive().getName()
+            );
         } catch (Exception e) {
             throw new IllegalStateException("Unable to find responder CN from OCSP response", e);
         }
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class OCSPConfiguration {
+
+        @NonNull
+        private String serviceUrl;
+        @NonNull
+        private Map<String, X509Certificate> trustedCertificates;
+
+        private long acceptedClockSkew;
+        private long responseLifetime;
+
     }
 
 }

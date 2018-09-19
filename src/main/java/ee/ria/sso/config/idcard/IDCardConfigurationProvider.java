@@ -26,4 +26,7 @@ public class IDCardConfigurationProvider {
     private String ocspCertificateLocation;
     private List<String> ocspCertificates = new ArrayList<>();
 
+    private long ocspAcceptedClockSkew = 2;
+    private long ocspResponseLifetime = 900;
+
 }

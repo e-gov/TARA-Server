@@ -1,5 +1,6 @@
 package ee.ria.sso.config.idcard;
 
+import ee.ria.sso.utils.X509Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -29,19 +30,20 @@ public class IDCardConfiguration {
 
     @Bean
     @ConditionalOnProperty("id-card.ocsp-enabled")
-    public Map<String, X509Certificate> idIssuerCertificatesMap() {
-        final Map<String, X509Certificate> issuerCertificates = new LinkedHashMap<>();
+    public Map<String, X509Certificate> idCardTrustedCertificatesMap() {
+        final Map<String, X509Certificate> trustedCertificates = new LinkedHashMap<>();
 
         configurationProvider.getOcspCertificates().forEach(ocspCertificate -> {
             try {
-                String[] certificateFields = ocspCertificate.split(":");
-                issuerCertificates.put(certificateFields[0], readCertFromResource(certificateFields[1]));
+                final X509Certificate certificate = readCertFromResource(ocspCertificate);
+                final String commonName = X509Utils.getSubjectCNFromCertificate(certificate);
+                trustedCertificates.put(commonName, certificate);
             } catch (Exception e) {
                 throw new IllegalArgumentException("Failed to read certificate " + ocspCertificate, e);
             }
         });
 
-        return issuerCertificates;
+        return trustedCertificates;
     }
 
     private X509Certificate readCertFromResource(String resourceName) throws CertificateException, IOException {
