@@ -1,6 +1,7 @@
 package org.apereo.cas.oidc.token;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -40,7 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class OidcIdTokenGeneratorService {
     private static final Logger LOGGER = LoggerFactory.getLogger(OidcIdTokenGeneratorService.class);
     private static final List<String> validProfileAttributes = Arrays.asList(
-            "family_name", "given_name", "date_of_birth", "mobile_number"
+            "family_name", "given_name", "date_of_birth"
     );
 
     @Autowired
@@ -131,7 +132,7 @@ public class OidcIdTokenGeneratorService {
         claims.setSubject(principal.getId());
 
         claims.setClaim("profile_attributes", getProfileAttributesMap(principal));
-        claims.setStringListClaim(OidcConstants.AMR, getAmrValuesList(principal).toArray(new String[]{}));
+        claims.setStringListClaim(OidcConstants.AMR, getAmrValuesList(principal));
 
         if (isOfAuthenticationType(principal, AuthenticationType.eIDAS)) {
             String levelOfAssurance = (String) principal.getAttributes().get("level_of_assurance");
@@ -172,15 +173,9 @@ public class OidcIdTokenGeneratorService {
         return profileAttributes;
     }
 
-    private List<Object> getAmrValuesList(Principal principal) {
-        final List<Object> amrValues = CollectionUtils.wrap(getAuthenticationType(principal));
-
-        if (isOfAuthenticationType(principal, AuthenticationType.BankLink)) {
-            String banklinkType = (String) principal.getAttributes().get("banklink_type");
-            if (banklinkType != null) amrValues.add(banklinkType);
-        }
-
-        return amrValues;
+    private List<String> getAmrValuesList(Principal principal) {
+        return CollectionUtils.toCollection(getAuthenticationType(principal)).stream()
+                .map(e -> e.toString()).collect(Collectors.toList());
     }
 
     private String generateAccessTokenHash(final AccessToken accessTokenId) {

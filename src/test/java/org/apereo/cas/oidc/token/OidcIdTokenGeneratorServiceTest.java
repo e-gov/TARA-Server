@@ -2,7 +2,6 @@ package org.apereo.cas.oidc.token;
 
 import ee.ria.sso.CommonConstants;
 import ee.ria.sso.authentication.AuthenticationType;
-import ee.ria.sso.authentication.BankEnum;
 import ee.ria.sso.authentication.LevelOfAssurance;
 import org.apache.commons.codec.digest.MessageDigestAlgorithms;
 import org.apereo.cas.authentication.Authentication;
@@ -71,7 +70,6 @@ public class OidcIdTokenGeneratorServiceTest {
         String identifier = mapPrincipalCode("abcd1234", principalAttributes);
         mapFirstName("SomeFirstName", expectedProfileAttributes, principalAttributes);
         mapLastName("SomeLastName", expectedProfileAttributes, principalAttributes);
-        mapMobileNumber("87654321", expectedProfileAttributes, principalAttributes);
 
         JwtClaims jwtClaims = callProduceIdTokenClaims(mockAuthentication(
                 createDefaultAuthenticationAttributesMap(), mockPrincipal(identifier, principalAttributes)
@@ -129,13 +127,12 @@ public class OidcIdTokenGeneratorServiceTest {
         String identifier = mapPrincipalCode("abcd1234", principalAttributes);
         mapFirstName("SomeFirstName", expectedProfileAttributes, principalAttributes);
         mapLastName("SomeLastName", expectedProfileAttributes, principalAttributes);
-        principalAttributes.put("banklink_type", BankEnum.SEB.getName().toUpperCase());
 
         JwtClaims jwtClaims = callProduceIdTokenClaims(mockAuthentication(
                 createDefaultAuthenticationAttributesMap(), mockPrincipal(identifier, principalAttributes)
         ));
         verifyJwtClaims(jwtClaims, identifier, expectedProfileAttributes, Arrays.asList(
-                AuthenticationType.BankLink.getAmrName(), BankEnum.SEB.getName().toUpperCase()
+                AuthenticationType.BankLink.getAmrName()
         ), null);
     }
 
@@ -297,11 +294,6 @@ public class OidcIdTokenGeneratorServiceTest {
     private void mapLastName(String lastName, Map<String, Object> expectedProfileAttributes, Map<String, Object> principalAttributes) {
         if (expectedProfileAttributes != null) expectedProfileAttributes.put("family_name", lastName);
         if (principalAttributes != null) principalAttributes.put("family_name", lastName);
-    }
-
-    private void mapMobileNumber(String mobileNumber, Map<String, Object> expectedProfileAttributes, Map<String, Object> principalAttributes) {
-        if (expectedProfileAttributes != null) expectedProfileAttributes.put("mobile_number", mobileNumber);
-        if (principalAttributes != null) principalAttributes.put("mobile_number", mobileNumber);
     }
 
     private void mapDateOfBirth(String dateOfBirth, Map<String, Object> expectedProfileAttributes, Map<String, Object> principalAttributes) {
