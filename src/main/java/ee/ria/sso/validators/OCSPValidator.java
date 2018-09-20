@@ -44,8 +44,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
-import javax.validation.constraints.Min;
-
 
 /**
  * Created by serkp on 7.10.2017.
