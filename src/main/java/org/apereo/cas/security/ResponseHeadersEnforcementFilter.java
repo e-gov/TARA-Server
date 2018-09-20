@@ -130,7 +130,7 @@ public final class ResponseHeadersEnforcementFilter extends AbstractSecurityFilt
                 HttpServletResponse httpServletResponse = (HttpServletResponse) servletResponse;
                 HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
                 String uri = httpServletRequest.getRequestURI();
-                if (this.enableCacheControl && !uri.endsWith(".css") && !uri.endsWith(".js") && !uri.endsWith(".png") && !uri.endsWith(".jpg") && !uri.endsWith(".ico") && !uri.endsWith(".jpeg") && !uri.endsWith(".bmp") && !uri.endsWith(".gif")) {
+                if (this.enableCacheControl && !StringUtils.endsWithAny(uri, ".css", ".js", ".png", ".jpg", ".ico", ".jpeg", ".bmp", ".gif", ".svg", ".woff", ".woff2")) {
                     httpServletResponse.addHeader("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate");
                     httpServletResponse.addHeader("Pragma", "no-cache");
                     httpServletResponse.addIntHeader("Expires", 0);
