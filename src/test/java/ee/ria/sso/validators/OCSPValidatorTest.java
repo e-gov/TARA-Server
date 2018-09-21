@@ -49,6 +49,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 public class OCSPValidatorTest {
@@ -69,8 +70,8 @@ public class OCSPValidatorTest {
 
     @InjectMocks
     private OCSPValidator ocspValidator;
+    private OCSPValidator.OCSPConfiguration ocspConfiguration;
     private KeyPair responderKeys;
-    private String mockOcspUrl;
 
     @BeforeClass
     public static void setUp() {
@@ -91,7 +92,13 @@ public class OCSPValidatorTest {
 
         responderKeys = keyPairGenerator.generateKeyPair();
         ocspResponseTransformer.setSignerKey(responderKeys.getPrivate());
-        mockOcspUrl = String.format("http://localhost:%d/ocsp", wireMockServer.port());
+        ocspResponseTransformer.setProducedAtProvider(() -> Date.from(Instant.now()));
+        ocspResponseTransformer.setNonceResolver(nonce -> nonce);
+
+        ocspConfiguration = new OCSPValidator.OCSPConfiguration(
+                String.format("http://localhost:%d/ocsp", wireMockServer.port()),
+                Collections.emptyMap(), 2, 900
+        );
     }
 
     @Test
@@ -100,7 +107,7 @@ public class OCSPValidatorTest {
 
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("User certificate cannot be null!");
-        ocspValidator.validate(null, issuerCert, mockOcspUrl, Collections.emptyMap());
+        ocspValidator.validate(null, issuerCert, ocspConfiguration);
     }
 
     @Test
@@ -109,27 +116,17 @@ public class OCSPValidatorTest {
 
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("Issuer certificate cannot be null!");
-        ocspValidator.validate(userCert, null, mockOcspUrl, Collections.emptyMap());
+        ocspValidator.validate(userCert, null, ocspConfiguration);
     }
 
     @Test
-    public void validateShouldThrowExceptionWhenOcspUrlIsMissing() throws Exception {
+    public void validateShouldThrowExceptionWhenOcspConfigurationIsMissing() throws Exception {
         X509Certificate issuerCert = loadCertificateFromResource(MOCK_ISSUER_CERT_PATH);
         X509Certificate userCert = loadCertificateFromResource(MOCK_USER_CERT_PATH);
 
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("OCSP URL cannot be null!");
-        ocspValidator.validate(userCert, issuerCert, null, Collections.emptyMap());
-    }
-
-    @Test
-    public void validateShouldThrowExceptionWhenCertificateMapIsMissing() throws Exception {
-        X509Certificate issuerCert = loadCertificateFromResource(MOCK_ISSUER_CERT_PATH);
-        X509Certificate userCert = loadCertificateFromResource(MOCK_USER_CERT_PATH);
-
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("Map of trusted certificates cannot be null!");
-        ocspValidator.validate(userCert, issuerCert, mockOcspUrl, null);
+        expectedEx.expectMessage("OCSP configuration cannot be null!");
+        ocspValidator.validate(userCert, issuerCert, null);
     }
 
     @Test
@@ -144,7 +141,7 @@ public class OCSPValidatorTest {
         expectedEx.expect(OCSPValidationException.class);
         expectedEx.expectMessage("OCSP request failed with status code 500");
 
-        ocspValidator.validate(userCert, issuerCert, mockOcspUrl, Collections.emptyMap());
+        ocspValidator.validate(userCert, issuerCert, ocspConfiguration);
     }
 
     @Test
@@ -156,7 +153,7 @@ public class OCSPValidatorTest {
         expectedEx.expect(OCSPValidationException.class);
         expectedEx.expectMessage("OCSP cert not found from setup");
 
-        ocspValidator.validate(userCert, issuerCert, mockOcspUrl, Collections.emptyMap());
+        ocspValidator.validate(userCert, issuerCert, ocspConfiguration);
     }
 
     @Test
@@ -164,14 +161,13 @@ public class OCSPValidatorTest {
         X509Certificate issuerCert = loadCertificateFromResource(MOCK_ISSUER_CERT_PATH);
         X509Certificate userCert = loadCertificateFromResource(MOCK_USER_CERT_PATH);
         updateWiremockOcspResponse(OCSPResp.SUCCESSFUL, CertificateStatus.GOOD);
+        updateOcspConfigurationWithGeneratedCertificate(responderKeys);
         ocspResponseTransformer.setNonceResolver(nonce -> null);
 
         expectedEx.expect(OCSPValidationException.class);
         expectedEx.expectMessage("No nonce found in OCSP response");
 
-        ocspValidator.validate(userCert, issuerCert, mockOcspUrl, Collections.singletonMap(
-                "TEST of SK OCSP RESPONDER 2011", generateCertificate(responderKeys)
-        ));
+        ocspValidator.validate(userCert, issuerCert, ocspConfiguration);
     }
 
     @Test
@@ -179,6 +175,7 @@ public class OCSPValidatorTest {
         X509Certificate issuerCert = loadCertificateFromResource(MOCK_ISSUER_CERT_PATH);
         X509Certificate userCert = loadCertificateFromResource(MOCK_USER_CERT_PATH);
         updateWiremockOcspResponse(OCSPResp.SUCCESSFUL, CertificateStatus.GOOD);
+        updateOcspConfigurationWithGeneratedCertificate(responderKeys);
         ocspResponseTransformer.setNonceResolver(nonce -> {
             return new DEROctetString(new byte[]{ 0 });
         });
@@ -186,9 +183,46 @@ public class OCSPValidatorTest {
         expectedEx.expect(OCSPValidationException.class);
         expectedEx.expectMessage("Invalid OCSP response nonce");
 
-        ocspValidator.validate(userCert, issuerCert, mockOcspUrl, Collections.singletonMap(
-                "TEST of SK OCSP RESPONDER 2011", generateCertificate(responderKeys)
-        ));
+        ocspValidator.validate(userCert, issuerCert, ocspConfiguration);
+    }
+
+    @Test
+    public void validateShouldThrowExceptionWhenOcspResponseProducedAtIsTooOld() throws Exception {
+        X509Certificate issuerCert = loadCertificateFromResource(MOCK_ISSUER_CERT_PATH);
+        X509Certificate userCert = loadCertificateFromResource(MOCK_USER_CERT_PATH);
+        updateWiremockOcspResponse(OCSPResp.SUCCESSFUL, CertificateStatus.GOOD);
+        updateOcspConfigurationWithGeneratedCertificate(responderKeys);
+        ocspResponseTransformer.setProducedAtProvider(() -> {
+            final Instant instant = Instant.now()
+                    .minusSeconds(ocspConfiguration.getAcceptedClockSkew())
+                    .minusSeconds(ocspConfiguration.getResponseLifetime())
+                    .minusSeconds(1L);
+            return Date.from(instant);
+        });
+
+        expectedEx.expect(OCSPValidationException.class);
+        expectedEx.expectMessage("OCSP response was older than accepted");
+
+        ocspValidator.validate(userCert, issuerCert, ocspConfiguration);
+    }
+
+    @Test
+    public void validateShouldThrowExceptionWhenOcspResponseProducedAtIsInTheFuture() throws Exception {
+        X509Certificate issuerCert = loadCertificateFromResource(MOCK_ISSUER_CERT_PATH);
+        X509Certificate userCert = loadCertificateFromResource(MOCK_USER_CERT_PATH);
+        updateWiremockOcspResponse(OCSPResp.SUCCESSFUL, CertificateStatus.GOOD);
+        updateOcspConfigurationWithGeneratedCertificate(responderKeys);
+        ocspResponseTransformer.setProducedAtProvider(() -> {
+            final Instant instant = Instant.now()
+                    .plusSeconds(ocspConfiguration.getAcceptedClockSkew())
+                    .plusSeconds(1L);
+            return Date.from(instant);
+        });
+
+        expectedEx.expect(OCSPValidationException.class);
+        expectedEx.expectMessage("OCSP response cannot be produced in the future");
+
+        ocspValidator.validate(userCert, issuerCert, ocspConfiguration);
     }
 
     @Test
@@ -197,20 +231,21 @@ public class OCSPValidatorTest {
         X509Certificate userCert = loadCertificateFromResource(MOCK_USER_CERT_PATH);
         updateWiremockOcspResponse(OCSPResp.SUCCESSFUL, CertificateStatus.GOOD);
 
-        KeyPair nonResponderKeyPair = KeyPairGenerator.getInstance("RSA", BouncyCastleProvider.PROVIDER_NAME).generateKeyPair();
+        updateOcspConfigurationWithGeneratedCertificate(
+                KeyPairGenerator.getInstance("RSA", BouncyCastleProvider.PROVIDER_NAME).generateKeyPair()
+        );
 
         expectedEx.expect(OCSPValidationException.class);
         expectedEx.expectMessage("OCSP response signature is not valid");
 
-        ocspValidator.validate(userCert, issuerCert, mockOcspUrl, Collections.singletonMap(
-                "TEST of SK OCSP RESPONDER 2011", generateCertificate(nonResponderKeyPair)
-        ));
+        ocspValidator.validate(userCert, issuerCert, ocspConfiguration);
     }
 
     @Test
     public void validateShouldThrowExceptionWhenCertificateStatusIsRevoked() throws Exception {
         X509Certificate issuerCert = loadCertificateFromResource(MOCK_ISSUER_CERT_PATH);
         X509Certificate userCert = loadCertificateFromResource(MOCK_USER_CERT_PATH);
+        updateOcspConfigurationWithGeneratedCertificate(responderKeys);
         updateWiremockOcspResponse(OCSPResp.SUCCESSFUL, new RevokedStatus(
                 new Date(), CRLReason.unspecified
         ));
@@ -218,9 +253,7 @@ public class OCSPValidatorTest {
         expectedEx.expect(OCSPValidationException.class);
         expectedEx.expectMessage("Invalid certificate status <REVOKED> received");
 
-        ocspValidator.validate(userCert, issuerCert, mockOcspUrl, Collections.singletonMap(
-                "TEST of SK OCSP RESPONDER 2011", generateCertificate(responderKeys)
-        ));
+        ocspValidator.validate(userCert, issuerCert, ocspConfiguration);
     }
 
     @Test
@@ -228,13 +261,12 @@ public class OCSPValidatorTest {
         X509Certificate issuerCert = loadCertificateFromResource(MOCK_ISSUER_CERT_PATH);
         X509Certificate userCert = loadCertificateFromResource(MOCK_USER_CERT_PATH);
         updateWiremockOcspResponse(OCSPResp.SUCCESSFUL, new UnknownStatus());
+        updateOcspConfigurationWithGeneratedCertificate(responderKeys);
 
         expectedEx.expect(OCSPValidationException.class);
         expectedEx.expectMessage("Invalid certificate status <UNKNOWN> received");
 
-        ocspValidator.validate(userCert, issuerCert, mockOcspUrl, Collections.singletonMap(
-                "TEST of SK OCSP RESPONDER 2011", generateCertificate(responderKeys)
-        ));
+        ocspValidator.validate(userCert, issuerCert, ocspConfiguration);
     }
 
     @Test
@@ -242,10 +274,9 @@ public class OCSPValidatorTest {
         X509Certificate issuerCert = loadCertificateFromResource(MOCK_ISSUER_CERT_PATH);
         X509Certificate userCert = loadCertificateFromResource(MOCK_USER_CERT_PATH);
         updateWiremockOcspResponse(OCSPResp.SUCCESSFUL, CertificateStatus.GOOD);
+        updateOcspConfigurationWithGeneratedCertificate(responderKeys);
 
-        ocspValidator.validate(userCert, issuerCert, mockOcspUrl, Collections.singletonMap(
-                "TEST of SK OCSP RESPONDER 2011", generateCertificate(responderKeys)
-        ));
+        ocspValidator.validate(userCert, issuerCert, ocspConfiguration);
     }
 
     private X509Certificate generateCertificate(KeyPair keyPair) throws OperatorCreationException, CertIOException, CertificateException {
@@ -283,28 +314,15 @@ public class OCSPValidatorTest {
         }
     }
 
-    private static BasicOCSPResp mockOcspResponse(CertificateID certificateID, CertificateStatus certificateStatus, DEROctetString nonce, PrivateKey signerKey)
-            throws OCSPException, OperatorCreationException {
-        RespID respID = new RespID(new X500Name("C=EE,O=AS Sertifitseerimiskeskus,OU=OCSP,CN=TEST of SK OCSP RESPONDER 2011,E=pki@sk.ee"));
-        BasicOCSPRespBuilder builder = new BasicOCSPRespBuilder(respID);
-        builder.addResponse(certificateID, certificateStatus);
-
-        if (nonce != null) {
-            Extension extension = new Extension(OCSPObjectIdentifiers.id_pkix_ocsp_nonce, true, nonce);
-            builder.setResponseExtensions(new Extensions(new Extension[]{ extension }));
-        }
-
-        return builder.build(
-                new JcaContentSignerBuilder("SHA256withRSA").build(signerKey),
-                null,
-                Date.from(Instant.now())
-        );
+    private void updateOcspConfigurationWithGeneratedCertificate(KeyPair keyPair) throws CertificateException, CertIOException, OperatorCreationException {
+        ocspConfiguration.setTrustedCertificates(Collections.singletonMap(
+                "TEST of SK OCSP RESPONDER 2011", generateCertificate(keyPair)
+        ));
     }
 
-    private static void updateWiremockOcspResponse(int responseStatus, CertificateStatus certificateStatus) throws IOException {
+    private static void updateWiremockOcspResponse(int responseStatus, CertificateStatus certificateStatus) {
         ocspResponseTransformer.setResponseStatus(responseStatus);
         ocspResponseTransformer.setCertificateStatus(certificateStatus);
-        ocspResponseTransformer.setNonceResolver(null);
 
         wireMockServer.stubFor(WireMock.post("/ocsp")
                 .willReturn(WireMock.aResponse().withStatus(200)
@@ -329,6 +347,7 @@ public class OCSPValidatorTest {
         private int responseStatus;
         private CertificateStatus certificateStatus;
         private Function<DEROctetString, DEROctetString> nonceResolver;
+        private Supplier<Date> producedAtProvider;
         private PrivateKey signerKey;
 
         @Override
@@ -343,17 +362,9 @@ public class OCSPValidatorTest {
 
                 DEROctetString nonce = (DEROctetString) ocspReq.getExtension(OCSPObjectIdentifiers.id_pkix_ocsp_nonce).getExtnValue();
                 validateNonceDerOctetString(nonce);
-                if (this.nonceResolver != null) nonce = this.nonceResolver.apply(nonce);
 
-                BasicOCSPResp basicOCSPResp = mockOcspResponse(
-                        ocspReq.getRequestList()[0].getCertID(),
-                        this.certificateStatus,
-                        nonce,
-                        this.signerKey
-                );
-
-                OCSPResp ocspResp = new OCSPRespBuilder()
-                        .build(this.responseStatus, basicOCSPResp);
+                BasicOCSPResp basicOCSPResp = mockOcspResponse(ocspReq.getRequestList()[0].getCertID(), this.nonceResolver.apply(nonce));
+                OCSPResp ocspResp = new OCSPRespBuilder().build(this.responseStatus, basicOCSPResp);
 
                 responseBytes = ocspResp.getEncoded();
             } catch (Exception e) {
@@ -369,6 +380,24 @@ public class OCSPValidatorTest {
         public String getName() {
             return getClass().getSimpleName();
         }
+
+        private BasicOCSPResp mockOcspResponse(CertificateID certificateID, DEROctetString nonce) throws OCSPException, OperatorCreationException {
+            RespID respID = new RespID(new X500Name("C=EE,O=AS Sertifitseerimiskeskus,OU=OCSP,CN=TEST of SK OCSP RESPONDER 2011,E=pki@sk.ee"));
+            BasicOCSPRespBuilder builder = new BasicOCSPRespBuilder(respID);
+            builder.addResponse(certificateID, this.certificateStatus);
+
+            if (nonce != null) {
+                Extension extension = new Extension(OCSPObjectIdentifiers.id_pkix_ocsp_nonce, true, nonce);
+                builder.setResponseExtensions(new Extensions(new Extension[]{ extension }));
+            }
+
+            return builder.build(
+                    new JcaContentSignerBuilder("SHA256withRSA").build(this.signerKey),
+                    null,
+                    this.producedAtProvider.get()
+            );
+        }
+
     }
 
 }

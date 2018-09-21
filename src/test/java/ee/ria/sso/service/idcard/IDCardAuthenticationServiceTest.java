@@ -42,8 +42,8 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
     private IDCardAuthenticationService authenticationService;
 
     @Autowired
-    @Qualifier("idIssuerCertificatesMap")
-    private Map<String, X509Certificate> issuerCertificates;
+    @Qualifier("idCardTrustedCertificatesMap")
+    private Map<String, X509Certificate> trustedCertificates;
 
     @Autowired
     @Qualifier("mockIDCardUserCertificate2015")
@@ -124,9 +124,13 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
         Exception cause = OCSPValidationException.of(new RuntimeException());
 
         Mockito.doThrow(cause).when(ocspValidatorMock).validate(mockUserCertificate2015,
-                issuerCertificates.get("TEST of ESTEID-SK 2015"),
-                configurationProvider.getOcspUrl(),
-                issuerCertificates
+                trustedCertificates.get("TEST of ESTEID-SK 2015"),
+                new OCSPValidator.OCSPConfiguration(
+                        configurationProvider.getOcspUrl(),
+                        trustedCertificates,
+                        configurationProvider.getOcspAcceptedClockSkew(),
+                        configurationProvider.getOcspResponseLifetime()
+                )
         );
 
         try {

@@ -92,7 +92,7 @@ public class IDCardControllerTest {
 
         Assert.assertEquals(new Boolean(false),response.getModel().get("ok"));
         SimpleTestAppender.verifyLogEventsExistInOrder(
-                containsString("ID-Card controller error: java.security.cert.CertificateException: Could not parse certificate: java.io.IOException: Empty input")
+                containsString("ID-Card controller error: Failed to decode certificate")
         );
     }
 

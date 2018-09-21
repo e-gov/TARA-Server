@@ -238,15 +238,17 @@ Table 2 - Enabling ID-card certificate validation
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
-| `id-card.ocsp-enabled` | N | Enables ID-card certificate validation if set to `true`, otherwise ignores all other ocsp related configuration. Defaults to `false`, if not specified. |
+| `id-card.ocsp-enabled` | N | Enables ID-card certificate validation if set to `true`, otherwise ignores all other ocsp related configuration. Defaults to `true`, if not specified. |
 
 Table 3 - Configuring ID-card OCSP 
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
-| `id-card.ocsp-url` | N | HTTP URL of the OCSP service. Defaults to `http://demo.sk.ee/ocsp`, if not specified. |
-| `id-card.ocsp-certificate-location` | Y | Path to the location of the trusted CA certificates. In case the certificate files are to be loaded from classpath, this path should be prefixed with `classpath:`. In case the certificate files are to be loaded from disk, this path should be prefixed with `file:`. |
-| `id-card.ocsp-certificates` | Y | A comma separated list of trusted CA certificates in the form of `<common_name>:<file_name>`. |
+| `id-card.ocsp-url` | Y | HTTP URL of the OCSP service. |
+| `id-card.ocsp-certificate-location` | Y | Path to the location of the trusted OCSP certificates. In case the certificate files are to be loaded from classpath, this path should be prefixed with `classpath:`. In case the certificate files are to be loaded from disk, this path should be prefixed with `file:`. |
+| `id-card.ocsp-certificates` | Y | A comma separated list of OCSP responder certificates and ID-card issuer certificates. |
+| `id-card.ocsp-accepted-clock-skew` | N | Maximum accepted time difference in seconds between OCSP provider and TARA-Server. Defaults to `2`, if not specified. |
+| `id-card.ocsp-response-lifetime` | N | Maximum accepted age of an OCSP response in seconds. Defaults to `900` if not specified. |
 
 Example:
 
@@ -255,7 +257,9 @@ id-card.enabled = true
 id-card.ocsp-enabled=true
 id-card.ocsp-url=http://demo.sk.ee/ocsp
 id-card.ocsp-certificate-location=file:/etc/ocspcerts/test
-id-card.ocsp-certificates=TEST of ESTEID-SK 2011:TEST_of_ESTEID-SK_2011.crt,TEST of ESTEID-SK 2015:TEST_of_ESTEID-SK_2015.crt
+id-card.ocsp-certificates=TEST_of_SK_OCSP_RESPONDER_2011.crt,TEST_of_ESTEID-SK_2011.crt,TEST_of_ESTEID-SK_2015.crt,TEST_of_ESTEID2018.crt
+id-card.ocsp-accepted-clock-skew=2
+id-card.ocsp-response-lifetime=900
 ````
 
 
