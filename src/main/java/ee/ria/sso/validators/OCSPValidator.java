@@ -74,10 +74,10 @@ public class OCSPValidator {
             BasicOCSPResp basicOCSPResponse = (BasicOCSPResp) response.getResponseObject();
 
             validateResponseNonce(basicOCSPResponse, nonce);
-            validateResponseProducedAt(basicOCSPResponse, ocsp.getAcceptedClockSkew(), ocsp.getResponseLifetime());
             validateResponseSignature(basicOCSPResponse, ocsp.getTrustedCertificates());
 
             SingleResp singleResponse = getSingleResp(basicOCSPResponse, certificateID);
+            validateResponseThisUpdate(singleResponse, ocsp.getAcceptedClockSkew(), ocsp.getResponseLifetime());
             org.bouncycastle.cert.ocsp.CertificateStatus status = singleResponse.getCertStatus();
 
             if (status == org.bouncycastle.cert.ocsp.CertificateStatus.GOOD) {
@@ -173,13 +173,13 @@ public class OCSPValidator {
             throw new IllegalStateException("Invalid OCSP response nonce");
     }
 
-    private void validateResponseProducedAt(BasicOCSPResp response, long acceptedClockSkew, long responseLifetime) {
-        final Instant producedAt = response.getProducedAt().toInstant();
+    private void validateResponseThisUpdate(SingleResp response, long acceptedClockSkew, long responseLifetime) {
+        final Instant thisUpdate = response.getThisUpdate().toInstant();
         final Instant now = Instant.now();
 
-        if (producedAt.isBefore(now.minusSeconds(acceptedClockSkew + responseLifetime)))
+        if (thisUpdate.isBefore(now.minusSeconds(acceptedClockSkew + responseLifetime)))
             throw new IllegalStateException("OCSP response was older than accepted");
-        if (producedAt.isAfter(now.plusSeconds(acceptedClockSkew)))
+        if (thisUpdate.isAfter(now.plusSeconds(acceptedClockSkew)))
             throw new IllegalStateException("OCSP response cannot be produced in the future");
     }
 
