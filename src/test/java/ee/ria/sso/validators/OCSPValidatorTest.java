@@ -92,7 +92,7 @@ public class OCSPValidatorTest {
 
         responderKeys = keyPairGenerator.generateKeyPair();
         ocspResponseTransformer.setSignerKey(responderKeys.getPrivate());
-        ocspResponseTransformer.setProducedAtProvider(() -> Date.from(Instant.now()));
+        ocspResponseTransformer.setThisUpdateProvider(() -> Date.from(Instant.now()));
         ocspResponseTransformer.setNonceResolver(nonce -> nonce);
 
         ocspConfiguration = new OCSPValidator.OCSPConfiguration(
@@ -187,12 +187,12 @@ public class OCSPValidatorTest {
     }
 
     @Test
-    public void validateShouldThrowExceptionWhenOcspResponseProducedAtIsTooOld() throws Exception {
+    public void validateShouldThrowExceptionWhenOcspResponseThisUpdateIsTooOld() throws Exception {
         X509Certificate issuerCert = loadCertificateFromResource(MOCK_ISSUER_CERT_PATH);
         X509Certificate userCert = loadCertificateFromResource(MOCK_USER_CERT_PATH);
         updateWiremockOcspResponse(OCSPResp.SUCCESSFUL, CertificateStatus.GOOD);
         updateOcspConfigurationWithGeneratedCertificate(responderKeys);
-        ocspResponseTransformer.setProducedAtProvider(() -> {
+        ocspResponseTransformer.setThisUpdateProvider(() -> {
             final Instant instant = Instant.now()
                     .minusSeconds(ocspConfiguration.getAcceptedClockSkew())
                     .minusSeconds(ocspConfiguration.getResponseLifetime())
@@ -207,12 +207,12 @@ public class OCSPValidatorTest {
     }
 
     @Test
-    public void validateShouldThrowExceptionWhenOcspResponseProducedAtIsInTheFuture() throws Exception {
+    public void validateShouldThrowExceptionWhenOcspResponseThisUpdateIsInTheFuture() throws Exception {
         X509Certificate issuerCert = loadCertificateFromResource(MOCK_ISSUER_CERT_PATH);
         X509Certificate userCert = loadCertificateFromResource(MOCK_USER_CERT_PATH);
         updateWiremockOcspResponse(OCSPResp.SUCCESSFUL, CertificateStatus.GOOD);
         updateOcspConfigurationWithGeneratedCertificate(responderKeys);
-        ocspResponseTransformer.setProducedAtProvider(() -> {
+        ocspResponseTransformer.setThisUpdateProvider(() -> {
             final Instant instant = Instant.now()
                     .plusSeconds(ocspConfiguration.getAcceptedClockSkew())
                     .plusSeconds(1L);
@@ -347,7 +347,7 @@ public class OCSPValidatorTest {
         private int responseStatus;
         private CertificateStatus certificateStatus;
         private Function<DEROctetString, DEROctetString> nonceResolver;
-        private Supplier<Date> producedAtProvider;
+        private Supplier<Date> thisUpdateProvider;
         private PrivateKey signerKey;
 
         @Override
@@ -384,7 +384,11 @@ public class OCSPValidatorTest {
         private BasicOCSPResp mockOcspResponse(CertificateID certificateID, DEROctetString nonce) throws OCSPException, OperatorCreationException {
             RespID respID = new RespID(new X500Name("C=EE,O=AS Sertifitseerimiskeskus,OU=OCSP,CN=TEST of SK OCSP RESPONDER 2011,E=pki@sk.ee"));
             BasicOCSPRespBuilder builder = new BasicOCSPRespBuilder(respID);
-            builder.addResponse(certificateID, this.certificateStatus);
+            builder.addResponse(certificateID, this.certificateStatus,
+                    this.thisUpdateProvider.get(),
+                    null,
+                    null
+            );
 
             if (nonce != null) {
                 Extension extension = new Extension(OCSPObjectIdentifiers.id_pkix_ocsp_nonce, true, nonce);
@@ -394,7 +398,7 @@ public class OCSPValidatorTest {
             return builder.build(
                     new JcaContentSignerBuilder("SHA256withRSA").build(this.signerKey),
                     null,
-                    this.producedAtProvider.get()
+                    Date.from(Instant.now())
             );
         }
 
