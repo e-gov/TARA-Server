@@ -1,15 +1,10 @@
 package org.pac4j.core.engine;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.LevelOfAssurance;
+import ee.ria.sso.authentication.TaraCredentialsException;
+import ee.ria.sso.flow.JSONFlowExecutionException;
+import ee.ria.sso.validators.OidcRequestParameter;
 import ee.ria.sso.validators.TaraScope;
 import org.pac4j.core.authorization.checker.AuthorizationChecker;
 import org.pac4j.core.authorization.checker.DefaultAuthorizationChecker;
@@ -21,7 +16,6 @@ import org.pac4j.core.client.direct.AnonymousClient;
 import org.pac4j.core.client.finder.ClientFinder;
 import org.pac4j.core.client.finder.DefaultClientFinder;
 import org.pac4j.core.config.Config;
-import org.pac4j.core.context.J2EContext;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.core.credentials.Credentials;
 import org.pac4j.core.exception.HttpAction;
@@ -36,10 +30,8 @@ import org.pac4j.core.util.CommonHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ee.ria.sso.authentication.TaraCredentialsException;
-import ee.ria.sso.flow.JSONFlowExecutionException;
-import ee.ria.sso.validators.OIDCRequestValidator;
-import ee.ria.sso.validators.RequestParameter;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created by Janar Rahumeel (CGI Estonia)
@@ -85,11 +77,6 @@ public class DefaultSecurityLogic<R, C extends WebContext> extends ProfileManage
             if (!this.matchingChecker.matches(context, matchers, config.getMatchers())) {
                 this.log.debug("no matching for this request -> grant access");
                 return securityGrantedAccessAdapter.adapt(context, parameters);
-            }
-            // Validating OAuth 2.0 Authorization request according to RFC6749
-            Optional<Integer> errorCode = this.validateOIDCRequest(context);
-            if (errorCode.isPresent()) {
-                return httpActionAdapter.adapt(errorCode.get(), context);
             }
             this.log.debug("clients: {}", clients);
             List<Client> currentClients = this.clientFinder.find(configClients, context, clients);
@@ -180,7 +167,10 @@ public class DefaultSecurityLogic<R, C extends WebContext> extends ProfileManage
     }
 
     protected void saveAllowedAuthenticationMethods(C context) {
-        String scope = context.getRequestParameter(RequestParameter.SCOPE.name().toLowerCase());
+        String scope = context.getRequestParameter(OidcRequestParameter.SCOPE.getParameterKey());
+        if (scope == null)
+            return;
+
         List scopes = Arrays.stream(scope.split(" ")).collect(Collectors.toList());
 
         List<String> authenticationMethods = scopes.contains(TaraScope.EIDASONLY.getFormalName()) ? Arrays.asList(AuthenticationType.eIDAS.name()) :
@@ -189,7 +179,7 @@ public class DefaultSecurityLogic<R, C extends WebContext> extends ProfileManage
     }
 
     protected void saveLevelOfAssuranceIfPresent(C context) {
-        String acrValues = context.getRequestParameter(RequestParameter.ACR_VALUES.getParameterKey());
+        String acrValues = context.getRequestParameter(OidcRequestParameter.ACR_VALUES.getParameterKey());
         if (acrValues == null) return;
 
         this.log.debug("acr_values: {}", acrValues);
@@ -205,13 +195,6 @@ public class DefaultSecurityLogic<R, C extends WebContext> extends ProfileManage
 
     protected HttpAction unauthorized(C context, List<Client> currentClients) throws HttpAction {
         return HttpAction.unauthorized("unauthorized", context, (String) null);
-    }
-
-    private Optional<Integer> validateOIDCRequest(C context) {
-        if (context.getPath().equals("/oidc/authorize")) {
-            return OIDCRequestValidator.validateAll((J2EContext) context, Arrays.asList(RequestParameter.values()));
-        }
-        return Optional.empty();
     }
 
     public ClientFinder getClientFinder() {
@@ -245,5 +228,4 @@ public class DefaultSecurityLogic<R, C extends WebContext> extends ProfileManage
     public void setSaveProfileInSession(boolean saveProfileInSession) {
         this.saveProfileInSession = saveProfileInSession;
     }
-
 }
