@@ -4,7 +4,7 @@ package ee.ria.sso.validators;
  * Created by Janar Rahumeel (CGI Estonia)
  */
 
-public enum RequestParameter {
+public enum OidcRequestParameter {
 
     CLIENT_ID("invalid_client", true),
     SCOPE("invalid_scope", true),
@@ -17,7 +17,7 @@ public enum RequestParameter {
     private String error;
     private boolean mandatory;
 
-    RequestParameter(String error, boolean mandatory) {
+    OidcRequestParameter(String error, boolean mandatory) {
         this.error = error;
         this.mandatory = mandatory;
     }

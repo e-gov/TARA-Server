@@ -20,8 +20,7 @@ import java.security.cert.X509Certificate;
 @EnableConfigurationProperties
 @ComponentScan(basePackages = {
         "ee.ria.sso.config.idcard",
-        "ee.ria.sso.service.idcard",
-        "ee.ria.sso.validators"
+        "ee.ria.sso.service.idcard"
 })
 @Configuration
 @Import(value = {
