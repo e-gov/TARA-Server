@@ -60,7 +60,9 @@ public class OidcRequestValidatorTest {
     @Test
     public void successWhenAllParametersPresentAndValid() {
         MockHttpServletRequest request = new MockOidcRequestBuilder()
-                .addAllMandatoryParameters().build();
+                .addAllMandatoryParameters()
+                .addAllOptionalParameters()
+                .build();
         oidcRequestValidator.validateAuthenticationRequestParameters(request);
     }
 
@@ -140,7 +142,7 @@ public class OidcRequestValidatorTest {
 
         public MockOidcRequestBuilder addAllOptionalParameters() {
             httpServletRequest.addParameter("nonce", "0983120382109831092830128308213098");
-            httpServletRequest.addParameter("acr_values", "eidas_only");
+            httpServletRequest.addParameter("acr_values", "high");
             return this;
         }
 
