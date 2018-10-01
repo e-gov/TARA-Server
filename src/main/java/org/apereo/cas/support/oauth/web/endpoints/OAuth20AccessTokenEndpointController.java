@@ -48,7 +48,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import com.google.common.base.Throwables;
 
 import ee.ria.sso.flow.JSONFlowExecutionException;
-import ee.ria.sso.validators.OIDCRequestValidator;
+import ee.ria.sso.validators.OidcRequestValidator;
 
 /**
  * Created by Janar Rahumeel (CGI Estonia)
@@ -94,7 +94,7 @@ public class OAuth20AccessTokenEndpointController extends BaseOAuth20Controller 
     public void handleRequest(HttpServletRequest request, HttpServletResponse response) throws Exception {
         try {
             response.setContentType("text/plain");
-            OIDCRequestValidator.checkGrantType(request);
+            OidcRequestValidator.checkGrantType(request);
             if (!this.verifyAccessTokenRequest(request, response)) {
                 throw JSONFlowExecutionException.ofBadRequest(Collections.singletonMap("error", "invalid_request"),
                     new RuntimeException("Access token request verification failed"));
