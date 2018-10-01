@@ -28,7 +28,7 @@
         </a>
         <div class="info-block method-block text-center">
             <div class="row">
-                <form id="mobileIdCheckForm" method="post">
+                <form id="authenticationCheckForm" method="post">
                     <p th:text="#{label.mid.check}"></p>
                     <h1 th:text="${mobileChallenge}"></h1>
                     <p></p>
@@ -42,14 +42,7 @@
     </div>
     <script type="text/javascript" src="/js/jquery.min.js"></script>
     <script type="text/javascript" src="/js/bootstrap.min.js"></script>
-    <script type="text/javascript">
-        $(document).ready(function () {
-            setTimeout(function () {
-                $("#mobileIdCheckForm").submit();
-            }, 5000);
-
-        });
-    </script>
+    <script type="text/javascript" src="/js/form-check.js"></script>
     <div th:replace="fragments/tarafooter" th:remove="tag">Footer</div>
 </div>
 </body>

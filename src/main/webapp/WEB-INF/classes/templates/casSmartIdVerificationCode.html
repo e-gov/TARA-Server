@@ -22,7 +22,7 @@
 </head>
 <div th:replace="fragments/taraheader" th:remove="tag">Header</div>
 
-<body>
+<body th:attr="data-check-form-refresh-rate=(${@environment.getProperty('smart-id.pin-querying-refresh-rate')} ?: '3000')">
     <div layout:fragment="content" th:remove="tag">
         <div class="container">
             <a th:href="${session.pac4jRequestedUrl}" class="text-black back-link icon-link">
@@ -30,7 +30,7 @@
             </a>
             <div class="info-block method-block text-center">
                 <div class="row">
-                    <form id="smartIdCheckForm" method="post">
+                    <form id="authenticationCheckForm" method="post">
                         <p th:text="#{label.smartId.check}"></p>
                         <h1 th:text="${smartIdVerificationCode}"></h1>
                         <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
@@ -41,13 +41,7 @@
         </div>
         <script type="text/javascript" src="/js/jquery.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.min.js"></script>
-        <script th:inline="javascript">
-            $(document).ready(function () {
-                setTimeout(function () {
-                    $("#smartIdCheckForm").submit();
-                }, /*[[${@environment.getProperty('smart-id.pin-querying-refresh-rate')}]]*/ '3000');
-            });
-        </script>
+        <script type="text/javascript" src="/js/form-check.js"></script>
         <div th:replace="fragments/tarafooter" th:remove="tag">Footer</div>
     </div>
 </body>

@@ -39,8 +39,7 @@
                                 <input type="hidden" name="_eventId" value="idsubmit"/>
                                 <input type="hidden" name="idlang" id="idlang" th:value="${lang}">
                                 <input type="hidden" name="geolocation"/>
-                                <button type="button" name="button" class="primary" th:text="#{label.button}"
-                                        onclick="APP.loginByIDCard(); return false;"></button>
+                                <button type="button" name="button" class="primary" th:text="#{label.button}"></button>
                             </form>
                         </div>
                         <div class="col-md-6 col-sm-6 col-xs-6">
@@ -100,8 +99,7 @@
                     </div>
                     <div class="row">
                         <div class="col-md-6 col-sm-6 col-xs-50">
-                            <button type="button" class="primary" th:text="#{label.button}"
-                                    onclick="$('#mobileIdForm').submit()"></button>
+                            <button id="mobileIdSubmitButton" type="button" class="primary" th:text="#{label.button}"></button>
                         </div>
                         <div class="col-md-6 col-sm-6 col-xs-50">
                             <a href="http://id.ee/index.php?id=35803&amp;group_id=1&amp;item=203&amp;crumbs=.203"
@@ -137,7 +135,7 @@
                         <div class="col-md-9 col-sm-9">
                             <div class="row" id="eIDAScountryList">
                                 <button type="button" class="btn btn-lg btn-link col-md-6 col-sm-6" th:each="country : ${@eidasConfigurationProvider.getListOfCountries(#locale.language)}">
-                                    <div align="left" th:id="${country}"><span class="flag-icon" th:classappend="${'flag-icon-' + #strings.toLowerCase(country)}"></span><span style="padding-left:5px;color: #000;" th:text="#{${'label.country.' + country}}"></span></div>
+                                    <div align="left" th:id="${country}"><span class="flag-icon" th:classappend="${'flag-icon-' + #strings.toLowerCase(country)}"></span><span class="flag-link-text" th:text="#{${'label.country.' + country}}"></span></div>
                                 </button>
                             </div>
                         </div>
@@ -237,8 +235,7 @@
                     </div>
                     <div class="row">
                         <div class="col-md-6 col-sm-6 col-xs-50">
-                            <button type="button" class="primary" th:text="#{label.button}"
-                                    onclick="$('#smartIdForm').submit()"></button>
+                            <button id="smartIdSubmitButton" type="button" class="primary" th:text="#{label.button}"></button>
                         </div>
                         <div class="col-md-6 col-sm-6 col-xs-50">
                             <a href="https://www.smart-id.com/help/faq/"

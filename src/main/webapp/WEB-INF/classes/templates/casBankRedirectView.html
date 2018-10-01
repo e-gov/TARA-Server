@@ -10,11 +10,7 @@
     <link rel="stylesheet" href="/css/style.css"/>
     <link href="css/font-roboto.css" rel="stylesheet">
     <link rel="icon" th:href="@{/favicon.ico}" type="image/x-icon"/>
-    <script>
-        window.onload = function(){
-            document.forms['bankRedirectForm'].submit();
-        }
-    </script>
+    <script type="text/javascript" src="/js/form-redirect.js"></script>
     <![endif]-->
 </head>
 <div th:replace="fragments/taraheader" th:remove="tag">Header</div>
@@ -32,7 +28,7 @@
                 <noscript><p th:text="#{label.bank.redirect.nojavascript}"></p></noscript>
             </div>
         </div>
-        <form id="bankRedirectForm" method="post" th:action="${url}" th:inline="text">
+        <form id="authenticationRedirectForm" method="post" th:action="${url}" th:inline="text">
             <div>[(${packet.html()})]</div>
             <noscript>
                 <input type="submit" th:value="#{label.bank.redirect.nojavascript.submit}">
