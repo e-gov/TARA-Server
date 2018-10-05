@@ -7,6 +7,8 @@ import ee.ria.sso.authentication.EidasAuthenticationFailedException;
 import ee.ria.sso.authentication.LevelOfAssurance;
 import ee.ria.sso.authentication.TaraAuthenticationException;
 import ee.ria.sso.authentication.credential.TaraCredential;
+import ee.ria.sso.security.CspDirective;
+import ee.ria.sso.security.CspHeaderUtil;
 import ee.ria.sso.service.AbstractService;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.model.AuthenticationResult;
@@ -67,7 +69,8 @@ public class EidasAuthenticationService extends AbstractService {
             LevelOfAssurance loa = (LevelOfAssurance) context.getExternalContext().getSessionMap().get("taraAuthorizeRequestLevelOfAssurance");
             byte[] authnRequest = this.eidasAuthenticator.authenticate(credential.getCountry(), relayState, loa);
             HttpServletResponse response = (HttpServletResponse) context.getExternalContext().getNativeResponse();
-            response.setContentType("text/html; charset=UTF-8");
+            configureResponseForWriting(response, authnRequest);
+
             try (OutputStream out = response.getOutputStream()) {
                 out.write(authnRequest);
                 out.flush();
@@ -134,6 +137,20 @@ public class EidasAuthenticationService extends AbstractService {
     private static void clearFlowScope(RequestContext context) {
         context.getFlowScope().clear();
         context.getFlowExecutionContext().getActiveSession().getScope().clear();
+    }
+
+    private static void configureResponseForWriting(HttpServletResponse response, byte[] html) {
+        response.setContentType("text/html; charset=UTF-8");
+
+        final String scriptHashes = CspHeaderUtil.generateSerializedHashListOfAllTags(html, "script");
+        if (StringUtils.isNotBlank(scriptHashes)) {
+            CspHeaderUtil.addValueToExistingDirectiveInCspHeader(response, CspDirective.SCRIPT_SRC, scriptHashes);
+        }
+
+        final String formActions = CspHeaderUtil.generateSerializedFormActionsList(html);
+        if (StringUtils.isNotBlank(formActions)) {
+            CspHeaderUtil.addValueToExistingDirectiveInCspHeader(response, CspDirective.FORM_ACTION, formActions);
+        }
     }
 
     private void validateRelayState(RequestContext context) {

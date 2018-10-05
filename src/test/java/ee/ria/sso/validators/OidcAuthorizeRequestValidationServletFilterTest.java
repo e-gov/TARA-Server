@@ -1,5 +1,6 @@
 package ee.ria.sso.validators;
 
+import ee.ria.sso.Constants;
 import org.apereo.cas.util.spring.ApplicationContextProvider;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
@@ -55,6 +56,24 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
     public void assertRedirectWhenParameterValidationFails() throws IOException, ServletException {
         OidcRequestParameter[] parameters = getAllParametersExcept(OidcRequestParameter.CLIENT_ID, OidcRequestParameter.REDIRECT_URI);
         assertRedirectWhenParameterValidationFails(parameters);
+    }
+
+    @Test
+    public void assertClientIdInSessionWhenValidationSucceeds() throws IOException, ServletException {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addParameter(OidcRequestParameter.CLIENT_ID.getParameterKey(), "clientIdValue");
+
+        servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
+        Assert.assertEquals("clientIdValue", request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_CLIENT_ID));
+    }
+
+    @Test
+    public void assertRedirectUriInSessionWhenValidationSucceeds() throws IOException, ServletException {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addParameter(OidcRequestParameter.REDIRECT_URI.getParameterKey(), "redirectUriValue");
+
+        servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
+        Assert.assertEquals("redirectUriValue", request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_REDIRECT_URI));
     }
 
     private void assertExceptionThrownWhenParameterValidationFails(OidcRequestParameter... parameters) throws IOException, ServletException {

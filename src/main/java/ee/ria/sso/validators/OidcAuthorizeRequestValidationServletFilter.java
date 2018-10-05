@@ -1,6 +1,7 @@
 package ee.ria.sso.validators;
 
 import com.stormpath.sdk.lang.Assert;
+import ee.ria.sso.Constants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apereo.cas.util.spring.ApplicationContextProvider;
@@ -9,6 +10,7 @@ import org.springframework.context.ApplicationContext;
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -34,6 +36,8 @@ public class OidcAuthorizeRequestValidationServletFilter implements Filter {
 
         try {
             this.oidcRequestValidator.validateAuthenticationRequestParameters(request);
+            this.saveOidcRequestParametersToSession(request);
+
             filterChain.doFilter(servletRequest, servletResponse);
         } catch (OidcRequestValidator.InvalidRequestException e) {
             log.error("Invalid OIDC authorization request: " + e.getMessage());
@@ -65,6 +69,17 @@ public class OidcAuthorizeRequestValidationServletFilter implements Filter {
         } catch (UnsupportedEncodingException ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    private void saveOidcRequestParametersToSession(final HttpServletRequest request) {
+        final HttpSession session = request.getSession(true);
+
+        session.setAttribute(Constants.TARA_OIDC_SESSION_CLIENT_ID,
+                request.getParameter(OidcRequestParameter.CLIENT_ID.getParameterKey())
+        );
+        session.setAttribute(Constants.TARA_OIDC_SESSION_REDIRECT_URI,
+                request.getParameter(OidcRequestParameter.REDIRECT_URI.getParameterKey())
+        );
     }
 
     @Override

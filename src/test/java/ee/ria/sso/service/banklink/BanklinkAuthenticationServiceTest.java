@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
 import org.springframework.core.env.Environment;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -450,6 +451,7 @@ public class BanklinkAuthenticationServiceTest {
         MockHttpServletRequest mockHttpServletRequest = new MockHttpServletRequest();
         mockHttpServletRequest.addParameter("service", "https://cas.test.url.net/oauth2.0/callbackAuthorize?client_name=CasOAuthClient&client_id=openIdDemo&redirect_uri=https://tara-client.arendus.kit:8451/oauth/response");
         mockExternalContext.setNativeRequest(mockHttpServletRequest);
+        mockExternalContext.setNativeResponse(new MockHttpServletResponse());
         context.setExternalContext(mockExternalContext);
 
         MockParameterMap map = (MockParameterMap) context.getExternalContext().getRequestParameterMap();

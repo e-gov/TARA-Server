@@ -9,6 +9,8 @@ import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.BankEnum;
 import ee.ria.sso.authentication.TaraAuthenticationException;
 import ee.ria.sso.authentication.credential.TaraCredential;
+import ee.ria.sso.security.CspDirective;
+import ee.ria.sso.security.CspHeaderUtil;
 import ee.ria.sso.service.AbstractService;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.statistics.StatisticsHandler;
@@ -25,6 +27,7 @@ import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
 
 @ConditionalOnProperty("banklinks.enabled")
@@ -66,6 +69,7 @@ public class BanklinkAuthenticationService extends AbstractService {
             outgoingPacket.setParameter("VK_LANG", LocaleContextHolder.getLocale().getISO3Language().toUpperCase());
             context.getRequestScope().put("packet", outgoingPacket);
             context.getExternalContext().getSessionMap().put(SERVICE_ATTRIBUTE, context.getFlowScope().get(SERVICE_ATTRIBUTE));
+            addBankUrlToResponseCspFormActionDirective(context, banklink);
 
             this.statistics.collect(new StatisticsRecord(
                     LocalDateTime.now(), getServiceClientId(context), bankEnum, StatisticsOperation.START_AUTH
@@ -126,6 +130,11 @@ public class BanklinkAuthenticationService extends AbstractService {
 
     private static BankEnum getBankEnum(RequestContext context) {
         return context.getExternalContext().getSessionMap().get(BANK_ENUM_ATTRIBUTE, BankEnum.class);
+    }
+
+    private static void addBankUrlToResponseCspFormActionDirective(RequestContext context, AuthLink banklink) {
+        HttpServletResponse response = (HttpServletResponse) context.getExternalContext().getNativeResponse();
+        CspHeaderUtil.addValueToExistingDirectiveInCspHeader(response, CspDirective.FORM_ACTION, banklink.getUrl());
     }
 
     private static void clearFlowScope(RequestContext context) {
