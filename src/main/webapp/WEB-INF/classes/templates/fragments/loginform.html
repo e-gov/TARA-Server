@@ -44,7 +44,7 @@
                             </form>
                         </div>
                         <div class="col-md-6 col-sm-6 col-xs-6">
-                            <a href="http://id.ee/index.php?id=35803" target="_blank" class="pull-right help-link"
+                            <a th:href="#{link.id.help}" target="_blank" rel="noopener" class="pull-right help-link"
                                th:text="#{label.id.help}"></a>
                         </div>
                     </div>
@@ -78,7 +78,7 @@
                                     <span th:text="#{label.idcode}" th:remove="tag"></span>
                                 </label>
                                 <input type="text" id="personalCode" placeholder="" size="25" tabindex="1"
-                                       th:field="*{principalCode}" autocomplete="off" required>
+                                       th:field="*{principalCode}" required>
                             </div>
                             <div class="label-input input-group col-md-6 col-sm-6">
                                 <label for="mobileNumber">
@@ -88,7 +88,7 @@
                                     <span class="input-group-addon" id="basic-phonenumber">+372</span>
                                     <input id="mobileNumber" type="text" placeholder=""
                                            aria-describedby="basic-phonenumber"
-                                           size="25" tabindex="2" th:field="*{mobileNumber}" autocomplete="off"
+                                           size="25" tabindex="2" th:field="*{mobileNumber}"
                                            required>
                                 </div>
                             </div>
@@ -104,8 +104,8 @@
                                     onclick="$('#mobileIdForm').submit()"></button>
                         </div>
                         <div class="col-md-6 col-sm-6 col-xs-50">
-                            <a href="http://id.ee/index.php?id=35803&amp;group_id=1&amp;item=203&amp;crumbs=.203"
-                               class="pull-right help-link" target="_blank" th:text="#{label.mid.help}"></a>
+                            <a th:href="#{link.mid.help}" target="_blank" rel="noopener"
+                               class="pull-right help-link" th:text="#{label.mid.help}"></a>
                         </div>
                     </div>
                 </div>
@@ -227,7 +227,7 @@
                                 <div class="input-group">
                                     <span class="input-group-addon" id="default-country">EE</span>
                                     <input type="text" id="personIdentifier" placeholder="" size="25" tabindex="1"
-                                           aria-describedby="default-country" th:field="*{principalCode}" autocomplete="off" required>
+                                           aria-describedby="default-country" th:field="*{principalCode}" required>
                                 </div>
                             </div>
                             <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
@@ -241,9 +241,10 @@
                                     onclick="$('#smartIdForm').submit()"></button>
                         </div>
                         <div class="col-md-6 col-sm-6 col-xs-50">
-                            <a href="https://www.smart-id.com/help/faq/"
+                            <a th:href="#{link.smartId.help}"
                                class="pull-right help-link"
                                target="_blank"
+                               rel="noopener"
                                th:text="#{label.smartId.help}"></a>
                         </div>
                     </div>
