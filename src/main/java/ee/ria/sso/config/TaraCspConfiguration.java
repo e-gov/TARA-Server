@@ -1,7 +1,8 @@
 package ee.ria.sso.config;
 
 import ee.ria.sso.security.CspDirective;
-import ee.ria.sso.security.ResponseCspHeadersEnforcementFilter;
+import ee.ria.sso.security.CspResponseHeadersEnforcementFilter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -16,6 +17,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+@Slf4j
 @Configuration
 @ConditionalOnProperty("security.csp.enabled")
 public class TaraCspConfiguration {
@@ -26,12 +28,12 @@ public class TaraCspConfiguration {
     private Environment environment;
 
     @Bean
-    public FilterRegistrationBean taraResponseCspHeadersEnforcementFilter() {
+    public FilterRegistrationBean taraCspResponseHeadersEnforcementFilter() {
         final FilterRegistrationBean bean = new FilterRegistrationBean();
-        bean.setFilter(new ResponseCspHeadersEnforcementFilter(getConfiguredCspDirectives()));
+        bean.setFilter(new CspResponseHeadersEnforcementFilter(getConfiguredCspDirectives()));
         bean.setUrlPatterns(Collections.singleton("/*"));
         bean.setInitParameters(new HashMap<>());
-        bean.setName("taraResponseCspHeadersEnforcementFilter");
+        bean.setName("taraCspResponseHeadersEnforcementFilter");
         bean.setOrder(Ordered.LOWEST_PRECEDENCE);
 
         return bean;
@@ -47,6 +49,10 @@ public class TaraCspConfiguration {
                 directive.validateValue(value);
                 directives.put(directive, StringUtils.isNotBlank(value) ? value : null);
             }
+        }
+
+        if (directives.isEmpty()) {
+            log.warn("CSP is enabled but no CSP directives configured");
         }
 
         return directives;

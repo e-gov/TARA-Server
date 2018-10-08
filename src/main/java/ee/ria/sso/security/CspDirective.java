@@ -66,6 +66,7 @@ public enum CspDirective {
             case OPTIONAL:
                 if (StringUtils.isBlank(value))
                     return;
+                break;
 
             case NEEDED:
                 if (StringUtils.isBlank(value))

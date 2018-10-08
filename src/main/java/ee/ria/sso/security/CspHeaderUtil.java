@@ -16,6 +16,9 @@ import java.util.regex.Pattern;
 public class CspHeaderUtil {
 
     public static final String CSP_HEADER_NAME = "Content-Security-Policy";
+    private static final Pattern FORM_ACTION_SEARCH_PATTERN = Pattern.compile(
+            "<form[^>]*action=\"([a-z0-9._~()'!*:@,;?/#+&=-]+?)\"",
+            Pattern.CASE_INSENSITIVE);
 
     public static void addValueToExistingDirectiveInCspHeader(HttpServletResponse response, CspDirective directive, String value) {
         final String headerValue = response.getHeader(CSP_HEADER_NAME);
@@ -39,8 +42,7 @@ public class CspHeaderUtil {
     }
 
     public static String generateSerializedFormActionsList(final byte[] html) {
-        return generateSerializedListWithPattern(html,
-                Pattern.compile("<form[^>]*action=\"([a-z0-9._~()'!*:@,;?/#+&=-]+?)\"", Pattern.CASE_INSENSITIVE),
+        return generateSerializedListWithPattern(html, FORM_ACTION_SEARCH_PATTERN,
                 matchResult -> parseUrlToString(
                         Arrays.copyOfRange(html, matchResult.start(1), matchResult.end(1))
                 )

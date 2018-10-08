@@ -11,6 +11,7 @@
   * [Banklink authentication](#banklink)
   * [Smart-ID authentication](#smart-id)
   * [Heartbeat endpoint](#heartbeat)
+  * [Content Security Policy](#security_csp)
   * [Tara-Stat service](#tara_stat)
   * [Test environment warning message](#test_environment_warning)
   * [Audit logging](#audit_logging)

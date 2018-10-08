@@ -17,7 +17,7 @@ public class TaraCspDisabledConfigurationTest extends AbstractDisabledConfigurat
 
     @Test
     public void whenEidasDisabledThenEidasBeansNotInitiated() {
-        assertBeanNotInitiated("taraResponseCspHeadersEnforcementFilter");
+        assertBeanNotInitiated("taraCspResponseHeadersEnforcementFilter");
         assertBeanNotInitiated(TaraCspConfiguration.class);
     }
 

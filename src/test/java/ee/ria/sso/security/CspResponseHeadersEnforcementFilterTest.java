@@ -21,20 +21,20 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class ResponseCspHeadersEnforcementFilterTest {
+public class CspResponseHeadersEnforcementFilterTest {
 
     @Rule
     public ExpectedException expectedEx = ExpectedException.none();
 
     @Test
     public void constructResponseCspHeadersEnforcementFilterShouldSucceedWithNoDirectives() throws Exception {
-        ResponseCspHeadersEnforcementFilter filter = new ResponseCspHeadersEnforcementFilter(Collections.emptyMap());
+        CspResponseHeadersEnforcementFilter filter = new CspResponseHeadersEnforcementFilter(Collections.emptyMap());
         validateFilterProducesNoCspHeader(filter);
     }
 
     @Test
     public void constructResponseCspHeadersEnforcementFilterShouldSucceedWithValidDirective() throws Exception {
-        ResponseCspHeadersEnforcementFilter filter = new ResponseCspHeadersEnforcementFilter(
+        CspResponseHeadersEnforcementFilter filter = new CspResponseHeadersEnforcementFilter(
                 Collections.singletonMap(CspDirective.DEFAULT_SRC, "source list")
         );
         validateFilterProducesCspHeader(filter, CspDirective.DEFAULT_SRC.getCspName() + " source list");
@@ -48,7 +48,7 @@ public class ResponseCspHeadersEnforcementFilterTest {
                 CspDirective.BLOCK_ALL_MIXED_CONTENT.getCspName()
         ));
 
-        ResponseCspHeadersEnforcementFilter filter = new ResponseCspHeadersEnforcementFilter(
+        CspResponseHeadersEnforcementFilter filter = new CspResponseHeadersEnforcementFilter(
                 Collections.singletonMap(CspDirective.BLOCK_ALL_MIXED_CONTENT, "some value")
         );
     }
@@ -59,14 +59,14 @@ public class ResponseCspHeadersEnforcementFilterTest {
         directives.put(CspDirective.DEFAULT_SRC, "source list");
         directives.put(CspDirective.BLOCK_ALL_MIXED_CONTENT, null);
 
-        ResponseCspHeadersEnforcementFilter filter = new ResponseCspHeadersEnforcementFilter(directives);
+        CspResponseHeadersEnforcementFilter filter = new CspResponseHeadersEnforcementFilter(directives);
         validateFilterProducesCspHeader(filter,
                 CspDirective.DEFAULT_SRC.getCspName() + " source list; " + CspDirective.BLOCK_ALL_MIXED_CONTENT.getCspName());
     }
 
     @Test
     public void doFilterShouldAddRedirectUriToCspHeaderIfFormActionPresent() throws Exception {
-        ResponseCspHeadersEnforcementFilter filter = new ResponseCspHeadersEnforcementFilter(
+        CspResponseHeadersEnforcementFilter filter = new CspResponseHeadersEnforcementFilter(
                 Collections.singletonMap(CspDirective.FORM_ACTION, "action list")
         );
 
@@ -78,7 +78,7 @@ public class ResponseCspHeadersEnforcementFilterTest {
 
     @Test
     public void doFilterShouldNotAddRedirectUriToCspHeaderIfFormActionMissing() throws Exception {
-        ResponseCspHeadersEnforcementFilter filter = new ResponseCspHeadersEnforcementFilter(
+        CspResponseHeadersEnforcementFilter filter = new CspResponseHeadersEnforcementFilter(
                 Collections.singletonMap(CspDirective.DEFAULT_SRC, "source list")
         );
 
@@ -90,7 +90,7 @@ public class ResponseCspHeadersEnforcementFilterTest {
 
     @Test
     public void doFilterShouldNotAddRedirectUriToCspHeaderIfNoDirectivesPresent() throws Exception {
-        ResponseCspHeadersEnforcementFilter filter = new ResponseCspHeadersEnforcementFilter(
+        CspResponseHeadersEnforcementFilter filter = new CspResponseHeadersEnforcementFilter(
                 Collections.emptyMap()
         );
 
@@ -100,7 +100,7 @@ public class ResponseCspHeadersEnforcementFilterTest {
         );
     }
 
-    private void validateFilterProducesNoCspHeader(final ResponseCspHeadersEnforcementFilter filter) throws IOException, ServletException {
+    private void validateFilterProducesNoCspHeader(final CspResponseHeadersEnforcementFilter filter) throws IOException, ServletException {
         MockHttpServletResponse response = new MockHttpServletResponse();
         Assert.assertNull(response.getHeader(CspHeaderUtil.CSP_HEADER_NAME));
 
@@ -112,13 +112,13 @@ public class ResponseCspHeadersEnforcementFilterTest {
         Mockito.verifyZeroInteractions(request);
     }
 
-    private void validateFilterProducesCspHeader(final ResponseCspHeadersEnforcementFilter filter, final String value) throws IOException, ServletException {
+    private void validateFilterProducesCspHeader(final CspResponseHeadersEnforcementFilter filter, final String value) throws IOException, ServletException {
         HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
         validateFilterProducesCspHeader(filter, request, value);
         Mockito.verifyZeroInteractions(request);
     }
 
-    private void validateFilterProducesCspHeader(final ResponseCspHeadersEnforcementFilter filter, final HttpServletRequest request, final String value)
+    private void validateFilterProducesCspHeader(final CspResponseHeadersEnforcementFilter filter, final HttpServletRequest request, final String value)
             throws IOException, ServletException {
         MockHttpServletResponse response = new MockHttpServletResponse();
         Assert.assertNull(response.getHeader(CspHeaderUtil.CSP_HEADER_NAME));

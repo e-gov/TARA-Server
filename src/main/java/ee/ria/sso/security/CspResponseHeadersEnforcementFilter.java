@@ -13,16 +13,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class ResponseCspHeadersEnforcementFilter implements Filter {
+public class CspResponseHeadersEnforcementFilter implements Filter {
 
     private final String cspHeaderValue;
     private final boolean isFormActionLimited;
 
-    public ResponseCspHeadersEnforcementFilter(final Map<CspDirective, String> directives) {
+    public CspResponseHeadersEnforcementFilter(final Map<CspDirective, String> directives) {
         final List<String> directivesList = getDirectivesAsStringsList(directives);
         this.isFormActionLimited = directives.containsKey(CspDirective.FORM_ACTION);
 
-        if (directivesList.size() > 0) {
+        if (!directivesList.isEmpty()) {
             if (this.isFormActionLimited) moveFormActionDirectiveToLast(directivesList);
             this.cspHeaderValue = directivesList.stream().collect(Collectors.joining("; "));
         } else {
