@@ -16,7 +16,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 public class TaraCspDisabledConfigurationTest extends AbstractDisabledConfigurationTest {
 
     @Test
-    public void whenEidasDisabledThenEidasBeansNotInitiated() {
+    public void whenCspDisabledThenCspBeansNotInitiated() {
         assertBeanNotInitiated("taraCspResponseHeadersEnforcementFilter");
         assertBeanNotInitiated(TaraCspConfiguration.class);
     }
