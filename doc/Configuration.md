@@ -484,19 +484,28 @@ Example (using currently recommended CSP configuration for TARA):
 security.csp.enabled=true
 
 # CSP fetch directives
+# Fallback for unspecified fetch directives
 security.csp.default-src='none'
+# Allow fetching fonts from the origin
 security.csp.font-src='self'
-security.csp.img-src='self'
+# Allow fetching images from the origin and "data:"
+# "data:" allows embedded images in SVG-s in some browsers that otherwise block them
+security.csp.img-src='self' data:
+# Allow fetching scripts from the origin
 security.csp.script-src='self'
+# Allow fetching css from the origin
 security.csp.style-src='self'
 # Allow AJAX for /idcard endpoint
 security.csp.connect-src='self'
 
 # Other directives
+# Restrict any URLs in HTML <base> element
 security.csp.base-uri='none'
+# Limit form submission targets to origin
 security.csp.form-action='self'
+# Disallow any parents from embedding this page
 security.csp.frame-ancestors='none'
-# Specifying CSP directive with no value
+# Block all mixed content (a CSP directive with no value)
 security.csp.block-all-mixed-content=
 ````
 
