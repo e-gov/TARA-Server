@@ -281,12 +281,18 @@ footer.footer .row {
   margin: 1.3em 0;
   display: inline-block; }
 
-.eu-logo {
-  background-image: url("/images/EU.svg");
-  background-repeat: no-repeat;
-  height: 29px;
-  margin-left: -15px;
-  margin-top: 1.5em; }
+.cef-logo {
+    background-repeat: no-repeat;
+    background-size: contain;
+    height: 29px;
+    margin-left: -15px;
+    margin-top: 0.6em; }
+
+.cef-logo-en {
+    background-image: url("/images/cef_logo_en.svg"); }
+
+.cef-logo-et {
+    background-image: url("/images/cef_logo_et.svg"); }
 
 ul.footer-links {
   padding-top: 7px;
