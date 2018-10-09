@@ -1,24 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="88px" height="31px" viewBox="0 0 88 31" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <!-- Generator: Sketch 50.2 (55047) - http://www.bohemiancoding.com/sketch -->
-    <title>lhv-pangalink-88x31</title>
-    <desc>Created with Sketch.</desc>
-    <defs>
-        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-1">
-            <stop stop-color="#434345" offset="0%"></stop>
-            <stop stop-color="#000000" offset="100%"></stop>
-        </linearGradient>
-        <polygon id="path-2" points="60.8437534 16.4043877 60.4535571 17.4274506 60.0758379 16.4043877 57.0726115 8 46.2885218 8 45.3542435 14.4226281 40.2401002 14.4226281 41.1755127 8 34.6242217 8 34.6242217 21.6548312 27.7364242 21.6548312 29.6919432 8 23 8 23 24 38.8849996 24 39.9054841 16.7522051 45.033617 16.7522051 43.9983868 24 49.3794668 24 51.5557946 10.3515654 56.3542267 24 61.0978348 24 68 8 64.2897317 8"></polygon>
-        <filter x="-1.1%" y="-9.4%" width="102.2%" height="112.5%" filterUnits="objectBoundingBox" id="filter-3">
-            <feOffset dx="0" dy="-1" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
-            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 1 0" type="matrix" in="shadowOffsetOuter1"></feColorMatrix>
-        </filter>
-    </defs>
-    <g id="lhv-pangalink-88x31" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <rect id="Rectangle" fill="url(#linearGradient-1)" x="0" y="0" width="88" height="31" rx="1"></rect>
-        <g id="Logo">
-            <use fill="black" fill-opacity="1" filter="url(#filter-3)" xlink:href="#path-2"></use>
-            <use fill="#FFFFFF" fill-rule="evenodd" xlink:href="#path-2"></use>
-        </g>
-    </g>
+<svg version="1.1" viewBox="0 0 88 31" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <title>lhv-pangalink-88x31</title>
+ <desc>Created with Sketch.</desc>
+ <defs>
+  <linearGradient id="linearGradient-1" x1="50%" x2="50%" y2="100%">
+   <stop stop-color="#434345" offset="0"/>
+   <stop offset="1"/>
+  </linearGradient>
+  <polygon id="path-2" points="60.844 16.404 60.454 17.427 60.076 16.404 57.073 8 46.289 8 45.354 14.423 40.24 14.423 41.176 8 34.624 8 34.624 21.655 27.736 21.655 29.692 8 23 8 23 24 38.885 24 39.905 16.752 45.034 16.752 43.998 24 49.379 24 51.556 10.352 56.354 24 61.098 24 68 8 64.29 8"/>
+  <filter id="filter-3" x="-1.1%" y="-9.4%" width="102.2%" height="112.5%">
+   <feOffset dx="0" dy="-1" in="SourceAlpha" result="shadowOffsetOuter1"/>
+   <feColorMatrix in="shadowOffsetOuter1" values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 1 0"/>
+  </filter>
+ </defs>
+ <g fill="none" fill-rule="evenodd">
+  <rect id="Rectangle" width="88" height="31" rx="1" fill="url(#linearGradient-1)"/>
+  <g id="Logo">
+   <use fill="black" filter="url(#filter-3)" xlink:href="#path-2"/>
+   <use fill="#FFFFFF" fill-rule="evenodd" xlink:href="#path-2"/>
+  </g>
+ </g>
 </svg>
