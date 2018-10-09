@@ -28,12 +28,8 @@
     <script type="text/javascript" src="/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="/js/cas.js"></script>
 </head>
-<body>
+<body th:attr="data-application-url=${@taraProperties.getApplicationUrl()}">
 <div layout:fragment="content" th:remove="tag">
-    <script th:inline="javascript">
-        var API = new API(/*[[${@taraProperties.getApplicationUrl()}]]*/'');
-        var APP = new APP();
-    </script>
     <div th:replace="fragments/loginform"/>
 </div>
 </body>

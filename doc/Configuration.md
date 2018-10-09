@@ -11,6 +11,7 @@
   * [Banklink authentication](#banklink)
   * [Smart-ID authentication](#smart-id)
   * [Heartbeat endpoint](#heartbeat)
+  * [Content Security Policy](#security_csp)
   * [Tara-Stat service](#tara_stat)
   * [Test environment warning message](#test_environment_warning)
   * [Audit logging](#audit_logging)
@@ -458,12 +459,63 @@ eidas.heartbeat-url=https://<eidas-client-host:port>/heartbeat
 ````
 
 
+<a name="security_csp"></a>
+### Content Security Policy
+
+Table 15 - Enabling TARA-specific `Content-Security-Policy` headers in responses from TARA server
+
+| Property        | Mandatory | Description |
+| :-------------- | :-------- | :-----------|
+| `security.csp.enabled` | N | Toggle for explicit Content Security Policy. Enables this feature to be loaded if set to `true`, otherwise ignores all other CSP related configuration. Defaults to `false`, if not specified. |
+
+Optional CSP directive-specific parameters are based on [Content Security Policy Level 3 directives](https://www.w3.org/TR/CSP/#csp-directives).
+Optional CSP directive-specific parameters can be specified in the following form
+
+````
+security.csp.<directive-name> = <optional-value>
+````
+
+The values of optional CSP directive-specific parameters must be specified exactly the same way as the values of those directives appear in a valid `Content-Security-Policy` header according to the [CSP specification](https://www.w3.org/TR/CSP/#framework-directives).
+
+Example (using currently recommended CSP configuration for TARA):
+
+````
+# Enable Content Security Policy
+security.csp.enabled=true
+
+# CSP fetch directives
+# Fallback for unspecified fetch directives
+security.csp.default-src='none'
+# Allow fetching fonts from the origin
+security.csp.font-src='self'
+# Allow fetching images from the origin and "data:"
+# "data:" allows embedded images in SVG-s in some browsers that otherwise block them
+security.csp.img-src='self' data:
+# Allow fetching scripts from the origin
+security.csp.script-src='self'
+# Allow fetching css from the origin
+security.csp.style-src='self'
+# Allow AJAX for /idcard endpoint
+security.csp.connect-src='self'
+
+# Other directives
+# Restrict any URLs in HTML <base> element
+security.csp.base-uri='none'
+# Limit form submission targets to origin
+security.csp.form-action='self'
+# Disallow any parents from embedding this page
+security.csp.frame-ancestors='none'
+# Block all mixed content (a CSP directive with no value)
+security.csp.block-all-mixed-content=
+````
+
+
 <a name="tara_stat"></a>
 ### TARA-Stat interfacing
 
 The TARA-Stat service (see https://e-gov.github.io/TARA-Stat/Dokumentatsioon for details) can be used as one of the receivers of TARA statistics.
 
-Table 15 - Enabling TARA-Stat statistics logging
+Table 16 - Enabling TARA-Stat statistics logging
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
@@ -495,7 +547,7 @@ Example log4j2 configuration for sendind statictics over TCP in syslog format:
 <a name="test_environment_warning"></a>
 ### Test environment warning message
 
-Table 16 - Configuring TARA login page to show a warning message about it being run against test services
+Table 17 - Configuring TARA login page to show a warning message about it being run against test services
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
@@ -511,7 +563,7 @@ env.test.message=Tegemist on testkeskkonnaga ja autentimiseks vajalik info on <a
 <a name="audit_logging"></a>
 ### Audit logging
 
-Table 17 - Relevant CAS parameters for TARA audit log
+Table 18 - Relevant CAS parameters for TARA audit log
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
