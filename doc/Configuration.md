@@ -2,6 +2,7 @@
 
 - [Logging](#logging)
   * [Log files](#log_files)
+  * [Remote syslog server](#tara_syslog)
   * [TARA audit trail events](#audit_events)
   * [Tara-Stat](#tara_stat_log)
 - [Configuration parameters](#configuration_parameters)
@@ -26,7 +27,8 @@
 
 Logging in TARA is handled by [Log4j2 framework](https://logging.apache.org/log4j/2.x/index.html) which can be configured by using an [xml configuration file](https://logging.apache.org/log4j/2.x/manual/configuration.html) (`log4j2.xml`).
 
-TARA provides a [default configuration](../src/main/webapp/WEB-INF/classes/log4j2.xml) that can be overridden by providing a custom configuration file.
+TARA provides a [default configuration](../src/main/webapp/WEB-INF/classes/log4j2.xml), that contains configuration samples for using local log files and remote syslog server (needs further configuration).
+
 
 You can override the default log configuration in the `application.properties` by using the property `logging.config` (see CAS documentation for further logging implementation [details](https://apereo.github.io/cas/5.1.x/installation/Logging.html).)
 
@@ -145,6 +147,15 @@ Example - full audit trail of successful ID-Card authentication:
 {"request":"POST https://tara.dev:443/oidc/accessToken", "requestId":"4H8PI1FOM1RG5TN8", "sessionId":"2_Y_MoI0BoOItwoXrlf_WiR0Fye5plIotyEnl0NSnXc=", "message":"{\"action\":\"ACCESS_TOKEN_REQUEST_HANDLING_SUCCESS\",\"who\":\"audit:unknown\",\"what\":\"Supplied parameters: map['grant_type' -> array<String>['authorization_code'], 'code' -> array<String>['OC-***************************zTcnSEzgZd'], 'redirect_uri' -> array<String>['https://tara-client.arendus.kit:8451/oauth/response']]; Generated id-token: eyJhbGciOiJSUzI1NiIsImtpZCI6IjY1YzYxZDY5LWIyODEtNGZlYS1iNDM1LTc4NzQwMWEyMjRiZiJ9.eyJqdGkiOiI4ZmIyMWM5ZS0zYTkxLTQzM2MtYTNjMy0wNDg1YWVlMTZiYzIiLCJpc3MiOiJodHRwczovL2tvb2dlbG1vb2dlbC5uZXQvb2lkYyIsImF1ZCI6Im9wZW5JZERlbW8iLCJleHAiOjE1MzYzNjA0NDcsImlhdCI6MTUzNjMzMTY0NywibmJmIjoxNTM2MzMxMzQ3LCJzdWIiOiJFRTQ3MTAxMDEwMDMzIiwicHJvZmlsZV9hdHRyaWJ1dGVzIjp7ImRhdGVfb2ZfYmlydGgiOiIxOTcxLTAxLTAxIiwiZmFtaWx5X25hbWUiOiJNw4ROTklLIiwiZ2l2ZW5fbmFtZSI6Ik1BUkktTElJUyJ9LCJhbXIiOlsiaWRjYXJkIl0sInN0YXRlIjoiYWJjZGVmZ2hpamtsbW5vcCIsIm5vbmNlIjoicXJzdHV2d3h5emFiY2RlZiIsImF0X2hhc2giOiJEUWxYcmZSVkdxL2x0eXJRTTF4aEpRPT0ifQ.T_uKOF4th9GjJsXIkjUJ6kJazv4sR89VeUN0bVerX6n37b_YKTPsxKmucOEwQzeapaoK8dv9tVnUlG4B9_NCjagWSypn2I5ZbwmuyP1F2xpAXfIcK58a8Mqf5CZq-Y8ja-xGcqxf2ybyqIq0IW7PGW9hu1Ec5A9o-Yp779gV1A86XgWBR52-wIz95L1th9FPuwJ73_UOKtDjQ7NzmHNPVEL15vujrq429MDf-vduVcbRAnjnKjnNCcu2yiUl4n4ZGkgNGD15c7uUXEalOw6GGuRqEVTxskyxXibPVPWmjGCB6eZ21ppVMFdfhaOeCv6kIjCZWAn0kba1e78VCikJvA\",\"when\":\"2018-09-07T14:47:27,898+0000\",\"clientIpAddress\":\"172.18.0.9\",\"serverIpAddress\":\"172.18.0.8\",\"application\":\"TARA-INSTANCE-3\"}"}
 ````
 
+<a name="tara_syslog"></a>
+### Logging to remote syslog server
+
+The default logging configuration contains example appenders for forwarding log events to a remote syslog server that accepts log messages over TLS-TCP using [RFC-5424 format](https://tools.ietf.org/html/rfc5424.html#section-6.2.1).
+
+The syslog message format has been set up so that the facility code is always `local1(17)` and syslog message priority in case of an log4j2 ERROR event is `error(3)` and `notice(5)` in all other cases (WARN, DEBUG, INFO, etc).
+
+Note that the syslog loggers are not enabled by default. Remote syslog configuration needs to be explicitly enabled and TLS key and syslog server cert configured in `log4j2.xml` file.
+
 
 <a name="audit_events"></a>
 ### TARA Audit trail events
@@ -212,7 +223,7 @@ export JAVA_OPTS="-Dcas.log.level=debug -Dcas.console.level=off"
 ````
 
 <a name="tara_stat_log"></a>
-### Interfacing with Tara-Stat
+### Logging to Tara-Stat
 
 TARA can also send statistics as JSON formatted event stream to the [Tara-Stat service](https://e-gov.github.io/TARA-Stat/Dokumentatsioon).
 
@@ -523,7 +534,7 @@ Table 16 - Enabling TARA-Stat statistics logging
 
 NB! When enabled, additional logger and appender must be configured to send the statistics to the external service (in `log4j2.xml`).
 
-Example log4j2 configuration for sendind statictics over TCP in syslog format:
+Example log4j2 configuration for sending statistics over TCP in syslog format:
 
 ````
 <?xml version="1.0" encoding="UTF-8"?>
