@@ -1,11 +1,7 @@
 package org.pac4j.core.engine;
 
-import ee.ria.sso.authentication.AuthenticationType;
-import ee.ria.sso.authentication.LevelOfAssurance;
 import ee.ria.sso.authentication.TaraCredentialsException;
 import ee.ria.sso.flow.JSONFlowExecutionException;
-import ee.ria.sso.validators.OidcRequestParameter;
-import ee.ria.sso.validators.TaraScope;
 import org.pac4j.core.authorization.checker.AuthorizationChecker;
 import org.pac4j.core.authorization.checker.DefaultAuthorizationChecker;
 import org.pac4j.core.client.Client;
@@ -31,7 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Created by Janar Rahumeel (CGI Estonia)
@@ -124,8 +119,6 @@ public class DefaultSecurityLogic<R, C extends WebContext> extends ProfileManage
             } else if (this.startAuthentication(context, currentClients)) {
                 this.log.debug("Starting authentication");
                 this.saveRequestedUrl(context, currentClients);
-                this.saveAllowedAuthenticationMethods(context);
-                this.saveLevelOfAssuranceIfPresent(context);
                 action = this.redirectToIdentityProvider(context, currentClients);
             } else {
                 this.log.debug("unauthorized");
@@ -164,28 +157,6 @@ public class DefaultSecurityLogic<R, C extends WebContext> extends ProfileManage
         String requestedUrl = context.getFullRequestURL();
         this.log.debug("requestedUrl: {}", requestedUrl);
         context.setSessionAttribute("pac4jRequestedUrl", requestedUrl);
-    }
-
-    protected void saveAllowedAuthenticationMethods(C context) {
-        String scope = context.getRequestParameter(OidcRequestParameter.SCOPE.getParameterKey());
-        if (scope == null)
-            return;
-
-        List scopes = Arrays.stream(scope.split(" ")).collect(Collectors.toList());
-
-        List<String> authenticationMethods = scopes.contains(TaraScope.EIDASONLY.getFormalName()) ? Arrays.asList(AuthenticationType.eIDAS.name()) :
-                Arrays.stream(AuthenticationType.values()).filter(e -> e != AuthenticationType.Default).map(AuthenticationType::name).collect(Collectors.toList());
-        context.setSessionAttribute("taraAuthenticationMethods", authenticationMethods);
-    }
-
-    protected void saveLevelOfAssuranceIfPresent(C context) {
-        String acrValues = context.getRequestParameter(OidcRequestParameter.ACR_VALUES.getParameterKey());
-        if (acrValues == null) return;
-
-        this.log.debug("acr_values: {}", acrValues);
-
-        LevelOfAssurance loa = LevelOfAssurance.findByAcrName(acrValues);
-        context.setSessionAttribute("taraAuthorizeRequestLevelOfAssurance", loa);
     }
 
     protected HttpAction redirectToIdentityProvider(C context, List<Client> currentClients) throws HttpAction {

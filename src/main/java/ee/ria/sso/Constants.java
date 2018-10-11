@@ -26,6 +26,10 @@ public final class Constants {
     public static final String MDC_ATTRIBUTE_REQUEST_ID = "requestId";
     public static final String MDC_ATTRIBUTE_SESSION_ID = "sessionId";
 
+    public static final String TARA_OIDC_SESSION_SCOPES = "taraOidcSessionScopes";
     public static final String TARA_OIDC_SESSION_CLIENT_ID = "taraOidcSessionClientId";
     public static final String TARA_OIDC_SESSION_REDIRECT_URI = "taraOidcSessionRedirectUri";
+    public static final String TARA_OIDC_SESSION_AUTH_METHODS = "taraOidcSessionAllowedAuthMethods";
+    public static final String TARA_OIDC_SESSION_LoA = "taraOidcSessionLoA";
+
 }

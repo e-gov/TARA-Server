@@ -12,8 +12,7 @@
 
     <div id="accordion" role="tablist" aria-multiselectable="true">
 
-        <div class="panel" th:if="${(@environment.getProperty('id-card.enabled') == 'true')
-         and (session.taraAuthenticationMethods == null or #lists.contains(session.taraAuthenticationMethods,'IDCard'))}">
+        <div class="panel" th:if="${@taraProperties.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).IDCard)}">
             <div class="method-block space-top-2 white row hidden-xs accordion-toggle collapsed" role="button"
                  data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="false"
                  aria-controls="collapseOne">
@@ -51,8 +50,7 @@
             </div>
         </div>
 
-        <div class="panel" th:if="${(@environment.getProperty('mobile-id.enabled') == 'true')
-         and (session.taraAuthenticationMethods == null or #lists.contains(session.taraAuthenticationMethods,'MobileID'))}">
+        <div class="panel" th:if="${@taraProperties.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).MobileID)}">
             <div div class="method-block space-top-2 white row accordion-toggle" role="button" data-toggle="collapse"
                  data-parent="#accordion" href="#collapseMob" aria-expanded="true" aria-controls="collapseMob">
                 <div class="col-md-3 col-sm-3 col-xs-3">
@@ -110,9 +108,8 @@
             </div>
         </div>
 
-        <div class="panel" th:if="${(@environment.getProperty('eidas.enabled') == 'true')
-         and (session.taraAuthenticationMethods == null or #lists.contains(session.taraAuthenticationMethods,'eIDAS'))
-         and not #lists.isEmpty(@eidasConfigurationProvider.getListOfCountries(#locale.language))}">
+        <div class="panel" th:if="${@taraProperties.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).eIDAS)
+                    and not #lists.isEmpty(@eidasConfigurationProvider.getListOfCountries(#locale.language))}">
             <div class="method-block space-top-2 white row accordion-toggle collapsed" role="button"
                  data-toggle="collapse" data-parent="#accordion" href="#collapseEidas" aria-expanded="false"
                  aria-controls="collapseEidas">
@@ -153,8 +150,7 @@
             </div>
         </div>
 
-        <div class="panel" th:if="${(session.taraAuthenticationMethods == null or #lists.contains(session.taraAuthenticationMethods,'BankLink'))
-             and @environment.getProperty('banklinks.enabled') == 'true' and (not #lists.isEmpty(@banklinkConfigurationProvider.getListOfBanks()))}">
+        <div class="panel" th:if="${@taraProperties.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).BankLink)}">
             <div class="method-block space-top-2 white row accordion-toggle collapsed" role="button"
                  data-toggle="collapse" data-parent="#accordion" href="#collapseBank" aria-expanded="false"
                  aria-controls="collapseBank">
@@ -197,8 +193,7 @@
             </div>
         </div>
 
-        <div class="panel" th:if="${(session.taraAuthenticationMethods == null or #lists.contains(session.taraAuthenticationMethods,'SmartID'))
-                and @environment.getProperty('smart-id.enabled') == 'true'}">
+        <div class="panel" th:if="${@taraProperties.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).SmartID)}">
             <div div class="method-block space-top-2 white row accordion-toggle" role="button" data-toggle="collapse"
                  data-parent="#accordion" href="#collapseSmartIdForm" aria-expanded="true" aria-controls="collapseSmartIdForm">
                 <div class="col-md-3 col-sm-3 col-xs-3">

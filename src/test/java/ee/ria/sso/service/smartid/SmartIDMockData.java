@@ -64,6 +64,7 @@ public class SmartIDMockData {
         mockHttpServletRequest.addParameter(Constants.CAS_SERVICE_ATTRIBUTE_NAME,
                 "https://cas.test.url.net/oauth2.0/callbackAuthorize?client_name=CasOAuthClient&client_id=clientId&redirect_uri=https://tara-client.arendus.kit:8451/oauth/response");
         mockExternalContext.setNativeRequest(mockHttpServletRequest);
+        mockExternalContext.getSessionMap().put(Constants.TARA_OIDC_SESSION_CLIENT_ID, "clientId");
         requestContext.setExternalContext(mockExternalContext);
     }
     
