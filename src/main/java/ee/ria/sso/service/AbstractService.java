@@ -6,8 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apereo.cas.authentication.principal.WebApplicationService;
 import org.apereo.cas.util.EncodingUtils;
-import org.springframework.web.util.UriComponents;
-import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.webflow.core.collection.SharedAttributeMap;
 import org.springframework.webflow.execution.RequestContext;
 
@@ -31,16 +29,21 @@ public class AbstractService {
     }
 
     protected String getServiceClientId(RequestContext context) {
+        final Object attribute = context.getExternalContext().getSessionMap()
+                .get(Constants.TARA_OIDC_SESSION_CLIENT_ID);
+
+        if (attribute != null && attribute instanceof String)
+            return (String) attribute;
+
         String serviceParameter = ((HttpServletRequest) context.getExternalContext().getNativeRequest())
                 .getParameter(Constants.CAS_SERVICE_ATTRIBUTE_NAME);
+        if (StringUtils.isBlank(serviceParameter))
+            serviceParameter = getServiceUrlFromFlowContext(context);
 
-        if (StringUtils.isNotBlank(serviceParameter)) {
-            return getClientIdParameterValue(serviceParameter);
-        } else if (StringUtils.isNotBlank(getServiceUrlFromFlowContext(context))) {
-            return getClientIdParameterValue(getServiceUrlFromFlowContext(context));
-        }
+        if (StringUtils.isNotEmpty(serviceParameter))
+            serviceParameter = EncodingUtils.urlEncode(serviceParameter);
 
-        return null;
+        return serviceParameter;
     }
 
     private String getServiceUrlFromFlowContext(RequestContext context) {
@@ -49,19 +52,6 @@ public class AbstractService {
             return ((WebApplicationService) attribute).getOriginalUrl();
         } else {
             return null;
-        }
-    }
-
-    private String getClientIdParameterValue(String serviceParameter) {
-        try {
-            UriComponents serviceUri = UriComponentsBuilder.fromUriString(serviceParameter).build();
-            String clientId = serviceUri.getQueryParams().getFirst("client_id");
-            if (clientId == null)
-                throw new IllegalStateException("No client_id found among query parameters!");
-            return clientId;
-        } catch (Exception e) {
-            log.warn("Failed to get client_id from service parameter: " + e.getMessage());
-            return EncodingUtils.urlEncode(serviceParameter);
         }
     }
 

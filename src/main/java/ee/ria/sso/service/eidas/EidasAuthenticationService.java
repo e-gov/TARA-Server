@@ -66,7 +66,7 @@ public class EidasAuthenticationService extends AbstractService {
             String relayState = UUID.randomUUID().toString();
             context.getExternalContext().getSessionMap().put("service", context.getFlowScope().get("service"));
             context.getExternalContext().getSessionMap().put("relayState", relayState);
-            LevelOfAssurance loa = (LevelOfAssurance) context.getExternalContext().getSessionMap().get("taraAuthorizeRequestLevelOfAssurance");
+            LevelOfAssurance loa = (LevelOfAssurance) context.getExternalContext().getSessionMap().get(Constants.TARA_OIDC_SESSION_LoA);
             byte[] authnRequest = this.eidasAuthenticator.authenticate(credential.getCountry(), relayState, loa);
             HttpServletResponse response = (HttpServletResponse) context.getExternalContext().getNativeResponse();
             configureResponseForWriting(response, authnRequest);

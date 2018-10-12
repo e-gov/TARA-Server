@@ -8,6 +8,7 @@ import com.nortal.banklink.core.packet.PacketFactory;
 import com.nortal.banklink.core.packet.param.PacketParameter;
 import com.nortal.banklink.link.BankLinkConfig;
 import ee.ria.sso.CommonConstants;
+import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.BankEnum;
 import ee.ria.sso.authentication.TaraAuthenticationException;
 import ee.ria.sso.authentication.credential.TaraCredential;
@@ -429,6 +430,7 @@ public class BanklinkAuthenticationServiceTest {
         Locale.setDefault(new Locale("en", "EN"));
         Map<String, String> map = new HashMap<>();
         map.put("bank", bank.getName());
+
         RequestContext requestContext = this.getRequestContext(map);
 
         Event event = this.authenticationService.startLoginByBankLink(requestContext);
@@ -452,6 +454,7 @@ public class BanklinkAuthenticationServiceTest {
         mockHttpServletRequest.addParameter("service", "https://cas.test.url.net/oauth2.0/callbackAuthorize?client_name=CasOAuthClient&client_id=openIdDemo&redirect_uri=https://tara-client.arendus.kit:8451/oauth/response");
         mockExternalContext.setNativeRequest(mockHttpServletRequest);
         mockExternalContext.setNativeResponse(new MockHttpServletResponse());
+        mockExternalContext.getSessionMap().put(Constants.TARA_OIDC_SESSION_CLIENT_ID, "openIdDemo");
         context.setExternalContext(mockExternalContext);
 
         MockParameterMap map = (MockParameterMap) context.getExternalContext().getRequestParameterMap();

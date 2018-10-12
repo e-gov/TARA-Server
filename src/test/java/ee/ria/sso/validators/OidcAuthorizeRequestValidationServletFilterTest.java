@@ -1,6 +1,8 @@
 package ee.ria.sso.validators;
 
 import ee.ria.sso.Constants;
+import ee.ria.sso.authentication.AuthenticationType;
+import ee.ria.sso.authentication.LevelOfAssurance;
 import org.apereo.cas.util.spring.ApplicationContextProvider;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
@@ -17,6 +19,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 public class OidcAuthorizeRequestValidationServletFilterTest {
@@ -59,6 +62,19 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
     }
 
     @Test
+    public void assertProvidedScopesInSessionWhenValidationSucceeds() throws IOException, ServletException {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addParameter(OidcRequestParameter.SCOPE.getParameterKey(),
+                Arrays.stream(TaraScope.values()).map(s -> s.getFormalName()).collect(Collectors.joining(" "))
+        );
+
+        servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
+        Assert.assertEquals(Arrays.asList(TaraScope.values()),
+                request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_SCOPES)
+        );
+    }
+
+    @Test
     public void assertClientIdInSessionWhenValidationSucceeds() throws IOException, ServletException {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addParameter(OidcRequestParameter.CLIENT_ID.getParameterKey(), "clientIdValue");
@@ -74,6 +90,52 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
 
         servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
         Assert.assertEquals("redirectUriValue", request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_REDIRECT_URI));
+    }
+
+    @Test
+    public void assertLoaInSessionWhenValidationSucceedsAndAcrValuesProvided() throws IOException, ServletException {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addParameter(OidcRequestParameter.ACR_VALUES.getParameterKey(),
+                LevelOfAssurance.SUBSTANTIAL.getAcrName());
+
+        servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
+        Assert.assertEquals(LevelOfAssurance.SUBSTANTIAL,
+                request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_LoA));
+    }
+
+    @Test
+    public void assertLoaNotInSessionWhenValidationSucceedsAndAcrValuesNotProvided() throws IOException, ServletException {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
+        Assert.assertNull(request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_LoA));
+    }
+
+    @Test
+    public void assertAllAuthMethodsInSessionWhenValidationSucceedsAndOnlyOpenidScopeProvided() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addParameter(OidcRequestParameter.SCOPE.getParameterKey(),
+                TaraScope.OPENID.getFormalName()
+        );
+
+        servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
+        Assert.assertEquals(
+                Arrays.asList(AuthenticationType.values()).stream().filter(at -> at != AuthenticationType.Default).collect(Collectors.toList()),
+                request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_AUTH_METHODS)
+        );
+    }
+
+    @Test
+    public void assertOnlyEidasAuthMethodInSessionWhenValidationSucceedsAndEidasonlyScopeProvided() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addParameter(OidcRequestParameter.SCOPE.getParameterKey(),
+                Arrays.asList(TaraScope.OPENID, TaraScope.EIDASONLY).stream()
+                        .map(s -> s.getFormalName()).collect(Collectors.joining(" "))
+        );
+
+        servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
+        Assert.assertEquals(Arrays.asList(AuthenticationType.eIDAS),
+                request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_AUTH_METHODS)
+        );
     }
 
     private void assertExceptionThrownWhenParameterValidationFails(OidcRequestParameter... parameters) throws IOException, ServletException {

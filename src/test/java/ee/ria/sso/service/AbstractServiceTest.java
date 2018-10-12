@@ -1,7 +1,9 @@
 package ee.ria.sso.service;
 
+import ee.ria.sso.Constants;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import org.apereo.cas.authentication.principal.AbstractWebApplicationService;
+import org.apereo.cas.util.EncodingUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,7 +32,7 @@ public class AbstractServiceTest {
     }
 
     @Test
-    public void getServiceClientIdShouldReturnServiceUrlWhenMalformedServiceUrl() {
+    public void getServiceClientIdShouldReturnServiceUrlWhenNoClientIdInSession() {
         RequestContext requestContext = getMockRequestContext(new HashMap<>());
         ((MockHttpServletRequest) requestContext.getExternalContext().getNativeRequest()).addParameter("service", "invalidUrl");
 
@@ -39,7 +41,7 @@ public class AbstractServiceTest {
     }
 
     @Test
-    public void getServiceClientIdShouldReturnServiceUrlWhenMalformedServiceUrl2() throws UnsupportedEncodingException {
+    public void getServiceClientIdShouldReturnServiceUrlWhenNoClientIdInSession2() throws UnsupportedEncodingException {
         String serviceParameter = createStringFromRangeOfValues('\0', '\u007F');
         RequestContext requestContext = getMockRequestContext(new HashMap<>());
         ((MockHttpServletRequest) requestContext.getExternalContext().getNativeRequest()).addParameter("service", serviceParameter);
@@ -49,25 +51,36 @@ public class AbstractServiceTest {
     }
 
     @Test
-    public void getServiceClientIdShouldSucceedWhenServiceAndClientIdProvidedInRequest() {
+    public void getServiceClientIdShouldSucceedWhenClientIdPresentInSession() {
         RequestContext requestContext = getMockRequestContext(new HashMap<>());
-        ((MockHttpServletRequest)requestContext.getExternalContext().getNativeRequest()).addParameter("service", "https://some.cas.url.for.testing.net/oauth2.0/callbackAuthorize?client_name=CasOAuthClient&client_id=openIdDemo&redirect_uri=https://tara-client.unit.test:8451/oauth/response");
+        requestContext.getExternalContext().getSessionMap().put(Constants.TARA_OIDC_SESSION_CLIENT_ID, "openIdDemo");
 
         String clientId = abstractService.getServiceClientId(requestContext);
         Assert.assertEquals("openIdDemo", clientId);
     }
 
     @Test
-    public void getServiceClientIdShouldSucceedWhenServiceAndClientIdProvidedInFlowScope() {
+    public void getServiceClientIdShouldReturnEncodedServiceUrlWhenServiceProvidedInRequest() {
         RequestContext requestContext = getMockRequestContext(new HashMap<>());
-        requestContext.getFlowScope().put("service", new AbstractWebApplicationService("", "https://some.cas.url.for.testing.net/oauth2.0/callbackAuthorize?client_name=CasOAuthClient&client_id=openIdDemo&redirect_uri=https://tara-client.unit.test:8451/oauth/response", "") {});
+        String serviceUrl = "https://some.cas.url.for.testing.net/oauth2.0/callbackAuthorize?client_name=CasOAuthClient&client_id=openIdDemo&redirect_uri=https://tara-client.unit.test:8451/oauth/response";
+        ((MockHttpServletRequest)requestContext.getExternalContext().getNativeRequest()).addParameter("service", serviceUrl);
 
         String clientId = abstractService.getServiceClientId(requestContext);
-        Assert.assertEquals("openIdDemo", clientId);
+        Assert.assertEquals(EncodingUtils.urlEncode(serviceUrl), clientId);
     }
 
     @Test
-    public void getServiceClientIdShouldReturnNullWhenClientIdNotFoundInRequestNorInFlowScope() {
+    public void getServiceClientIdShouldReturnEncodedServiceUrlWhenServiceProvidedInFlowScope() {
+        RequestContext requestContext = getMockRequestContext(new HashMap<>());
+        String serviceUrl = "https://some.cas.url.for.testing.net/oauth2.0/callbackAuthorize?client_name=CasOAuthClient&client_id=openIdDemo&redirect_uri=https://tara-client.unit.test:8451/oauth/response";
+        requestContext.getFlowScope().put("service", new AbstractWebApplicationService("", serviceUrl, "") {});
+
+        String clientId = abstractService.getServiceClientId(requestContext);
+        Assert.assertEquals(EncodingUtils.urlEncode(serviceUrl), clientId);
+    }
+
+    @Test
+    public void getServiceClientIdShouldReturnNullWhenServiceUrldNotFoundInRequestNorInFlowScope() {
         RequestContext requestContext = getMockRequestContext(new HashMap<>());
 
         String clientId = abstractService.getServiceClientId(requestContext);

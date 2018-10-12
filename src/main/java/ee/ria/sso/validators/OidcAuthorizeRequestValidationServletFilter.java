@@ -2,6 +2,8 @@ package ee.ria.sso.validators;
 
 import com.stormpath.sdk.lang.Assert;
 import ee.ria.sso.Constants;
+import ee.ria.sso.authentication.AuthenticationType;
+import ee.ria.sso.authentication.LevelOfAssurance;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apereo.cas.util.spring.ApplicationContextProvider;
@@ -15,6 +17,10 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class OidcAuthorizeRequestValidationServletFilter implements Filter {
@@ -74,12 +80,41 @@ public class OidcAuthorizeRequestValidationServletFilter implements Filter {
     private void saveOidcRequestParametersToSession(final HttpServletRequest request) {
         final HttpSession session = request.getSession(true);
 
+        final List<TaraScope> scopes = getTaraOidcScopesFromRequest(request);
+        session.setAttribute(Constants.TARA_OIDC_SESSION_SCOPES, scopes);
+
         session.setAttribute(Constants.TARA_OIDC_SESSION_CLIENT_ID,
                 request.getParameter(OidcRequestParameter.CLIENT_ID.getParameterKey())
         );
         session.setAttribute(Constants.TARA_OIDC_SESSION_REDIRECT_URI,
                 request.getParameter(OidcRequestParameter.REDIRECT_URI.getParameterKey())
         );
+        session.setAttribute(Constants.TARA_OIDC_SESSION_AUTH_METHODS,
+                getListOfAllowedAuthenticationMethods(scopes)
+        );
+
+        final String acrValues = request.getParameter(OidcRequestParameter.ACR_VALUES.getParameterKey());
+        if (acrValues != null) session.setAttribute(Constants.TARA_OIDC_SESSION_LoA,
+                LevelOfAssurance.findByAcrName(acrValues));
+    }
+
+    private List<TaraScope> getTaraOidcScopesFromRequest(final HttpServletRequest request) {
+        final String scope = request.getParameter(OidcRequestParameter.SCOPE.getParameterKey());
+        if (StringUtils.isBlank(scope)) return Collections.emptyList();
+
+        return Arrays.stream(scope.split(" "))
+                .map(s -> TaraScope.valueOf(s.toUpperCase()))
+                .collect(Collectors.toList());
+    }
+
+    private List<AuthenticationType> getListOfAllowedAuthenticationMethods(final List<TaraScope> scopes) {
+        if (scopes.contains(TaraScope.EIDASONLY)) {
+            return Arrays.asList(AuthenticationType.eIDAS);
+        } else {
+            return Arrays.stream(AuthenticationType.values())
+                    .filter(e -> e != AuthenticationType.Default)
+                    .collect(Collectors.toList());
+        }
     }
 
     @Override
