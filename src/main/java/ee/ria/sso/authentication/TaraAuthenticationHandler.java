@@ -34,24 +34,21 @@ public class TaraAuthenticationHandler extends AbstractPreAndPostProcessingAuthe
      * RESTRICTED METHODS
      */
 
-    // TODO: this class extracts attributes from TaraCredential and inserts them into a map
-
     @Override
     protected HandlerResult doAuthentication(Credential credential) throws GeneralSecurityException, PreventedException {
         final Map<String, Object> map = new LinkedHashMap<>();
         if (credential instanceof TaraCredential) {
             TaraCredential taraCredential = (TaraCredential) credential;
-            this.putIfNotEmpty(map, "principalCode", taraCredential.getPrincipalCode());
-            this.putIfNotEmpty(map, "firstName", taraCredential.getFirstName());
-            this.putIfNotEmpty(map, "lastName", taraCredential.getLastName());
-            this.putIfNotEmpty(map, "authenticationType", taraCredential.getType().getAmrName());
-            if (AuthenticationType.MobileID.equals(taraCredential.getType())) {
-                this.putIfNotEmpty(map, "mobileNumber", taraCredential.getMobileNumber());
-            }
-            if (AuthenticationType.eIDAS.equals(taraCredential.getType())) {
-                this.putIfNotEmpty(map, "dateOfBirth", taraCredential.getDateOfBirth());
-                if (taraCredential.getLevelOfAssurance() != null)
-                    map.put("levelOfAssurance", taraCredential.getLevelOfAssurance().getAcrName());
+            this.putIfNotEmpty(map, "principal_code", taraCredential.getPrincipalCode());
+            this.putIfNotEmpty(map, "given_name", taraCredential.getFirstName());
+            this.putIfNotEmpty(map, "family_name", taraCredential.getLastName());
+            this.putIfNotEmpty(map, "authentication_type", taraCredential.getType().getAmrName());
+            switch (taraCredential.getType()) {
+                case eIDAS:
+                    this.putIfNotEmpty(map, "date_of_birth", taraCredential.getDateOfBirth());
+                    if (taraCredential.getLevelOfAssurance() != null)
+                        map.put("level_of_assurance", taraCredential.getLevelOfAssurance().getAcrName());
+                    break;
             }
             return this.createHandlerResult(credential, this.principalFactory
                 .createPrincipal(taraCredential.getId(), map), new ArrayList<>());

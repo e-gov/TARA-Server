@@ -1,14 +1,15 @@
 package org.apereo.cas.oidc.token;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import ee.ria.sso.authentication.AuthenticationType;
+import ee.ria.sso.utils.EstonianIdCodeUtil;
 import org.apache.commons.codec.digest.MessageDigestAlgorithms;
 import org.apereo.cas.authentication.Authentication;
-import org.apereo.cas.authentication.AuthenticationHandler;
 import org.apereo.cas.authentication.principal.Principal;
 import org.apereo.cas.configuration.CasConfigurationProperties;
 import org.apereo.cas.oidc.OidcConstants;
@@ -39,6 +40,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 public class OidcIdTokenGeneratorService {
     private static final Logger LOGGER = LoggerFactory.getLogger(OidcIdTokenGeneratorService.class);
+    private static final List<String> validProfileAttributes = Arrays.asList(
+            "family_name", "given_name", "date_of_birth"
+    );
 
     @Autowired
     private CasConfigurationProperties casProperties;
@@ -85,7 +89,12 @@ public class OidcIdTokenGeneratorService {
             oidcRegisteredService, profile.get(), context, responseType);
         LOGGER.debug("Produce claims for the id token [{}] as [{}]", accessTokenId, claims);
 
-        return this.signingService.encode(oidcRegisteredService, claims);
+        String encodedIdToken = this.signingService.encode(oidcRegisteredService, claims);
+
+        // Needed for audit log (see "TARA_ID_TOKEN_REQUEST_RESOURCE_RESOLVER")
+        request.setAttribute("generatedAndEncodedIdTokenString", encodedIdToken);
+
+        return encodedIdToken;
     }
 
     /**
@@ -121,16 +130,13 @@ public class OidcIdTokenGeneratorService {
         claims.setIssuedAtToNow();
         claims.setNotBeforeMinutesInThePast(this.skew);
         claims.setSubject(principal.getId());
-        claims.setClaim("profile_attributes", filterAttributes(principal.getAttributes()));
 
-        if (AuthenticationType.eIDAS.name().equals(principal.getAttributes().get("authenticationType"))) {
-            String levelOfAssurance = (String) principal.getAttributes().get("levelOfAssurance");
+        claims.setClaim("profile_attributes", getProfileAttributesMap(principal));
+        claims.setStringListClaim(OidcConstants.AMR, getAmrValuesList(principal));
+
+        if (isOfAuthenticationType(principal, AuthenticationType.eIDAS)) {
+            String levelOfAssurance = (String) principal.getAttributes().get("level_of_assurance");
             if (levelOfAssurance != null) claims.setStringClaim(OidcConstants.ACR, levelOfAssurance);
-        }
-
-        if (authentication.getAttributes().containsKey(AuthenticationHandler.SUCCESSFUL_AUTHENTICATION_HANDLERS)) {
-            final Collection<Object> val = CollectionUtils.toCollection(principal.getAttributes().get("authenticationType"));
-            claims.setStringListClaim(OidcConstants.AMR, val.toArray(new String[]{}));
         }
 
         claims.setClaim(OAuth20Constants.STATE, authentication.getAttributes().get(OAuth20Constants.STATE));
@@ -140,53 +146,36 @@ public class OidcIdTokenGeneratorService {
         return claims;
     }
 
-    private static final Map<String, String> attributeMap = new HashMap<>();
-    static {
-        attributeMap.put("lastName", "family_name");
-        attributeMap.put("firstName", "given_name");
-        attributeMap.put("dateOfBirth", "date_of_birth");
-        attributeMap.put("mobileNumber", "mobile_number");
+    private static Object getAuthenticationType(Principal principal) {
+        return principal.getAttributes().get("authentication_type");
     }
 
-    private Map<String, Object> filterAttributes(Map<String, Object> inputAttributes) {
-        Map<String, Object> attrs = new TreeMap(String.CASE_INSENSITIVE_ORDER);
+    private static boolean isOfAuthenticationType(Principal principal, AuthenticationType type) {
+        return type.getAmrName().equals(getAuthenticationType(principal));
+    }
 
-        for (String inputAttributeName : inputAttributes.keySet()) {
-            String mappedAttributeName = attributeMap.get(inputAttributeName);
-            if (mappedAttributeName == null) continue;
+    private Map<String, Object> getProfileAttributesMap(Principal principal) {
+        final Map<String, Object> principalAttributes = principal.getAttributes();
+        final Map<String, Object> profileAttributes = new TreeMap(String.CASE_INSENSITIVE_ORDER);
 
-            attrs.put(mappedAttributeName, inputAttributes.get(inputAttributeName));
-        }
+        validProfileAttributes.forEach(key -> {
+            Object value = principalAttributes.get(key);
+            if (value != null) profileAttributes.put(key, value);
+        });
 
-        if (attrs.get("date_of_birth") == null) {
-            String principalCode = (String) inputAttributes.get("principalCode");
-            if (principalCode != null && isEstonianIdCode(principalCode)) {
-                String dateOfBirth = tryToExtractDateOfBirth(principalCode);
-                if (dateOfBirth != null) attrs.put("date_of_birth", dateOfBirth);
+        if (profileAttributes.get("date_of_birth") == null) {
+            String principalCode = (String) principalAttributes.get("principal_code");
+            if (principalCode != null && EstonianIdCodeUtil.isEEPrefixedEstonianIdCode(principalCode)) {
+                profileAttributes.put("date_of_birth", EstonianIdCodeUtil.extractDateOfBirthFromEEPrefixedEstonianIdCode(principalCode));
             }
         }
 
-        return attrs;
+        return profileAttributes;
     }
 
-    private boolean isEstonianIdCode(String principalCode) {
-        return principalCode.length() == 13 && principalCode.startsWith("EE");
-    }
-
-    private String tryToExtractDateOfBirth(String estonianIdCode) {
-        int sexAndCentury = Integer.parseUnsignedInt(estonianIdCode.substring(2, 3));
-        if (sexAndCentury < 1 || sexAndCentury > 6) return null;
-
-        int birthYear = Integer.parseUnsignedInt(estonianIdCode.substring(3, 5));
-        birthYear += (1800 + ((sexAndCentury - 1) >>> 1) * 100);
-
-        int birthMonth = Integer.parseUnsignedInt(estonianIdCode.substring(5, 7));
-        if (birthMonth < 1 || birthMonth > 12) return null;
-
-        int birthDay = Integer.parseUnsignedInt(estonianIdCode.substring(7, 9));
-        if (birthDay < 1 || birthDay > 31) return null;
-
-        return String.format("%04d-%02d-%02d", birthYear, birthMonth, birthDay);
+    private List<String> getAmrValuesList(Principal principal) {
+        return CollectionUtils.toCollection(getAuthenticationType(principal)).stream()
+                .map(e -> e.toString()).collect(Collectors.toList());
     }
 
     private String generateAccessTokenHash(final AccessToken accessTokenId) {

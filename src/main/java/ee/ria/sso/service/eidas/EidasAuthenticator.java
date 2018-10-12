@@ -3,6 +3,7 @@ package ee.ria.sso.service.eidas;
 import ee.ria.sso.authentication.EidasAuthenticationFailedException;
 import ee.ria.sso.authentication.LevelOfAssurance;
 import ee.ria.sso.config.eidas.EidasConfigurationProvider;
+import ee.ria.sso.logging.CorrelationIdUtil;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -48,14 +49,18 @@ public class EidasAuthenticator {
         if (loa != null) uri += ("&LoA=" + loa.getAcrName().toUpperCase());
 
         log.debug("Sending authentication request to eIDAS-Client: <{}>", uri);
+
         HttpGet get = new HttpGet(uri);
+        CorrelationIdUtil.setCorrelationIdHeadersFromMDC(get);
         return httpClient.execute(get, new EidasResponseHandler(), HttpClientContext.create());
     }
 
     public byte[] getAuthenticationResult(HttpServletRequest request) throws IOException {
         String uri = eidasClientUrl + "/returnUrl";
         log.debug("Requesting authentication result from eIDAS-Client: <{}>", uri);
+
         HttpPost post = new HttpPost(uri);
+        CorrelationIdUtil.setCorrelationIdHeadersFromMDC(post);
         List<NameValuePair> urlParameters = getAuthResultUrlParameters(request);
         post.setEntity(new UrlEncodedFormEntity(urlParameters));
         return httpClient.execute(post, new EidasResponseHandler(), HttpClientContext.create());
@@ -82,7 +87,7 @@ public class EidasAuthenticator {
             } else if (status == HttpStatus.SC_UNAUTHORIZED) {
                 throw new EidasAuthenticationFailedException();
             } else {
-                throw new IllegalStateException("eIDAS-Client responded with " + response.getStatusLine().getStatusCode() + " HTTP status code");
+                throw new IllegalStateException("eIDAS-Client responded with " + status + " HTTP status code");
             }
         }
     }

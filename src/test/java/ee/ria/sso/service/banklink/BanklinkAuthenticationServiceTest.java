@@ -7,6 +7,8 @@ import com.nortal.banklink.core.packet.Packet;
 import com.nortal.banklink.core.packet.PacketFactory;
 import com.nortal.banklink.core.packet.param.PacketParameter;
 import com.nortal.banklink.link.BankLinkConfig;
+import ee.ria.sso.CommonConstants;
+import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.BankEnum;
 import ee.ria.sso.authentication.TaraAuthenticationException;
 import ee.ria.sso.authentication.credential.TaraCredential;
@@ -22,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
 import org.springframework.core.env.Environment;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -293,7 +296,7 @@ public class BanklinkAuthenticationServiceTest {
         );
         Assert.assertTrue("Invalid VK_NONCE!",
                 Pattern.matches(
-                        "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+                        CommonConstants.UUID_REGEX,
                         packet.getParameterValue("VK_NONCE")
                 )
         );
@@ -427,6 +430,7 @@ public class BanklinkAuthenticationServiceTest {
         Locale.setDefault(new Locale("en", "EN"));
         Map<String, String> map = new HashMap<>();
         map.put("bank", bank.getName());
+
         RequestContext requestContext = this.getRequestContext(map);
 
         Event event = this.authenticationService.startLoginByBankLink(requestContext);
@@ -449,6 +453,8 @@ public class BanklinkAuthenticationServiceTest {
         MockHttpServletRequest mockHttpServletRequest = new MockHttpServletRequest();
         mockHttpServletRequest.addParameter("service", "https://cas.test.url.net/oauth2.0/callbackAuthorize?client_name=CasOAuthClient&client_id=openIdDemo&redirect_uri=https://tara-client.arendus.kit:8451/oauth/response");
         mockExternalContext.setNativeRequest(mockHttpServletRequest);
+        mockExternalContext.setNativeResponse(new MockHttpServletResponse());
+        mockExternalContext.getSessionMap().put(Constants.TARA_OIDC_SESSION_CLIENT_ID, "openIdDemo");
         context.setExternalContext(mockExternalContext);
 
         MockParameterMap map = (MockParameterMap) context.getExternalContext().getRequestParameterMap();

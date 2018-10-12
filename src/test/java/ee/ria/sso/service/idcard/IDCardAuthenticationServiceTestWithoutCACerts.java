@@ -22,7 +22,7 @@ import java.security.cert.X509Certificate;
 
 @TestPropertySource(
         locations= "classpath:application-test.properties",
-        properties = { "id-card.ocsp-certificates=" })
+        properties = { "id-card.ocsp-certificates=TEST_of_ESTEID2018.crt" })
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(
         classes = TestIDCardConfiguration.class,
@@ -33,7 +33,7 @@ public class IDCardAuthenticationServiceTestWithoutCACerts extends AbstractAuthe
     private IDCardAuthenticationService authenticationService;
 
     @Autowired
-    @Qualifier("mockIDCardUserCertificate")
+    @Qualifier("mockIDCardUserCertificate2015")
     private X509Certificate mockUserCertificate;
 
     @After

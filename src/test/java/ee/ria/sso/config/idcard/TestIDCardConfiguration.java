@@ -20,8 +20,7 @@ import java.security.cert.X509Certificate;
 @EnableConfigurationProperties
 @ComponentScan(basePackages = {
         "ee.ria.sso.config.idcard",
-        "ee.ria.sso.service.idcard",
-        "ee.ria.sso.validators"
+        "ee.ria.sso.service.idcard"
 })
 @Configuration
 @Import(value = {
@@ -34,14 +33,22 @@ public class TestIDCardConfiguration {
     private ResourceLoader resourceLoader;
 
     @Bean
-    X509Certificate mockIDCardUserCertificate() throws CertificateException, IOException {
-        String filePath = "classpath:id-card/47101010033.pem";
-        Resource file = resourceLoader.getResource(filePath);
-        if (!file.exists()) {
-            throw new IllegalArgumentException("Could not find file " + filePath);
+    X509Certificate mockIDCardUserCertificate2015() throws CertificateException, IOException {
+        return loadCertificate("classpath:id-card/47101010033(TEST_of_ESTEID-SK_2015).pem");
+    }
+
+    @Bean
+    X509Certificate mockIDCardUserCertificate2018() throws CertificateException, IOException {
+        return loadCertificate("classpath:id-card/38001085718(TEST_of_ESTEID2018).pem");
+    }
+
+    private X509Certificate loadCertificate(String resourcePath) throws CertificateException, IOException {
+        Resource resource = resourceLoader.getResource(resourcePath);
+        if (!resource.exists()) {
+            throw new IllegalArgumentException("Could not find resource " + resourcePath);
         }
 
-        try (InputStream inputStream = file.getInputStream()) {
+        try (InputStream inputStream = resource.getInputStream()) {
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
             return (X509Certificate) cf.generateCertificate(inputStream);
         }

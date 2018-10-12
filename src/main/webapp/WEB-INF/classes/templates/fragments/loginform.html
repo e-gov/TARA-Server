@@ -12,8 +12,7 @@
 
     <div id="accordion" role="tablist" aria-multiselectable="true">
 
-        <div class="panel" th:if="${(@environment.getProperty('id-card.enabled') == 'true')
-         and (session.taraAuthenticationMethods == null or #lists.contains(session.taraAuthenticationMethods,'IDCard'))}">
+        <div class="panel" th:if="${@taraProperties.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).IDCard)}">
             <div class="method-block space-top-2 white row hidden-xs accordion-toggle collapsed" role="button"
                  data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="false"
                  aria-controls="collapseOne">
@@ -39,12 +38,11 @@
                                 <input type="hidden" name="_eventId" value="idsubmit"/>
                                 <input type="hidden" name="idlang" id="idlang" th:value="${lang}">
                                 <input type="hidden" name="geolocation"/>
-                                <button type="button" name="button" class="primary" th:text="#{label.button}"
-                                        onclick="APP.loginByIDCard(); return false;"></button>
+                                <button type="button" name="button" class="primary" th:text="#{label.button}"></button>
                             </form>
                         </div>
                         <div class="col-md-6 col-sm-6 col-xs-6">
-                            <a href="http://id.ee/index.php?id=35803" target="_blank" class="pull-right help-link"
+                            <a th:href="#{link.id.help}" target="_blank" rel="noopener" class="pull-right help-link"
                                th:text="#{label.id.help}"></a>
                         </div>
                     </div>
@@ -52,8 +50,7 @@
             </div>
         </div>
 
-        <div class="panel" th:if="${(@environment.getProperty('mobile-id.enabled') == 'true')
-         and (session.taraAuthenticationMethods == null or #lists.contains(session.taraAuthenticationMethods,'MobileID'))}">
+        <div class="panel" th:if="${@taraProperties.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).MobileID)}">
             <div div class="method-block space-top-2 white row accordion-toggle" role="button" data-toggle="collapse"
                  data-parent="#accordion" href="#collapseMob" aria-expanded="true" aria-controls="collapseMob">
                 <div class="col-md-3 col-sm-3 col-xs-3">
@@ -78,7 +75,7 @@
                                     <span th:text="#{label.idcode}" th:remove="tag"></span>
                                 </label>
                                 <input type="text" id="personalCode" placeholder="" size="25" tabindex="1"
-                                       th:field="*{principalCode}" autocomplete="off" required>
+                                       th:field="*{principalCode}" required>
                             </div>
                             <div class="label-input input-group col-md-6 col-sm-6">
                                 <label for="mobileNumber">
@@ -88,7 +85,7 @@
                                     <span class="input-group-addon" id="basic-phonenumber">+372</span>
                                     <input id="mobileNumber" type="text" placeholder=""
                                            aria-describedby="basic-phonenumber"
-                                           size="25" tabindex="2" th:field="*{mobileNumber}" autocomplete="off"
+                                           size="25" tabindex="2" th:field="*{mobileNumber}"
                                            required>
                                 </div>
                             </div>
@@ -100,21 +97,19 @@
                     </div>
                     <div class="row">
                         <div class="col-md-6 col-sm-6 col-xs-50">
-                            <button type="button" class="primary" th:text="#{label.button}"
-                                    onclick="$('#mobileIdForm').submit()"></button>
+                            <button id="mobileIdSubmitButton" type="button" class="primary" th:text="#{label.button}"></button>
                         </div>
                         <div class="col-md-6 col-sm-6 col-xs-50">
-                            <a href="http://id.ee/index.php?id=35803&amp;group_id=1&amp;item=203&amp;crumbs=.203"
-                               class="pull-right help-link" target="_blank" th:text="#{label.mid.help}"></a>
+                            <a th:href="#{link.mid.help}" target="_blank" rel="noopener"
+                               class="pull-right help-link" th:text="#{label.mid.help}"></a>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="panel" th:if="${(@environment.getProperty('eidas.enabled') == 'true')
-         and (session.taraAuthenticationMethods == null or #lists.contains(session.taraAuthenticationMethods,'eIDAS'))
-         and not #lists.isEmpty(@eidasConfigurationProvider.getListOfCountries(#locale.language))}">
+        <div class="panel" th:if="${@taraProperties.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).eIDAS)
+                    and not #lists.isEmpty(@eidasConfigurationProvider.getListOfCountries(#locale.language))}">
             <div class="method-block space-top-2 white row accordion-toggle collapsed" role="button"
                  data-toggle="collapse" data-parent="#accordion" href="#collapseEidas" aria-expanded="false"
                  aria-controls="collapseEidas">
@@ -137,7 +132,7 @@
                         <div class="col-md-9 col-sm-9">
                             <div class="row" id="eIDAScountryList">
                                 <button type="button" class="btn btn-lg btn-link col-md-6 col-sm-6" th:each="country : ${@eidasConfigurationProvider.getListOfCountries(#locale.language)}">
-                                    <div align="left" th:id="${country}"><span class="flag-icon" th:classappend="${'flag-icon-' + #strings.toLowerCase(country)}"></span><span style="padding-left:5px;color: #000;" th:text="#{${'label.country.' + country}}"></span></div>
+                                    <div align="left" th:id="${country}"><span class="flag-icon" th:classappend="${'flag-icon-' + #strings.toLowerCase(country)}"></span><span class="flag-link-text" th:text="#{${'label.country.' + country}}"></span></div>
                                 </button>
                             </div>
                         </div>
@@ -155,8 +150,7 @@
             </div>
         </div>
 
-        <div class="panel" th:if="${(session.taraAuthenticationMethods == null or #lists.contains(session.taraAuthenticationMethods,'BankLink'))
-             and @environment.getProperty('banklinks.enabled') == 'true' and (not #lists.isEmpty(@banklinkConfigurationProvider.getListOfBanks()))}">
+        <div class="panel" th:if="${@taraProperties.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).BankLink)}">
             <div class="method-block space-top-2 white row accordion-toggle collapsed" role="button"
                  data-toggle="collapse" data-parent="#accordion" href="#collapseBank" aria-expanded="false"
                  aria-controls="collapseBank">
@@ -199,8 +193,7 @@
             </div>
         </div>
 
-        <div class="panel" th:if="${(session.taraAuthenticationMethods == null or #lists.contains(session.taraAuthenticationMethods,'SmartID'))
-                and @environment.getProperty('smart-id.enabled') == 'true'}">
+        <div class="panel" th:if="${@taraProperties.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).SmartID)}">
             <div div class="method-block space-top-2 white row accordion-toggle" role="button" data-toggle="collapse"
                  data-parent="#accordion" href="#collapseSmartIdForm" aria-expanded="true" aria-controls="collapseSmartIdForm">
                 <div class="col-md-3 col-sm-3 col-xs-3">
@@ -227,7 +220,7 @@
                                 <div class="input-group">
                                     <span class="input-group-addon" id="default-country">EE</span>
                                     <input type="text" id="personIdentifier" placeholder="" size="25" tabindex="1"
-                                           aria-describedby="default-country" th:field="*{principalCode}" autocomplete="off" required>
+                                           aria-describedby="default-country" th:field="*{principalCode}" required>
                                 </div>
                             </div>
                             <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
@@ -237,13 +230,13 @@
                     </div>
                     <div class="row">
                         <div class="col-md-6 col-sm-6 col-xs-50">
-                            <button type="button" class="primary" th:text="#{label.button}"
-                                    onclick="$('#smartIdForm').submit()"></button>
+                            <button id="smartIdSubmitButton" type="button" class="primary" th:text="#{label.button}"></button>
                         </div>
                         <div class="col-md-6 col-sm-6 col-xs-50">
-                            <a href="https://www.smart-id.com/help/faq/"
+                            <a th:href="#{link.smartId.help}"
                                class="pull-right help-link"
                                target="_blank"
+                               rel="noopener"
                                th:text="#{label.smartId.help}"></a>
                         </div>
                     </div>

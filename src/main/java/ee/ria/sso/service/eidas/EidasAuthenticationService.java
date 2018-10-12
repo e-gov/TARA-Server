@@ -7,6 +7,8 @@ import ee.ria.sso.authentication.EidasAuthenticationFailedException;
 import ee.ria.sso.authentication.LevelOfAssurance;
 import ee.ria.sso.authentication.TaraAuthenticationException;
 import ee.ria.sso.authentication.credential.TaraCredential;
+import ee.ria.sso.security.CspDirective;
+import ee.ria.sso.security.CspHeaderUtil;
 import ee.ria.sso.service.AbstractService;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.model.AuthenticationResult;
@@ -62,11 +64,13 @@ public class EidasAuthenticationService extends AbstractService {
             }
 
             String relayState = UUID.randomUUID().toString();
-            context.getExternalContext().getSessionMap().put(relayState, context.getFlowScope().get("service"));
-            LevelOfAssurance loa = (LevelOfAssurance) context.getExternalContext().getSessionMap().get("taraAuthorizeRequestLevelOfAssurance");
+            context.getExternalContext().getSessionMap().put("service", context.getFlowScope().get("service"));
+            context.getExternalContext().getSessionMap().put("relayState", relayState);
+            LevelOfAssurance loa = (LevelOfAssurance) context.getExternalContext().getSessionMap().get(Constants.TARA_OIDC_SESSION_LoA);
             byte[] authnRequest = this.eidasAuthenticator.authenticate(credential.getCountry(), relayState, loa);
             HttpServletResponse response = (HttpServletResponse) context.getExternalContext().getNativeResponse();
-            response.setContentType("text/html; charset=UTF-8");
+            configureResponseForWriting(response, authnRequest);
+
             try (OutputStream out = response.getOutputStream()) {
                 out.write(authnRequest);
                 out.flush();
@@ -86,15 +90,14 @@ public class EidasAuthenticationService extends AbstractService {
     public Event checkLoginForEidas(RequestContext context) {
         try {
             HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getNativeRequest();
-            String relayState = request.getParameter("RelayState");
-            validateRelayState(relayState, context);
+            validateRelayState(context);
 
             TaraCredential credential = getCredentialFromAuthResult(
                     this.eidasAuthenticator.getAuthenticationResult(request)
             );
 
             context.getFlowExecutionContext().getActiveSession().getScope().put("credential", credential);
-            context.getFlowScope().put("service", context.getExternalContext().getSessionMap().get(relayState));
+            context.getFlowScope().put("service", context.getExternalContext().getSessionMap().get("service"));
 
             this.statistics.collect(new StatisticsRecord(
                     LocalDateTime.now(), getServiceClientId(context), AuthenticationType.eIDAS, StatisticsOperation.SUCCESSFUL_AUTH
@@ -136,8 +139,26 @@ public class EidasAuthenticationService extends AbstractService {
         context.getFlowExecutionContext().getActiveSession().getScope().clear();
     }
 
-    private void validateRelayState(String relayState, RequestContext context) {
-        if (StringUtils.isEmpty(relayState) || !context.getExternalContext().getSessionMap().contains(relayState)) {
+    private static void configureResponseForWriting(HttpServletResponse response, byte[] html) {
+        response.setContentType("text/html; charset=UTF-8");
+
+        final String scriptHashes = CspHeaderUtil.generateSerializedHashListOfAllTags(html, "script");
+        if (StringUtils.isNotBlank(scriptHashes)) {
+            CspHeaderUtil.addValueToExistingDirectiveInCspHeader(response, CspDirective.SCRIPT_SRC, scriptHashes);
+        }
+
+        final String formActions = CspHeaderUtil.generateSerializedFormActionsList(html);
+        if (StringUtils.isNotBlank(formActions)) {
+            CspHeaderUtil.addValueToExistingDirectiveInCspHeader(response, CspDirective.FORM_ACTION, formActions);
+        }
+    }
+
+    private void validateRelayState(RequestContext context) {
+        String relayState = ((HttpServletRequest)context.getExternalContext().getNativeRequest()).getParameter("RelayState");
+
+        if (context.getExternalContext().getSessionMap().contains("relayState") && context.getExternalContext().getSessionMap().get("relayState").equals(relayState)) {
+            context.getExternalContext().getSessionMap().remove("relayState");
+        } else {
             throw new IllegalStateException("SAML response's relay state (" + relayState + ") not found among previously stored relay states!");
         }
     }

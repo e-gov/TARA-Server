@@ -1,10 +1,10 @@
 package ee.ria.sso.config;
 
 import ee.ria.sso.Constants;
+import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.model.EmptyOidcRegisteredService;
 import ee.ria.sso.service.manager.ManagerService;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
 import org.apereo.cas.configuration.CasConfigurationProperties;
 import org.slf4j.Logger;
@@ -18,14 +18,10 @@ import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
-import org.springframework.webflow.core.collection.ParameterMap;
 import org.springframework.webflow.execution.RequestContextHolder;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -58,6 +54,27 @@ public class TaraProperties {
 
     public String getApplicationVersion() {
         return this.environment.getProperty("tara.version", "-");
+    }
+
+    private boolean isPropertyEnabled(final String propertyName) {
+        return StringUtils.isNotBlank(propertyName) && "true".equals(
+                this.environment.getProperty(propertyName + ".enabled", (String) null)
+        );
+    }
+
+    public boolean isAuthMethodAllowed(final AuthenticationType method) {
+        if (method != null && this.isPropertyEnabled(method.getPropertyName())) {
+            final Object attribute = RequestContextHolder.getRequestContext().getExternalContext()
+                    .getSessionMap().get(Constants.TARA_OIDC_SESSION_AUTH_METHODS);
+
+            if (attribute == null) {
+                return true; // TODO: only needed for cas management
+            } else if (attribute instanceof List) {
+                return ((List) attribute).contains(method);
+            }
+        }
+
+        return false;
     }
 
     public boolean isNotLocale(String code, Locale locale) {
@@ -94,20 +111,15 @@ public class TaraProperties {
     }
 
     public String getHomeUrl() {
-        ParameterMap map = RequestContextHolder.getRequestContext().getRequestParameters();
-        if (map.contains("service")) {
-            Optional<NameValuePair> uri;
-            try {
-                uri = new URIBuilder(URLDecoder.decode(map.getRequired("service"), StandardCharsets.UTF_8.name())).
-                        getQueryParams().stream().filter(p -> p.getName().equals("redirect_uri")).findFirst();
-            } catch (URISyntaxException | UnsupportedEncodingException e) {
-                log.error("Failed to parse home url", e);
-                uri = Optional.empty();
-            }
-            if (uri.isPresent()) {
-                return this.managerService.getServiceByID(uri.get().getValue()).orElse(new EmptyOidcRegisteredService()).
-                        getInformationUrl();
-            }
+        final Object redirectUri = RequestContextHolder.getRequestContext().getExternalContext()
+                .getSessionMap().get(Constants.TARA_OIDC_SESSION_REDIRECT_URI);
+
+        if (redirectUri != null && redirectUri instanceof String) {
+            return this.managerService.getServiceByID((String) redirectUri)
+                    .orElse(new EmptyOidcRegisteredService())
+                    .getInformationUrl();
+        } else {
+            log.error("Could not find home url from session");
         }
         return "#";
     }

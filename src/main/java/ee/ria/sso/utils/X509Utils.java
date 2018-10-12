@@ -32,19 +32,33 @@ public class X509Utils {
                 .generateCertificate(new ByteArrayInputStream(Base64.decode(encodedCertificate
                     .replaceAll(BEGIN_CERT, "").replaceAll(END_CERT, ""))));
         } catch (CertificateException e) {
-            throw new RuntimeException(e);
+            throw new IllegalStateException("Failed to decode certificate", e);
+        }
+    }
+
+    public static String getIssuerCNFromCertificate(X509Certificate certificate) {
+        try {
+            return getFirstCNFromX500Name(
+                    new JcaX509CertificateHolder(certificate).getIssuer()
+            );
+        } catch (CertificateEncodingException e) {
+            throw new IllegalStateException("Unable to get issuer CN from certificate", e);
         }
     }
 
     public static String getSubjectCNFromCertificate(X509Certificate certificate) {
         try {
-            X500Name x500name = new JcaX509CertificateHolder(certificate).getIssuer();
-            RDN cn = x500name.getRDNs(BCStyle.CN)[0];
-            return IETFUtils.valueToString(cn.getFirst().getValue());
+            return getFirstCNFromX500Name(
+                    new JcaX509CertificateHolder(certificate).getSubject()
+            );
         } catch (CertificateEncodingException e) {
-            log.error("Unable to get issuer CN", e);
-            return null;
+            throw new IllegalStateException("Unable to get subject CN from certificate", e);
         }
+    }
+
+    public static String getFirstCNFromX500Name(X500Name x500Name) {
+        final RDN cn = x500Name.getRDNs(BCStyle.CN)[0];
+        return IETFUtils.valueToString(cn.getFirst().getValue());
     }
 
 }
