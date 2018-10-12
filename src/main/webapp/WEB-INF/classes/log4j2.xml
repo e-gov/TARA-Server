@@ -15,6 +15,19 @@
         <!-- Log record format: cas_audit.log -->
         <Property name="cas.audit_log.pattern">{&quot;request&quot;:&quot;%enc{%X{method} %X{scheme}://%X{serverName}:%X{serverPort}%X{requestUri}}{JSON}&quot;, &quot;requestId&quot;:&quot;%X{requestId}&quot;, &quot;sessionId&quot;:&quot;%X{sessionId}&quot;, &quot;message&quot;:&quot;%enc{%msg}{JSON}&quot;}%n</Property>
 
+        <!-- Log record format: stats.log -->
+        <Property name="cas.stats_log.pattern">%m%n</Property>
+
+        <!-- Log record format for syslog. Note that the syslog facility code is constant: 'local1' (17). And syslog priority is assigned error (3) in case of ERROR level, otherwise 'notice' (5) shall be used) -->
+        <Property name="cas.syslog.pattern">&lt;%level{WARN=141, DEBUG=141, ERROR=139, TRACE=141, INFO=141}&gt;1 %d{yyyy-MM-dd'T'HH:mm:ss.SSSZ} ${hostName} rak-tara.log - - - ${sys:cas.log.pattern}</Property>
+
+        <!-- Log record format for syslog. Note that the syslog facility code is constant: 'local1' (17). And syslog priority is assigned error (3) in case of ERROR level, otherwise 'notice' (5) shall be used) -->
+        <Property name="cas.audit.syslog.pattern">&lt;%level{WARN=141, DEBUG=141, ERROR=139, TRACE=141, INFO=141}&gt;1 %d{yyyy-MM-dd'T'HH:mm:ss.SSSZ} ${hostName} rak-tara_audit.log - - - ${sys:cas.audit_log.pattern}</Property>
+
+        <!-- Log record format for syslog. Note that the syslog facility code is constant: 'local1' (17). And syslog priority is assigned error (3) in case of ERROR level, otherwise 'notice' (5) shall be used) -->
+        <Property name="cas.stats.syslog.pattern">&lt;%level{WARN=141, DEBUG=141, ERROR=139, TRACE=141, INFO=141}&gt;1 %d{yyyy-MM-dd'T'HH:mm:ss.SSSZ} ${hostName} rak-tara_stats.log - - - ${sys:cas.stats_log.pattern}</Property>
+
+
         <!-- The default log verbosity level for cas.log -->
         <Property name="cas.log.level">info</Property>
 
@@ -26,21 +39,43 @@
         <Console name="console" target="SYSTEM_OUT">
             <PatternLayout pattern="%highlight{%d %-5level %X{requestId}/%X{sessionId} %logger{1.} [%thread] ---  &lt;%enc{%m}&gt;%throwable%n}"/>
         </Console>
-
+        <!-- NB! Uncomment and configure this section when using sending log events to tara-stat service; -->
         <!--Syslog name="taraStatServiceAppender"
                 host="tara-stat-rakendus.ci.kit" port="5001" protocol="TCP"
                 charset="UTF-8" facility="AUTH" newLine="true" /-->
 
+        <!-- NB! Uncomment and configure this section when sending log events to external syslog server -->
+        <!--Socket name="taraSyslog" host="example_host" port="example_port" protocol="SSL">
+            <PatternLayout charset="UTF-8" pattern="${sys:cas.syslog.pattern}" alwaysWriteExceptions="false"/>
+            <SSL>
+                <KeyStore   location="/path/to/log4j2-keystore.jks"      password="changeit"/>
+                <TrustStore location="/path/to/log4j2-truststore.jks"    password="changeit"/>
+            </SSL>
+        </Socket>
+        <Socket name="taraAuditSyslog" host="example_host" port="example_port" protocol="SSL">
+            <PatternLayout charset="UTF-8" pattern="${sys:cas.audit.syslog.pattern}" alwaysWriteExceptions="false"/>
+            <SSL>
+                <KeyStore   location="/path/to/log4j2-keystore.jks"      password="changeit"/>
+                <TrustStore location="/path/to/log4j2-truststore.jks"    password="changeit"/>
+            </SSL>
+        </Socket>
+        <Socket name="taraStatsSyslog" host="example_host" port="example_port" protocol="SSL">
+            <PatternLayout charset="UTF-8" pattern="${sys:cas.stats.syslog.pattern}" alwaysWriteExceptions="false"/>
+            <SSL>
+                <KeyStore   location="/path/to/log4j2-keystore.jks"      password="changeit"/>
+                <TrustStore location="/path/to/log4j2-truststore.jks"    password="changeit"/>
+            </SSL>
+        </Socket-->
+
         <RollingFile name="statisticsFileAppender" fileName="${sys:cas.log.dir}/stats.log" append="true"
                      filePattern="${sys:cas.log.dir}/$${date:yyyy-MM}/stats-%d{yyyy-MM-dd-HH}-%i.log.gz">
-            <PatternLayout pattern="%m%n"/>
+            <PatternLayout pattern="${sys:cas.stats.pattern}"/>
             <Policies>
                 <OnStartupTriggeringPolicy/>								<!-- Log rotation every time CAS is started -->
                 <TimeBasedTriggeringPolicy interval="1" modulate="true"/>	<!-- Log rotation once the date/time pattern no longer applies to the active file. This policy accepts an interval attribute which indicates how frequently the rollover should occur based on the time pattern and a modulate boolean attribute. -->
                 <SizeBasedTriggeringPolicy size="100 MB"/>					<!-- Log rotation once the file has reached the specified size. The size can be specified in bytes, with the suffix KB, MB or GB, for example 20MB -->
             </Policies>
         </RollingFile>
-
         <RollingFile name="file" fileName="${sys:cas.log.dir}/cas.log" append="true"
                      filePattern="${sys:cas.log.dir}/$${date:yyyy-MM}/cas-%d{yyyy-MM-dd-HH}-%i.log.gz">
             <PatternLayout alwaysWriteExceptions="false" pattern="${sys:cas.log.pattern}" />
@@ -99,231 +134,59 @@
         </CasAppender>
     </Appenders>
     <Loggers>
-        <AsyncLogger name="com.couchbase" level="warn" additivity="false" includeLocation="true">
+        <AsyncLogger name="nz.net.ultraq.thymeleaf" level="error" additivity="false" >
             <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
+            <AppenderRef ref="errorFile" level="error" />
             <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
+
+            <!-- Uncomment when using syslog appender -->
+            <!--AppenderRef ref="taraSyslog" level="${sys:cas.log.level}" /-->
         </AsyncLogger>
-        <AsyncLogger name="org.springframework.security" level="warn" additivity="false">
+        <AsyncLogger name="org.apereo.cas" level="error" additivity="false" >
             <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
+            <AppenderRef ref="errorFile" level="error" />
             <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="org.springframework.boot.autoconfigure.security" level="info" additivity="false">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="org.jasig.cas.client" level="info" additivity="false" includeLocation="true">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="org.apereo" level="info" additivity="false" includeLocation="true">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="org.apereo.cas.web.CasWebApplication" level="info" additivity="false" includeLocation="true">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="org.apereo.cas.config.support.authentication" level="debug" additivity="false" includeLocation="true">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="org.apereo.cas.support.events.listener" level="warn" additivity="false" includeLocation="true">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="org.apereo.services.persondir" level="warn" additivity="false" includeLocation="true">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="org.apereo.cas.web.flow" level="info" additivity="true" includeLocation="true">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="org.apache" level="error" additivity="false">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="org.springframework.cloud" level="info" additivity="false">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="org.springframework.cloud.context" level="warn" additivity="false">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="org.springframework.boot" level="warn" additivity="false">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="org.springframework" level="warn" additivity="false">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="org.springframework.aop" level="warn" additivity="false">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="org.springframework.boot.actuate.autoconfigure" level="warn" additivity="false">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="org.springframework.webflow" level="warn" additivity="false">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="org.springframework.session" level="warn" additivity="false">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="org.springframework.amqp" level="off" additivity="false">
-            <AppenderRef ref="casConsole"/>
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="org.springframework.integration" level="warn" additivity="false">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="org.springframework.messaging" level="warn" additivity="false">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="org.springframework.web" level="warn" additivity="false">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="org.springframework.orm.jpa" level="warn" additivity="false">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="org.springframework.scheduling" level="warn" additivity="false">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="org.thymeleaf" level="warn" additivity="false">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="org.pac4j" level="warn" additivity="false">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="org.opensaml" level="warn" additivity="false">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="net.sf.ehcache" level="warn" additivity="false">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="com.ryantenney.metrics" level="warn" additivity="false">
-            <AppenderRef ref="casConsole"/>
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="file"/>
-        </AsyncLogger>
-        <AsyncLogger name="net.jradius" level="warn" additivity="false">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="org.openid4java" level="warn" additivity="false">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="org.ldaptive" level="warn" additivity="false">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="com.hazelcast" level="warn" additivity="false">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="org.springframework.context.annotation" level="off" additivity="false" />
-        <AsyncLogger name="org.springframework.boot.devtools" level="off" additivity="false" />
-        <AsyncLogger name="org.jasig.spring" level="warn" additivity="false">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="org.springframework.web.socket" level="warn" additivity="false">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="org.apache.cxf" level="warn" additivity="false">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="org.apache.http" level="${sys:cas.log.level}" additivity="false">
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="com.codeborne.security" level="${sys:cas.log.level}" additivity="false">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="com.brsanthu.googleanalytics" level="${sys:cas.log.level}" additivity="false">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
-        </AsyncLogger>
-        <AsyncLogger name="ee.ria.sso.statistics.StatisticsHandler" level="debug" additivity="false">
-            <AppenderRef ref="statisticsFileAppender"/>
+
+            <!-- Uncomment when using syslog appender -->
+            <!--AppenderRef ref="taraSyslog" level="${sys:cas.log.level}" /-->
         </AsyncLogger>
         <AsyncLogger name="ee.ria" level="${sys:cas.log.level}" additivity="false" >
             <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
+            <AppenderRef ref="errorFile" level="error" />
             <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
+
+            <!-- Uncomment when using syslog appender -->
+            <!--AppenderRef ref="taraSyslog" level="${sys:cas.log.level}" /-->
         </AsyncLogger>
         <AsyncLogger name="auditLog" level="info" includeLocation="true" additivity="false">
-            <AppenderRef ref="casAudit"/>
             <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-            <AppenderRef ref="errorFile" level="ERROR" />
+            <AppenderRef ref="casAudit"/>
+            <AppenderRef ref="errorFile" level="error" />
             <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
+
+            <!-- Uncomment when using syslog appender -->
+            <!--AppenderRef ref="taraAuditSyslog" level="${sys:cas.log.level}" /-->
+        </AsyncLogger>
+        <AsyncLogger name="ee.ria.sso.statistics.StatisticsHandler" level="debug" additivity="false">
+            <AppenderRef ref="statisticsFileAppender"/>
+
+            <!-- Uncomment when using syslog appender -->
+            <!--AppenderRef ref="taraStatsSyslog"/-->
         </AsyncLogger>
         <AsyncLogger name="perfStatsLogger" level="info" includeLocation="true" additivity="false">
             <AppenderRef ref="casPerf"/>
         </AsyncLogger>
         <AsyncLogger name="ee.ria.sso.statistics.TaraStatHandler" level="info" additivity="false">
-            <!-- (OPTIONAL) Statistics (to Tara-Stat microservice) -->
+            <!-- Uncomment when using Tara-Stat service -->
             <!--AppenderRef ref="taraStatServiceAppender"/-->
+
             <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
         </AsyncLogger>
-
-        <AsyncRoot level="error">
+        <AsyncRoot level="warn">
             <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
+
+            <!-- Uncomment when using syslog appender -->
+            <!--AppenderRef ref="taraSyslog" level="${sys:cas.log.level}" /-->
         </AsyncRoot>
     </Loggers>
 </Configuration>
