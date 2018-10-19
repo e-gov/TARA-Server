@@ -16,21 +16,20 @@ import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.ssl.SSLContexts;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
+import javax.net.ssl.SSLContext;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.security.*;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 
-@ConditionalOnProperty("eidas.enabled")
-@Component
 public class EidasAuthenticator {
 
     private final Logger log = LoggerFactory.getLogger(EidasAuthenticator.class);
@@ -41,6 +40,16 @@ public class EidasAuthenticator {
 
     public EidasAuthenticator(EidasConfigurationProvider configurationProvider) {
         httpClient = HttpClients.createDefault();
+        eidasClientUrl = configurationProvider.getServiceUrl();
+    }
+
+    public EidasAuthenticator(EidasConfigurationProvider configurationProvider, KeyStore eidasAuthenticatorKeystore)
+            throws UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+        final SSLContext sslContext = SSLContexts.custom()
+                .loadKeyMaterial(eidasAuthenticatorKeystore, configurationProvider.getClientCertificateKeystorePass().toCharArray())
+                .build();
+
+        httpClient = HttpClients.custom().setSSLContext(sslContext).build();
         eidasClientUrl = configurationProvider.getServiceUrl();
     }
 
@@ -96,4 +105,5 @@ public class EidasAuthenticator {
     public void cleanUp() throws IOException {
         httpClient.close();
     }
+
 }
