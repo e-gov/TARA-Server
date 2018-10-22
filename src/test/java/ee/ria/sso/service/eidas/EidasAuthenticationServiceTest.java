@@ -16,12 +16,15 @@ import ee.ria.sso.statistics.StatisticsOperation;
 import ee.ria.sso.test.SimpleTestAppender;
 import org.hamcrest.Matcher;
 import org.junit.*;
+import org.junit.runner.RunWith;
 import org.mockito.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
 import org.springframework.webflow.test.MockExternalContext;
@@ -34,6 +37,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+@TestPropertySource(
+        locations= "classpath:application-test.properties"
+)
+@RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(
         classes = TestEidasConfiguration.class,
         initializers = ConfigFileApplicationContextInitializer.class
