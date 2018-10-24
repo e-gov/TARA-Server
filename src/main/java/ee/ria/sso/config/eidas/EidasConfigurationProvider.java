@@ -12,9 +12,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 import org.springframework.validation.annotation.Validated;
 
 import javax.annotation.PostConstruct;
+import java.security.KeyStore;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -35,14 +37,26 @@ public class EidasConfigurationProvider {
     private String serviceUrl;
 
     private String heartbeatUrl;
-
     @NotBlank
     private String availableCountries;
 
     private List<String> listOfCountries;
 
+    private boolean clientCertificateEnabled;
+
+    private String clientCertificateKeystore;
+
+    private String clientCertificateKeystoreType = KeyStore.getDefaultType();
+
+    private String clientCertificateKeystorePass;
+
     @PostConstruct
     public void init() {
+        if (clientCertificateEnabled) {
+            Assert.notNull(clientCertificateKeystore, "No client certificate keystore provided");
+            Assert.notNull(clientCertificateKeystorePass, "No client certificate keystore password provided");
+        }
+
         listOfCountries = parsePropertiesList(availableCountries);
     }
 

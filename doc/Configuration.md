@@ -324,6 +324,15 @@ Table 7 - Configuring eIDAS authentication
 | `eidas.service-url` | Y | HTTP base URL of the eIDAS-client microservice. |
 | `eidas.heartbeat-url` | N | HTTP URL of the eIDAS-client microservice heartbeat endpoint. Affects TARA [heartbeat endpoint](#heartbeat). |
 | `eidas.available-countries` | Y | A comma separated list of ISO 3166-1 alpha-2 country codes that determine which countries are displayed on the login page. |
+| `eidas.client-certificate-enabled` | N | Feature toggle for using client certificate when making requests to authentication endpoints at `eidas.service-url`. Enables this feature if set to `true`, otherwise ignores all other client certificate related configuration. Defaults to `false`, if not specified. |
+
+Table 8 - Configuring client certificate for requests to authentication endpoints at `eidas.service-url`
+
+| Property        | Mandatory | Description |
+| :---------------- | :---------- | :----------------|
+| `eidas.client-certificate-keystore` | Y | Path to the keystore that holds client certificate and private key. For example: `classpath:eidasClientKeystore.p12`, when the file is to be accessed from the classpath or `file:/etc/cas/eidasClientKeystore.p12` when the file is referenced in the local filesystem.  |
+| `eidas.client-certificate-keystore-type` | N | Keystore type. Defaults to `PKCS12` |
+| `eidas.client-certificate-keystore-pass` | Y | Keystore password. |
 
 Example:
 
@@ -332,30 +341,35 @@ eidas.enabled=true
 eidas.service-url=https://<eidas-client-host:port>
 eidas.heartbeat-url=https://<eidas-client-host:port>/heartbeat
 eidas.available-countries=EE,LT,LV,FI,NO,IT,IE
+
+eidas.client-certificate-enabled=true
+eidas.client-certificate-keystore=classpath:/eidas-client/clientCertificateKeystore.p12
+eidas.client-certificate-keystore-type=PKCS12
+eidas.client-certificate-keystore-pass=changeit
 ````
 
 
 <a name="banklink"></a>
 ### Estonian banklinks
 
-Table 8 - Enabling banklink feature in TARA
+Table 9 - Enabling banklink feature in TARA
 
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
 | `banklinks.enabled` | N | Feature toggle for banklink functionality in TARA. Enables banklinks feature to be loaded when set to `true`, otherwise ignores all other banklink related configuration. Defaults to `false`, if not specified. |
 
-Table 9 - Generic banklink properties
+Table 10 - Generic banklink properties
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
-| `banklinks.available-banks` | Y | A comma separated list of bank codes that determine which bank link(s) are displayed on the login page. Supported values in the list are: <ul><li>`seb`</li><li>`luminor`</li><li>`coop`</li><li>`swedbank`</li><li>`lhv`</li><li>`danske`</ul> For example:`seb,lhv,luminor`. <br>Note that adding a bank to this list, requires further bank specific property configuration (see Table 10 for details) |
+| `banklinks.available-banks` | Y | A comma separated list of bank codes that determine which bank link(s) are displayed on the login page. Supported values in the list are: <ul><li>`seb`</li><li>`luminor`</li><li>`coop`</li><li>`swedbank`</li><li>`lhv`</li><li>`danske`</ul> For example:`seb,lhv,luminor`. <br>Note that adding a bank to this list, requires further bank specific property configuration (see Table 11 for details) |
 | `banklinks.keystore` | Y | Path to the keystore that holds bank keys. For example: `classpath:banklinkKeystore.p12`, when the file is to be accessed from the classpath or `file:/etc/cas/banklinkKeystore.p12` when the file is referenced in the local filesystem.  |
 | `banklinks.keystore-type` | N | Keystore type. Defaults to `PKCS12` |
 | `banklinks.keystore-pass` | Y | Keystore password. |
 | `banklinks.return-url` | Y | HTTP URL for accepting the bank authentication response. Must reference the publicly available TARA `/login` url. |
 
-Table 10 - Bank specific properties
+Table 11 - Bank specific properties
 
 
 | Property        | Mandatory | Description |
@@ -398,13 +412,13 @@ banklinks.bank.lhv.url=https://www.testlhv.ee/banklinkurl
 <a name="smart-id"></a>
 ### Estonian Smart-ID
 
-Table 11 - Enabling Smart-ID authentication feature in TARA
+Table 12 - Enabling Smart-ID authentication feature in TARA
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
 | `smart-id.enabled` | N | Feature toggle for authentication with Smart-ID in TARA. Enables this feature to be loaded if set to `true`, otherwise ignores all other Smart-ID related configuration. Defaults to `false`, if not specified. |
 
-Table 12 - Other Smart-ID configuration properties (if Smart-ID is enabled)
+Table 13 - Other Smart-ID configuration properties (if Smart-ID is enabled)
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
@@ -445,14 +459,14 @@ More information about Estonian Smart-ID can be obtained from [here](https://git
 
 TARA heartbeat endpoint is a Spring Boot Actuator endpoint and thus is configured as described [here](https://docs.spring.io/spring-boot/docs/1.5.3.RELEASE/reference/html/production-ready-endpoints.html), while also taking into consideration CAS specific configuration properties as described [here](https://apereo.github.io/cas/5.1.x/installation/Configuration-Properties.html#spring-boot-endpoints).
 
-Table 13 - Configuring heartbeat endpoint in TARA
+Table 14 - Configuring heartbeat endpoint in TARA
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
 | `endpoints.heartbeat.*` | N | Spring Boot specific actuator configuration. |
 | `endpoints.heartbeat.timeout` | N | Maximum time to wait on status requests made to systems that TARA is depending on, in seconds. Defaults to 3 seconds. |
 
-Table 14 - Heartbeat endpoints on systems TARA is depending on
+Table 15 - Heartbeat endpoints on systems TARA is depending on
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
@@ -475,7 +489,7 @@ eidas.heartbeat-url=https://<eidas-client-host:port>/heartbeat
 <a name="security_csp"></a>
 ### Content Security Policy
 
-Table 15 - Enabling TARA-specific `Content-Security-Policy` headers in responses from TARA server
+Table 16 - Enabling TARA-specific `Content-Security-Policy` headers in responses from TARA server
 
 | Property        | Mandatory | Description |
 | :-------------- | :-------- | :-----------|
@@ -528,7 +542,7 @@ security.csp.block-all-mixed-content=
 
 The TARA-Stat service (see https://e-gov.github.io/TARA-Stat/Dokumentatsioon for details) can be used as one of the receivers of TARA statistics.
 
-Table 16 - Enabling TARA-Stat statistics logging
+Table 17 - Enabling TARA-Stat statistics logging
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
@@ -560,7 +574,7 @@ Example log4j2 configuration for sending statistics over TCP in syslog format:
 <a name="test_environment_warning"></a>
 ### Test environment warning message
 
-Table 17 - Configuring TARA login page to show a warning message about it being run against test services
+Table 18 - Configuring TARA login page to show a warning message about it being run against test services
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
@@ -576,7 +590,7 @@ env.test.message=Tegemist on testkeskkonnaga ja autentimiseks vajalik info on <a
 <a name="audit_logging"></a>
 ### Audit logging
 
-Table 18 - Relevant CAS parameters for TARA audit log
+Table 19 - Relevant CAS parameters for TARA audit log
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
