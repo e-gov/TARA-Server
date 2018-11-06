@@ -557,7 +557,12 @@ Example log4j2 configuration for sending statistics over TCP in syslog format:
 <Configuration status="WARN">
    <Appenders>
       ... additional appenders ...
-      <Syslog name="taraStatServiceAppender" host="tara-stat.dev" port="5001" protocol="TCP" charset="UTF-8" newLine="true" facility="AUTH" />
+      <Syslog name="taraStatServiceAppender" host="tara-stat.dev" port="5001" protocol="TCP" charset="UTF-8" newLine="true" facility="AUTH" >
+         <SSL>
+            <KeyStore   location="/path/to/tarastat-client-keystore.jks"      password="changeit"/>
+            <TrustStore location="/path/to/tarastat-client-truststore.jks"    password="changeit"/>
+         </SSL>
+      </Syslog>
    </Appenders>
 
    <Loggers>
