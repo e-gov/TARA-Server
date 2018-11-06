@@ -17,7 +17,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.Ordered;
 
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -58,7 +57,7 @@ public class TaraLoggingConfiguration {
         bean.setUrlPatterns(Collections.singleton("/*"));
         bean.setInitParameters(initParams);
         bean.setName("incidentLoggingMDCServletFilter");
-        bean.setOrder(Ordered.HIGHEST_PRECEDENCE + 1);
+        bean.setOrder(Integer.MIN_VALUE + 51); // Spring's SessionRepositoryFilter must precede the IncidentLoggingMDCServletFilter
         return bean;
     }
 
