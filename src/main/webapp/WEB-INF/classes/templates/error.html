@@ -1,54 +1,22 @@
 <!DOCTYPE html>
-<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout" th:with="hideHeaderLanguageSelection=true">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE9">
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title th:text="#{label.ria.title}"></title>
-    <!-- Main CSS file -->
-    <link rel="stylesheet" href="/css/bootstrap.min.css"/>
-    <link rel="stylesheet" href="/css/font-awesome.css"/>
-    <link rel="stylesheet" href="/css/style.css"/>
-    <link href="css/font-roboto.css" rel="stylesheet">
-    <!-- Favicon -->
-    <link rel="icon" th:href="@{/favicon.ico}" type="image/x-icon"/>
-    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-    <script src="/js/html5shiv.js"></script>
-    <script src="/js/respond.min.js"></script>
-    <![endif]-->
-</head>
-<div th:replace="fragments/taraheader(hideHeaderLanguageSelection=true)" th:remove="tag">Header</div>
+<html xmlns:th="http://www.w3.org/1999/xhtml" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout" th:with="hideHeaderLanguageSelection=true">
+<head th:replace="~{fragments/head}"></head>
 <body>
 <div layout:fragment="content" th:with="hideHeaderLanguageSelection=true" th:remove="tag">
     <div class="container">
-        <a th:if="${@taraProperties.getBackUrl(session.pac4jRequestedUrl, #locale) != '#'}" th:href="${@taraProperties.getBackUrl(session.pac4jRequestedUrl, #locale)}" class="text-black back-link icon-link">
-            <i class="fa fa-chevron-left fa-fw"></i><span th:text="#{label.back}" th:remove="tag"></span>
-        </a>
-        <div class="row">
-            <div class="error-box">
-                <h4 class="text-red"><i class="fa fa-times-circle-o fa-fw"></i><span th:text="#{label.error.title}"
-                                                                                     th:remove="tag"></span></h4>
-                <p th:if="${TARA_ERROR_MESSAGE != null}" th:text="${TARA_ERROR_MESSAGE}"></p>
-                <p th:unless="${TARA_ERROR_MESSAGE != null}" th:text="#{message.auth.error}"></p>
-                <p th:if="${@taraProperties.getCurrentRequestIdentifier() != null}">
-                    <span th:text="#{label.incident.number}"></span>
-                    <span th:text="${@taraProperties.getCurrentRequestIdentifier()}"></span>
-                </p>
-            </div>
+        <div class="alert alert-error">
+            <p><strong><span th:text="#{message.error.auth.title}" th:remove="tag"></span></strong></p>
+            <p th:if="${TARA_ERROR_MESSAGE != null}" th:text="${TARA_ERROR_MESSAGE}"></p>
+            <p th:unless="${TARA_ERROR_MESSAGE != null}" th:text="#{message.error.auth.error}"></p>
+            <p th:if="${@taraProperties.getCurrentRequestIdentifier() != null}">
+                <span th:text="#{label.error.incidentNumber}" th:remove="tag"></span>&nbsp;
+                <span th:text="${@taraProperties.getCurrentRequestIdentifier()}" th:remove="tag"></span>
+            </p>
         </div>
+        <p th:if="${@taraProperties.getBackUrl(session.pac4jRequestedUrl, #locale) != '#'}" class="link-back">
+            <a th:href="${@taraProperties.getBackUrl(session.pac4jRequestedUrl, #locale)}" th:text="#{label.common.back}">Back</a>
+        </p>
     </div>
-    <script type="text/javascript" src="/js/jquery.min.js"></script>
-    <script type="text/javascript" src="/js/bootstrap.min.js"></script>
-    <div th:replace="fragments/tarafooter" th:remove="tag">Footer</div>
 </div>
 </body>
 </html>
-
-
-
-
-
-
-

@@ -84,7 +84,7 @@ public class EidasConfigurationProvider {
     }
 
     private String getCountryTranslation(Locale locale, String c) {
-        return messageSource.getMessage("label.country." + c.toUpperCase(), null, null, locale);
+        return messageSource.getMessage("label.countries." + c.toUpperCase(), null, null, locale);
     }
 
     public class Country implements Comparable<Country> {

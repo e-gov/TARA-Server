@@ -1,0 +1,144 @@
+// Breakpoints
+$breakpoint-mobile: 800px !default;
+
+// Reset
+p,ul,li,h1,h2,h3,form,fieldset,input,button {
+  margin: 0;
+  padding: 0;
+}
+h2,h3 {
+  line-height: 1.2;
+}
+ul,li {
+  list-style: none;
+}
+a, button {
+  transition: color .25s, background-color .25s;
+}
+a {
+  color: #0083ba;
+  text-decoration: underline;
+  &:hover {
+    color: #0083ba;
+    text-decoration: none;
+  }
+}
+input,button {
+  font-size: inherit;
+}
+fieldset {
+  border: 0;
+}
+* {
+  box-sizing: border-box;
+}
+
+// SVG Icon
+.icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  stroke-width: 0;
+  stroke: currentColor;
+  fill: currentColor;
+}
+.icon-bank-link {
+  width: 1.5em;
+}
+.icon-eu-citizen {
+  width: 1.53125em;
+}
+.icon-id-card {
+  width: 1.5em;
+}
+.icon-mobile-id {
+  width: 0.611328125em;
+}
+
+// General
+html,body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+body {
+  font-family: 'Roboto', sans-serif;
+  font-size: 18px;
+  line-height: 1.47;
+  background-color: #f2f3f3;
+  @media (max-width: $breakpoint-mobile) {
+    font-size: 16px;
+  }
+}
+
+// Layout
+.container {
+  width: 100%;
+  max-width: 1054px;
+  margin: 0 auto;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+.c-layout {
+  height: 100%;
+  min-height: 100%;
+	display: flex;
+  flex-direction: column;
+  @media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+    display: block;
+  }
+  &--full {
+    flex: 1;
+  }
+}
+
+// Back link
+.link-back {
+  margin: 25px 0;
+  @media (max-width: $breakpoint-mobile) {
+    text-align: center;
+  }
+}
+
+// Mobile back link
+.link-back-mobile {
+  display: none;
+  margin-bottom: 25px;
+  text-align: center;
+  @media (max-width: $breakpoint-mobile) {
+    display: block;
+  }
+}
+
+// Mobile
+body.is-mobile-subview {
+  @media (max-width: $breakpoint-mobile) {
+    background-color: #fff;
+  }
+  .c-header-bar,
+  .c-header,
+  .c-tab-login__nav-item:not(.is-active) {
+    @media (max-width: $breakpoint-mobile) {
+      display: none;
+    }
+  }
+  .c-tab-login__content.is-active {
+    @media (max-width: $breakpoint-mobile) {
+      display: block;
+    }
+  }
+}
+
+// Helpers
+.d-flex {
+  display: flex;
+}
+.justify-content-between {
+  justify-content: space-between;
+}
+.justify-content-end {
+  justify-content: flex-end;
+}
+.align-items-center {
+  align-items: center;
+}

@@ -1,100 +1,67 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TARA autentimisteenus</title>
-
-  <!-- Main CSS file -->
-  <link rel="stylesheet" href="css/bootstrap.min.css" />
-  <link rel="stylesheet" href="css/font-awesome.css" />
-  <link rel="stylesheet" href="css/style.css" />
-  <link href="css/font-roboto.css" rel="stylesheet">
-
-
-  <!-- Favicon -->
-  <link rel="shortcut icon" href="images/icon/favicon.png">
-  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="images/icon/apple-touch-icon-144-precomposed.png">
-  <link rel="apple-touch-icon-precomposed" sizes="114x114" href="images/icon/apple-touch-icon-114-precomposed.png">
-  <link rel="apple-touch-icon-precomposed" sizes="72x72" href="images/icon/apple-touch-icon-72-precomposed.png">
-  <link rel="apple-touch-icon-precomposed" href="images/icon/apple-touch-icon-57-precomposed.png">
-
-  <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-  <!--[if lt IE 9]>
-	  <script src="/js/html5shiv.js"></script>
-	  <script src="/js/respond.min.js"></script>
-	<![endif]-->
-
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="styles/main.css">
+    <title>Riigi autentimisteenus</title>
 </head>
-<header>
-  <div class="header-bar">
-    <div class="container">
-      <!-- <button type="button" name="button">Ligipääsetavus</button> -->
-      <div class="pull-right">
-        <a href="#">РУССКИЙ</a>
-        <a href="#">ENGLISH</a>
-      </div>
-    </div>
-  </div>
-  <div class="logo-bar">
-    <div class="container">
-      <div class="row white">
-        <div class="col-md-3 col-sm-3">
-          <div class="tara-logo img-responsive">
-          </div>
-        </div>
-        <div class="col-md-9 col-sm-9 text-right">
-          <p>Turvaliseks autentimiseks asutuste e-teenustes</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-</header>
-
 
 <body>
+<div class="c-layout">
 
-  <div class="container">
-    <a href="#" class="text-black row icon-link">
-    <i class="fa fa-chevron-left fa-fw"></i>Tagasi tuvastamismeetodite valiku juurde
-  </a>
-    <div class="row">
-      <div class="error-box">
-        <h4 class="text-red"><i class="fa fa-times-circle-o fa-fw"></i>Kasutaja tuvastamine ebaõnnestus</h4>
-        <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam n</p>
-      </div>
-    </div>
-  </div>
+    <div class="c-layout--full">
+        <div class="c-header-bar">
+            <div class="container">
+                <div class="d-flex justify-content-between align-items-center">
+                    <p>Turvaliseks autentimiseks asutuste e-teenustes</p>
+                </div>
+            </div>
+        </div>
+        <header class="c-header">
+            <div class="container">
+                <h1 class="c-header__logo">
+                    <a class="c-header__logo-link" href="#">
+                        <img src="assets/riigivapp.png" alt="Riigi autentimisteenus">
+                        Riigi autentimisteenus
+                    </a>
+                </h1>
+            </div>
+        </header>
 
-  <script type="text/javascript" src="/js/jquery.min.js"></script>
-  <!-- jQuery -->
-  <script type="text/javascript" src="/js/bootstrap.min.js"></script>
-  <!-- Bootstrap -->
-  <script type="text/javascript" src="/js/script.js"></script>
-  <footer class="footer">
-    <div class="container">
-      <div class="row">
-        <hr>
-        <div class="col-md-4 col-md-offset-2 col-md-push-6 col-sm-4 col-sm-offset-2 col-sm-push-6">
-          <ul class="footer-links">
-            <li>
-              <a href="#">Raporteeri viga</a>
-            </li>
-            <li>
-              <a href="#">TARA-st lähemalt</a>
-            </li>
-          </ul>
+        <div class="container">
+            <div class="alert alert-error">
+                <p><strong>Kasutaja tuvastamine ebaõnnestus.</strong></p>
+                <p>Kasutajal pole Mobiil-ID lepingut.</p>
+                <p>Intsidendi number: IEUQBC0TQSW4JTR4</p>
+            </div>
+            <p class="link-back">
+                <a href="#">Tagasi tuvastamismeetodite valiku juurde</a>
+            </p>
         </div>
-        <div class="col-md-6 col-md-pull-6 col-sm-6 col-sm-pull-6">
-          <div class="eu-logo"></div>
-        </div>
-      </div>
     </div>
-  </footer>
+
+    <div class="c-footer">
+        <div class="container">
+            <div class="c-footer__row">
+                <div class="c-footer__col">
+                    <div class="c-footer__block">
+                        <div class="c-footer__block-logo">
+                            <img src="assets/eu-flag.svg" alt="EU"></div>
+                        <div class="c-footer__block-text">
+                            <p><strong>Kaasrahastatud Euroopa Liidu poolt</strong></p>
+                            <p>Euroopa Ühendamise Rahastu</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="c-footer__col">
+                    <p><a href="#" target="_blank" rel="noopener">Riigi autentimisteenusest lähemalt</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 </body>
-
 </html>

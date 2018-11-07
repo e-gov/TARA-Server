@@ -1,41 +1,13 @@
 <!DOCTYPE html>
-<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE9">
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title th:text="#{label.ria.title}"></title>
-    <!-- Main CSS file -->
-    <link rel="stylesheet" href="/css/bootstrap.min.css"/>
-    <link rel="stylesheet" href="/css/font-awesome.css"/>
-    <link rel="stylesheet" href="/css/style.css"/>
-    <link href="css/font-roboto.css" rel="stylesheet">
-    <!-- Favicon -->
-    <link rel="icon" th:href="@{/favicon.ico}" type="image/x-icon"/>
-    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-    <script src="/js/html5shiv.js"></script>
-    <script src="/js/respond.min.js"></script>
-    <![endif]-->
-</head>
-<div th:replace="fragments/taraheader" th:remove="tag">Header</div>
+<html xmlns:th="http://www.w3.org/1999/xhtml" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout">
+<head th:replace="~{fragments/head}"></head>
 <body>
-<div layout:fragment="content" th:remove="tag">
+<div layout:fragment="content" th:with="hideHeaderLanguageSelection=true" th:remove="tag">
     <div class="container">
-        <a th:href="${@taraProperties.getBackUrl(session.pac4jRequestedUrl, #locale)}" class="text-black back-link icon-link">
-            <i class="fa fa-chevron-left fa-fw"></i><span th:text="#{label.back}" th:remove="tag"></span>
-        </a>
-        <div class="info-block method-block text-center">
-            <div class="row">
-                <i class="fa fa-exclamation-circle fa-5x"></i>
-                <h1 th:text="#{label.error.servicelimited.title}"></h1>
-            </div>
+        <div class="alert alert-error">
+            <p><strong><span th:text="#{message.error.serviceLimited}" th:remove="tag"></span></strong></p>
         </div>
     </div>
-    <script type="text/javascript" src="/js/jquery.min.js"></script>
-    <script type="text/javascript" src="/js/bootstrap.min.js"></script>
-    <div th:replace="fragments/tarafooter" th:remove="tag">Footer</div>
 </div>
 </body>
 </html>

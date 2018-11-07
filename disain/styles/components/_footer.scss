@@ -1,0 +1,40 @@
+.c-footer {
+  padding: 25px 0;
+  color: #5d6071;
+  background-color: #dbdfe2;
+  @media (max-width: $breakpoint-mobile) {
+    text-align: center;
+  }
+  &__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    @media (max-width: $breakpoint-mobile) {
+      flex-direction: column;
+    }
+  }
+  &__block {
+    display: flex;
+    align-items: center;
+    @media (max-width: $breakpoint-mobile) {
+      flex-direction: column;
+      margin-bottom: 15px;
+    }
+  }
+  &__block-logo {
+    @media (max-width: $breakpoint-mobile) {
+      margin-bottom: 15px;
+    }
+    img {
+      display: block;
+      width: 60px;
+      height: auto;
+    }
+  }
+  &__block-text {
+    padding-left: 20px;
+    @media (max-width: $breakpoint-mobile) {
+      padding: 0;
+    }
+  }
+}

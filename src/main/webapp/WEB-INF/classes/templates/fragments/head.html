@@ -1,20 +1,7 @@
-<head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-    <title th:insert="::title">CAS - Central Authentication Service</title>
-
-    <link rel="stylesheet" th:href="@{${#themes.code('standard.custom.css.file')}}" />
-
-    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" />
-
+<head xmlns:th="http://www.w3.org/1999/xhtml">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" th:href="@{/favicon.ico}" type="image/x-icon"/>
-
-    <script th:inline="javascript">
-        /*<![CDATA[*/
-        
-        var trackGeoLocation = /*[[${trackGeoLocation}]]*/ === "true";
-        
-        /*]]>*/
-    </script>
+    <link rel="stylesheet" href="styles/main.css">
+    <title th:text="#{label.page.title}"></title>
 </head>

@@ -1,0 +1,22 @@
+.c-lang-list {
+  display: flex;
+  @media (max-width: $breakpoint-mobile) {
+    padding-left: 20px;
+  }
+  &__link {
+    display: block;
+    padding: 0 17px;
+    color: #fff;
+    font-weight: 500;
+    text-transform: uppercase;
+    text-decoration: none;
+    &:hover {
+      color: #fff;
+      text-decoration: underline;
+    }
+    @media (max-width: $breakpoint-mobile) {
+      padding: 0 10px;
+      font-size: 14px;
+    }
+  }
+}

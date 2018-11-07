@@ -1,0 +1,36 @@
+.c-btn {
+  display: inline-block;
+  padding: 11px 35px;
+  font-weight: 500;
+  border-radius: 8px;
+  border: 0;
+  cursor: pointer;
+  @media (max-width: $breakpoint-mobile) {
+    display: block;
+    width: 100%;
+    padding: 12px 35px;
+    font-size: 18px;
+  }
+  &--primary {
+    color: #fff;
+    background-color: #12a043;
+    border: 2px solid #12a043;
+    &:hover {
+      background-color: darken( #12a043, 5% );
+      border-color: darken( #12a043, 5% );
+    }
+  }
+  &--cancel {
+    color: #003168;
+    background-color: #ffffff;
+    border: 2px solid #003168;
+    &:hover {
+      color: #fff;
+      background-color: #003168;
+    }
+  }
+  &--from-link {
+	text-decoration: none;
+	text-align: center;
+  }
+}

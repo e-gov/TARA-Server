@@ -1,48 +1,40 @@
 <!DOCTYPE html>
-<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:th="http://www.springframework.org/schema/webflow"
-      layout:decorate="layout">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE9">
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title th:text="#{label.ria.title}"></title>
-    <!-- Main CSS file -->
-    <link rel="stylesheet" href="/css/bootstrap.min.css"/>
-    <link rel="stylesheet" href="/css/font-awesome.css"/>
-    <link rel="stylesheet" href="/css/style.css"/>
-    <link href="css/font-roboto.css" rel="stylesheet">
-    <!-- Favicon -->
-    <link rel="icon" th:href="@{/favicon.ico}" type="image/x-icon"/>
-    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-    <script src="/js/html5shiv.js"></script>
-    <script src="/js/respond.min.js"></script>
-    <![endif]-->
-</head>
-<div th:replace="fragments/taraheader" th:remove="tag">Header</div>
-
-<body th:attr="data-check-form-refresh-rate=(${@environment.getProperty('smart-id.pin-querying-refresh-rate')} ?: '3000')">
-    <div layout:fragment="content" th:remove="tag">
-        <div class="container">
-            <a th:href="${session.pac4jRequestedUrl}" class="text-black back-link icon-link">
-                <i class="fa fa-chevron-left fa-fw"></i><span th:text="#{label.back}" th:remove="tag"></span>
-            </a>
-            <div class="info-block method-block text-center">
-                <div class="row">
-                    <form id="authenticationCheckForm" method="post">
-                        <p th:text="#{label.smartId.check}"></p>
-                        <h1 th:text="${smartIdVerificationCode}"></h1>
+<html xmlns:th="http://www.w3.org/1999/xhtml" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout" th:with="hideHeaderLanguageSelection=true">
+<head th:replace="~{fragments/head}"></head>
+<body class="is-mobile-subview" th:attr="data-check-form-refresh-rate=(${@environment.getProperty('smart-id.pin-querying-refresh-rate')} ?: '3000')">
+<div layout:fragment="content" th:with="hideHeaderLanguageSelection=true" th:remove="tag">
+    <div class="container">
+        <div class="c-tab-login">
+            <div class="c-tab-login__header hide-in-desktop">
+                <ul class="c-tab-login__nav">
+                    <li th:replace="~{fragments/logintabs :: nav_default(tab_id = 'smart-id', static = true)}"></li>
+                </ul>
+            </div>
+            <div class="c-tab-login__main">
+                <div layout:include="~{fragments/logintabs :: content(tab_id = 'smart-id', instruction = 'instruction-check', static = true)}" th:remove="tag">
+                    <form id="authenticationCheckForm" method="post" class="c-form" layout:fragment="login-form-content">
+                        <p th:text="#{label.common.controlCode}">Control code:</p>
+                        <p class="control-code" th:text="${smartIdVerificationCode}"></p>
+                        <a class="c-btn c-btn--cancel c-btn--from-link" th:href="${session.pac4jRequestedUrl}" th:text="#{label.common.cancel}">Cancel</a>
                         <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
                         <input type="hidden" id="_eventId" name="_eventId" value="check"/>
                     </form>
                 </div>
             </div>
         </div>
-        <script type="text/javascript" src="/js/jquery.min.js"></script>
-        <script type="text/javascript" src="/js/bootstrap.min.js"></script>
-        <script type="text/javascript" src="/js/form-check.js"></script>
-        <div th:replace="fragments/tarafooter" th:remove="tag">Footer</div>
     </div>
+    <p class="link-back-mobile" xmlns:th="http://www.w3.org/1999/xhtml">
+        <a th:href="${@taraProperties.getHomeUrl()}" th:text="#{label.common.home}">Home</a>
+    </p>
+    <svg aria-hidden="true" class="c-inline-svg__hidden" version="1.1" xmlns:th="http://www.w3.org/1999/xhtml" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <defs>
+            <symbol id="icon-smart-id" viewBox="0 0 32 32">
+                <title>smart-id</title>
+                <path d="M18.983 8.903c0.637 0 1.154 0.517 1.154 1.154s-0.517 1.154-1.154 1.154v0c-0.637 0-1.154-0.517-1.154-1.154s0.517-1.154 1.154-1.154v0zM24.937 29.074c-0.505 0-0.914-0.409-0.914-0.914 0-0.298 0.143-0.563 0.363-0.73l0.002-0.002c3.533-2.604 5.8-6.749 5.8-11.423 0-7.814-6.335-14.149-14.149-14.149-0.736 0-1.459 0.056-2.165 0.165l0.079-0.010v20.011c0 0.505-0.409 0.914-0.914 0.914s-0.914-0.409-0.914-0.914v0-20.8c0.002-0.438 0.313-0.804 0.725-0.89l0.006-0.001c0.939-0.196 2.018-0.308 3.124-0.308 8.837 0 16 7.163 16 16 0 5.263-2.541 9.933-6.464 12.849l-0.043 0.030c-0.148 0.107-0.333 0.171-0.533 0.171-0.001 0-0.003 0-0.004 0h0zM16.011 32c-8.822-0.019-15.966-7.175-15.966-16 0-5.257 2.535-9.922 6.45-12.838l0.042-0.030c0.15-0.111 0.339-0.178 0.543-0.178 0.506 0 0.915 0.41 0.915 0.915 0 0.301-0.146 0.569-0.37 0.735l-0.002 0.002c-3.533 2.604-5.8 6.749-5.8 11.423 0 7.814 6.335 14.149 14.149 14.149 0.736 0 1.459-0.056 2.165-0.165l-0.079 0.010v-13.143c0-0.505 0.409-0.914 0.914-0.914s0.914 0.409 0.914 0.914v0 13.909c0 0.006 0 0.014 0 0.021 0 0.436-0.305 0.801-0.714 0.892l-0.006 0.001c-1.040 0.194-2.103 0.297-3.154 0.297z"></path>
+            </symbol>
+        </defs>
+    </svg>
+    <script src="scripts/form-check.js" defer></script>
+</div>
 </body>
 </html>

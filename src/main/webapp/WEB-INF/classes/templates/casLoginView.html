@@ -1,36 +1,9 @@
 <!DOCTYPE html>
-<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE9">
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title th:text="#{label.ria.title}"></title>
-    <!-- Main CSS file -->
-    <link rel="stylesheet" href="/css/bootstrap.min.css"/>
-    <link rel="stylesheet" href="/css/font-awesome.css"/>
-    <link rel="stylesheet" href="/css/style.css"/>
-    <link rel="stylesheet" href="/css/flag-icon.css"/>
-    <link rel="stylesheet" href="/css/bank-icon.css"/>
-    <link href="css/font-roboto.css" rel="stylesheet">
-    <!-- Favicon -->
-    <link rel="icon" th:href="@{/favicon.ico}" type="image/x-icon"/>
-    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-    <script src="/js/html5shiv.js"></script>
-    <script src="/js/respond.min.js"></script>
-    <![endif]-->
-    <!--[if IE]>
-    <script src="/js/es6-promise.auto.min.js"></script>
-    <![endif]-->
-    <script type="text/javascript" src="/js/axios.min.js"></script>
-    <script type="text/javascript" src="/js/jquery.min.js"></script>
-    <script type="text/javascript" src="/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="/js/cas.js"></script>
-</head>
+<html xmlns:th="http://www.w3.org/1999/xhtml" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout">
+<head th:replace="~{fragments/head}"></head>
 <body th:attr="data-application-url=${@taraProperties.getApplicationUrl()}">
 <div layout:fragment="content" th:remove="tag">
-    <div th:replace="fragments/loginform"/>
+    <div th:replace="~{fragments/loginform}"/>
 </div>
 </body>
 </html>
