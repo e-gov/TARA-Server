@@ -19,173 +19,14 @@
   background-repeat: no-repeat;
   background-position: 0 50%;
   background-size: 30px auto;
-  &[data-value="AF"] {
-    background-image: url('../assets/flags/af.svg');
-  }
-  &[data-value="AX"] {
-    background-image: url('../assets/flags/ax.svg');
-  }
-  &[data-value="AL"] {
-    background-image: url('../assets/flags/al.svg');
-  }
-  &[data-value="DZ"] {
-    background-image: url('../assets/flags/dz.svg');
-  }
-  &[data-value="AS"] {
-    background-image: url('../assets/flags/AS.svg');
-  }
-  &[data-value="AD"] {
-    background-image: url('../assets/flags/ad.svg');
-  }
-  &[data-value="AO"] {
-    background-image: url('../assets/flags/ao.svg');
-  }
-  &[data-value="AI"] {
-    background-image: url('../assets/flags/ai.svg');
-  }
-  &[data-value="AQ"] {
-    background-image: url('../assets/flags/aq.svg');
-  }
-  &[data-value="AG"] {
-    background-image: url('../assets/flags/ag.svg');
-  }
-  &[data-value="AR"] {
-    background-image: url('../assets/flags/ar.svg');
-  }
-  &[data-value="AM"] {
-    background-image: url('../assets/flags/am.svg');
-  }
-  &[data-value="AW"] {
-    background-image: url('../assets/flags/aw.svg');
-  }
-  &[data-value="AU"] {
-    background-image: url('../assets/flags/au.svg');
-  }
   &[data-value="AT"] {
     background-image: url('../assets/flags/at.svg');
-  }
-  &[data-value="AZ"] {
-    background-image: url('../assets/flags/az.svg');
-  }
-  &[data-value="BS"] {
-    background-image: url('../assets/flags/bs.svg');
-  }
-  &[data-value="BH"] {
-    background-image: url('../assets/flags/bh.svg');
-  }
-  &[data-value="BD"] {
-    background-image: url('../assets/flags/bd.svg');
-  }
-  &[data-value="BB"] {
-    background-image: url('../assets/flags/bb.svg');
-  }
-  &[data-value="BY"] {
-    background-image: url('../assets/flags/by.svg');
   }
   &[data-value="BE"] {
     background-image: url('../assets/flags/be.svg');
   }
-  &[data-value="BZ"] {
-    background-image: url('../assets/flags/bz.svg');
-  }
-  &[data-value="BJ"] {
-    background-image: url('../assets/flags/bj.svg');
-  }
-  &[data-value="BM"] {
-    background-image: url('../assets/flags/bm.svg');
-  }
-  &[data-value="BT"] {
-    background-image: url('../assets/flags/bt.svg');
-  }
-  &[data-value="BO"] {
-    background-image: url('../assets/flags/bo.svg');
-  }
-  &[data-value="BA"] {
-    background-image: url('../assets/flags/ba.svg');
-  }
-  &[data-value="BW"] {
-    background-image: url('../assets/flags/bw.svg');
-  }
-  &[data-value="BV"] {
-    background-image: url('../assets/flags/bv.svg');
-  }
-  &[data-value="BR"] {
-    background-image: url('../assets/flags/br.svg');
-  }
-  &[data-value="IO"] {
-    background-image: url('../assets/flags/io.svg');
-  }
-  &[data-value="BN"] {
-    background-image: url('../assets/flags/bn.svg');
-  }
   &[data-value="BG"] {
     background-image: url('../assets/flags/bg.svg');
-  }
-  &[data-value="BF"] {
-    background-image: url('../assets/flags/bf.svg');
-  }
-  &[data-value="BI"] {
-    background-image: url('../assets/flags/bi.svg');
-  }
-  &[data-value="KH"] {
-    background-image: url('../assets/flags/kh.svg');
-  }
-  &[data-value="CM"] {
-    background-image: url('../assets/flags/cm.svg');
-  }
-  &[data-value="CA"] {
-    background-image: url('../assets/flags/ca.svg');
-  }
-  &[data-value="CV"] {
-    background-image: url('../assets/flags/cv.svg');
-  }
-  &[data-value="KY"] {
-    background-image: url('../assets/flags/ky.svg');
-  }
-  &[data-value="CF"] {
-    background-image: url('../assets/flags/cf.svg');
-  }
-  &[data-value="TD"] {
-    background-image: url('../assets/flags/td.svg');
-  }
-  &[data-value="CL"] {
-    background-image: url('../assets/flags/cl.svg');
-  }
-  &[data-value="CN"] {
-    background-image: url('../assets/flags/cn.svg');
-  }
-  &[data-value="CX"] {
-    background-image: url('../assets/flags/cx.svg');
-  }
-  &[data-value="CC"] {
-    background-image: url('../assets/flags/cc.svg');
-  }
-  &[data-value="CO"] {
-    background-image: url('../assets/flags/co.svg');
-  }
-  &[data-value="KM"] {
-    background-image: url('../assets/flags/km.svg');
-  }
-  &[data-value="CG"] {
-    background-image: url('../assets/flags/cg.svg');
-  }
-  &[data-value="CD"] {
-    background-image: url('../assets/flags/cd.svg');
-  }
-  &[data-value="CK"] {
-    background-image: url('../assets/flags/ck.svg');
-  }
-  &[data-value="CR"] {
-    background-image: url('../assets/flags/cr.svg');
-  }
-  &[data-value="CI"] {
-    background-image: url('../assets/flags/ci.svg');
-  }
-  &[data-value="HR"] {
-    background-image: url('../assets/flags/hr.svg');
-  }
-  &[data-value="CU"] {
-    background-image: url('../assets/flags/cu.svg');
   }
   &[data-value="CY"] {
     background-image: url('../assets/flags/cy.svg');
@@ -193,47 +34,17 @@
   &[data-value="CZ"] {
     background-image: url('../assets/flags/cz.svg');
   }
+  &[data-value="DE"] {
+    background-image: url('../assets/flags/de.svg');
+  }
   &[data-value="DK"] {
     background-image: url('../assets/flags/dk.svg');
-  }
-  &[data-value="DJ"] {
-    background-image: url('../assets/flags/dj.svg');
-  }
-  &[data-value="DM"] {
-    background-image: url('../assets/flags/dm.svg');
-  }
-  &[data-value="DO"] {
-    background-image: url('../assets/flags/do.svg');
-  }
-  &[data-value="EC"] {
-    background-image: url('../assets/flags/ec.svg');
-  }
-  &[data-value="EG"] {
-    background-image: url('../assets/flags/eg.svg');
-  }
-  &[data-value="SV"] {
-    background-image: url('../assets/flags/sv.svg');
-  }
-  &[data-value="GQ"] {
-    background-image: url('../assets/flags/gq.svg');
-  }
-  &[data-value="ER"] {
-    background-image: url('../assets/flags/er.svg');
   }
   &[data-value="EE"] {
     background-image: url('../assets/flags/ee.svg');
   }
-  &[data-value="ET"] {
-    background-image: url('../assets/flags/et.svg');
-  }
-  &[data-value="FK"] {
-    background-image: url('../assets/flags/fk.svg');
-  }
-  &[data-value="FO"] {
-    background-image: url('../assets/flags/fo.svg');
-  }
-  &[data-value="FJ"] {
-    background-image: url('../assets/flags/fj.svg');
+  &[data-value="ES"] {
+    background-image: url('../assets/flags/es.svg');
   }
   &[data-value="FI"] {
     background-image: url('../assets/flags/fi.svg');
@@ -241,158 +52,26 @@
   &[data-value="FR"] {
     background-image: url('../assets/flags/fr.svg');
   }
-  &[data-value="GF"] {
-    background-image: url('../assets/flags/gf.svg');
-  }
-  &[data-value="PF"] {
-    background-image: url('../assets/flags/pf.svg');
-  }
-  &[data-value="TF"] {
-    background-image: url('../assets/flags/tf.svg');
-  }
-  &[data-value="GA"] {
-    background-image: url('../assets/flags/ga.svg');
-  }
-  &[data-value="GM"] {
-    background-image: url('../assets/flags/gm.svg');
-  }
-  &[data-value="GE"] {
-    background-image: url('../assets/flags/ge.svg');
-  }
-  &[data-value="DE"] {
-    background-image: url('../assets/flags/de.svg');
-  }
-  &[data-value="GH"] {
-    background-image: url('../assets/flags/gh.svg');
-  }
-  &[data-value="GI"] {
-    background-image: url('../assets/flags/gi.svg');
+  &[data-value="GB"] {
+    background-image: url('../assets/flags/gb.svg');
   }
   &[data-value="GR"] {
     background-image: url('../assets/flags/gr.svg');
   }
-  &[data-value="GL"] {
-    background-image: url('../assets/flags/gl.svg');
-  }
-  &[data-value="GD"] {
-    background-image: url('../assets/flags/gd.svg');
-  }
-  &[data-value="GP"] {
-    background-image: url('../assets/flags/gp.svg');
-  }
-  &[data-value="GU"] {
-    background-image: url('../assets/flags/gu.svg');
-  }
-  &[data-value="GT"] {
-    background-image: url('../assets/flags/gt.svg');
-  }
-  &[data-value="GG"] {
-    background-image: url('../assets/flags/gg.svg');
-  }
-  &[data-value="GN"] {
-    background-image: url('../assets/flags/gn.svg');
-  }
-  &[data-value="GW"] {
-    background-image: url('../assets/flags/gw.svg');
-  }
-  &[data-value="GY"] {
-    background-image: url('../assets/flags/gy.svg');
-  }
-  &[data-value="HT"] {
-    background-image: url('../assets/flags/ht.svg');
-  }
-  &[data-value="HM"] {
-    background-image: url('../assets/flags/hm.svg');
-  }
-  &[data-value="VA"] {
-    background-image: url('../assets/flags/va.svg');
-  }
-  &[data-value="HN"] {
-    background-image: url('../assets/flags/hn.svg');
-  }
-  &[data-value="HK"] {
-    background-image: url('../assets/flags/hk.svg');
+  &[data-value="HR"] {
+    background-image: url('../assets/flags/hr.svg');
   }
   &[data-value="HU"] {
     background-image: url('../assets/flags/hu.svg');
   }
-  &[data-value="IS"] {
-    background-image: url('../assets/flags/is.svg');
-  }
-  &[data-value="IN"] {
-    background-image: url('../assets/flags/in.svg');
-  }
-  &[data-value="ID"] {
-    background-image: url('../assets/flags/id.svg');
-  }
-  &[data-value="IR"] {
-    background-image: url('../assets/flags/ir.svg');
-  }
-  &[data-value="IQ"] {
-    background-image: url('../assets/flags/iq.svg');
-  }
   &[data-value="IE"] {
     background-image: url('../assets/flags/ie.svg');
   }
-  &[data-value="IM"] {
-    background-image: url('../assets/flags/im.svg');
-  }
-  &[data-value="IL"] {
-    background-image: url('../assets/flags/il.svg');
+  &[data-value="IS"] {
+    background-image: url('../assets/flags/is.svg');
   }
   &[data-value="IT"] {
     background-image: url('../assets/flags/it.svg');
-  }
-  &[data-value="JM"] {
-    background-image: url('../assets/flags/jm.svg');
-  }
-  &[data-value="JP"] {
-    background-image: url('../assets/flags/jp.svg');
-  }
-  &[data-value="JE"] {
-    background-image: url('../assets/flags/je.svg');
-  }
-  &[data-value="JO"] {
-    background-image: url('../assets/flags/jo.svg');
-  }
-  &[data-value="KZ"] {
-    background-image: url('../assets/flags/kz.svg');
-  }
-  &[data-value="KE"] {
-    background-image: url('../assets/flags/ke.svg');
-  }
-  &[data-value="KI"] {
-    background-image: url('../assets/flags/ki.svg');
-  }
-  &[data-value="KP"] {
-    background-image: url('../assets/flags/kp.svg');
-  }
-  &[data-value="KR"] {
-    background-image: url('../assets/flags/kr.svg');
-  }
-  &[data-value="KW"] {
-    background-image: url('../assets/flags/kw.svg');
-  }
-  &[data-value="KG"] {
-    background-image: url('../assets/flags/kg.svg');
-  }
-  &[data-value="LA"] {
-    background-image: url('../assets/flags/la.svg');
-  }
-  &[data-value="LV"] {
-    background-image: url('../assets/flags/lv.svg');
-  }
-  &[data-value="LB"] {
-    background-image: url('../assets/flags/lb.svg');
-  }
-  &[data-value="LS"] {
-    background-image: url('../assets/flags/ls.svg');
-  }
-  &[data-value="LR"] {
-    background-image: url('../assets/flags/lr.svg');
-  }
-  &[data-value="LY"] {
-    background-image: url('../assets/flags/ly.svg');
   }
   &[data-value="LI"] {
     background-image: url('../assets/flags/li.svg');
@@ -403,146 +82,17 @@
   &[data-value="LU"] {
     background-image: url('../assets/flags/lu.svg');
   }
-  &[data-value="MO"] {
-    background-image: url('../assets/flags/mo.svg');
-  }
-  &[data-value="MK"] {
-    background-image: url('../assets/flags/mk.svg');
-  }
-  &[data-value="MG"] {
-    background-image: url('../assets/flags/mg.svg');
-  }
-  &[data-value="MW"] {
-    background-image: url('../assets/flags/mw.svg');
-  }
-  &[data-value="MY"] {
-    background-image: url('../assets/flags/my.svg');
-  }
-  &[data-value="MV"] {
-    background-image: url('../assets/flags/mv.svg');
-  }
-  &[data-value="ML"] {
-    background-image: url('../assets/flags/ml.svg');
+  &[data-value="LV"] {
+    background-image: url('../assets/flags/lv.svg');
   }
   &[data-value="MT"] {
     background-image: url('../assets/flags/mt.svg');
   }
-  &[data-value="MH"] {
-    background-image: url('../assets/flags/mh.svg');
-  }
-  &[data-value="MQ"] {
-    background-image: url('../assets/flags/mq.svg');
-  }
-  &[data-value="MR"] {
-    background-image: url('../assets/flags/mr.svg');
-  }
-  &[data-value="MU"] {
-    background-image: url('../assets/flags/mu.svg');
-  }
-  &[data-value="YT"] {
-    background-image: url('../assets/flags/yt.svg');
-  }
-  &[data-value="MX"] {
-    background-image: url('../assets/flags/mx.svg');
-  }
-  &[data-value="FM"] {
-    background-image: url('../assets/flags/fm.svg');
-  }
-  &[data-value="MD"] {
-    background-image: url('../assets/flags/md.svg');
-  }
-  &[data-value="MC"] {
-    background-image: url('../assets/flags/mc.svg');
-  }
-  &[data-value="MN"] {
-    background-image: url('../assets/flags/mn.svg');
-  }
-  &[data-value="ME"] {
-    background-image: url('../assets/flags/me.svg');
-  }
-  &[data-value="MS"] {
-    background-image: url('../assets/flags/ms.svg');
-  }
-  &[data-value="MA"] {
-    background-image: url('../assets/flags/ma.svg');
-  }
-  &[data-value="MZ"] {
-    background-image: url('../assets/flags/mz.svg');
-  }
-  &[data-value="MM"] {
-    background-image: url('../assets/flags/mm.svg');
-  }
-  &[data-value="NA"] {
-    background-image: url('../assets/flags/na.svg');
-  }
-  &[data-value="NR"] {
-    background-image: url('../assets/flags/nr.svg');
-  }
-  &[data-value="NP"] {
-    background-image: url('../assets/flags/np.svg');
-  }
   &[data-value="NL"] {
     background-image: url('../assets/flags/nl.svg');
   }
-  &[data-value="AN"] {
-    background-image: url('../assets/flags/an.svg');
-  }
-  &[data-value="NC"] {
-    background-image: url('../assets/flags/nc.svg');
-  }
-  &[data-value="NZ"] {
-    background-image: url('../assets/flags/nz.svg');
-  }
-  &[data-value="NI"] {
-    background-image: url('../assets/flags/ni.svg');
-  }
-  &[data-value="NE"] {
-    background-image: url('../assets/flags/ne.svg');
-  }
-  &[data-value="NG"] {
-    background-image: url('../assets/flags/ng.svg');
-  }
-  &[data-value="NU"] {
-    background-image: url('../assets/flags/nu.svg');
-  }
-  &[data-value="NF"] {
-    background-image: url('../assets/flags/nf.svg');
-  }
-  &[data-value="MP"] {
-    background-image: url('../assets/flags/mp.svg');
-  }
   &[data-value="NO"] {
     background-image: url('../assets/flags/no.svg');
-  }
-  &[data-value="OM"] {
-    background-image: url('../assets/flags/om.svg');
-  }
-  &[data-value="PK"] {
-    background-image: url('../assets/flags/pk.svg');
-  }
-  &[data-value="PW"] {
-    background-image: url('../assets/flags/pw.svg');
-  }
-  &[data-value="PS"] {
-    background-image: url('../assets/flags/ps.svg');
-  }
-  &[data-value="PA"] {
-    background-image: url('../assets/flags/pa.svg');
-  }
-  &[data-value="PG"] {
-    background-image: url('../assets/flags/pg.svg');
-  }
-  &[data-value="PY"] {
-    background-image: url('../assets/flags/py.svg');
-  }
-  &[data-value="PE"] {
-    background-image: url('../assets/flags/pe.svg');
-  }
-  &[data-value="PH"] {
-    background-image: url('../assets/flags/ph.svg');
-  }
-  &[data-value="PN"] {
-    background-image: url('../assets/flags/pn.svg');
   }
   &[data-value="PL"] {
     background-image: url('../assets/flags/pl.svg');
@@ -550,212 +100,17 @@
   &[data-value="PT"] {
     background-image: url('../assets/flags/pt.svg');
   }
-  &[data-value="PR"] {
-    background-image: url('../assets/flags/pr.svg');
-  }
-  &[data-value="QA"] {
-    background-image: url('../assets/flags/qa.svg');
-  }
-  &[data-value="RE"] {
-    background-image: url('../assets/flags/re.svg');
-  }
   &[data-value="RO"] {
     background-image: url('../assets/flags/ro.svg');
-  }
-  &[data-value="RU"] {
-    background-image: url('../assets/flags/ru.svg');
-  }
-  &[data-value="RW"] {
-    background-image: url('../assets/flags/rw.svg');
-  }
-  &[data-value="BL"] {
-    background-image: url('../assets/flags/bl.svg');
-  }
-  &[data-value="SH"] {
-    background-image: url('../assets/flags/sh.svg');
-  }
-  &[data-value="KN"] {
-    background-image: url('../assets/flags/kn.svg');
-  }
-  &[data-value="LC"] {
-    background-image: url('../assets/flags/lc.svg');
-  }
-  &[data-value="MF"] {
-    background-image: url('../assets/flags/mf.svg');
-  }
-  &[data-value="PM"] {
-    background-image: url('../assets/flags/pm.svg');
-  }
-  &[data-value="VC"] {
-    background-image: url('../assets/flags/vc.svg');
-  }
-  &[data-value="WS"] {
-    background-image: url('../assets/flags/ws.svg');
-  }
-  &[data-value="SM"] {
-    background-image: url('../assets/flags/sm.svg');
-  }
-  &[data-value="ST"] {
-    background-image: url('../assets/flags/st.svg');
-  }
-  &[data-value="SA"] {
-    background-image: url('../assets/flags/sa.svg');
-  }
-  &[data-value="SN"] {
-    background-image: url('../assets/flags/sn.svg');
-  }
-  &[data-value="RS"] {
-    background-image: url('../assets/flags/rs.svg');
-  }
-  &[data-value="SC"] {
-    background-image: url('../assets/flags/sc.svg');
-  }
-  &[data-value="SL"] {
-    background-image: url('../assets/flags/sl.svg');
-  }
-  &[data-value="SG"] {
-    background-image: url('../assets/flags/sg.svg');
-  }
-  &[data-value="SK"] {
-    background-image: url('../assets/flags/sk.svg');
-  }
-  &[data-value="SI"] {
-    background-image: url('../assets/flags/si.svg');
-  }
-  &[data-value="SB"] {
-    background-image: url('../assets/flags/sb.svg');
-  }
-  &[data-value="SO"] {
-    background-image: url('../assets/flags/so.svg');
-  }
-  &[data-value="ZA"] {
-    background-image: url('../assets/flags/za.svg');
-  }
-  &[data-value="GS"] {
-    background-image: url('../assets/flags/gs.svg');
-  }
-  &[data-value="ES"] {
-    background-image: url('../assets/flags/es.svg');
-  }
-  &[data-value="LK"] {
-    background-image: url('../assets/flags/lk.svg');
-  }
-  &[data-value="SD"] {
-    background-image: url('../assets/flags/sd.svg');
-  }
-  &[data-value="SR"] {
-    background-image: url('../assets/flags/sr.svg');
-  }
-  &[data-value="SJ"] {
-    background-image: url('../assets/flags/sj.svg');
-  }
-  &[data-value="SZ"] {
-    background-image: url('../assets/flags/sz.svg');
   }
   &[data-value="SE"] {
     background-image: url('../assets/flags/se.svg');
   }
-  &[data-value="CH"] {
-    background-image: url('../assets/flags/ch.svg');
+  &[data-value="SI"] {
+    background-image: url('../assets/flags/si.svg');
   }
-  &[data-value="SY"] {
-    background-image: url('../assets/flags/sy.svg');
-  }
-  &[data-value="TW"] {
-    background-image: url('../assets/flags/tw.svg');
-  }
-  &[data-value="TJ"] {
-    background-image: url('../assets/flags/tj.svg');
-  }
-  &[data-value="TZ"] {
-    background-image: url('../assets/flags/tz.svg');
-  }
-  &[data-value="TH"] {
-    background-image: url('../assets/flags/th.svg');
-  }
-  &[data-value="TL"] {
-    background-image: url('../assets/flags/tl.svg');
-  }
-  &[data-value="TG"] {
-    background-image: url('../assets/flags/tg.svg');
-  }
-  &[data-value="TK"] {
-    background-image: url('../assets/flags/tk.svg');
-  }
-  &[data-value="TO"] {
-    background-image: url('../assets/flags/to.svg');
-  }
-  &[data-value="TT"] {
-    background-image: url('../assets/flags/tt.svg');
-  }
-  &[data-value="TN"] {
-    background-image: url('../assets/flags/tn.svg');
-  }
-  &[data-value="TR"] {
-    background-image: url('../assets/flags/tr.svg');
-  }
-  &[data-value="TM"] {
-    background-image: url('../assets/flags/tm.svg');
-  }
-  &[data-value="TC"] {
-    background-image: url('../assets/flags/tc.svg');
-  }
-  &[data-value="TV"] {
-    background-image: url('../assets/flags/tv.svg');
-  }
-  &[data-value="UG"] {
-    background-image: url('../assets/flags/ug.svg');
-  }
-  &[data-value="UA"] {
-    background-image: url('../assets/flags/ua.svg');
-  }
-  &[data-value="AE"] {
-    background-image: url('../assets/flags/ae.svg');
-  }
-  &[data-value="GB"] {
-    background-image: url('../assets/flags/gb.svg');
-  }
-  &[data-value="US"] {
-    background-image: url('../assets/flags/us.svg');
-  }
-  &[data-value="UM"] {
-    background-image: url('../assets/flags/um.svg');
-  }
-  &[data-value="UY"] {
-    background-image: url('../assets/flags/uy.svg');
-  }
-  &[data-value="UZ"] {
-    background-image: url('../assets/flags/uz.svg');
-  }
-  &[data-value="VU"] {
-    background-image: url('../assets/flags/vu.svg');
-  }
-  &[data-value="VE"] {
-    background-image: url('../assets/flags/ve.svg');
-  }
-  &[data-value="VN"] {
-    background-image: url('../assets/flags/vn.svg');
-  }
-  &[data-value="VG"] {
-    background-image: url('../assets/flags/vg.svg');
-  }
-  &[data-value="VI"] {
-    background-image: url('../assets/flags/vi.svg');
-  }
-  &[data-value="WF"] {
-    background-image: url('../assets/flags/wf.svg');
-  }
-  &[data-value="EH"] {
-    background-image: url('../assets/flags/eh.svg');
-  }
-  &[data-value="YE"] {
-    background-image: url('../assets/flags/ye.svg');
-  }
-  &[data-value="ZM"] {
-    background-image: url('../assets/flags/zm.svg');
-  }
-  &[data-value="ZW"] {
-    background-image: url('../assets/flags/zw.svg');
+  &[data-value="SK"] {
+    background-image: url('../assets/flags/sk.svg');
   }
 }
 .selectize-dropdown .option {

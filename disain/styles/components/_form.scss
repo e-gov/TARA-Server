@@ -158,6 +158,57 @@
     border-width: 2px;
   }
 }
+.alert-warning {
+  background-color: #fcf8e3;
+  border: 4px solid #faebcc;
+  @media (max-width: $breakpoint-mobile) {
+    border-width: 2px;
+  }
+}
 .alert-neutral {
   background-color: #fff;
+}
+.alert-popup {
+  display: none;
+  max-width: 700px;
+  padding-right: 60px;
+  position: absolute;
+  bottom: 5%;
+  right: 10%;
+  @media (max-width: $breakpoint-mobile) {
+    max-width: inherit;
+    margin: 0;
+    position: relative;
+    bottom: auto;
+    right: auto;
+  }
+  &.show {
+    display: block;
+  }
+  .close {
+    width: 30px;
+    height: 30px;
+    color: #5d6070;
+    font-size: 20px;
+    font-weight: 700;
+    background: none;
+    border: 2px solid #5d6070;
+    border-radius: 50%;
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    @media (max-width: $breakpoint-mobile) {
+      top: 10px;
+      right: 10px;
+    }
+    cursor: pointer;
+    span {
+      display: block;
+      line-height: 1;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%,-50%);
+    }
+  }
 }

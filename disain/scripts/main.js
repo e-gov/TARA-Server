@@ -1,11 +1,14 @@
 jQuery(function ($) {
 	"use strict";
 	
+	// Hide nav bar in desktop mode if less than 2 auth methods
+	if ($('.c-tab-login__nav-link').length < 2) {
+		$('.c-tab-login__header').addClass('hide-in-desktop');
+	}
+	
 	// Activate first auth method
-	$(document).ready(function(event){
-		$('.c-tab-login__nav-link').first().addClass('is-active');
-		$('.c-tab-login__content').first().addClass('is-active');
-	});
+	$('.c-tab-login__nav-link').first().addClass('is-active');
+	$('.c-tab-login__content').first().addClass('is-active');
 
 	// Tab nav
 	$(document).on('click', '.c-tab-login__nav-link', function(event){
@@ -31,9 +34,14 @@ jQuery(function ($) {
 		event.preventDefault();
 
 		$('body').removeClass('is-mobile-subview');
-		$('.c-tab-login__nav-item, .c-tab-login__nav-link, .c-tab-login__content').removeClass('is-active');
-		$('.c-tab-login__content[data-tab="id-card"], .c-tab-login__nav-link[data-tab="id-card"]').addClass('is-active');
+		$('.c-tab-login__nav-item').removeClass('is-active');
 
+	});
+	
+	// Close alert
+	$(document).on('click', '.alert-popup .close', function(event){
+		event.preventDefault();
+		$(this).closest('.alert').removeClass('show');
 	});
 
 	// Country select
@@ -91,7 +99,7 @@ jQuery(function ($) {
 		xhttp.onreadystatechange = function() {
 			if (this.readyState !== 4) return;
 			if (this.status !== 200 || this.responseText !== '{"ok":true}') {
-				alert(this.status + ' ' + this.responseText);
+				$('#idCardForm .alert-popup').addClass('show');
 				_this.prop('disabled', false);
 			} else {
 				$('#idCardForm').submit();

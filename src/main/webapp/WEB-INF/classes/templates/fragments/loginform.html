@@ -1,12 +1,24 @@
 <div class="container" xmlns:th="http://www.w3.org/1999/xhtml" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+    <noscript>
+        <div class="alert alert-error">
+            <p><strong th:text="#{message.warning.noscript}"></strong></p>
+        </div>
+        <br>
+    </noscript>
+    <th:block th:if="${@taraProperties.getTestEnvironmentAlertMessageIfAvailable() != null}">
+        <div class="alert alert-warning">
+            <p><strong th:utext="${@taraProperties.getTestEnvironmentAlertMessageIfAvailable()}"></strong></p>
+        </div>
+        <br>
+    </th:block>
     <div class="c-tab-login">
         <div class="c-tab-login__header">
             <ul class="c-tab-login__nav">
-                <li th:if="${@taraProperties.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).IDCard)}" th:replace="~{fragments/logintabs :: nav_default('id-card')}"></li>
-                <li th:if="${@taraProperties.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).MobileID)}" th:replace="~{fragments/logintabs :: nav_default('mobile-id')}"></li>
-                <li th:if="${@taraProperties.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).BankLink)}" th:replace="~{fragments/logintabs :: nav_default('bank-link')}"></li>
-                <li th:if="${@taraProperties.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).SmartID)}" th:replace="~{fragments/logintabs :: nav_default('smart-id')}"></li>
-                <li th:if="${@taraProperties.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).eIDAS)}" th:replace="~{fragments/logintabs :: nav_alt('eu-citizen', 'eu')}"></li>
+                <th:block th:if="${@taraProperties.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).IDCard)}"><li th:replace="~{fragments/logintabs :: nav_default('id-card')}"></li></th:block>
+                <th:block th:if="${@taraProperties.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).MobileID)}"><li th:replace="~{fragments/logintabs :: nav_default('mobile-id')}"></li></th:block>
+                <th:block th:if="${@taraProperties.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).BankLink)}"><li th:replace="~{fragments/logintabs :: nav_default('bank-link')}"></li></th:block>
+                <th:block th:if="${@taraProperties.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).SmartID)}"><li th:replace="~{fragments/logintabs :: nav_default('smart-id')}"></li></th:block>
+                <th:block th:if="${@taraProperties.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).eIDAS)}"><li th:replace="~{fragments/logintabs :: nav_alt('eu-citizen', 'eu')}"></li></th:block>
             </ul>
         </div>
         <div class="c-tab-login__main">

@@ -5,7 +5,7 @@
 <div layout:fragment="content" th:with="hideHeaderLanguageSelection=true" th:remove="tag">
     <div class="container">
         <div class="alert alert-error">
-            <p><strong><span th:text="#{label.error.general}" th:remove="tag"></span></strong></p>
+            <p><strong><span th:text="#{message.error.general}" th:remove="tag"></span></strong></p>
         </div>
         <p th:if="${@taraProperties.getBackUrl(session.pac4jRequestedUrl, #locale) != '#'}" class="link-back">
             <a th:href="${@taraProperties.getBackUrl(session.pac4jRequestedUrl, #locale)}" th:text="#{label.common.back}">Back</a>

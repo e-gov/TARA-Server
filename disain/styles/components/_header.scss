@@ -15,8 +15,8 @@
     font-family: 'Roboto Condensed', sans-serif;
     font-size: 22px;
     color: #000;
-    font-weight: 700;
-    text-transform: uppercase;
+    font-weight: 400;
+    text-transform: capitalize;
     text-decoration: none;
     @media (max-width: $breakpoint-mobile) {
       height: 60px;

@@ -1,16 +1,1 @@
-(function() {
-    var timeout = 5000;
-
-    try {
-        var value = document.body.getAttribute("data-check-form-refresh-rate");
-        var number = new Number(value);
-
-        if (number >= 100) {
-            timeout = number;
-        }
-    } catch (e) {}
-
-    setTimeout(function() {
-        document.forms['authenticationCheckForm'].submit();
-    }, timeout);
-})();
+(function(){var t=5e3;try{var e=document.body.getAttribute("data-check-form-refresh-rate"),r=new Number(e);r>=100&&(t=r)}catch(t){}setTimeout(function(){document.forms.authenticationCheckForm.submit()},t)})();

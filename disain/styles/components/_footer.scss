@@ -15,9 +15,10 @@
   }
   &__block {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     @media (max-width: $breakpoint-mobile) {
       flex-direction: column;
+	  align-items: center;
       margin-bottom: 15px;
     }
   }
@@ -33,6 +34,9 @@
   }
   &__block-text {
     padding-left: 20px;
+	font-family: Arial, Helvetica, sans-serif;
+    font-size: 13px;
+    color: #000;
     @media (max-width: $breakpoint-mobile) {
       padding: 0;
     }

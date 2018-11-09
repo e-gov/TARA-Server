@@ -515,9 +515,8 @@ security.csp.enabled=true
 security.csp.default-src='none'
 # Allow fetching fonts from the origin
 security.csp.font-src='self'
-# Allow fetching images from the origin and "data:"
-# "data:" allows embedded images in SVG-s in some browsers that otherwise block them
-security.csp.img-src='self' data:
+# Allow fetching images from the origin
+security.csp.img-src='self'
 # Allow fetching scripts from the origin
 security.csp.script-src='self'
 # Allow fetching css from the origin
@@ -583,7 +582,7 @@ Table 18 - Configuring TARA login page to show a warning message about it being 
 Example:
 
 ````
-env.test.message=Tegemist on testkeskkonnaga ja autentimiseks vajalik info on <a href="https://e-gov.github.io/TARA-Doku/Testimine#testimine-testnumbrite-ja-id-kaardiga" class="alert-link">TARA dokumentatsioonis</a>!
+env.test.message=Tegemist on testkeskkonnaga ja autentimiseks vajalik info on <a href="https://e-gov.github.io/TARA-Doku/Testimine#testimine-testnumbrite-ja-id-kaardiga">TARA dokumentatsioonis</a>!
 ````
 
 

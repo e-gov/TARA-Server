@@ -1,3 +1,1 @@
-(function() {
-    document.forms['authenticationRedirectForm'].submit();
-})();
+(function(){document.forms.authenticationRedirectForm.submit();})();
