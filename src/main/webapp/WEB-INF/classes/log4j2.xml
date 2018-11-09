@@ -42,7 +42,12 @@
         <!-- NB! Uncomment and configure this section when using sending log events to tara-stat service; -->
         <!--Syslog name="taraStatServiceAppender"
                 host="tara-stat-rakendus.ci.kit" port="5001" protocol="TCP"
-                charset="UTF-8" facility="AUTH" newLine="true" /-->
+                charset="UTF-8" facility="AUTH" newLine="true" >
+            <SSL>
+                <KeyStore   location="/path/to/log4j2-keystore.jks"      password="changeit"/>
+                <TrustStore location="/path/to/log4j2-truststore.jks"    password="changeit"/>
+            </SSL>
+        </Syslog-->
 
         <!-- NB! Uncomment and configure this section when sending log events to external syslog server -->
         <!--Socket name="taraSyslog" host="example_host" port="example_port" protocol="SSL">

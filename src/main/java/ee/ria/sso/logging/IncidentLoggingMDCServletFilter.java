@@ -13,6 +13,7 @@ import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Base64;
 
 public class IncidentLoggingMDCServletFilter implements Filter {
@@ -74,7 +75,7 @@ public class IncidentLoggingMDCServletFilter implements Filter {
 
     @Getter
     @AllArgsConstructor
-    public static class TaraSessionIdentifier {
+    public static class TaraSessionIdentifier implements Serializable {
 
         public static final String TARA_SESSION_IDENTIFIER_KEY = TaraSessionIdentifier.class.getName();
 
