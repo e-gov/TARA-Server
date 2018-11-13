@@ -1,41 +1,40 @@
 <!DOCTYPE html>
-<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE9">
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title th:text="#{label.ria.title}"></title>
-    <link rel="stylesheet" href="/css/bootstrap.min.css"/>
-    <link rel="stylesheet" href="/css/font-awesome.css"/>
-    <link rel="stylesheet" href="/css/style.css"/>
-    <link href="css/font-roboto.css" rel="stylesheet">
-    <link rel="icon" th:href="@{/favicon.ico}" type="image/x-icon"/>
-    <script type="text/javascript" src="/js/form-redirect.js"></script>
-    <![endif]-->
-</head>
-<div th:replace="fragments/taraheader" th:remove="tag">Header</div>
-<body>
-<div layout:fragment="content" th:remove="tag">
+<html xmlns:th="http://www.w3.org/1999/xhtml" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout" th:with="hideHeaderLanguageSelection=true">
+<head th:replace="~{fragments/head}"></head>
+<body class="is-mobile-subview">
+<div layout:fragment="content" th:with="hideHeaderLanguageSelection=true" th:remove="tag">
     <div class="container">
-        <div class="info-block method-block text-center">
-            <div class="row">
-                <i class="fa fa-external-link fa-5x"></i>
-                <h2 th:text="#{label.bank.redirect.info}"></h2>
-                <br>
-                <p></p>
-                <br>
-                <br>
-                <noscript><p th:text="#{label.bank.redirect.nojavascript}"></p></noscript>
+        <div class="c-tab-login">
+            <div class="c-tab-login__header hide-in-desktop">
+                <ul class="c-tab-login__nav">
+                    <li th:replace="~{fragments/logintabs :: nav_default(tab_id = 'bank-link', static = true)}"></li>
+                </ul>
+            </div>
+            <div class="c-tab-login__main">
+                <div layout:include="~{fragments/logintabs :: content(tab_id = 'bank-link', instruction = 'instruction-redirect', static = true)}" th:remove="tag">
+                    <form id="authenticationRedirectForm" method="post" class="c-form" th:action="${url}" th:inline="text" layout:fragment="login-form-content">
+                        <div>[(${packet.html()})]</div>
+                        <noscript>
+                            <p th:text="#{message.bank-link.nojavascript}"></p>
+                            <button type="submit" class="c-btn c-btn--primary" th:text="#{label.bank-link.nojavascript-redirect}">Redirect</button>
+                        </noscript>
+                    </form>
+                </div>
             </div>
         </div>
-        <form id="authenticationRedirectForm" method="post" th:action="${url}" th:inline="text">
-            <div>[(${packet.html()})]</div>
-            <noscript>
-                <input type="submit" th:value="#{label.bank.redirect.nojavascript.submit}">
-            </noscript>
-        </form>
     </div>
-    <div th:replace="fragments/tarafooter" th:remove="tag">Footer</div>
+    <p class="link-back-mobile" xmlns:th="http://www.w3.org/1999/xhtml">
+        <a th:href="${@taraProperties.getHomeUrl()}" th:text="#{label.common.home}">Home</a>
+    </p>
+    <svg aria-hidden="true" class="c-inline-svg__hidden" version="1.1" xmlns:th="http://www.w3.org/1999/xhtml" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <defs>
+            <symbol id="icon-bank-link" viewBox="0 0 48 32">
+                <title>bank-link</title>
+                <path d="M43.080 31.907h-38.173c0 0 0 0-0 0-2.705 0-4.899-2.189-4.907-4.893v-21.054c0.008-2.704 2.201-4.893 4.907-4.893 0 0 0 0 0 0h38.173c0.004 0 0.009-0 0.013-0 2.705 0 4.899 2.189 4.907 4.893v21.054c-0.008 2.704-2.201 4.893-4.907 4.893-0.005 0-0.009 0-0.014-0h0.001zM4.907 2.747c-1.782 0-3.227 1.445-3.227 3.227v0 21.040c0.008 1.779 1.448 3.219 3.226 3.227h38.174c0 0 0 0 0 0 1.785 0 3.232-1.443 3.24-3.226v-21.054c-0.008-1.784-1.455-3.227-3.24-3.227 0 0-0 0-0 0v0zM34.733 13.48h6.2c0.24 0 0.453 0.2 0.453 0.453v5.12c0 0.24-0.213 0.44-0.453 0.44h-6.2c-0 0-0 0-0 0-0.246 0-0.446-0.195-0.453-0.439l-0-0.001v-5.12c0-0.253 0.213-0.453 0.453-0.453zM7.467 19.773h12.24v1.667h-12.24zM7.467 24.173h12.24v1.68h-12.24z"></path>
+            </symbol>
+        </defs>
+    </svg>
+    <script src="/scripts/form-redirect.js" defer></script>
 </div>
 </body>
 </html>

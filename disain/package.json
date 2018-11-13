@@ -1,0 +1,27 @@
+{
+  "main": "gulpfile.js",
+  "devDependencies": {
+    "browser-sync": "^2.18.13",
+    "gulp": "^3.9.1",
+    "gulp-autoprefixer": "^4.0.0",
+    "gulp-concat": "^2.6.1",
+    "gulp-imagemin": "^3.3.0",
+    "gulp-npm-script-sync": "^1.1.0",
+    "gulp-sass": "^3.1.0",
+    "gulp-sourcemaps": "^2.6.0",
+    "gulp-uglify": "^3.0.0",
+    "pump": "^1.0.2"
+  },
+  "dependencies": {
+    "npm": "^5.10.0"
+  },
+  "scripts": {
+    "build:images": "gulp build:images",
+    "build:favicon": "gulp build:favicon",
+    "build:fonts": "gulp build:fonts",
+    "build:css": "gulp build:css",
+    "build:js_main": "gulp build:js_main",
+    "build:js_form": "gulp build:js_form",
+    "build": "gulp build"
+  }
+}

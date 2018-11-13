@@ -1,9 +1,14 @@
 <!DOCTYPE html>
-<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<html xmlns:th="http://www.w3.org/1999/xhtml" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
 <head>
 </head>
-<div th:replace="fragments/taraheader">Header</div>
 <body>
-    <div layout:fragment="content"></div>
+    <div class="c-layout">
+        <div class="c-layout--full">
+            <div th:replace="fragments/taraheader">Header</div>
+            <div class="container" layout:fragment="content"></div>
+        </div>
+        <div th:replace="~{fragments/tarafooter}">Footer</div>
+    </div>
 </body>
 </html>

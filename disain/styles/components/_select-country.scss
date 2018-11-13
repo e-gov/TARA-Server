@@ -1,0 +1,120 @@
+.selectize-control {
+  width: 350px;
+  @media (max-width: $breakpoint-mobile) {
+    width: 100%;
+  }
+}
+.selectize-input {
+  padding: 13px 20px;
+  color: #5d6071;
+  border: 2px solid #5d6071;
+  border-radius: 10px;
+  &.is-invalid {
+    border-color: #fc7376;
+  }
+}
+.selectize-input .item,
+.selectize-dropdown .option {
+  padding-left: 45px;
+  background-repeat: no-repeat;
+  background-position: 0 50%;
+  background-size: 30px auto;
+  &[data-value="AT"] {
+    background-image: url('../assets/flags/at.svg');
+  }
+  &[data-value="BE"] {
+    background-image: url('../assets/flags/be.svg');
+  }
+  &[data-value="BG"] {
+    background-image: url('../assets/flags/bg.svg');
+  }
+  &[data-value="CY"] {
+    background-image: url('../assets/flags/cy.svg');
+  }
+  &[data-value="CZ"] {
+    background-image: url('../assets/flags/cz.svg');
+  }
+  &[data-value="DE"] {
+    background-image: url('../assets/flags/de.svg');
+  }
+  &[data-value="DK"] {
+    background-image: url('../assets/flags/dk.svg');
+  }
+  &[data-value="EE"] {
+    background-image: url('../assets/flags/ee.svg');
+  }
+  &[data-value="ES"] {
+    background-image: url('../assets/flags/es.svg');
+  }
+  &[data-value="FI"] {
+    background-image: url('../assets/flags/fi.svg');
+  }
+  &[data-value="FR"] {
+    background-image: url('../assets/flags/fr.svg');
+  }
+  &[data-value="GB"] {
+    background-image: url('../assets/flags/gb.svg');
+  }
+  &[data-value="GR"] {
+    background-image: url('../assets/flags/gr.svg');
+  }
+  &[data-value="HR"] {
+    background-image: url('../assets/flags/hr.svg');
+  }
+  &[data-value="HU"] {
+    background-image: url('../assets/flags/hu.svg');
+  }
+  &[data-value="IE"] {
+    background-image: url('../assets/flags/ie.svg');
+  }
+  &[data-value="IS"] {
+    background-image: url('../assets/flags/is.svg');
+  }
+  &[data-value="IT"] {
+    background-image: url('../assets/flags/it.svg');
+  }
+  &[data-value="LI"] {
+    background-image: url('../assets/flags/li.svg');
+  }
+  &[data-value="LT"] {
+    background-image: url('../assets/flags/lt.svg');
+  }
+  &[data-value="LU"] {
+    background-image: url('../assets/flags/lu.svg');
+  }
+  &[data-value="LV"] {
+    background-image: url('../assets/flags/lv.svg');
+  }
+  &[data-value="MT"] {
+    background-image: url('../assets/flags/mt.svg');
+  }
+  &[data-value="NL"] {
+    background-image: url('../assets/flags/nl.svg');
+  }
+  &[data-value="NO"] {
+    background-image: url('../assets/flags/no.svg');
+  }
+  &[data-value="PL"] {
+    background-image: url('../assets/flags/pl.svg');
+  }
+  &[data-value="PT"] {
+    background-image: url('../assets/flags/pt.svg');
+  }
+  &[data-value="RO"] {
+    background-image: url('../assets/flags/ro.svg');
+  }
+  &[data-value="SE"] {
+    background-image: url('../assets/flags/se.svg');
+  }
+  &[data-value="SI"] {
+    background-image: url('../assets/flags/si.svg');
+  }
+  &[data-value="SK"] {
+    background-image: url('../assets/flags/sk.svg');
+  }
+}
+.selectize-dropdown .option {
+  padding-left: 66px;
+  background-position: 21px 50%;
+  color: #5d6071;
+}

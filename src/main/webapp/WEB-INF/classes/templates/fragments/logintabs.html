@@ -1,0 +1,41 @@
+<li class="c-tab-login__nav-item" th:fragment="nav_default(tab_id)" th:classappend="${static} ? is-active : ''" xmlns:th="http://www.w3.org/1999/xhtml">
+    <span th:unless="${static}" class="c-tab-login__nav-back-link"></span>
+    <a class="c-tab-login__nav-link" href="#" th:data-tab="${tab_id}">
+        <span class="c-tab-login__nav-label">
+            <svg th:class="'icon icon-' + ${tab_id}"><use th:attr="'xlink:href'='#icon-' + ${tab_id}"></use></svg>
+            <span th:text="${#messages.msg('label.' + tab_id + '.title')}" th:remove="tag">Tab</span>
+        </span>
+    </a>
+</li>
+
+<li class="c-tab-login__nav-item" th:fragment="nav_alt(tab_id, suffix)" xmlns:th="http://www.w3.org/1999/xhtml">
+    <span class="c-tab-login__nav-back-link"></span>
+    <a th:class="'c-tab-login\_\_nav-link c-tab-login\_\_nav-link--' + ${suffix}" href="#" th:data-tab="${tab_id}">
+        <span class="c-tab-login__nav-label">
+            <span th:class="'icon icon-' + ${tab_id}"><img th:src="'/assets/' + ${suffix} + '-icon.png'" th:alt="${#messages.msg('label.' + tab_id + '.title')}"></span>
+            <span th:text="${#messages.msg('label.' + tab_id + '.title')}" th:remove="tag">Tab</span>
+        </span>
+    </a>
+</li>
+
+
+<div layout:fragment="content(tab_id)" xmlns:th="http://www.w3.org/1999/xhtml" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+    <div class="c-tab-login__content" th:classappend="${static} ? is-active : ''" th:data-tab="${tab_id}">
+        <div class="c-tab-login__content-wrap">
+            <div class="c-tab-login__content-icon">
+                <svg th:class="'icon icon-' + ${tab_id}"><use th:attr="'xlink:href'='#icon-' + ${tab_id}"></use></svg>
+            </div>
+            <div class="c-tab-login__content-text">
+                <h2 th:text="${#messages.msg('label.' + tab_id + '.' + (title ?: 'title'))}"></h2>
+                <p th:text="${#messages.msg('label.' + tab_id + '.' + (instruction ?: 'instruction'))}"></p>
+                <form layout:fragment="login-form-content"></form>
+            </div>
+        </div>
+        <div class="c-tab-login__footer">
+            <p><a th:href="${@taraProperties.getHomeUrl()}" th:text="#{label.common.home}">Home</a></p>
+            <p th:if="${!#strings.startsWith(#messages.msg('label.' + tab_id + '.help'), 'label.')}">
+                <a th:href="${#messages.msg('link.' + tab_id + '.help')}" th:text="${#messages.msg('label.' + tab_id + '.help')}" target="_blank" rel="noopener">Help</a>
+            </p>
+        </div>
+    </div>
+</div>
