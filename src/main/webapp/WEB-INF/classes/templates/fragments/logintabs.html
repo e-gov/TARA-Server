@@ -12,7 +12,7 @@
     <span class="c-tab-login__nav-back-link"></span>
     <a th:class="'c-tab-login\_\_nav-link c-tab-login\_\_nav-link--' + ${suffix}" href="#" th:data-tab="${tab_id}">
         <span class="c-tab-login__nav-label">
-            <span th:class="'icon icon-' + ${tab_id}"><img th:src="'assets/' + ${suffix} + '-icon.png'" th:alt="${#messages.msg('label.' + tab_id + '.title')}"></span>
+            <span th:class="'icon icon-' + ${tab_id}"><img th:src="'/assets/' + ${suffix} + '-icon.png'" th:alt="${#messages.msg('label.' + tab_id + '.title')}"></span>
             <span th:text="${#messages.msg('label.' + tab_id + '.title')}" th:remove="tag">Tab</span>
         </span>
     </a>

@@ -3,11 +3,11 @@
         <div class="d-flex justify-content-between align-items-center">
             <p th:text="#{label.header.slogan}">Slogan</p>
             <ul class="c-lang-list" th:if="not ${hideHeaderLanguageSelection}">
-                <li class="c-lang-list__item" th:if="${@taraProperties.isNotLocale('en', #locale)}">
-                    <a class="c-lang-list__link" th:href="${@taraProperties.getLocaleUrl('en')}" th:text="#{label.header.en}">ENGLISH</a>
-                </li>
                 <li class="c-lang-list__item" th:if="${@taraProperties.isNotLocale('et', #locale)}">
                     <a class="c-lang-list__link" th:href="${@taraProperties.getLocaleUrl('et')}" th:text="#{label.header.et}">EESTI</a>
+                </li>
+                <li class="c-lang-list__item" th:if="${@taraProperties.isNotLocale('en', #locale)}">
+                    <a class="c-lang-list__link" th:href="${@taraProperties.getLocaleUrl('en')}" th:text="#{label.header.en}">ENGLISH</a>
                 </li>
                 <li class="c-lang-list__item" th:if="${@taraProperties.isNotLocale('ru', #locale)}">
                     <a class="c-lang-list__link" th:href="${@taraProperties.getLocaleUrl('ru')}" th:text="#{label.header.ru}">РУССКИЙ</a>
@@ -20,7 +20,7 @@
     <div class="container">
         <h1 class="c-header__logo">
             <a class="c-header__logo-link" th:href="${@taraProperties.getBackUrl(session.pac4jRequestedUrl, #locale)}">
-                <img src="assets/riigivapp.png" th:alt="#{label.header.title}">
+                <img src="/assets/riigivapp.png" th:alt="#{label.header.title}">
                 <span th:text="#{label.header.title}" th:remove="tag"></span>
             </a>
         </h1>

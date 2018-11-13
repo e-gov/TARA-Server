@@ -1,1 +1,1 @@
-(function(){document.forms.authenticationRedirectForm.submit();})();
+document.forms.authenticationRedirectForm.submit();
