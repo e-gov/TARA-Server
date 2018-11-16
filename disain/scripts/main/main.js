@@ -5,7 +5,7 @@ jQuery(function ($) {
 	if ($('.c-tab-login__nav-link').length < 2) {
 		$('.c-tab-login__header').addClass('hide-in-desktop');
 	}
-	
+
 	// Activate previously selected or first auth method
     try {
         if (typeof(Storage) === "undefined") throw 1;
@@ -67,11 +67,11 @@ jQuery(function ($) {
 	
 	function validateEstonianIdCode(value){
 		return value && /^[0-9]{11}$/.test(value);
-	};
+	}
 	
 	function validateEstonianPhoneNumber(value){
 		return value && /^[0-9]{3,15}$/.test(value);
-	};
+	}
 	
 	function validateFormFieldValue(field, testFunc){
 		if (testFunc(field.val())) {
@@ -90,7 +90,7 @@ jQuery(function ($) {
 			
 			return false;
 		}
-	};
+	}
 	
 	function validateSelectizeValue(selection, testFunc){
 		if (testFunc(selection.val())) {
@@ -102,7 +102,7 @@ jQuery(function ($) {
 			selection.parent('td').children('div.invalid-feedback').removeClass('is-hidden');
 			return false;
 		}
-	};
+	}
 	
 	// ID-card form submit
 	$('#idCardForm button.c-btn--primary').on('click', function(event){
