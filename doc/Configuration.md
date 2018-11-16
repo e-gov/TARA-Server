@@ -527,8 +527,6 @@ security.csp.connect-src='self'
 # Other directives
 # Restrict any URLs in HTML <base> element
 security.csp.base-uri='none'
-# Limit form submission targets to origin
-security.csp.form-action='self'
 # Disallow any parents from embedding this page
 security.csp.frame-ancestors='none'
 # Block all mixed content (a CSP directive with no value)
