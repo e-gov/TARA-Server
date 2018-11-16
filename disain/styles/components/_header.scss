@@ -12,28 +12,14 @@
     display: inline-flex;
     align-items: center;
     height: 120px;
-    font-family: 'Roboto Condensed', sans-serif;
-    font-size: 22px;
-    color: #000;
-    font-weight: 400;
-    text-transform: capitalize;
-    text-decoration: none;
     @media (max-width: $breakpoint-mobile) {
-      height: 60px;
-      font-size: 16px;
+      height: 80px;
     }
     img {
-      margin-right: 20px;
-      width: 72px;
-      height: auto;
       @media (max-width: $breakpoint-mobile) {
-        margin-right: 15px;
-        width: 32px;
+        width: auto;
+        height: 60px;
       }
-    }
-    &:hover {
-      color: #000;
-      text-decoration: none;
     }
   }
 }

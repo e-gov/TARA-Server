@@ -6,9 +6,22 @@ jQuery(function ($) {
 		$('.c-tab-login__header').addClass('hide-in-desktop');
 	}
 	
-	// Activate first auth method
-	$('.c-tab-login__nav-link').first().addClass('is-active');
-	$('.c-tab-login__content').first().addClass('is-active');
+	// Activate previously selected or first auth method
+    try {
+        if (typeof(Storage) === "undefined") throw 1;
+
+        var active = sessionStorage.getItem('active-tab', active);
+        if (!active || !/^[a-z]{2,10}-[a-z]{2,10}$/.test(active)) throw 2;
+
+        if ($('.c-tab-login__nav-link[data-tab="' + active + '"]').length !== 1)
+            throw 3;
+
+        $('.c-tab-login__nav-link[data-tab="' + active + '"]').addClass('is-active');
+        $('.c-tab-login__content[data-tab="' + active + '"]').addClass('is-active');
+    } catch (e) {
+        $('.c-tab-login__nav-link').first().addClass('is-active');
+        $('.c-tab-login__content').first().addClass('is-active');
+    }
 
 	// Tab nav
 	$(document).on('click', '.c-tab-login__nav-link', function(event){
@@ -20,6 +33,10 @@ jQuery(function ($) {
 		$('.c-tab-login__nav-item, .c-tab-login__nav-link, .c-tab-login__content').removeClass('is-active');
 		$(this).addClass('is-active');
 		$('.c-tab-login__content[data-tab="' + active + '"]').addClass('is-active');
+
+		if (typeof(Storage) !== "undefined") {
+            sessionStorage.setItem('active-tab', active);
+        }
 
 		$('body').removeClass('is-mobile-subview');
 		if (docwidth <= 800 ) {
