@@ -5,10 +5,23 @@ jQuery(function ($) {
 	if ($('.c-tab-login__nav-link').length < 2) {
 		$('.c-tab-login__header').addClass('hide-in-desktop');
 	}
-	
-	// Activate first auth method
-	$('.c-tab-login__nav-link').first().addClass('is-active');
-	$('.c-tab-login__content').first().addClass('is-active');
+
+	// Activate previously selected or first auth method
+    try {
+        if (typeof(Storage) === "undefined") throw 1;
+
+        var active = sessionStorage.getItem('active-tab', active);
+        if (!active || !/^[a-z]{2,10}-[a-z]{2,10}$/.test(active)) throw 2;
+
+        if ($('.c-tab-login__nav-link[data-tab="' + active + '"]').length !== 1)
+            throw 3;
+
+        $('.c-tab-login__nav-link[data-tab="' + active + '"]').addClass('is-active');
+        $('.c-tab-login__content[data-tab="' + active + '"]').addClass('is-active');
+    } catch (e) {
+        $('.c-tab-login__nav-link').first().addClass('is-active');
+        $('.c-tab-login__content').first().addClass('is-active');
+    }
 
 	// Tab nav
 	$(document).on('click', '.c-tab-login__nav-link', function(event){
@@ -20,6 +33,10 @@ jQuery(function ($) {
 		$('.c-tab-login__nav-item, .c-tab-login__nav-link, .c-tab-login__content').removeClass('is-active');
 		$(this).addClass('is-active');
 		$('.c-tab-login__content[data-tab="' + active + '"]').addClass('is-active');
+
+		if (typeof(Storage) !== "undefined") {
+            sessionStorage.setItem('active-tab', active);
+        }
 
 		$('body').removeClass('is-mobile-subview');
 		if (docwidth <= 800 ) {
@@ -50,11 +67,11 @@ jQuery(function ($) {
 	
 	function validateEstonianIdCode(value){
 		return value && /^[0-9]{11}$/.test(value);
-	};
+	}
 	
 	function validateEstonianPhoneNumber(value){
 		return value && /^[0-9]{3,15}$/.test(value);
-	};
+	}
 	
 	function validateFormFieldValue(field, testFunc){
 		if (testFunc(field.val())) {
@@ -73,7 +90,7 @@ jQuery(function ($) {
 			
 			return false;
 		}
-	};
+	}
 	
 	function validateSelectizeValue(selection, testFunc){
 		if (testFunc(selection.val())) {
@@ -85,7 +102,7 @@ jQuery(function ($) {
 			selection.parent('td').children('div.invalid-feedback').removeClass('is-hidden');
 			return false;
 		}
-	};
+	}
 	
 	// ID-card form submit
 	$('#idCardForm button.c-btn--primary').on('click', function(event){
