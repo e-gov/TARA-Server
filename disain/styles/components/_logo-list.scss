@@ -1,0 +1,62 @@
+.c-logo-list {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 40px;
+  @media (max-width: $breakpoint-mobile) {
+    flex-direction: column;
+    margin-top: 0;
+  }
+  &__item {
+    margin: 0 15px 15px 0;
+    @media (max-width: $breakpoint-mobile) {
+      margin-right: 0;
+      max-width: inherit;
+    }
+    &:last-child {
+      margin-right: 0;
+      @media (max-width: $breakpoint-mobile) {
+        margin-bottom: 0;
+      }
+    }
+  }
+  &__link {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 146px;
+    height: 50px;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    background-repeat: no-repeat;
+    background-position: 50%;
+    @media (max-width: $breakpoint-mobile) {
+      width: 100%;
+      height: 60px;
+    }
+    &--swedbank {
+      border-color: #f26522;
+      background-image: url('../assets/banks/swedbank-logo.png');
+      background-size: auto 25px;
+    }
+    &--seb {
+      border-color: #959595;
+      background-image: url('../assets/banks/seb-logo.svg');
+      background-size: auto 25px;
+    }
+    &--luminor {
+      border-color: #2b0015;
+      background-image: url('../assets/banks/luminor-logo.svg');
+      background-size: auto 20px;
+    }
+    &--lhv {
+      border-color: #000;
+      background-image: url('../assets/banks/lhv-logo.svg');
+      background-size: auto 20px;
+    }
+    &--coop {
+      border-color: #2070b8;
+      background-image: url('../assets/banks/coop-logo.svg');
+      background-size: auto 20px;
+    }
+  }
+}

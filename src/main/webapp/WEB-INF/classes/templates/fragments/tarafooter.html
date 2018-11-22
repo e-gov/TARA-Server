@@ -1,20 +1,16 @@
-<footer class="footer">
+<div class="c-footer" xmlns:th="http://www.w3.org/1999/xhtml" >
     <div class="container">
-        <div class="row">
-            <hr>
-            <div class="col-md-4 col-md-offset-2 col-md-push-6 col-sm-4 col-sm-offset-2 col-sm-push-6">
-                <ul class="footer-links">
-                    <!--li>
-                        <a href="#" th:text="#{label.footer.report}"></a>
-                    </li-->
-                    <li>
-                        <a th:href="#{link.footer.about}" th:text="#{label.footer.about}" target="_blank" rel="noopener"></a>
-                    </li>
-                </ul>
+        <div class="c-footer__row">
+            <div class="c-footer__col">
+                <div class="c-footer__block">
+                    <div class="c-footer__block-logo">
+                        <img th:src="#{logo.footer.cef}" alt="CEF">
+                    </div>
+                </div>
             </div>
-            <div class="col-md-6 col-md-pull-6 col-sm-6 col-sm-pull-6">
-                <div th:class="'cef-logo ' + #{logo.footer.cef}"></div>
+            <div class="c-footer__col">
+                <p><a th:href="#{link.footer.about}" th:text="#{label.footer.about}" target="_blank" rel="noopener">About</a></p>
             </div>
         </div>
     </div>
-</footer>
+</div>

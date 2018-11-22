@@ -1,0 +1,1 @@
+!function(){var t=5e3;try{var e=document.body.getAttribute("data-check-form-refresh-rate"),r=new Number(e);100<=r&&(t=r)}catch(t){}setTimeout(function(){document.forms.authenticationCheckForm.submit()},t)}();

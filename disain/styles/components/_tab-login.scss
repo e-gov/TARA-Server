@@ -1,0 +1,220 @@
+.c-tab-login {
+  margin-bottom: 30px;
+  @media (max-width: $breakpoint-mobile) {
+    margin-bottom: 20px;
+  }
+  &__header {
+    margin-bottom: 20px;
+    @media (max-width: $breakpoint-mobile) {
+      margin-bottom: 0;
+    }
+	&.hide-in-desktop {
+      display: none;
+      @media (max-width: $breakpoint-mobile) {
+        display: block;
+      }
+    }
+  }
+  &__nav {
+    display: flex;
+    @media (max-width: $breakpoint-mobile) {
+      flex-direction: column;
+    }
+  }
+  &__nav-item {
+    width: 20%;
+    padding-left: 15px;
+    @media (max-width: $breakpoint-mobile) {
+      width: 100%;
+      padding: 0;
+      margin-top: 10px;
+      position: relative;
+    }
+    &:first-child {
+      padding-left: 0;
+    }
+    &.is-active {
+      .c-tab-login__nav-link {
+        @media (max-width: $breakpoint-mobile) {
+          justify-content: center;
+          margin: -15px -15px 0 -15px;
+          border-radius: 0;
+          background-color: #003168;
+          color: #fff;
+        }
+      }
+      .c-tab-login__nav-back-link {
+        @media (max-width: $breakpoint-mobile) {
+          display: block;
+        }
+      }
+    }
+  }
+  &__nav-link {
+    display: flex;
+    justify-content: center;
+    height: 50px;
+    padding: 0 10px;
+    color: #003168;
+    text-decoration: none;
+    border-radius: 8px;
+    background-color: #fff;
+    @media (max-width: $breakpoint-mobile) {
+      justify-content: flex-start;
+      height: 60px;
+      padding: 0 15px;
+      font-size: 18px;
+      font-weight: 500;
+    }
+    .icon {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-right: 10px;
+      @media (max-width: $breakpoint-mobile) {
+        width: 50px;
+      }
+    }
+    .icon-id-card,
+    .icon-bank-link {
+      font-size: 24px;
+    }
+    .icon-mobile-id {
+      font-size: 36px;
+    }
+    .icon-smart-id {
+      font-size: 28px;
+    }
+    .icon-eu-citizen {
+      img {
+        height: 40px;
+        width: auto;
+      }
+    }
+    &.is-active,
+    &:hover {
+      text-decoration: none;
+      color: #fff;
+      background-color: #0083ba;
+      @media (max-width: $breakpoint-mobile) {
+        color: #003168;
+        background-color: #fff;
+      }
+    }
+    &--eu {
+      color: #fff;
+      background-color: #0c4da2;
+      &.is-active,
+      &:hover {
+        color: #fff;
+        background-color: #0c4da2;
+      }
+    }
+  }
+  &__nav-label {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    font-size: 20px;
+  }
+  &__nav-back-link {
+    display: none;
+    width: 60px;
+    height: 60px;
+    position: absolute;
+    left: -15px;
+    top: -15px;
+    bottom: 0;
+    z-index: 2;
+    cursor: pointer;
+    &:before {
+      content: "";
+      display: block;
+      width: 0;
+      height: 0;
+      border-top: 10px solid transparent;
+      border-bottom: 10px solid transparent;
+      border-right: 10px solid #fff;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%,-50%);
+    }
+  }
+  &__content {
+    display: none;
+    &.is-active {
+      display: block;
+      @media (max-width: $breakpoint-mobile) {
+        display: none;
+      }
+    }
+  }
+  &__content-wrap {
+    display: flex;
+    background-color: #fff;
+    border-radius: 8px;
+    @media (max-width: $breakpoint-mobile) {
+      display: block;
+      margin-left: -15px;
+      margin-right: -15px;
+      border-radius: 0;
+    }
+  }
+  &__content-icon {
+    flex: 0 0 auto;
+    width: 190px;
+    padding: 30px 0;
+    text-align: center;
+    .icon {
+      color: #003168;
+    }
+    .icon-eu-citizen,
+    .icon-bank-link,
+    .icon-id-card {
+      font-size: 60px;
+    }
+    .icon-smart-id {
+      font-size: 65px;
+    }
+    .icon-mobile-id {
+      font-size: 100px;
+    }
+    @media (max-width: $breakpoint-mobile) {
+      display: none;
+    }
+  }
+  &__content-text {
+    flex: 1 1 auto;
+    max-width: 100%;
+    padding: 40px 40px 40px 0;
+    @media (max-width: $breakpoint-mobile) {
+      padding: 20px 15px 0 15px;
+    }
+    h2 {
+      margin-bottom: 25px;
+      font-size: 30px;
+      color: #003168;
+      font-weight: 400;
+      @media (max-width: $breakpoint-mobile) {
+        display: none;
+      }
+    }
+    p {
+      margin-bottom: 25px;
+      color: #5d6071;
+      @media (max-width: $breakpoint-mobile) {
+        margin-bottom: 20px;
+      }
+    }
+  }
+  &__footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 30px;
+    @media (max-width: $breakpoint-mobile) {
+      display: none;
+    }
+  }
+}
