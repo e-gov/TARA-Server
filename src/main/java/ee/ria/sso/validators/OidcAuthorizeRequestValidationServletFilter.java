@@ -60,10 +60,11 @@ public class OidcAuthorizeRequestValidationServletFilter implements Filter {
     }
 
     private String getRedirectUrlToRelyingParty(HttpServletRequest request, OidcRequestValidator.InvalidRequestException e) {
+        String redirectUri = request.getParameter(OidcRequestParameter.REDIRECT_URI.getParameterKey());
         try {
             StringBuilder sb = new StringBuilder();
-            sb.append(request.getParameter(OidcRequestParameter.REDIRECT_URI.getParameterKey()));
-            sb.append("?");
+            sb.append(redirectUri);
+            sb.append(redirectUri.contains("?") ? "&" : "?");
             sb.append(String.format("error=%s", URLEncoder.encode(e.getErrorCode(), StandardCharsets.UTF_8.name())));
             sb.append(String.format("&error_description=%s", URLEncoder.encode(e.getErrorDescription(), StandardCharsets.UTF_8.name())));
             String state = request.getParameter(OidcRequestParameter.STATE.getParameterKey());
@@ -73,7 +74,7 @@ public class OidcAuthorizeRequestValidationServletFilter implements Filter {
 
             return sb.toString();
         } catch (UnsupportedEncodingException ex) {
-            throw new RuntimeException(ex);
+            throw new IllegalStateException(ex);
         }
     }
 
