@@ -1,27 +1,33 @@
 package ee.ria.sso.config;
 
-import ee.ria.sso.logging.*;
-import org.apereo.cas.audit.spi.DefaultDelegatingAuditTrailManager;
-import org.apereo.cas.audit.spi.DelegatingAuditTrailManager;
-import org.apereo.cas.audit.spi.config.CasCoreAuditConfiguration;
+import com.fasterxml.jackson.core.util.MinimalPrettyPrinter;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import ee.ria.sso.logging.AccessTokenRequestResourceResolver;
+import ee.ria.sso.logging.IncidentLoggingMDCServletFilter;
+import ee.ria.sso.logging.OAuthCodeResourceResolver;
+import ee.ria.sso.logging.RequestContextAsFirstParameterResourceResolver;
+import org.apereo.cas.audit.AuditTrailExecutionPlan;
+import org.apereo.cas.audit.AuditTrailRecordResolutionPlan;
 import org.apereo.cas.configuration.CasConfigurationProperties;
 import org.apereo.inspektr.audit.AuditActionContext;
 import org.apereo.inspektr.audit.spi.AuditResourceResolver;
 import org.apereo.inspektr.audit.support.Slf4jLoggingAuditTrailManager;
-import org.hjson.JsonObject;
-import org.hjson.Stringify;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import javax.annotation.PostConstruct;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Configuration
@@ -31,21 +37,27 @@ public class TaraLoggingConfiguration {
     @Autowired
     private CasConfigurationProperties casProperties;
 
-    @Bean
-    public DelegatingAuditTrailManager auditTrailManager() {
-        final TaraSlf4jLoggingAuditTrailManager mgmr = new TaraSlf4jLoggingAuditTrailManager();
-        mgmr.setUseSingleLine(casProperties.getAudit().isUseSingleLine());
-        mgmr.setEntrySeparator(casProperties.getAudit().getSinglelineSeparator());
-        mgmr.setAuditFormat(casProperties.getAudit().getAuditFormat());
-        return new DefaultDelegatingAuditTrailManager(mgmr);
+    @Autowired
+    private AuditTrailRecordResolutionPlan auditTrailRecordResolutionPlan;
+
+    @Autowired
+    @Qualifier("auditTrailExecutionPlan")
+    private AuditTrailExecutionPlan  auditTrailExecutionPlan;
+
+    @PostConstruct
+    public void init() {
+        if (auditTrailExecutionPlan != null) {
+            auditTrailExecutionPlan.registerAuditTrailManager(new TaraSlf4jLoggingAuditTrailManager());
+        }
     }
 
     @Bean
     public Map<String, AuditResourceResolver> auditResourceResolverMap() {
-        final Map<String, AuditResourceResolver> map = new CasCoreAuditConfiguration().auditResourceResolverMap();
+        final Map<String, AuditResourceResolver> map = new HashMap<>();
         map.put("TARA_AUTHENTICATION_RESOURCE_RESOLVER", new RequestContextAsFirstParameterResourceResolver());
         map.put("TARA_ACCESS_TOKEN_REQUEST_RESOURCE_RESOLVER", new AccessTokenRequestResourceResolver());
         map.put("TARA_CREATE_OAUTH_CODE_RESOURCE_RESOLVER", new OAuthCodeResourceResolver());
+        auditTrailRecordResolutionPlan.registerAuditResourceResolvers(map);
         return map;
     }
 
@@ -64,26 +76,33 @@ public class TaraLoggingConfiguration {
     private class TaraSlf4jLoggingAuditTrailManager extends Slf4jLoggingAuditTrailManager {
 
         private final Logger log = LoggerFactory.getLogger("auditLog");
+        private final ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
         private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss,SSSZ");
 
         public void record(final AuditActionContext auditActionContext) {
 
-            if (casProperties.getAudit().getAuditFormat() == AuditFormats.JSON)
-                log.info(getJsonObjectForAudit(auditActionContext).toString(Stringify.PLAIN));
-            else
-                log.info(toString(auditActionContext));
+            try {
+                if (casProperties.getAudit().getSlf4j().getAuditFormat() == AuditFormats.JSON) {
+                    final ObjectWriter writer = this.mapper.writer(new MinimalPrettyPrinter());
+                    log.info(writer.writeValueAsString(getJsonObjectForAudit(auditActionContext)));
+                } else {
+                    log.info(toString(auditActionContext));
+                }
+            } catch (final Exception e) {
+                throw new IllegalArgumentException(e.getMessage(), e);
+            }
         }
 
         @Override
-        protected JsonObject getJsonObjectForAudit(final AuditActionContext auditActionContext) {
-            final JsonObject jsonObject = new JsonObject()
-                    .add("action", auditActionContext.getActionPerformed())
-                    .add("who", auditActionContext.getPrincipal())
-                    .add("what", auditActionContext.getResourceOperatedUpon())
-                    .add("when", dateTimeFormatter.format(auditActionContext.getWhenActionWasPerformed().toInstant().atZone(ZoneId.systemDefault())))
-                    .add("clientIpAddress", auditActionContext.getClientIpAddress())
-                    .add("serverIpAddress", auditActionContext.getServerIpAddress())
-                    .add("application", auditActionContext.getApplicationCode());
+        protected Map getJsonObjectForAudit(final AuditActionContext auditActionContext) {
+            final Map jsonObject = new LinkedHashMap();
+            jsonObject.put("action", auditActionContext.getActionPerformed());
+            jsonObject.put("who", auditActionContext.getPrincipal());
+            jsonObject.put("what", auditActionContext.getResourceOperatedUpon());
+            jsonObject.put("when", dateTimeFormatter.format(auditActionContext.getWhenActionWasPerformed().toInstant().atZone(ZoneId.systemDefault())));
+            jsonObject.put("clientIpAddress", auditActionContext.getClientIpAddress());
+            jsonObject.put("serverIpAddress", auditActionContext.getServerIpAddress());
+            jsonObject.put("application", auditActionContext.getApplicationCode());
             return jsonObject;
         }
     }

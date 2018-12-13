@@ -9,8 +9,6 @@ import ee.ria.sso.config.idcard.TestIDCardConfiguration;
 import ee.ria.sso.service.AbstractAuthenticationServiceTest;
 import ee.ria.sso.statistics.StatisticsOperation;
 import ee.ria.sso.test.SimpleTestAppender;
-import ee.ria.sso.validators.OCSPValidationException;
-import ee.ria.sso.validators.OCSPValidator;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Assert;

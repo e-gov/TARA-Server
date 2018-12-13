@@ -1,10 +1,7 @@
 package ee.ria.sso.statistics;
 
-import static org.hamcrest.Matchers.containsString;
-
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.test.SimpleTestAppender;
-
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -12,6 +9,8 @@ import org.junit.rules.ExpectedException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+
+import static org.hamcrest.Matchers.containsString;
 
 public class StatisticsHandlerTest {
 

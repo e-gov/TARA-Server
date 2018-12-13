@@ -1,7 +1,7 @@
 package ee.ria.sso.config.banklink;
 
 import com.nortal.banklink.authentication.link.standard.IPizzaStandardAuthInfoParser;
-import ee.ria.sso.authentication.BankEnum;
+import ee.ria.sso.service.banklink.BankEnum;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;

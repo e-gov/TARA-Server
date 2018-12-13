@@ -1,19 +1,18 @@
 package ee.ria.sso.authentication;
 
-import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
+import ee.ria.sso.authentication.credential.TaraCredential;
 import org.apache.commons.lang3.StringUtils;
+import org.apereo.cas.authentication.AuthenticationHandlerExecutionResult;
 import org.apereo.cas.authentication.Credential;
-import org.apereo.cas.authentication.HandlerResult;
 import org.apereo.cas.authentication.PreventedException;
 import org.apereo.cas.authentication.handler.support.AbstractPreAndPostProcessingAuthenticationHandler;
 import org.apereo.cas.authentication.principal.PrincipalFactory;
 import org.apereo.cas.services.ServicesManager;
 
-import ee.ria.sso.authentication.credential.TaraCredential;
+import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Created by Janar Rahumeel (CGI Estonia)
@@ -35,7 +34,7 @@ public class TaraAuthenticationHandler extends AbstractPreAndPostProcessingAuthe
      */
 
     @Override
-    protected HandlerResult doAuthentication(Credential credential) throws GeneralSecurityException, PreventedException {
+    protected AuthenticationHandlerExecutionResult doAuthentication(Credential credential) throws GeneralSecurityException, PreventedException {
         final Map<String, Object> map = new LinkedHashMap<>();
         if (credential instanceof TaraCredential) {
             TaraCredential taraCredential = (TaraCredential) credential;

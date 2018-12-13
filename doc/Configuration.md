@@ -32,7 +32,7 @@ Logging in TARA is handled by [Log4j2 framework](https://logging.apache.org/log4
 TARA provides a [default configuration](../src/main/webapp/WEB-INF/classes/log4j2.xml), that contains configuration samples for using local log files and remote syslog server (needs further configuration).
 
 
-You can override the default log configuration in the `application.properties` by using the property `logging.config` (see CAS documentation for further logging implementation [details](https://apereo.github.io/cas/5.1.x/installation/Logging.html).)
+You can override the default log configuration in the `application.properties` by using the property `logging.config` (see CAS documentation for further logging implementation [details](https://apereo.github.io/cas/5.3.x/installation/Logging.html).)
 
 Example:
 ````
@@ -42,7 +42,7 @@ logging.config=file:/etc/cas/config/log4j2.xml
 <a name="log_files"></a>
 ### Log files
 
-By default, all log files are written to the local filesystem `/var/log/cas`. The location can be overridden either by providing a parameter `-Dcas.log.dir=<logdir>` during TARA startup or overriding the `log4j2.xml` file.
+By default, all log files are written to the local filesystem `/var/log/cas`. The location can be overridden either by providing a parameter `-Dtara.log.dir=<logdir>` during TARA startup or overriding the `log4j2.xml` file.
 
 Log files are rolled over hourly or when the size cap for a file is reached or the TARA service has been restarted. Files that are rolled over are compressed with `gz` and transferred to directory that corresponds to a date pattern `yyyy-MM`).
 
@@ -187,7 +187,7 @@ The following is a complete list of TARA specific audit events:
 | `ACCESS_TOKEN_REQUEST_HANDLING_SUCCESS` | Request was successfully processed and an access token was sent as a response. |
 | `ACCESS_TOKEN_REQUEST_HANDLING_FAILED` | An error occurred while processing the request or sending the response. |
 
-NB! See additional list of CAS related events [here](https://apereo.github.io/cas/5.1.x/installation/Audits.html#audit-events)
+NB! See additional list of CAS related events [here](https://apereo.github.io/cas/5.3.x/installation/Audits.html#audit-events)
 
 
 **Log verbosity level**
@@ -196,8 +196,8 @@ Log verbosity is controlled by the following properties in the default `log4j2.x
 
 | **Property**       | **Description** | **Default** |
 | :---------------- | :---------- | :-----------|
-| **cas.log.level** | Controls the detail level of the main event stream (`cas.log`).  | `info` |
-| **cas.console.level** | Console log verbosity level | `off` |
+| **tara.log.level** | Controls the detail level of the main event stream (`cas.log`).  | `info` |
+| **tara.console.level** | Console log verbosity level | `off` |
 
 These parameters can be overridden when needed:
 
@@ -210,8 +210,8 @@ Example:
 <Configuration monitorInterval="5" packages="org.apereo.cas.logging">
     <Properties>
         ...
-        <Property name="cas.log.level">debug</Property>
-        <Property name="cas.console.level">off</Property>
+        <Property name="tara.log.level">debug</Property>
+        <Property name="tara.console.level">off</Property>
     </Properties>
     ...
 ````
@@ -221,7 +221,7 @@ Example:
 
 Example:
 ````
-export JAVA_OPTS="-Dcas.log.level=debug -Dcas.console.level=off"
+export JAVA_OPTS="-Dtara.log.level=debug -Dtara.console.level=off"
 ````
 
 <a name="tara_stat_log"></a>
@@ -236,7 +236,7 @@ Note that the Tara-Stat logger is not enabled by default. Tara-Stat needs to be 
 ## Configuration parameters
 --------------------
 
-The configuration of the TARA service is managed through a central configuration properties file - `application.properties`. In addition to Apereo CAS configuration properties described [here](https://apereo.github.io/cas/5.1.x/installation/Configuration-Properties.html) the `application.properties` can also include properties for TARA specific features. The following document describes the custom configuration properties available in TARA service.
+The configuration of the TARA service is managed through a central configuration properties file - `application.properties`. In addition to Apereo CAS configuration properties described [here](https://apereo.github.io/cas/5.3.x/installation/Configuration-Properties.html) the `application.properties` can also include properties for TARA specific features. The following document describes the custom configuration properties available in TARA service.
 
 
 <a name="id_card"></a>
@@ -457,7 +457,7 @@ More information about Estonian Smart-ID can be obtained from [here](https://git
 <a name="heartbeat"></a>
 ### Heartbeat endpoint
 
-TARA heartbeat endpoint is a Spring Boot Actuator endpoint and thus is configured as described [here](https://docs.spring.io/spring-boot/docs/1.5.3.RELEASE/reference/html/production-ready-endpoints.html), while also taking into consideration CAS specific configuration properties as described [here](https://apereo.github.io/cas/5.1.x/installation/Configuration-Properties.html#spring-boot-endpoints).
+TARA heartbeat endpoint is a Spring Boot Actuator endpoint and thus is configured as described [here](https://docs.spring.io/spring-boot/docs/1.5.3.RELEASE/reference/html/production-ready-endpoints.html), while also taking into consideration CAS specific configuration properties as described [here](https://apereo.github.io/cas/5.3.x/installation/Configuration-Properties.html#spring-boot-endpoints).
 
 Table 14 - Configuring heartbeat endpoint in TARA
 
@@ -604,7 +604,7 @@ Example:
 cas.audit.appCode=TARA-INSTANCE-1
 ````
 
-NB! Note that audit logging can be further customized by CAS configuration parameters (see [CAS documentation](https://apereo.github.io/cas/5.1.x/installation/Configuration-Properties.html#audits)).
+NB! Note that audit logging can be further customized by CAS configuration parameters (see [CAS documentation](https://apereo.github.io/cas/5.3.x/installation/Configuration-Properties.html#audits)).
 
 
 <a name="tara_truststore"></a>

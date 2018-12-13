@@ -9,15 +9,18 @@ import ee.ria.sso.authentication.credential.TaraCredential;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.config.eidas.EidasConfigurationProvider;
 import ee.ria.sso.config.eidas.TestEidasConfiguration;
-import ee.ria.sso.model.AuthenticationResult;
 import ee.ria.sso.service.AbstractAuthenticationServiceTest;
 import ee.ria.sso.statistics.StatisticsHandler;
 import ee.ria.sso.statistics.StatisticsOperation;
 import ee.ria.sso.test.SimpleTestAppender;
 import org.hamcrest.Matcher;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.*;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -35,7 +38,9 @@ import wiremock.com.fasterxml.jackson.databind.ObjectMapper;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.UUID;
 
 @TestPropertySource(
         locations= "classpath:application-test.properties"
@@ -233,7 +238,7 @@ public class EidasAuthenticationServiceTest extends AbstractAuthenticationServic
         attributes.put("FamilyName", MOCK_LAST_NAME);
         attributes.put("DateOfBirth", MOCK_DATE_OF_BIRTH);
 
-        AuthenticationResult authenticationResult = new AuthenticationResult();
+        EidasAuthenticationResult authenticationResult = new EidasAuthenticationResult();
         authenticationResult.setAttributes(attributes);
 
         try {

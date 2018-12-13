@@ -1,7 +1,10 @@
 package ee.ria.sso.endpoints;
 
 import ee.ria.sso.test.SimpleTestAppender;
-import org.junit.*;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpSession;

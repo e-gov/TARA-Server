@@ -1,45 +1,105 @@
 package ee.ria.sso.config;
 
-import ee.ria.sso.InsecureTrustManager;
-import org.apache.commons.lang.StringUtils;
-import org.apereo.cas.util.AsciiArtUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import ee.ria.sso.authentication.TaraAuthenticationHandler;
+import ee.ria.sso.authentication.principal.TaraPrincipalFactory;
+import ee.ria.sso.flow.TaraWebflowConfigurer;
+import lombok.extern.slf4j.Slf4j;
+import org.apereo.cas.authentication.AuthenticationEventExecutionPlan;
+import org.apereo.cas.authentication.AuthenticationEventExecutionPlanConfigurer;
+import org.apereo.cas.authentication.AuthenticationHandler;
+import org.apereo.cas.authentication.principal.PrincipalFactory;
+import org.apereo.cas.configuration.CasConfigurationProperties;
+import org.apereo.cas.services.ServicesManager;
+import org.apereo.cas.web.flow.CasWebflowConfigurer;
+import org.apereo.cas.web.flow.CasWebflowExecutionPlan;
+import org.apereo.cas.web.flow.CasWebflowExecutionPlanConfigurer;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.*;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
-
-import javax.annotation.PostConstruct;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import java.security.*;
+import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
+import org.springframework.webflow.definition.registry.FlowDefinitionRegistry;
+import org.springframework.webflow.engine.builder.support.FlowBuilderServices;
 
 /**
  * @author Janar Rahumeel (CGI Estonia)
  */
 
+@Slf4j
 @Configuration
 @PropertySource("classpath:dynamic.properties")
 @EnableAspectJAutoProxy(proxyTargetClass = true)
-@ComponentScan(basePackages = {"ee.ria.sso", "org.jasig.cas"})
+@ComponentScan(basePackages = {"ee.ria.sso"})
 public class TaraConfiguration extends WebMvcConfigurerAdapter {
 
-    private final Logger log = LoggerFactory.getLogger(TaraConfiguration.class);
-    private final TaraProperties taraProperties;
-    private final int paddingSize = 225;
+    @Autowired
+    private CasConfigurationProperties casProperties;
 
-    public TaraConfiguration(TaraProperties taraProperties) {
-        this.taraProperties = taraProperties;
+    @Bean
+    public PrincipalFactory taraPrincipalFactory() {
+        return new TaraPrincipalFactory();
     }
 
-    @PostConstruct
-    protected void init() throws Exception {
-        if (this.taraProperties.getApplication().isDevelopment()) {
-            StringBuilder sb = new StringBuilder();
-            SSLContext sslContext = SSLContext.getInstance("SSL");
-            sslContext.init(null, new TrustManager[]{new InsecureTrustManager()}, new SecureRandom());
-            SSLContext.setDefault(sslContext);
-            sb.append(StringUtils.rightPad("<x> Using insecure trust manager configuration ", this.paddingSize, "-"));
-            AsciiArtUtils.printAsciiArtWarning(this.log, "NB! DEVELOPMENT MODE ACTIVATED", sb.toString());
+    @Bean
+    public LocaleChangeInterceptor localeChangeInterceptor() {
+        TaraLocaleChangeInterceptor localeInterceptor = new TaraLocaleChangeInterceptor();
+        localeInterceptor.setIgnoreInvalidLocale(true);
+        return localeInterceptor;
+    }
+
+    @Configuration("TaraWebFlowConfiguration")
+    public class TaraWebFlowConfiguration implements CasWebflowExecutionPlanConfigurer {
+
+        @Autowired
+        @Qualifier("loginFlowRegistry")
+        private FlowDefinitionRegistry loginFlowDefinitionRegistry;
+
+        @Autowired
+        private FlowBuilderServices flowBuilderServices;
+
+        @Autowired
+        private ApplicationContext applicationContext;
+
+
+        @Bean("defaultWebflowConfigurer")
+        public CasWebflowConfigurer defaultWebflowConfigurer() {
+            CasWebflowConfigurer configurer = new TaraWebflowConfigurer(flowBuilderServices, loginFlowDefinitionRegistry,
+                    applicationContext, casProperties);
+            ((TaraWebflowConfigurer) configurer).setOrder(1);
+            return configurer;
+        }
+
+        @Override
+        public void configureWebflowExecutionPlan(final CasWebflowExecutionPlan plan) {
+            plan.registerWebflowConfigurer(defaultWebflowConfigurer());
+        }
+    }
+
+    @Configuration("TaraAuthenticationEventExecutionPlanConfiguration")
+    @EnableConfigurationProperties(CasConfigurationProperties.class)
+    public class TaraAuthenticationEventExecutionPlanConfiguration
+            implements AuthenticationEventExecutionPlanConfigurer {
+
+        @Autowired
+        @Qualifier("servicesManager")
+        private ServicesManager servicesManager;
+
+        @Autowired
+        @Qualifier("taraPrincipalFactory")
+        private PrincipalFactory taraPrincipalFactory;
+
+        @Bean
+        public AuthenticationHandler taraAuthenticationHandler() {
+            return new TaraAuthenticationHandler(this.servicesManager, taraPrincipalFactory, 1);
+        }
+
+        @Override
+        public void configureAuthenticationExecutionPlan(final AuthenticationEventExecutionPlan plan) {
+            log.info("Authentication Execution Plan of RIIGI INFOSÜSTEEMI AMET has been loaded");
+
+            plan.registerAuthenticationHandlerWithPrincipalResolver(taraAuthenticationHandler(), null);
         }
     }
 }

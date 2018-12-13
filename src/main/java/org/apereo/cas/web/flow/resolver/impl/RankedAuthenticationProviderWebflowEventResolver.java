@@ -1,7 +1,6 @@
 package org.apereo.cas.web.flow.resolver.impl;
 
-import java.util.Set;
-
+import lombok.extern.slf4j.Slf4j;
 import org.apereo.cas.CentralAuthenticationService;
 import org.apereo.cas.authentication.AuthenticationContextValidator;
 import org.apereo.cas.authentication.AuthenticationServiceSelectionPlan;
@@ -11,6 +10,7 @@ import org.apereo.cas.services.RegisteredService;
 import org.apereo.cas.services.ServicesManager;
 import org.apereo.cas.ticket.registry.TicketRegistrySupport;
 import org.apereo.cas.util.CollectionUtils;
+import org.apereo.cas.web.flow.CasWebflowConstants;
 import org.apereo.cas.web.flow.resolver.CasDelegatingWebflowEventResolver;
 import org.apereo.cas.web.support.WebUtils;
 import org.apereo.inspektr.audit.annotation.Audit;
@@ -21,11 +21,13 @@ import org.springframework.webflow.action.EventFactorySupport;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
 
+import java.util.Set;
+
 
 /**
  * Created by serkp on 21.09.2017.
  */
-
+@Slf4j
 public class RankedAuthenticationProviderWebflowEventResolver extends AbstractCasWebflowEventResolver {
 	private static final Logger LOGGER = LoggerFactory.getLogger(RankedAuthenticationProviderWebflowEventResolver.class);
 
@@ -36,7 +38,8 @@ public class RankedAuthenticationProviderWebflowEventResolver extends AbstractCa
 	public Set<Event> resolveInternal(RequestContext context) {
 		RegisteredService service = WebUtils.getRegisteredService(context);
 		if(service == null) {
-			throw new RuntimeException("Autentimisteenuse üldine viga või keelatud tegevus");
+		    log.error("Invalid flow detected - registered service not found in flow. Cannot continue.");
+			return CollectionUtils.wrapSet(new Event(this, CasWebflowConstants.TRANSITION_ID_ERROR));
 		} else {
 			return this.resumeFlow();
 		}

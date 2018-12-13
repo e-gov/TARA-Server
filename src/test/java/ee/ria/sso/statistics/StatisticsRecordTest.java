@@ -1,7 +1,7 @@
 package ee.ria.sso.statistics;
 
 import ee.ria.sso.authentication.AuthenticationType;
-import ee.ria.sso.authentication.BankEnum;
+import ee.ria.sso.service.banklink.BankEnum;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;

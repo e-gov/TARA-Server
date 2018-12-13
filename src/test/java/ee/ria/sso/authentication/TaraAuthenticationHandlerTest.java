@@ -1,8 +1,8 @@
 package ee.ria.sso.authentication;
 
 import ee.ria.sso.authentication.credential.TaraCredential;
+import org.apereo.cas.authentication.AuthenticationHandlerExecutionResult;
 import org.apereo.cas.authentication.Credential;
-import org.apereo.cas.authentication.HandlerResult;
 import org.apereo.cas.authentication.PreventedException;
 import org.apereo.cas.authentication.principal.Principal;
 import org.junit.Assert;
@@ -55,32 +55,32 @@ public class TaraAuthenticationHandlerTest {
 
     @Test
     public void doAuthenticationShouldReturnNullWhenCredentialIsMissing() throws GeneralSecurityException, PreventedException {
-        HandlerResult handlerResult = authenticationHandler.doAuthentication(null);
-        Assert.assertNull(handlerResult);
+        AuthenticationHandlerExecutionResult AuthenticationHandlerExecutionResult = authenticationHandler.doAuthentication(null);
+        Assert.assertNull(AuthenticationHandlerExecutionResult);
     }
 
     @Test
     public void doAuthenticationShouldReturnNullWhenCredentialIsNotTaraCredential() throws GeneralSecurityException, PreventedException {
-        HandlerResult handlerResult = authenticationHandler.doAuthentication(createNonTaraCredential());
-        Assert.assertNull(handlerResult);
+        AuthenticationHandlerExecutionResult AuthenticationHandlerExecutionResult = authenticationHandler.doAuthentication(createNonTaraCredential());
+        Assert.assertNull(AuthenticationHandlerExecutionResult);
     }
 
     @Test
     public void doAuthenticationShouldReturnValidResultForValidIdCardCredential() throws GeneralSecurityException, PreventedException {
         TaraCredential credential = new TaraCredential(AuthenticationType.IDCard, MOCK_PRINCIPAL_CODE, MOCK_FIRST_NAME, MOCK_LAST_NAME);
-        HandlerResult handlerResult = authenticationHandler.doAuthentication(credential);
+        AuthenticationHandlerExecutionResult AuthenticationHandlerExecutionResult = authenticationHandler.doAuthentication(credential);
 
         Map<String, Object> expectedAttributes = buildCommonExpectedAttributesMap(AuthenticationType.IDCard);
-        verifyHandlerResult(handlerResult, expectedAttributes);
+        verifyAuthenticationHandlerExecutionResult(AuthenticationHandlerExecutionResult, expectedAttributes);
     }
 
     @Test
     public void doAuthenticationShouldReturnValidResultForValidMobileIdCredential() throws GeneralSecurityException, PreventedException {
         TaraCredential credential = new TaraCredential(AuthenticationType.MobileID, MOCK_PRINCIPAL_CODE, MOCK_FIRST_NAME, MOCK_LAST_NAME);
-        HandlerResult handlerResult = authenticationHandler.doAuthentication(credential);
+        AuthenticationHandlerExecutionResult AuthenticationHandlerExecutionResult = authenticationHandler.doAuthentication(credential);
 
         Map<String, Object> expectedAttributes = buildCommonExpectedAttributesMap(AuthenticationType.MobileID);
-        verifyHandlerResult(handlerResult, expectedAttributes);
+        verifyAuthenticationHandlerExecutionResult(AuthenticationHandlerExecutionResult, expectedAttributes);
     }
 
     @Test
@@ -88,11 +88,11 @@ public class TaraAuthenticationHandlerTest {
         TaraCredential credential = new TaraCredential(AuthenticationType.eIDAS, MOCK_PRINCIPAL_CODE, MOCK_FIRST_NAME, MOCK_LAST_NAME);
         credential.setDateOfBirth(MOCK_DATE_OF_BIRTH);
 
-        HandlerResult handlerResult = authenticationHandler.doAuthentication(credential);
+        AuthenticationHandlerExecutionResult AuthenticationHandlerExecutionResult = authenticationHandler.doAuthentication(credential);
 
         Map<String, Object> expectedAttributes = buildCommonExpectedAttributesMap(AuthenticationType.eIDAS);
         expectedAttributes.put("date_of_birth", MOCK_DATE_OF_BIRTH);
-        verifyHandlerResult(handlerResult, expectedAttributes);
+        verifyAuthenticationHandlerExecutionResult(AuthenticationHandlerExecutionResult, expectedAttributes);
     }
 
     @Test
@@ -101,37 +101,37 @@ public class TaraAuthenticationHandlerTest {
         credential.setDateOfBirth(MOCK_DATE_OF_BIRTH);
         credential.setLevelOfAssurance(LevelOfAssurance.SUBSTANTIAL);
 
-        HandlerResult handlerResult = authenticationHandler.doAuthentication(credential);
+        AuthenticationHandlerExecutionResult AuthenticationHandlerExecutionResult = authenticationHandler.doAuthentication(credential);
 
         Map<String, Object> expectedAttributes = buildCommonExpectedAttributesMap(AuthenticationType.eIDAS);
         expectedAttributes.put("date_of_birth", MOCK_DATE_OF_BIRTH);
         expectedAttributes.put("level_of_assurance", LevelOfAssurance.SUBSTANTIAL.getAcrName());
-        verifyHandlerResult(handlerResult, expectedAttributes);
+        verifyAuthenticationHandlerExecutionResult(AuthenticationHandlerExecutionResult, expectedAttributes);
     }
 
     @Test
     public void doAuthenticationShouldReturnValidResultForValidBanklinkCredential() throws GeneralSecurityException, PreventedException {
         TaraCredential credential = new TaraCredential(AuthenticationType.BankLink, MOCK_PRINCIPAL_CODE, MOCK_FIRST_NAME, MOCK_LAST_NAME);
-        HandlerResult handlerResult = authenticationHandler.doAuthentication(credential);
+        AuthenticationHandlerExecutionResult AuthenticationHandlerExecutionResult = authenticationHandler.doAuthentication(credential);
 
         Map<String, Object> expectedAttributes = buildCommonExpectedAttributesMap(AuthenticationType.BankLink);
-        verifyHandlerResult(handlerResult, expectedAttributes);
+        verifyAuthenticationHandlerExecutionResult(AuthenticationHandlerExecutionResult, expectedAttributes);
     }
 
     @Test
     public void doAuthenticationShouldReturnValidResultForValidSmartIdCredential() throws GeneralSecurityException, PreventedException {
         TaraCredential credential = new TaraCredential(AuthenticationType.SmartID, MOCK_PRINCIPAL_CODE, MOCK_FIRST_NAME, MOCK_LAST_NAME);
-        HandlerResult handlerResult = authenticationHandler.doAuthentication(credential);
+        AuthenticationHandlerExecutionResult AuthenticationHandlerExecutionResult = authenticationHandler.doAuthentication(credential);
 
         Map<String, Object> expectedAttributes = buildCommonExpectedAttributesMap(AuthenticationType.SmartID);
-        verifyHandlerResult(handlerResult, expectedAttributes);
+        verifyAuthenticationHandlerExecutionResult(AuthenticationHandlerExecutionResult, expectedAttributes);
     }
 
 
-    private void verifyHandlerResult(HandlerResult handlerResult, Map<String, Object> expectedAttributes) {
-        Assert.assertNotNull("HandlerResult must not be null!", handlerResult);
+    private void verifyAuthenticationHandlerExecutionResult(AuthenticationHandlerExecutionResult AuthenticationHandlerExecutionResult, Map<String, Object> expectedAttributes) {
+        Assert.assertNotNull("AuthenticationHandlerExecutionResult must not be null!", AuthenticationHandlerExecutionResult);
 
-        Principal principal = handlerResult.getPrincipal();
+        Principal principal = AuthenticationHandlerExecutionResult.getPrincipal();
         Assert.assertNotNull("Principal must not be null!", principal);
         Assert.assertEquals(MOCK_PRINCIPAL_CODE, principal.getId());
 
