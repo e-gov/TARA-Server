@@ -188,7 +188,8 @@
         </AsyncLogger>
         <AsyncRoot level="warn">
             <AppenderRef ref="casConsole" level="${sys:tara.console.level}" />
-
+            <AppenderRef ref="casFile" level="${sys:tara.log.level}" />
+            <AppenderRef ref="errorFile" level="error" />
             <!-- Uncomment when using syslog appender -->
             <!--AppenderRef ref="taraSyslog" level="${sys:tara.log.level}" /-->
         </AsyncRoot>

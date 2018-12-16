@@ -3,6 +3,7 @@ package ee.ria.sso.config;
 import ee.ria.sso.authentication.TaraAuthenticationHandler;
 import ee.ria.sso.authentication.principal.TaraPrincipalFactory;
 import ee.ria.sso.flow.TaraWebflowConfigurer;
+import ee.ria.sso.i18n.TaraLocaleChangeInterceptor;
 import lombok.extern.slf4j.Slf4j;
 import org.apereo.cas.authentication.AuthenticationEventExecutionPlan;
 import org.apereo.cas.authentication.AuthenticationEventExecutionPlanConfigurer;
@@ -18,10 +19,15 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.*;
+import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
+import org.springframework.web.servlet.i18n.SessionLocaleResolver;
 import org.springframework.webflow.definition.registry.FlowDefinitionRegistry;
 import org.springframework.webflow.engine.builder.support.FlowBuilderServices;
+
+import java.util.Arrays;
+import java.util.Locale;
 
 /**
  * @author Janar Rahumeel (CGI Estonia)
@@ -43,9 +49,24 @@ public class TaraConfiguration extends WebMvcConfigurerAdapter {
     }
 
     @Bean
+    public LocaleResolver localeResolver() {
+        SessionLocaleResolver bean = new SessionLocaleResolver();
+        String locale = this.casProperties.getLocale().getDefaultValue();
+        this.log.info("Setting default locale to [{}]", locale);
+        bean.setDefaultLocale(new Locale(locale));
+        return bean;
+    }
+
+    @Bean
     public LocaleChangeInterceptor localeChangeInterceptor() {
         TaraLocaleChangeInterceptor localeInterceptor = new TaraLocaleChangeInterceptor();
         localeInterceptor.setIgnoreInvalidLocale(true);
+        String[] names = Arrays.asList(casProperties.getLocale().getParamName().split(","))
+                .stream()
+                .map(String::trim)
+                .toArray(String[]::new);
+        localeInterceptor.setParamNames(names);
+        log.info("Supported locale parameters: " + Arrays.asList(localeInterceptor.getParamNames()));
         return localeInterceptor;
     }
 

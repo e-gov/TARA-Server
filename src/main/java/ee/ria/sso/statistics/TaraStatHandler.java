@@ -20,7 +20,7 @@ public class TaraStatHandler {
         try {
             log.info(new ObjectMapper().writeValueAsString(statisticsRecord));
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new IllegalStateException(e);
         }
     }
 
