@@ -39,6 +39,7 @@ public class TaraLocaleChangeInterceptor extends LocaleChangeInterceptor {
                 }
                 try {
                     localeResolver.setLocale(request, response, parseLocaleValue(newLocale));
+                    return true;
                 } catch (IllegalArgumentException ex) {
                     if (isIgnoreInvalidLocale()) {
                         logger.warn("Ignoring invalid locale value [" + newLocale + "]: " + ex.getMessage());

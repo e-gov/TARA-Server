@@ -15,7 +15,7 @@ import org.springframework.web.servlet.LocaleResolver;
 import java.util.Locale;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-public class TaraLocalChangeInterceptorTest {
+public class TaraLocaleChangeInterceptorTest {
 
     @Mock
     LocaleResolver localeResolver;
@@ -72,7 +72,7 @@ public class TaraLocalChangeInterceptorTest {
         servletRequest.addParameter("lang", "en");
 
         interceptor.preHandle(servletRequest, servletResponse, null);
-        Mockito.verify(localeResolver).setLocale(Mockito.eq(servletRequest), Mockito.eq(servletResponse), Mockito.eq(Locale.forLanguageTag("et")));
+        Mockito.verify(localeResolver).setLocale(Mockito.eq(servletRequest), Mockito.eq(servletResponse), Mockito.eq(Locale.forLanguageTag("ru")));
     }
 
     @Test
@@ -90,7 +90,7 @@ public class TaraLocalChangeInterceptorTest {
         servletRequest.addParameter("ui_locales", "xxxxxxxx");
 
         interceptor.preHandle(servletRequest, servletResponse, null);
-        Mockito.verify(localeResolver, Mockito.never()).setLocale(Mockito.eq(servletRequest), Mockito.eq(servletResponse), Mockito.eq(Locale.forLanguageTag("en")));
+        Mockito.verify(localeResolver, Mockito.never()).setLocale(Mockito.eq(servletRequest), Mockito.eq(servletResponse), Mockito.any());
     }
 
     @Test
@@ -99,6 +99,6 @@ public class TaraLocalChangeInterceptorTest {
 
         interceptor.setIgnoreInvalidLocale(true);
         interceptor.preHandle(servletRequest, servletResponse, null);
-        Mockito.verify(localeResolver, Mockito.never()).setLocale(Mockito.eq(servletRequest), Mockito.eq(servletResponse), Mockito.eq(Locale.forLanguageTag("en")));
+        Mockito.verify(localeResolver, Mockito.never()).setLocale(Mockito.eq(servletRequest), Mockito.eq(servletResponse), Mockito.any());
     }
 }
