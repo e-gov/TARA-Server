@@ -1,8 +1,8 @@
 package ee.ria.sso.config.idcard;
 
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
+import ee.ria.sso.service.idcard.OCSPValidator;
 import ee.ria.sso.statistics.StatisticsHandler;
-import ee.ria.sso.validators.OCSPValidator;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

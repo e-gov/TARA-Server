@@ -9,14 +9,13 @@ import com.nortal.banklink.core.packet.param.PacketParameter;
 import com.nortal.banklink.link.BankLinkConfig;
 import ee.ria.sso.CommonConstants;
 import ee.ria.sso.Constants;
-import ee.ria.sso.authentication.BankEnum;
 import ee.ria.sso.authentication.TaraAuthenticationException;
 import ee.ria.sso.authentication.credential.TaraCredential;
 import ee.ria.sso.config.banklink.BanklinkConfigurationProvider;
 import ee.ria.sso.config.banklink.TestBanklinkConfiguration;
 import ee.ria.sso.test.SimpleTestAppender;
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
@@ -116,7 +115,7 @@ public class BanklinkAuthenticationServiceTest {
     @Test
     public void startLoginByBankLinkFailsWhenIncorrectBankParam() {
         expectedEx.expect(TaraAuthenticationException.class);
-        expectedEx.expectMessage(String.format("No enum constant ee.ria.sso.authentication.BankEnum.????",
+        expectedEx.expectMessage(String.format("No enum constant ee.ria.sso.service.banklink.BankEnum.????",
                 Arrays.stream(BankEnum.values()).map(be -> be.getAuthLinkBank().getSpec()).collect(Collectors.toList())
         ));
 

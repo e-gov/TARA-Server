@@ -1,38 +1,37 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!-- Specify the refresh internal in seconds. -->
 <Configuration monitorInterval="5" packages="org.apereo.cas.logging">
     <Properties>
 
         <!-- The default logs output directory -->
-        <Property name="cas.log.dir">/var/log/cas</Property>
+        <Property name="tara.log.dir">/var/log/cas</Property>
 
         <!-- Log record format: -->
-        <Property name="cas.log.pattern">{&quot;date&quot;:&quot;%d{yyyy-MM-dd'T'HH:mm:ss,SSSZ}&quot;, &quot;level&quot;:&quot;%level&quot;%notEmpty{, &quot;requestId&quot;:&quot;%X{requestId}&quot;}%notEmpty{, &quot;sessionId&quot;:&quot;%X{sessionId}&quot;}, &quot;logger&quot;:&quot;%logger&quot;, &quot;thread&quot;:&quot;%thread&quot;, &quot;message&quot;:&quot;%enc{%msg}{JSON}&quot;}%n</Property>
+        <Property name="tara.log.pattern">{&quot;date&quot;:&quot;%d{yyyy-MM-dd'T'HH:mm:ss,SSSZ}&quot;, &quot;level&quot;:&quot;%level&quot;%notEmpty{, &quot;requestId&quot;:&quot;%X{requestId}&quot;}%notEmpty{, &quot;sessionId&quot;:&quot;%X{sessionId}&quot;}, &quot;logger&quot;:&quot;%logger&quot;, &quot;thread&quot;:&quot;%thread&quot;, &quot;message&quot;:&quot;%enc{%msg}{JSON}&quot;}%n</Property>
 
         <!-- Log record format: error details -->
-        <Property name="cas.error_details_log.pattern">{&quot;date&quot;:&quot;%d{yyyy-MM-dd'T'HH:mm:ss,SSSZ}&quot;, &quot;level&quot;:&quot;%level&quot;%notEmpty{, &quot;requestId&quot;:&quot;%X{requestId}&quot;}%notEmpty{, &quot;sessionId&quot;:&quot;%X{sessionId}&quot;}, &quot;throwable&quot;:&quot;%enc{%throwable}{JSON}&quot;}%n</Property>
+        <Property name="tara.error_details_log.pattern">{&quot;date&quot;:&quot;%d{yyyy-MM-dd'T'HH:mm:ss,SSSZ}&quot;, &quot;level&quot;:&quot;%level&quot;%notEmpty{, &quot;requestId&quot;:&quot;%X{requestId}&quot;}%notEmpty{, &quot;sessionId&quot;:&quot;%X{sessionId}&quot;}, &quot;throwable&quot;:&quot;%enc{%throwable}{JSON}&quot;}%n</Property>
 
         <!-- Log record format: cas_audit.log -->
-        <Property name="cas.audit_log.pattern">{&quot;request&quot;:&quot;%enc{%X{method} %X{scheme}://%X{serverName}:%X{serverPort}%X{requestUri}}{JSON}&quot;, &quot;requestId&quot;:&quot;%X{requestId}&quot;, &quot;sessionId&quot;:&quot;%X{sessionId}&quot;, &quot;message&quot;:&quot;%enc{%msg}{JSON}&quot;}%n</Property>
+        <Property name="tara.audit_log.pattern">{&quot;request&quot;:&quot;%enc{%X{method} %X{scheme}://%X{serverName}:%X{serverPort}%X{requestUri}}{JSON}&quot;, &quot;requestId&quot;:&quot;%X{requestId}&quot;, &quot;sessionId&quot;:&quot;%X{sessionId}&quot;, &quot;message&quot;:&quot;%enc{%msg}{JSON}&quot;}%n</Property>
 
         <!-- Log record format: stats.log -->
-        <Property name="cas.stats_log.pattern">%m%n</Property>
+        <Property name="tara.stats_log.pattern">%m%n</Property>
 
         <!-- Log record format for syslog. Note that the syslog facility code is constant: 'local1' (17). And syslog priority is assigned error (3) in case of ERROR level, otherwise 'notice' (5) shall be used) -->
-        <Property name="cas.syslog.pattern">&lt;%level{WARN=141, DEBUG=141, ERROR=139, TRACE=141, INFO=141}&gt;1 %d{yyyy-MM-dd'T'HH:mm:ss.SSSZ} ${hostName} rak-tara.log - - - ${sys:cas.log.pattern}</Property>
+        <Property name="tara.syslog.pattern">&lt;%level{WARN=141, DEBUG=141, ERROR=139, TRACE=141, INFO=141}&gt;1 %d{yyyy-MM-dd'T'HH:mm:ss.SSSZ} ${hostName} rak-tara.log - - - ${sys:tara.log.pattern}</Property>
 
         <!-- Log record format for syslog. Note that the syslog facility code is constant: 'local1' (17). And syslog priority is assigned error (3) in case of ERROR level, otherwise 'notice' (5) shall be used) -->
-        <Property name="cas.audit.syslog.pattern">&lt;%level{WARN=141, DEBUG=141, ERROR=139, TRACE=141, INFO=141}&gt;1 %d{yyyy-MM-dd'T'HH:mm:ss.SSSZ} ${hostName} rak-tara_audit.log - - - ${sys:cas.audit_log.pattern}</Property>
+        <Property name="tara.audit.syslog.pattern">&lt;%level{WARN=141, DEBUG=141, ERROR=139, TRACE=141, INFO=141}&gt;1 %d{yyyy-MM-dd'T'HH:mm:ss.SSSZ} ${hostName} rak-tara_audit.log - - - ${sys:tara.audit_log.pattern}</Property>
 
         <!-- Log record format for syslog. Note that the syslog facility code is constant: 'local1' (17). And syslog priority is assigned error (3) in case of ERROR level, otherwise 'notice' (5) shall be used) -->
-        <Property name="cas.stats.syslog.pattern">&lt;%level{WARN=141, DEBUG=141, ERROR=139, TRACE=141, INFO=141}&gt;1 %d{yyyy-MM-dd'T'HH:mm:ss.SSSZ} ${hostName} rak-tara_stats.log - - - ${sys:cas.stats_log.pattern}</Property>
+        <Property name="tara.stats.syslog.pattern">&lt;%level{WARN=141, DEBUG=141, ERROR=139, TRACE=141, INFO=141}&gt;1 %d{yyyy-MM-dd'T'HH:mm:ss.SSSZ} ${hostName} rak-tara_stats.log - - - ${sys:tara.stats_log.pattern}</Property>
 
 
         <!-- The default log verbosity level for cas.log -->
-        <Property name="cas.log.level">info</Property>
+        <Property name="tara.log.level">info</Property>
 
         <!-- The default log verbosity level for console -->
-        <Property name="cas.console.level">off</Property>
+        <Property name="tara.console.level">off</Property>
 
     </Properties>
     <Appenders>
@@ -51,57 +50,57 @@
 
         <!-- NB! Uncomment and configure this section when sending log events to external syslog server -->
         <!--Socket name="taraSyslog" host="example_host" port="example_port" protocol="SSL">
-            <PatternLayout charset="UTF-8" pattern="${sys:cas.syslog.pattern}" alwaysWriteExceptions="false"/>
+            <PatternLayout charset="UTF-8" pattern="${sys:tara.syslog.pattern}" alwaysWriteExceptions="false"/>
             <SSL>
                 <KeyStore   location="/path/to/log4j2-keystore.jks"      password="changeit"/>
                 <TrustStore location="/path/to/log4j2-truststore.jks"    password="changeit"/>
             </SSL>
         </Socket>
         <Socket name="taraAuditSyslog" host="example_host" port="example_port" protocol="SSL">
-            <PatternLayout charset="UTF-8" pattern="${sys:cas.audit.syslog.pattern}" alwaysWriteExceptions="false"/>
+            <PatternLayout charset="UTF-8" pattern="${sys:tara.audit.syslog.pattern}" alwaysWriteExceptions="false"/>
             <SSL>
                 <KeyStore   location="/path/to/log4j2-keystore.jks"      password="changeit"/>
                 <TrustStore location="/path/to/log4j2-truststore.jks"    password="changeit"/>
             </SSL>
         </Socket>
         <Socket name="taraStatsSyslog" host="example_host" port="example_port" protocol="SSL">
-            <PatternLayout charset="UTF-8" pattern="${sys:cas.stats.syslog.pattern}" alwaysWriteExceptions="false"/>
+            <PatternLayout charset="UTF-8" pattern="${sys:tara.stats.syslog.pattern}" alwaysWriteExceptions="false"/>
             <SSL>
                 <KeyStore   location="/path/to/log4j2-keystore.jks"      password="changeit"/>
                 <TrustStore location="/path/to/log4j2-truststore.jks"    password="changeit"/>
             </SSL>
         </Socket-->
 
-        <RollingFile name="statisticsFileAppender" fileName="${sys:cas.log.dir}/stats.log" append="true"
-                     filePattern="${sys:cas.log.dir}/$${date:yyyy-MM}/stats-%d{yyyy-MM-dd-HH}-%i.log.gz">
-            <PatternLayout pattern="${sys:cas.stats.pattern}"/>
+        <RollingFile name="statisticsFileAppender" fileName="${sys:tara.log.dir}/stats.log" append="true"
+                     filePattern="${sys:tara.log.dir}/$${date:yyyy-MM}/stats-%d{yyyy-MM-dd-HH}-%i.log.gz">
+            <PatternLayout pattern="${sys:tara.stats_log.pattern}"/>
             <Policies>
                 <OnStartupTriggeringPolicy/>								<!-- Log rotation every time CAS is started -->
                 <TimeBasedTriggeringPolicy interval="1" modulate="true"/>	<!-- Log rotation once the date/time pattern no longer applies to the active file. This policy accepts an interval attribute which indicates how frequently the rollover should occur based on the time pattern and a modulate boolean attribute. -->
                 <SizeBasedTriggeringPolicy size="100 MB"/>					<!-- Log rotation once the file has reached the specified size. The size can be specified in bytes, with the suffix KB, MB or GB, for example 20MB -->
             </Policies>
         </RollingFile>
-        <RollingFile name="file" fileName="${sys:cas.log.dir}/cas.log" append="true"
-                     filePattern="${sys:cas.log.dir}/$${date:yyyy-MM}/cas-%d{yyyy-MM-dd-HH}-%i.log.gz">
-            <PatternLayout alwaysWriteExceptions="false" pattern="${sys:cas.log.pattern}" />
+        <RollingFile name="file" fileName="${sys:tara.log.dir}/cas.log" append="true"
+                     filePattern="${sys:tara.log.dir}/$${date:yyyy-MM}/cas-%d{yyyy-MM-dd-HH}-%i.log.gz">
+            <PatternLayout alwaysWriteExceptions="false" pattern="${sys:tara.log.pattern}" />
             <Policies>
                 <OnStartupTriggeringPolicy />
                 <SizeBasedTriggeringPolicy size="100 MB"/>
                 <TimeBasedTriggeringPolicy />
             </Policies>
         </RollingFile>
-        <RollingFile name="errorFile" fileName="${sys:cas.log.dir}/cas_error.log" append="true"
-                     filePattern="${sys:cas.log.dir}/$${date:yyyy-MM}/cas_error-%d{yyyy-MM-dd-HH}-%i.log.gz">
-            <PatternLayout alwaysWriteExceptions="false" pattern="${sys:cas.error_details_log.pattern}" />
+        <RollingFile name="errorFile" fileName="${sys:tara.log.dir}/cas_error.log" append="true"
+                     filePattern="${sys:tara.log.dir}/$${date:yyyy-MM}/cas_error-%d{yyyy-MM-dd-HH}-%i.log.gz">
+            <PatternLayout alwaysWriteExceptions="false" pattern="${sys:tara.error_details_log.pattern}" />
             <Policies>
                 <OnStartupTriggeringPolicy />
                 <SizeBasedTriggeringPolicy size="100 MB"/>
                 <TimeBasedTriggeringPolicy />
             </Policies>
         </RollingFile>
-        <RollingFile name="auditlogfile" fileName="${sys:cas.log.dir}/cas_audit.log" append="true"
-                     filePattern="${sys:cas.log.dir}/$${date:yyyy-MM}/cas_audit-%d{yyyy-MM-dd-HH}-%i.log.gz">
-            <PatternLayout pattern="${sys:cas.audit_log.pattern}"/>
+        <RollingFile name="auditlogfile" fileName="${sys:tara.log.dir}/cas_audit.log" append="true"
+                     filePattern="${sys:tara.log.dir}/$${date:yyyy-MM}/cas_audit-%d{yyyy-MM-dd-HH}-%i.log.gz">
+            <PatternLayout pattern="${sys:tara.audit_log.pattern}"/>
             <Policies>
                 <OnStartupTriggeringPolicy />
                 <SizeBasedTriggeringPolicy size="100 MB"/>
@@ -109,8 +108,8 @@
             </Policies>
         </RollingFile>
         <!-- Files older than 1 day are deleted. File will be rolled overs when 100MB limit is reached and only 5 last files are kept -->
-        <RollingFile name="perfFileAppender" fileName="${sys:cas.log.dir}/perfStats.log" append="true"
-                     filePattern="${sys:cas.log.dir}/$${date:yyyy-MM}/perfStats-%d{yyyy-MM-dd}-%i.log.gz">
+        <RollingFile name="perfFileAppender" fileName="${sys:tara.log.dir}/perfStats.log" append="true"
+                     filePattern="${sys:tara.log.dir}/$${date:yyyy-MM}/perfStats-%d{yyyy-MM-dd}-%i.log.gz">
             <PatternLayout pattern="%m%n"/>
             <Policies>
                 <OnStartupTriggeringPolicy />
@@ -118,7 +117,7 @@
                 <TimeBasedTriggeringPolicy />
             </Policies>
             <DefaultRolloverStrategy max="5" compressionLevel="9">
-                <Delete basePath="${sys:cas.log.dir}" maxDepth="2">
+                <Delete basePath="${sys:tara.log.dir}" maxDepth="2">
                     <IfFileName glob="*/*.log.gz" />
                     <IfLastModified age="1d" />
                 </Delete>
@@ -140,37 +139,37 @@
     </Appenders>
     <Loggers>
         <AsyncLogger name="nz.net.ultraq.thymeleaf" level="error" additivity="false" >
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
+            <AppenderRef ref="casConsole" level="${sys:tara.console.level}" />
             <AppenderRef ref="errorFile" level="error" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
+            <AppenderRef ref="casFile" level="${sys:tara.log.level}" />
 
             <!-- Uncomment when using syslog appender -->
-            <!--AppenderRef ref="taraSyslog" level="${sys:cas.log.level}" /-->
+            <!--AppenderRef ref="taraSyslog" level="${sys:tara.log.level}" /-->
         </AsyncLogger>
         <AsyncLogger name="org.apereo.cas" level="error" additivity="false" >
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
+            <AppenderRef ref="casConsole" level="${sys:tara.console.level}" />
             <AppenderRef ref="errorFile" level="error" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
+            <AppenderRef ref="casFile" level="${sys:tara.log.level}" />
 
             <!-- Uncomment when using syslog appender -->
-            <!--AppenderRef ref="taraSyslog" level="${sys:cas.log.level}" /-->
+            <!--AppenderRef ref="taraSyslog" level="${sys:tara.log.level}" /-->
         </AsyncLogger>
-        <AsyncLogger name="ee.ria" level="${sys:cas.log.level}" additivity="false" >
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
+        <AsyncLogger name="ee.ria" level="${sys:tara.log.level}" additivity="false" >
+            <AppenderRef ref="casConsole" level="${sys:tara.console.level}" />
             <AppenderRef ref="errorFile" level="error" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
+            <AppenderRef ref="casFile" level="${sys:tara.log.level}" />
 
             <!-- Uncomment when using syslog appender -->
-            <!--AppenderRef ref="taraSyslog" level="${sys:cas.log.level}" /-->
+            <!--AppenderRef ref="taraSyslog" level="${sys:tara.log.level}" /-->
         </AsyncLogger>
         <AsyncLogger name="auditLog" level="info" includeLocation="true" additivity="false">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
+            <AppenderRef ref="casConsole" level="${sys:tara.console.level}" />
             <AppenderRef ref="casAudit"/>
             <AppenderRef ref="errorFile" level="error" />
-            <AppenderRef ref="casFile" level="${sys:cas.log.level}" />
+            <AppenderRef ref="casFile" level="${sys:tara.log.level}" />
 
             <!-- Uncomment when using syslog appender -->
-            <!--AppenderRef ref="taraAuditSyslog" level="${sys:cas.log.level}" /-->
+            <!--AppenderRef ref="taraAuditSyslog" level="${sys:tara.log.level}" /-->
         </AsyncLogger>
         <AsyncLogger name="ee.ria.sso.statistics.StatisticsHandler" level="debug" additivity="false">
             <AppenderRef ref="statisticsFileAppender"/>
@@ -185,13 +184,14 @@
             <!-- Uncomment when using Tara-Stat service -->
             <!--AppenderRef ref="taraStatServiceAppender"/-->
 
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
+            <AppenderRef ref="casConsole" level="${sys:tara.console.level}" />
         </AsyncLogger>
         <AsyncRoot level="warn">
-            <AppenderRef ref="casConsole" level="${sys:cas.console.level}" />
-
+            <AppenderRef ref="casConsole" level="${sys:tara.console.level}" />
+            <AppenderRef ref="casFile" level="${sys:tara.log.level}" />
+            <AppenderRef ref="errorFile" level="error" />
             <!-- Uncomment when using syslog appender -->
-            <!--AppenderRef ref="taraSyslog" level="${sys:cas.log.level}" /-->
+            <!--AppenderRef ref="taraSyslog" level="${sys:tara.log.level}" /-->
         </AsyncRoot>
     </Loggers>
 </Configuration>

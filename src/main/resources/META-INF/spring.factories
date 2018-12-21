@@ -1,3 +1,1 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-  org.apereo.cas.config.CasEmbeddedContainerTomcatConfiguration,\
-  ee.ria.sso.config.TaraConfiguration
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=ee.ria.sso.config.TaraConfiguration

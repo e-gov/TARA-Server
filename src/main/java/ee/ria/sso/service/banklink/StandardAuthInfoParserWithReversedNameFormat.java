@@ -1,7 +1,7 @@
 package ee.ria.sso.service.banklink;
 
 import com.nortal.banklink.authentication.link.standard.IPizzaStandardAuthInfoParser;
-import org.apache.commons.lang3.text.WordUtils;
+import org.apache.commons.text.WordUtils;
 
 import java.util.Arrays;
 

@@ -1,6 +1,6 @@
 package ee.ria.sso.authentication.principal;
 
-import org.apache.commons.lang3.StringUtils;
+import ee.ria.sso.authentication.credential.TaraCredential;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apereo.cas.authentication.AuthenticationHandler;
 import org.apereo.cas.authentication.Credential;
@@ -9,6 +9,8 @@ import org.apereo.cas.authentication.principal.PrincipalResolver;
 import org.apereo.services.persondir.IPersonAttributeDao;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+
 /**
  * @author Janar Rahumeel (CGI Estonia)
  */
@@ -16,12 +18,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class TaraPrincipalResolver implements PrincipalResolver {
 
-    public Principal resolve(Credential credential, Principal principal, AuthenticationHandler handler) {
-        return principal;
+    public Principal resolve(Credential credential, Optional<Principal> principal, Optional<AuthenticationHandler> handler) {
+        return principal.isPresent() ? principal.get() : null;
     }
 
-    public boolean supports(Credential credential) {
-        return StringUtils.isNotBlank(credential.getId());
+    public boolean supports(Credential credentials) {
+        return TaraCredential.class.isAssignableFrom(credentials.getClass());
     }
 
     public String toString() {

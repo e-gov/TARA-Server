@@ -2,7 +2,7 @@ package ee.ria.sso.security;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.text.StringEscapeUtils;
 
 import javax.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
