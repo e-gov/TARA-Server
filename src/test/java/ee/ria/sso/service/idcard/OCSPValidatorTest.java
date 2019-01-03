@@ -11,6 +11,7 @@ import com.github.tomakehurst.wiremock.http.Response;
 import ee.ria.sso.service.idcard.OCSPValidationException;
 import ee.ria.sso.service.idcard.OCSPValidator;
 import lombok.Setter;
+import org.apache.commons.codec.binary.Hex;
 import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1Primitive;
@@ -144,6 +145,26 @@ public class OCSPValidatorTest {
 
         expectedEx.expect(OCSPValidationException.class);
         expectedEx.expectMessage("OCSP request failed with status code 500");
+
+        ocspValidator.validate(userCert, issuerCert, ocspConfiguration);
+    }
+
+    @Test
+    public void validateShouldThrowExceptionWhenOcspResponseIsMissingBody() throws Exception {
+        X509Certificate issuerCert = loadCertificateFromResource(MOCK_ISSUER_CERT_PATH);
+        X509Certificate userCert = loadCertificateFromResource(MOCK_USER_CERT_PATH);
+
+        wireMockServer.stubFor(WireMock.post("/ocsp")
+                .willReturn(WireMock.aResponse()
+                        .withTransformerParameter("ignore", true)
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/ocsp-request")
+                        .withBody(Hex.decodeHex("30030a0100"))
+                )
+        );
+
+        expectedEx.expect(OCSPValidationException.class);
+        expectedEx.expectMessage("Invalid OCSP response! OCSP response object bytes could not be read!");
 
         ocspValidator.validate(userCert, issuerCert, ocspConfiguration);
     }
@@ -356,6 +377,7 @@ public class OCSPValidatorTest {
 
         @Override
         public Response transform(Request request, Response response, FileSource fileSource, Parameters parameters) {
+            if (parameters != null && parameters.containsKey("ignore")) return response;
             if (response.getStatus() != 200) return response;
             byte[] responseBytes;
 

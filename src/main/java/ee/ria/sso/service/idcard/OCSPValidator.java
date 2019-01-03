@@ -67,6 +67,7 @@ public class OCSPValidator {
 
             OCSPResp response = this.sendOCSPReq(buildOCSPReq(certificateID, nonce), ocsp.getServiceUrl());
             BasicOCSPResp basicOCSPResponse = (BasicOCSPResp) response.getResponseObject();
+            Assert.notNull(basicOCSPResponse,"Invalid OCSP response! OCSP response object bytes could not be read!");
 
             validateResponseNonce(basicOCSPResponse, nonce);
             validateResponseSignature(basicOCSPResponse, ocsp.getTrustedCertificates());
