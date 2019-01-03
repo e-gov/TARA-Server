@@ -1,5 +1,6 @@
 package ee.ria.sso.config;
 
+import ee.ria.sso.i18n.TaraLocaleChangeInterceptor;
 import ee.ria.sso.oidc.*;
 import org.apache.http.HttpStatus;
 import org.apereo.cas.audit.AuditableExecution;
@@ -192,10 +193,10 @@ public class TaraOidcConfiguration {
     public FactoryBean<OidcServerDiscoverySettings> oidcServerDiscoverySettingsFactory() {
         return new OidcServerDiscoverySettingsFactory(casProperties) {
             @Override
-            public OidcServerDiscoverySettings getObject() {
+            public TaraOidcServerDiscoverySettings getObject() {
                 final OidcProperties oidc = casProperties.getAuthn().getOidc();
-                final OidcServerDiscoverySettings discoveryProperties =
-                        new OidcServerDiscoverySettings(casProperties, oidc.getIssuer());
+                final TaraOidcServerDiscoverySettings discoveryProperties =
+                        new TaraOidcServerDiscoverySettings(casProperties, oidc.getIssuer());
                 discoveryProperties.setClaimsSupported(oidc.getClaims());
                 discoveryProperties.setScopesSupported(oidc.getScopes());
                 discoveryProperties.setResponseTypesSupported(
@@ -205,6 +206,7 @@ public class TaraOidcConfiguration {
                 discoveryProperties.setGrantTypesSupported(
                         Collections.singletonList(OAuth20GrantTypes.AUTHORIZATION_CODE.getType()));
                 discoveryProperties.setIdTokenSigningAlgValuesSupported(Arrays.asList("none", "RS256"));
+                discoveryProperties.setUiLocalesSupported(TaraLocaleChangeInterceptor.SUPPORTED_LOCALE_PARAM_VALUES);
                 return discoveryProperties;
             }
         };

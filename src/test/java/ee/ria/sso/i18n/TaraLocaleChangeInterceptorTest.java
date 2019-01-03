@@ -12,6 +12,8 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.servlet.DispatcherServlet;
 import org.springframework.web.servlet.LocaleResolver;
+
+import java.util.Arrays;
 import java.util.Locale;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -35,6 +37,7 @@ public class TaraLocaleChangeInterceptorTest {
         servletResponse = new MockHttpServletResponse();
         servletRequest.setAttribute(DispatcherServlet.LOCALE_RESOLVER_ATTRIBUTE, localeResolver);
         interceptor = new TaraLocaleChangeInterceptor();
+        interceptor.setIgnoreInvalidLocale(true);
     }
 
     @Test
@@ -64,8 +67,24 @@ public class TaraLocaleChangeInterceptorTest {
     }
 
     @Test
-    public void multipleValidLocaleParametersWithValidValuesFirstParameterIsUsedToUpdateLocale() throws Exception {
-        interceptor.setParamNames(new String[] {"ui_locales", "locale"});
+    public void localeValuesMustBeCaseInsensitive() throws Exception {
+        servletRequest.addParameter(TaraLocaleChangeInterceptor.DEFAULT_OIDC_LOCALE_PARAM, "eN");
+
+        interceptor.preHandle(servletRequest, servletResponse, null);
+        Mockito.verify(localeResolver).setLocale(Mockito.eq(servletRequest), Mockito.eq(servletResponse), Mockito.eq(Locale.forLanguageTag("en")));
+    }
+
+    @Test
+    public void validDefaultLocaleParameterWithMultipleValuesSelectsFirstValidLocaleValue() throws Exception {
+        servletRequest.addParameter(TaraLocaleChangeInterceptor.DEFAULT_OIDC_LOCALE_PARAM, "fi en ru");
+        interceptor.setIgnoreInvalidLocale(true);
+        interceptor.preHandle(servletRequest, servletResponse, null);
+        Mockito.verify(localeResolver).setLocale(Mockito.eq(servletRequest), Mockito.eq(servletResponse), Mockito.eq(Locale.forLanguageTag("en")));
+    }
+
+    @Test
+    public void multipleValidLocaleParametersWithValidValueFirstParameterIsUsedToUpdateLocale() throws Exception {
+        interceptor.setParamNames(Arrays.asList("ui_locales", "locale"));
 
         servletRequest.addParameter("ui_locales", "ru");
         servletRequest.addParameter("locale", "et");
@@ -89,6 +108,7 @@ public class TaraLocaleChangeInterceptorTest {
         expectedEx.expectMessage("Invalid value specified for language selection. Supported values are: [et, en, ru]");
         servletRequest.addParameter("ui_locales", "xxxxxxxx");
 
+        interceptor.setIgnoreInvalidLocale(false);
         interceptor.preHandle(servletRequest, servletResponse, null);
         Mockito.verify(localeResolver, Mockito.never()).setLocale(Mockito.eq(servletRequest), Mockito.eq(servletResponse), Mockito.any());
     }
@@ -97,7 +117,6 @@ public class TaraLocaleChangeInterceptorTest {
     public void validLocaleParameterWithInvalidValueInRequestIsIgnored() throws Exception {
         servletRequest.addParameter("ui_locales", "xxxxxxxx");
 
-        interceptor.setIgnoreInvalidLocale(true);
         interceptor.preHandle(servletRequest, servletResponse, null);
         Mockito.verify(localeResolver, Mockito.never()).setLocale(Mockito.eq(servletRequest), Mockito.eq(servletResponse), Mockito.any());
     }

@@ -27,7 +27,9 @@ import org.springframework.webflow.definition.registry.FlowDefinitionRegistry;
 import org.springframework.webflow.engine.builder.support.FlowBuilderServices;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 /**
  * @author Janar Rahumeel (CGI Estonia)
@@ -61,10 +63,9 @@ public class TaraConfiguration extends WebMvcConfigurerAdapter {
     public LocaleChangeInterceptor localeChangeInterceptor() {
         TaraLocaleChangeInterceptor localeInterceptor = new TaraLocaleChangeInterceptor();
         localeInterceptor.setIgnoreInvalidLocale(true);
-        String[] names = Arrays.asList(casProperties.getLocale().getParamName().split(","))
+        List<String> names = Arrays.asList(casProperties.getLocale().getParamName().split(","))
                 .stream()
-                .map(String::trim)
-                .toArray(String[]::new);
+                .map(String::trim).collect(Collectors.toList());
         localeInterceptor.setParamNames(names);
         log.info("Supported locale parameters: " + Arrays.asList(localeInterceptor.getParamNames()));
         return localeInterceptor;

@@ -11,6 +11,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -19,48 +20,60 @@ import java.util.Locale;
 public class TaraLocaleChangeInterceptor extends LocaleChangeInterceptor {
 
     public static final String DEFAULT_OIDC_LOCALE_PARAM = "ui_locales";
-    private static final String[] DEFAULT_ALLOWED_LOCALE_PARAM_NAMES = {DEFAULT_OIDC_LOCALE_PARAM};
-    private static final List<String> ALLOWED_LOCALE_PARAM_VALUES = Arrays.asList("et", "en", "ru");
+    public static final String LOCALE_VALUE_SEPARATOR = " ";
 
-    private String[] paramNames = DEFAULT_ALLOWED_LOCALE_PARAM_NAMES;
+    public static final List<String> DEFAULT_ALLOWED_LOCALE_PARAM_NAMES = Collections.unmodifiableList(Arrays.asList(DEFAULT_OIDC_LOCALE_PARAM));
+    public static final List<String> SUPPORTED_LOCALE_PARAM_VALUES = Collections.unmodifiableList(Arrays.asList("et", "en", "ru"));
+
+    private List<String> paramNames = DEFAULT_ALLOWED_LOCALE_PARAM_NAMES;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws ServletException {
 
         for (String paramName : getParamNames()) {
-            String newLocale = request.getParameter(paramName);
-            if (newLocale != null) {
-
-                LocaleResolver localeResolver = RequestContextUtils.getLocaleResolver(request);
-                if (localeResolver == null) {
-                    throw new IllegalStateException(
-                            "No LocaleResolver found: not in a DispatcherServlet request?");
-                }
-                try {
-                    localeResolver.setLocale(request, response, parseLocaleValue(newLocale));
-                    return true;
-                } catch (IllegalArgumentException ex) {
-                    if (isIgnoreInvalidLocale()) {
-                        logger.warn("Ignoring invalid locale value [" + newLocale + "]: " + ex.getMessage());
-                    } else {
-                        throw ex;
-                    }
-                }
-            }
-
+            if (updateLocale(request, response, paramName))
+                return true;
         }
 
         // Proceed in any case.
         return true;
     }
 
-    protected Locale parseLocaleValue(String locale) {
-        if (ALLOWED_LOCALE_PARAM_VALUES.contains(locale)) {
-            return (isLanguageTagCompliant() ? Locale.forLanguageTag(locale) : StringUtils.parseLocaleString(locale));
-        } else {
-            throw new IllegalArgumentException("Invalid value specified for language selection. Supported values are: " + ALLOWED_LOCALE_PARAM_VALUES);
+    private boolean updateLocale(HttpServletRequest request, HttpServletResponse response, String paramName) {
+        String newLocale = request.getParameter(paramName);
+        if (StringUtils.isEmpty(newLocale))
+            return false;
+
+        String[] locales = newLocale.toLowerCase().split(LOCALE_VALUE_SEPARATOR);
+
+        for (String locale : locales) {
+            try {
+                if (!SUPPORTED_LOCALE_PARAM_VALUES.contains(locale))
+                    throw new IllegalArgumentException("Invalid value specified for language selection. Supported values are: " + SUPPORTED_LOCALE_PARAM_VALUES);
+
+                setLocale(request, response, locale);
+                return true;
+            } catch (IllegalArgumentException e) {
+                if (isIgnoreInvalidLocale()) {
+                    logger.warn("Ignoring invalid locale value [" + newLocale + "] for parameter [" + paramName + "]: " + e.getMessage());
+                } else {
+                    throw e;
+                }
+            }
         }
+
+        return false;
     }
 
+    private void setLocale(HttpServletRequest request, HttpServletResponse response, String requestedLocale) {
+        Locale locale = parseLocaleValue(requestedLocale);
+        LocaleResolver localeResolver = RequestContextUtils.getLocaleResolver(request);
+        if (localeResolver == null) {
+            throw new IllegalStateException(
+                    "No LocaleResolver found: not in a DispatcherServlet request?");
+        }
+
+        localeResolver.setLocale(request, response, locale);
+    }
 }
