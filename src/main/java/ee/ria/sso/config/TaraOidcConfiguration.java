@@ -63,6 +63,9 @@ import java.util.stream.Stream;
 public class TaraOidcConfiguration {
 
     @Autowired
+    private TaraProperties taraProperties;
+
+    @Autowired
     private CasConfigurationProperties casProperties;
 
     @Autowired
@@ -118,6 +121,10 @@ public class TaraOidcConfiguration {
     private PrincipalFactory taraPrincipalFactory;
 
     @Autowired
+    @Qualifier("oidcPrincipalFactory")
+    private PrincipalFactory oidcPrincipalFactory;
+
+    @Autowired
     @Qualifier("defaultOAuthCodeFactory")
     private OAuthCodeFactory defaultOAuthCodeFactory;
 
@@ -147,7 +154,7 @@ public class TaraOidcConfiguration {
                 servicesManager,
                 ticketRegistry,
                 defaultAccessTokenFactory,
-                oidcPrincipalFactory(),
+                oidcPrincipalFactory,
                 webApplicationServiceFactory,
                 defaultOAuthCodeFactory,
                 consentApprovalViewResolver,
@@ -164,7 +171,7 @@ public class TaraOidcConfiguration {
     public OidcAccessTokenEndpointController oidcAccessTokenController() {
         return new TaraOidcAccessTokenEndpointController(
                 servicesManager, ticketRegistry, defaultAccessTokenFactory,
-                oidcPrincipalFactory(), webApplicationServiceFactory, oauthTokenGenerator,
+                oidcPrincipalFactory, webApplicationServiceFactory, oauthTokenGenerator,
                 oidcAccessTokenResponseGenerator(), profileScopeToAttributesFilter, casProperties,
                 ticketGrantingTicketCookieGenerator.getIfAvailable(), accessTokenExpirationPolicy,
                 accessTokenGrantRequestExtractors, oauthTokenRequestValidators);
@@ -185,18 +192,13 @@ public class TaraOidcConfiguration {
     }
 
     @Bean
-    public PrincipalFactory oidcPrincipalFactory() {
-        return taraPrincipalFactory;
-    }
-
-    @Bean
     public FactoryBean<OidcServerDiscoverySettings> oidcServerDiscoverySettingsFactory() {
         return new OidcServerDiscoverySettingsFactory(casProperties) {
             @Override
             public TaraOidcServerDiscoverySettings getObject() {
                 final OidcProperties oidc = casProperties.getAuthn().getOidc();
                 final TaraOidcServerDiscoverySettings discoveryProperties =
-                        new TaraOidcServerDiscoverySettings(casProperties, oidc.getIssuer());
+                        new TaraOidcServerDiscoverySettings(taraProperties, casProperties, oidc.getIssuer());
                 discoveryProperties.setClaimsSupported(oidc.getClaims());
                 discoveryProperties.setScopesSupported(oidc.getScopes());
                 discoveryProperties.setResponseTypesSupported(
@@ -205,7 +207,7 @@ public class TaraOidcConfiguration {
                 discoveryProperties.setClaimTypesSupported(Collections.singletonList("normal"));
                 discoveryProperties.setGrantTypesSupported(
                         Collections.singletonList(OAuth20GrantTypes.AUTHORIZATION_CODE.getType()));
-                discoveryProperties.setIdTokenSigningAlgValuesSupported(Arrays.asList("none", "RS256"));
+                discoveryProperties.setIdTokenSigningAlgValuesSupported(Arrays.asList("RS256"));
                 discoveryProperties.setUiLocalesSupported(TaraLocaleChangeInterceptor.SUPPORTED_LOCALE_PARAM_VALUES);
                 return discoveryProperties;
             }

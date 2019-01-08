@@ -1,14 +1,13 @@
 package ee.ria.sso.config;
 
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import org.apereo.cas.audit.AuditTrailExecutionPlan;
 import org.apereo.cas.audit.AuditTrailRecordResolutionPlan;
 import org.apereo.cas.audit.AuditableExecution;
 import org.apereo.cas.audit.spi.DefaultAuditTrailRecordResolutionPlan;
+import org.apereo.cas.authentication.principal.PrincipalFactory;
 import org.apereo.cas.authentication.principal.ServiceFactory;
 import org.apereo.cas.authentication.principal.WebApplicationService;
-import org.apereo.cas.configuration.model.support.oidc.OidcProperties;
 import org.apereo.cas.oidc.token.OidcIdTokenSigningAndEncryptionService;
 import org.apereo.cas.services.OidcRegisteredService;
 import org.apereo.cas.services.ServicesManager;
@@ -32,6 +31,7 @@ import org.mockito.Mockito;
 import org.pac4j.core.config.Config;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.info.BuildProperties;
 import org.springframework.boot.info.GitProperties;
 import org.springframework.context.annotation.Bean;
@@ -42,12 +42,9 @@ import org.springframework.webflow.definition.registry.FlowDefinitionRegistryImp
 import org.springframework.webflow.engine.builder.support.FlowBuilderServices;
 
 import javax.annotation.PostConstruct;
-import java.security.KeyPairGenerator;
-import java.security.interfaces.RSAPublicKey;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author Janar Rahumeel (CGI Estonia)
@@ -79,6 +76,10 @@ public class TestTaraConfiguration {
     public ServicesManager servicesManager() {
         return Mockito.mock(ServicesManager.class);
     }
+
+    @Bean
+    @Qualifier("oidcPrincipalFactory")
+    public PrincipalFactory oidcPrincipalFactory() {return Mockito.mock(PrincipalFactory.class); }
 
     @Bean
     public AuditTrailRecordResolutionPlan auditTrailRecordResolutionPlan() {

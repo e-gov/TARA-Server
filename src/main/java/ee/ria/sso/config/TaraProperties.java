@@ -57,14 +57,14 @@ public class TaraProperties {
         return this.environment.getProperty("tara.version", "-");
     }
 
-    private boolean isPropertyEnabled(final String propertyName) {
+    public boolean isPropertyEnabled(final String propertyName) {
         return StringUtils.isNotBlank(propertyName) && "true".equals(
-                this.environment.getProperty(propertyName + ".enabled", (String) null)
+                this.environment.getProperty(propertyName, (String) null)
         );
     }
 
     public boolean isAuthMethodAllowed(final AuthenticationType method) {
-        if (method != null && this.isPropertyEnabled(method.getPropertyName())) {
+        if (method != null && this.isPropertyEnabled(method.getPropertyName() + ".enabled")) {
             final Object attribute = RequestContextHolder.getRequestContext().getExternalContext()
                     .getSessionMap().get(Constants.TARA_OIDC_SESSION_AUTH_METHODS);
 

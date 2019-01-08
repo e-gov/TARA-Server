@@ -3,6 +3,7 @@ package org.apereo.cas.oidc.config;
 import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import ee.ria.sso.Constants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apereo.cas.CentralAuthenticationService;
@@ -80,6 +81,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.ApplicationContext;
@@ -319,6 +321,7 @@ public class OidcConfiguration extends WebMvcConfigurerAdapter implements CasWeb
                 userDefinedScopeBasedAttributeReleasePolicies(), casProperties);
     }
 
+    @ConditionalOnProperty(name = Constants.TARA_OIDC_INTROSPECTION_ENDPOINT_ENABLED)
     @RefreshScope
     @Bean
     public OidcIntrospectionEndpointController oidcIntrospectionEndpointController() {
@@ -331,6 +334,7 @@ public class OidcConfiguration extends WebMvcConfigurerAdapter implements CasWeb
                 registeredServiceAccessStrategyEnforcer);
     }
 
+    @ConditionalOnProperty(name = Constants.TARA_OIDC_REVOCATION_ENDPOINT_ENABLED)
     @RefreshScope
     @Bean
     public OidcRevocationEndpointController oidcRevocationEndpointController() {
@@ -360,6 +364,7 @@ public class OidcConfiguration extends WebMvcConfigurerAdapter implements CasWeb
         return new OidcClientRegistrationRequestSerializer();
     }
 
+    @ConditionalOnProperty(name = Constants.TARA_OIDC_DYNAMIC_CLIENT_REGISTRATION_ENDPOINT_ENABLED)
     @RefreshScope
     @Bean
     public OidcDynamicClientRegistrationEndpointController oidcDynamicClientRegistrationEndpointController() {
@@ -394,6 +399,7 @@ public class OidcConfiguration extends WebMvcConfigurerAdapter implements CasWeb
                 ticketGrantingTicketCookieGenerator.getIfAvailable());
     }
 
+    @ConditionalOnProperty(name = Constants.TARA_OIDC_PROFILE_ENDPOINT_ENABLED)
     @RefreshScope
     @Bean
     public OidcUserProfileEndpointController oidcProfileController() {
@@ -472,6 +478,7 @@ public class OidcConfiguration extends WebMvcConfigurerAdapter implements CasWeb
     }
 
     @Bean
+    @ConditionalOnMissingBean(name = "oidcServiceJsonWebKeystoreCache")
     public LoadingCache<OidcRegisteredService, Optional<RsaJsonWebKey>> oidcServiceJsonWebKeystoreCache() {
         final OidcProperties oidc = casProperties.getAuthn().getOidc();
         final LoadingCache<OidcRegisteredService, Optional<RsaJsonWebKey>> cache =

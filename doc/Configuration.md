@@ -18,6 +18,7 @@ _CAS tarkvaras tehtud kohanduste ja täienduste kirjeldus._
   * [Tara-Stat service](#tara_stat)
   * [Test environment warning message](#test_environment_warning)
   * [Audit logging](#audit_logging)
+  * [Enabling additional OpenID Connect endpoints](#oidc_optional_endpoints)
 - [TARA truststore](#tara_truststore)
   * [DigiDocService CA certs](#dds_ca_certs)
   * [Smart-ID CA certs](#smart-id_ca_certs)
@@ -605,6 +606,30 @@ cas.audit.appCode=TARA-INSTANCE-1
 ````
 
 NB! Note that audit logging can be further customized by CAS configuration parameters (see [CAS documentation](https://apereo.github.io/cas/5.3.x/installation/Configuration-Properties.html#audits)).
+
+
+<a name="oidc_optional_endpoints"></a>
+### OpenID Connect optional endpoints
+
+
+
+Table 20 - Relevant parameters for enabling/disabling additional OpenID Connect endpoints in CAS
+
+| Property        | Mandatory | Description |
+| :---------------- | :---------- | :----------------|
+| `oidc.dynamic-client-registration.enabled` | N | Enables/disables the CAS built-in /oidc/registration endpoint and displays/hides the related information at the /oidc/.well-known/openid-configuration. Defaults to `false`, if not specified. |
+| `oidc.profile-endpoint.enabled` | N | Enables/disables the CAS built-in /oidc/profile endpoint and displays/hides the related information at the /oidc/.well-known/openid-configuration. Defaults to `false`, if not specified. |
+| `oidc.revocation-endpoint.enabled` | N | Enables/disables the CAS built-in /oidc/revocation endpoint and displays/hides the related information at the /oidc/.well-known/openid-configuration. Defaults to `false`, if not specified. |
+| `oidc.introspection-endpoint.enabled` | N | Enables/disables the CAS built-in /oidc/introspection endpoint and displays/hides the related information at the /oidc/.well-known/openid-configuration. Defaults to `false`, if not specified. |
+
+Example:
+
+````
+oidc.dynamic-client-registration.enabled=true
+oidc.profile-endpoint.enabled=true
+oidc.revocation-endpoint.enabled=true
+oidc.introspection-endpoint.enabled=true
+````
 
 
 <a name="tara_truststore"></a>
