@@ -93,7 +93,7 @@ public class OidcJwksEndpointController extends BaseOAuth20Controller {
                                     final JsonWebKeySet set = new JsonWebKeySet(IOUtils.toString(resource.getInputStream(), StandardCharsets.UTF_8));
                                     set.getJsonWebKeys().forEach(jsonWebKeySet::addJsonWebKey);
                                 } catch (Exception e) {
-                                    log.error("Failed to extract JWKS for service with id: {}. Error: {}", s.getServiceId(), e.getMessage(), e);
+                                    log.debug("Failed to extract JWKS for service with id: {}. Error: {}", s.getServiceId(), e.getMessage(), e);
                                 }
                             });
     }
