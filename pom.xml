@@ -9,7 +9,7 @@
     <version>1.3.1</version>
 
     <properties>
-        <cas.version>5.3.6</cas.version>
+        <cas.version>5.3.7</cas.version>
         <spring.version>4.3.20.RELEASE</spring.version>
         <springboot.version>1.5.18.RELEASE</springboot.version>
         <banklink.version>2.1.15</banklink.version>
