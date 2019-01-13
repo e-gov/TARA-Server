@@ -18,7 +18,7 @@ public class HashingUtil {
     private static TaraProperties taraProperties;
 
     public static String hash(String secret) {
-        return DigestUtils.digest(HashingUtil.taraProperties.getApplication().getDigestAlgorithm(),
+        return DigestUtils.digest(HashingUtil.taraProperties.getDigestAlgorithm(),
             secret.getBytes(StandardCharsets.UTF_8));
     }
 

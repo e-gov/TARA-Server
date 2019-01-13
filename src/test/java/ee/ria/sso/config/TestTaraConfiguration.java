@@ -54,12 +54,9 @@ import java.util.Set;
 @Import( TaraConfiguration.class)
 public class TestTaraConfiguration {
 
-    @Autowired
-    private TaraProperties taraProperties;
-
-    @PostConstruct
-    protected void init() {
-        this.taraProperties.getApplication().setMode(TaraProperties.Mode.development);
+    @Bean
+    public TaraProperties taraProperties() {
+        return Mockito.mock(TaraProperties.class);
     }
 
     @Bean

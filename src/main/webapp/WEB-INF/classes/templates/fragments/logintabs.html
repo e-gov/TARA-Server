@@ -32,7 +32,7 @@
             </div>
         </div>
         <div class="c-tab-login__footer">
-            <p><a th:href="${@taraProperties.getHomeUrl()}" th:text="#{label.common.home}">Home</a></p>
+            <p><a th:href="${@thymeleafSupport.getHomeUrl()}" th:text="#{label.common.home}">Home</a></p>
             <p th:if="${!#strings.startsWith(#messages.msg('label.' + tab_id + '.help'), 'label.')}">
                 <a th:href="${#messages.msg('link.' + tab_id + '.help')}" th:text="${#messages.msg('label.' + tab_id + '.help')}" target="_blank" rel="noopener">Help</a>
             </p>

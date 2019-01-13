@@ -96,6 +96,9 @@
                         <overlay>
                             <groupId>org.apereo.cas</groupId>
                             <artifactId>cas-server-webapp${app.server}</artifactId>
+                            <excludes>
+                                <exclude>WEB-INF/classes/user-details.properties</exclude>
+                            </excludes>
                         </overlay>
                     </overlays>
                 </configuration>

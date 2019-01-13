@@ -3,13 +3,14 @@ package ee.ria.sso.config;
 import ee.ria.sso.AbstractTest;
 import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
+import ee.ria.sso.flow.ThymeleafSupport;
 import ee.ria.sso.service.manager.ManagerService;
+import org.apereo.cas.configuration.CasConfigurationProperties;
 import org.apereo.cas.services.OidcRegisteredService;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.webflow.core.collection.SharedAttributeMap;
 import org.springframework.webflow.execution.RequestContextHolder;
 import org.springframework.webflow.test.MockExternalContext;
@@ -20,28 +21,25 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Created by Janar Rahumeel (CGI Estonia)
- */
-
-public class TaraPropertiesTest extends AbstractTest {
+public class ThymeleafSupportTest extends AbstractTest {
 
     @Autowired
-    private TaraProperties taraProperties;
+    CasConfigurationProperties casProperties;
 
-    @Test
-    public void testApplicationVersion() {
-        Assert.assertNotEquals("Is not different", "-", this.taraProperties.getApplicationVersion());
-    }
+    @Autowired TaraProperties taraProperties;
+
+    @Autowired
+    private ThymeleafSupport thymeleafSupport;
 
     @Test
     public void isAuthMethodAllowedShouldReturnTrueWhenMethodsEnabledAndAllowedInSession() {
         Arrays.stream(AuthenticationType.values()).filter(at -> at != AuthenticationType.Default)
                 .forEach(method -> {
+                    Mockito.when(taraProperties.isPropertyEnabled(Mockito.eq(method.getPropertyName()+ ".enabled"))).thenReturn(true);
                     setRequestContextWithSessionMap(Collections.singletonMap(
                             Constants.TARA_OIDC_SESSION_AUTH_METHODS, Collections.singletonList(method)
                     ));
-                    Assert.assertTrue(this.taraProperties.isAuthMethodAllowed(method));
+                    Assert.assertTrue(this.thymeleafSupport.isAuthMethodAllowed(method));
                 });
     }
 
@@ -51,37 +49,37 @@ public class TaraPropertiesTest extends AbstractTest {
                 Constants.TARA_OIDC_SESSION_AUTH_METHODS, Collections.emptyList()
         ));
         Arrays.stream(AuthenticationType.values()).filter(at -> at != AuthenticationType.Default)
-                .forEach(method -> Assert.assertFalse(this.taraProperties.isAuthMethodAllowed(method)));
+                .forEach(method -> Assert.assertFalse(this.thymeleafSupport.isAuthMethodAllowed(method)));
     }
 
     @Test
     public void isAuthMethodAllowedShouldReturnFalseWhenMethodsDisabledButAllowedInSession() {
-        final TaraProperties taraProperties = new TaraProperties(null,
-                Mockito.mock(Environment.class), null);
+        final ThymeleafSupport thymeleafSupport = new ThymeleafSupport(null,
+                casProperties, taraProperties);
         Arrays.stream(AuthenticationType.values()).filter(at -> at != AuthenticationType.Default)
                 .forEach(method -> {
                     setRequestContextWithSessionMap(Collections.singletonMap(
                             Constants.TARA_OIDC_SESSION_AUTH_METHODS, Collections.singletonList(method)
                     ));
-                    Assert.assertFalse(taraProperties.isAuthMethodAllowed(method));
+                    Assert.assertFalse(thymeleafSupport.isAuthMethodAllowed(method));
                 });
     }
 
     @Test
     public void isAuthMethodAllowedShouldReturnFalseWhenMethodsDisabledAndNotAllowedInSession() {
-        final TaraProperties taraProperties = new TaraProperties(null,
-                Mockito.mock(Environment.class), null);
+        final ThymeleafSupport thymeleafSupport = new ThymeleafSupport(null,
+                casProperties, taraProperties);
         setRequestContextWithSessionMap(Collections.singletonMap(
                 Constants.TARA_OIDC_SESSION_AUTH_METHODS, Collections.emptyList()
         ));
         Arrays.stream(AuthenticationType.values()).filter(at -> at != AuthenticationType.Default)
-                .forEach(method -> Assert.assertFalse(taraProperties.isAuthMethodAllowed(method)));
+                .forEach(method -> Assert.assertFalse(thymeleafSupport.isAuthMethodAllowed(method)));
     }
 
     @Test
     public void getHomeUrlShouldReturnEmptyUrlWhenRedirectUriNotPresentInSession() {
         setRequestContextWithSessionMap(null);
-        Assert.assertEquals("#", this.taraProperties.getHomeUrl());
+        Assert.assertEquals("#", this.thymeleafSupport.getHomeUrl());
     }
 
     @Test
@@ -93,12 +91,12 @@ public class TaraPropertiesTest extends AbstractTest {
         Mockito.when(managerService.getServiceByID("https://client/url"))
                 .thenReturn(Optional.of(oidcRegisteredService));
 
-        TaraProperties taraProperties = new TaraProperties(null, null, managerService);
+        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(managerService, null, null);
 
         setRequestContextWithSessionMap(
                 Collections.singletonMap(Constants.TARA_OIDC_SESSION_REDIRECT_URI, "https://client/url")
         );
-        Assert.assertEquals("https://client/url", taraProperties.getHomeUrl());
+        Assert.assertEquals("https://client/url", thymeleafSupport.getHomeUrl());
     }
 
     @Test
@@ -107,12 +105,12 @@ public class TaraPropertiesTest extends AbstractTest {
         Mockito.when(managerService.getServiceByID("https://client/url"))
                 .thenReturn(Optional.empty());
 
-        TaraProperties taraProperties = new TaraProperties(null, null, managerService);
+        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(managerService, casProperties, null);
 
         setRequestContextWithSessionMap(
                 Collections.singletonMap(Constants.TARA_OIDC_SESSION_REDIRECT_URI, "https://client/url")
         );
-        Assert.assertEquals("#", taraProperties.getHomeUrl());
+        Assert.assertEquals("#", thymeleafSupport.getHomeUrl());
     }
 
     private static void setRequestContextWithSessionMap(final Map<String, Object> sessionMap) {
