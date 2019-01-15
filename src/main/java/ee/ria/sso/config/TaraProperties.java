@@ -15,7 +15,7 @@ public class TaraProperties {
     @Value("${oidc.authorize.force-auth-renewal.enabled:true}")
     private boolean forceOidcAuthenticationRenewalEnabled;
 
-    @Value("${env.test.message}")
+    @Value("${env.test.message:#{null}}")
     private String testEnvironmentWarningMessage;
 
     @Getter(AccessLevel.NONE)
