@@ -2,11 +2,11 @@ package ee.ria.sso.config;
 
 import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
-import ee.ria.sso.model.EmptyOidcRegisteredService;
 import ee.ria.sso.service.manager.ManagerService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.apereo.cas.configuration.CasConfigurationProperties;
+import org.apereo.cas.services.OidcRegisteredService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -22,7 +22,8 @@ import org.springframework.webflow.execution.RequestContextHolder;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * @author Janar Rahumeel (CGI Estonia)
@@ -56,14 +57,14 @@ public class TaraProperties {
         return this.environment.getProperty("tara.version", "-");
     }
 
-    private boolean isPropertyEnabled(final String propertyName) {
+    public boolean isPropertyEnabled(final String propertyName) {
         return StringUtils.isNotBlank(propertyName) && "true".equals(
-                this.environment.getProperty(propertyName + ".enabled", (String) null)
+                this.environment.getProperty(propertyName, (String) null)
         );
     }
 
     public boolean isAuthMethodAllowed(final AuthenticationType method) {
-        if (method != null && this.isPropertyEnabled(method.getPropertyName())) {
+        if (method != null && this.isPropertyEnabled(method.getPropertyName() + ".enabled")) {
             final Object attribute = RequestContextHolder.getRequestContext().getExternalContext()
                     .getSessionMap().get(Constants.TARA_OIDC_SESSION_AUTH_METHODS);
 
@@ -116,12 +117,17 @@ public class TaraProperties {
 
         if (redirectUri != null && redirectUri instanceof String) {
             return this.managerService.getServiceByID((String) redirectUri)
-                    .orElse(new EmptyOidcRegisteredService())
+                    .orElse(new OidcRegisteredService() {
+                        @Override
+                        public String getInformationUrl() {
+                            return "#";
+                        }
+                    })
                     .getInformationUrl();
         } else {
             log.error("Could not find home url from session");
+            return "#";
         }
-        return "#";
     }
 
     public String getCurrentRequestIdentifier() {

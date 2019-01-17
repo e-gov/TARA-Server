@@ -6,12 +6,12 @@
     <groupId>ee.ria.tara</groupId>
     <artifactId>tara-server</artifactId>
     <packaging>war</packaging>
-    <version>1.3.1</version>
+    <version>1.4.0</version>
 
     <properties>
-        <cas.version>5.1.9</cas.version>
-        <spring.version>4.3.9.RELEASE</spring.version>
-        <springboot.version>1.5.14.RELEASE</springboot.version>
+        <cas.version>5.3.7</cas.version>
+        <spring.version>4.3.20.RELEASE</spring.version>
+        <springboot.version>1.5.18.RELEASE</springboot.version>
         <banklink.version>2.1.15</banklink.version>
         <!-- app.server could be -jetty, -undertow, -tomcat, or blank if you plan to provide appserver -->
         <app.server>-tomcat</app.server>
@@ -19,17 +19,11 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <cas.config>/etc/cas/config</cas.config>
-        <build.profile.id></build.profile.id>
+        <isExecutable>false</isExecutable>
     </properties>
 
     <build>
         <resources>
-            <resource>
-                <directory>src/main/profiles/${build.profile.id}</directory>
-                <excludes>
-                    <exclude>/config/*</exclude>
-                </excludes>
-            </resource>
             <resource>
                 <directory>src/main/resources</directory>
                 <filtering>true</filtering>
@@ -45,7 +39,7 @@
             <plugin>
                 <groupId>com.rimerosolutions.maven.plugins</groupId>
                 <artifactId>wrapper-maven-plugin</artifactId>
-                <version>0.0.4</version>
+                <version>0.0.5</version>
             </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -136,7 +130,6 @@
     </build>
 
     <dependencies>
-        <!-- https://mvnrepository.com/artifact/javax.servlet/servlet-api -->
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
@@ -156,6 +149,75 @@
             <version>${cas.version}</version>
             <scope>provided</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.apereo.cas</groupId>
+            <artifactId>cas-server-core</artifactId>
+            <version>${cas.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apereo.cas</groupId>
+            <artifactId>cas-server-core-web-api</artifactId>
+            <version>${cas.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apereo.cas</groupId>
+            <artifactId>cas-server-core-webflow-api</artifactId>
+            <version>${cas.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apereo.cas</groupId>
+            <artifactId>cas-server-core-util-api</artifactId>
+            <version>${cas.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apereo.cas</groupId>
+            <artifactId>cas-server-core-api-audit</artifactId>
+            <version>${cas.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apereo.cas</groupId>
+            <artifactId>cas-server-core-services-api</artifactId>
+            <version>${cas.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apereo.cas</groupId>
+            <artifactId>cas-server-core-authentication</artifactId>
+            <version>${cas.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apereo.cas</groupId>
+            <artifactId>cas-server-core-authentication-api</artifactId>
+            <version>${cas.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apereo.cas</groupId>
+            <artifactId>cas-server-core-api-configuration-model</artifactId>
+            <version>${cas.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apereo.cas</groupId>
+            <artifactId>cas-server-core-tickets-api</artifactId>
+            <version>${cas.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apereo.cas</groupId>
+            <artifactId>cas-server-core-cookie-api</artifactId>
+            <version>${cas.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- oidc support -->
         <dependency>
             <groupId>org.apereo.cas</groupId>
             <artifactId>cas-server-support-oidc</artifactId>
@@ -163,9 +225,54 @@
         </dependency>
         <dependency>
             <groupId>org.apereo.cas</groupId>
-            <artifactId>cas-server-support-cookie</artifactId>
+            <artifactId>cas-server-support-oidc-core</artifactId>
             <version>${cas.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apereo.cas</groupId>
+            <artifactId>cas-server-support-oidc-services</artifactId>
+            <version>${cas.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apereo.cas</groupId>
+            <artifactId>cas-server-support-oauth</artifactId>
+            <version>${cas.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apereo.cas</groupId>
+            <artifactId>cas-server-support-oauth-api</artifactId>
+            <version>${cas.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apereo.cas</groupId>
+            <artifactId>cas-server-support-oauth-services</artifactId>
+            <version>${cas.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apereo.cas</groupId>
+            <artifactId>cas-server-support-oauth-core</artifactId>
+            <version>${cas.version}</version>
+        </dependency>
+
+        <!-- service storage support -->
+        <dependency>
+            <groupId>org.apereo.cas</groupId>
+            <artifactId>cas-server-support-jpa-service-registry</artifactId>
+            <version>${cas.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>2.7.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.2.2</version>
+        </dependency>
+
+        <!-- cluster support -->
         <dependency>
             <groupId>org.apereo.cas</groupId>
             <artifactId>cas-server-webapp-session-hazelcast</artifactId>
@@ -176,22 +283,46 @@
             <artifactId>cas-server-support-hazelcast-ticket-registry</artifactId>
             <version>${cas.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.apereo.cas</groupId>
-            <artifactId>cas-server-core</artifactId>
-            <version>${cas.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apereo.cas</groupId>
-            <artifactId>cas-server-core-audit</artifactId>
-            <version>${cas.version}</version>
-            <scope>provided</scope>
-        </dependency>
+
+
+
+
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-aspects</artifactId>
             <version>${spring.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.jasig.cas.client</groupId>
+            <artifactId>cas-client-core</artifactId>
+            <version>3.5.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.pac4j</groupId>
+            <artifactId>pac4j-core</artifactId>
+            <version>3.3.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.pac4j</groupId>
+            <artifactId>spring-webmvc-pac4j</artifactId>
+            <version>3.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.pac4j</groupId>
+            <artifactId>pac4j-cas</artifactId>
+            <version>3.0.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+            <version>2.6.2</version>
+            <scope>provided</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.cryptacular</groupId>
             <artifactId>cryptacular</artifactId>
@@ -219,17 +350,6 @@
             <version>1.3</version>
         </dependency>
         <dependency>
-            <groupId>com.zaxxer</groupId>
-            <artifactId>HikariCP</artifactId>
-            <version>2.7.1</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>42.2.2</version>
-        </dependency>
-        <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk15on</artifactId>
             <version>1.56</version>
@@ -246,11 +366,19 @@
             <artifactId>smart-id-java-client</artifactId>
             <version>1.0</version>
         </dependency>
+
+        <!-- test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <version>${springboot.version}</version>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.vaadin.external.google</groupId>
+                    <artifactId>android-json</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.github.tomakehurst</groupId>
@@ -285,117 +413,9 @@
             </releases>
         </repository>
         <repository>
-            <id>sonatype-snapshots</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-        </repository>
-        <repository>
             <id>shibboleth-releases</id>
             <url>https://build.shibboleth.net/nexus/content/repositories/releases</url>
         </repository>
-        <repository>
-            <id>spring-milestones</id>
-            <url>https://repo.spring.io/milestone</url>
-        </repository>
-        <repository>
-            <id>central</id>
-            <name>Central Repository</name>
-            <url>http://repo.maven.apache.org/maven2</url>
-            <layout>default</layout>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
     </repositories>
-
-    <profiles>
-        <profile>
-            <id>dev</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <properties>
-                <build.profile.id>dev</build.profile.id>
-            </properties>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-resources-plugin</artifactId>
-                        <version>3.0.2</version>
-                        <executions>
-                            <execution>
-                                <id>copy-resources</id>
-                                <phase>validate</phase>
-                                <goals>
-                                    <goal>copy-resources</goal>
-                                </goals>
-                                <configuration>
-                                    <outputDirectory>${cas.config}</outputDirectory>
-                                    <resources>
-                                        <resource>
-                                            <directory>src/main/profiles/${build.profile.id}/config</directory>
-                                        </resource>
-                                    </resources>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.zeroturnaround</groupId>
-                        <artifactId>jrebel-maven-plugin</artifactId>
-                        <version>1.1.8</version>
-                        <executions>
-                            <execution>
-                                <id>generate-rebel-xml</id>
-                                <phase>process-resources</phase>
-                                <goals>
-                                    <goal>generate</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-            <dependencies>
-                <dependency>
-                    <groupId>org.apereo.cas</groupId>
-                    <artifactId>cas-server-support-json-service-registry</artifactId>
-                    <version>${cas.version}</version>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>test</id>
-            <properties>
-                <build.profile.id>test</build.profile.id>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>org.apereo.cas</groupId>
-                    <artifactId>cas-server-support-jpa-service-registry</artifactId>
-                    <version>${cas.version}</version>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>prod</id>
-            <properties>
-                <build.profile.id>prod</build.profile.id>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>org.apereo.cas</groupId>
-                    <artifactId>cas-server-support-jpa-service-registry</artifactId>
-                    <version>${cas.version}</version>
-                </dependency>
-            </dependencies>
-        </profile>
-    </profiles>
 
 </project>

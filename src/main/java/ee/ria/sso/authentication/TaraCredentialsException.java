@@ -1,7 +1,5 @@
 package ee.ria.sso.authentication;
 
-import org.pac4j.core.exception.CredentialsException;
-
 /**
  * Created by Janar Rahumeel (CGI Estonia)
  */
@@ -16,10 +14,6 @@ public class TaraCredentialsException extends RuntimeException {
         super(String.format("Credential value <%s> is invalid", value));
         this.key = key;
         this.value = value;
-    }
-
-    public TaraCredentialsException(String message, CredentialsException e) {
-        super(message, e);
     }
 
     /*

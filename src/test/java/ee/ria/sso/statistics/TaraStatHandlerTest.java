@@ -1,10 +1,12 @@
 package ee.ria.sso.statistics;
 
 import ee.ria.sso.authentication.AuthenticationType;
-import ee.ria.sso.authentication.BankEnum;
+import ee.ria.sso.service.banklink.BankEnum;
 import ee.ria.sso.test.SimpleTestAppender;
 import org.hamcrest.Matchers;
-import org.junit.*;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;

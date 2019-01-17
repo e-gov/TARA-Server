@@ -4,8 +4,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
+import lombok.EqualsAndHashCode;
 import org.apereo.cas.authentication.principal.Principal;
 import org.springframework.util.Assert;
 
@@ -20,7 +19,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonIgnoreProperties(
     ignoreUnknown = true
 )
+@EqualsAndHashCode
 public class TaraPrincipal implements Principal {
+
+    public enum Attribute {
+        PRINCIPAL_CODE,
+        GIVEN_NAME,
+        FAMILY_NAME,
+        AUTHENTICATION_TYPE,
+        DATE_OF_BIRTH,
+        LEVEL_OF_ASSURANCE;
+    }
 
     private static final long serialVersionUID = 1L;
     private Map<String, Object> attributes;
@@ -37,7 +46,6 @@ public class TaraPrincipal implements Principal {
         } else {
             this.attributes = attributes;
         }
-
     }
 
     @Override
@@ -48,26 +56,6 @@ public class TaraPrincipal implements Principal {
     @Override
     public String toString() {
         return this.id;
-    }
-
-    @Override
-    public int hashCode() {
-        HashCodeBuilder builder = new HashCodeBuilder(83, 31);
-        builder.append(this.id.toLowerCase());
-        return builder.toHashCode();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        } else if (obj == this) {
-            return true;
-        } else if (obj.getClass() != this.getClass()) {
-            return false;
-        } else {
-            return StringUtils.equalsIgnoreCase(this.id, ((TaraPrincipal) obj).getId());
-        }
     }
 
     public Map<String, Object> getAttributes() {

@@ -2,6 +2,7 @@ package ee.ria.sso.authentication.principal;
 
 import java.util.Map;
 
+import lombok.EqualsAndHashCode;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apereo.cas.authentication.principal.Principal;
@@ -10,7 +11,7 @@ import org.apereo.cas.authentication.principal.PrincipalFactory;
 /**
  * Created by Janar Rahumeel (CGI Estonia)
  */
-
+@EqualsAndHashCode
 public class TaraPrincipalFactory implements PrincipalFactory {
 
     private static final long serialVersionUID = 1L;
@@ -24,17 +25,8 @@ public class TaraPrincipalFactory implements PrincipalFactory {
 
     public Principal createPrincipal(String id, Map<String, Object> attributes) {
         if (MapUtils.isEmpty(attributes)) {
-            throw new IllegalArgumentException("No any attributes found when creating principal");
+            throw new IllegalArgumentException("No attributes found when creating principal");
         }
         return new TaraPrincipal(id, attributes);
     }
-
-    public boolean equals(Object obj) {
-        return obj == null ? false : (obj == this ? true : obj.getClass() == this.getClass());
-    }
-
-    public int hashCode() {
-        return (new HashCodeBuilder(13, 33)).toHashCode();
-    }
-
 }

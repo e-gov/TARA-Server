@@ -38,7 +38,7 @@ public class IDCardController {
             resourceResolverName = "TARA_AUTHENTICATION_RESOURCE_RESOLVER"
     )
     @GetMapping(path = {"/idcard"})
-    public ModelAndView handleRequest(HttpServletRequest request) throws Exception {
+    public ModelAndView handleRequest(HttpServletRequest request) {
         try {
             String encodedCertificate = request.getHeader(HEADER_SSL_CLIENT_CERT);
             Assert.notNull(encodedCertificate, "Expected header '" + HEADER_SSL_CLIENT_CERT + "' could not be found in request");

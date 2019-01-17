@@ -7,7 +7,7 @@ import com.nortal.banklink.authentication.link.AuthLinkManagerImpl;
 import com.nortal.banklink.authentication.link.standard.IPizzaStandardAuthLink;
 import com.nortal.banklink.core.packet.NonceManager;
 import com.nortal.banklink.link.BankLinkConfig;
-import ee.ria.sso.authentication.BankEnum;
+import ee.ria.sso.service.banklink.BankEnum;
 import ee.ria.sso.service.banklink.HttpSessionNonceManager;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;

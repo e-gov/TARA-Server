@@ -3,7 +3,7 @@ package ee.ria.sso.statistics;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import ee.ria.sso.authentication.AuthenticationType;
-import ee.ria.sso.authentication.BankEnum;
+import ee.ria.sso.service.banklink.BankEnum;
 import org.springframework.util.Assert;
 
 import java.time.LocalDateTime;

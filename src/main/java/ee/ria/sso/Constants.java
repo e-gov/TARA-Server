@@ -6,11 +6,9 @@ package ee.ria.sso;
 
 public final class Constants {
 
-    public static final String APPLICATION_NAME = "TARA";
     public static final String CERTIFICATE_SESSION_ATTRIBUTE = "Client-Certificate";
     public static final String MOBILE_CHALLENGE = "mobileChallenge";
     public static final String MOBILE_SESSION = "mobileSession";
-    public static final String SSN = "principalCode";
     public static final String AUTH_COUNT = "authCount";
     public static final String ERROR_MESSAGE = "TARA_ERROR_MESSAGE";
     public static final String CREDENTIAL = "credential";
@@ -31,5 +29,10 @@ public final class Constants {
     public static final String TARA_OIDC_SESSION_REDIRECT_URI = "taraOidcSessionRedirectUri";
     public static final String TARA_OIDC_SESSION_AUTH_METHODS = "taraOidcSessionAllowedAuthMethods";
     public static final String TARA_OIDC_SESSION_LoA = "taraOidcSessionLoA";
+
+    public static final String TARA_OIDC_DYNAMIC_CLIENT_REGISTRATION_ENDPOINT_ENABLED = "oidc.dynamic-client-registration.enabled";
+    public static final String TARA_OIDC_PROFILE_ENDPOINT_ENABLED = "oidc.profile-endpoint.enabled";
+    public static final String TARA_OIDC_REVOCATION_ENDPOINT_ENABLED = "oidc.revocation-endpoint.enabled";
+    public static final String TARA_OIDC_INTROSPECTION_ENDPOINT_ENABLED = "oidc.introspection-endpoint.enabled";
 
 }

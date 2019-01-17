@@ -7,11 +7,10 @@ import ee.ria.sso.authentication.EidasAuthenticationFailedException;
 import ee.ria.sso.authentication.LevelOfAssurance;
 import ee.ria.sso.authentication.TaraAuthenticationException;
 import ee.ria.sso.authentication.credential.TaraCredential;
+import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.security.CspDirective;
 import ee.ria.sso.security.CspHeaderUtil;
 import ee.ria.sso.service.AbstractService;
-import ee.ria.sso.config.TaraResourceBundleMessageSource;
-import ee.ria.sso.model.AuthenticationResult;
 import ee.ria.sso.statistics.StatisticsHandler;
 import ee.ria.sso.statistics.StatisticsOperation;
 import ee.ria.sso.statistics.StatisticsRecord;
@@ -164,8 +163,8 @@ public class EidasAuthenticationService extends AbstractService {
     }
 
     private TaraCredential getCredentialFromAuthResult(byte[] authResultBytes) throws IOException {
-        AuthenticationResult authResult = new ObjectMapper().readValue(
-                new String(authResultBytes, StandardCharsets.UTF_8), AuthenticationResult.class
+        EidasAuthenticationResult authResult = new ObjectMapper().readValue(
+                new String(authResultBytes, StandardCharsets.UTF_8), EidasAuthenticationResult.class
         );
 
         Map<String, String> authResultAttributes = authResult.getAttributes();
