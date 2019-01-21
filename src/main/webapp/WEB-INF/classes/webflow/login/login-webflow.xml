@@ -24,7 +24,7 @@
 	</action-state>
 
 	<action-state id="ticketGrantingTicketCheck">
-		<evaluate expression="ticketGrantingTicketCheckAction"/>
+		<evaluate expression="taraTicketGrantingTicketCheckAction"/>
 		<transition on="notExists" to="gatewayRequestCheck"/>
 		<transition on="invalid" to="terminateSession"/>
 		<transition on="valid" to="hasServiceCheck"/>
