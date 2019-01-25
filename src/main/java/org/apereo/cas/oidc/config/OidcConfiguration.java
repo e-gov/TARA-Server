@@ -4,6 +4,7 @@ import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import ee.ria.sso.Constants;
+import ee.ria.sso.config.TaraProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apereo.cas.CentralAuthenticationService;
@@ -115,6 +116,9 @@ import java.util.stream.Stream;
 @EnableConfigurationProperties(CasConfigurationProperties.class)
 @Slf4j
 public class OidcConfiguration extends WebMvcConfigurerAdapter implements CasWebflowExecutionPlanConfigurer {
+
+    @Autowired
+    TaraProperties taraProperties;
 
     @Autowired
     @Qualifier("defaultAuthenticationSystemSupport")
@@ -273,7 +277,7 @@ public class OidcConfiguration extends WebMvcConfigurerAdapter implements CasWeb
     @Bean
     public HandlerInterceptorAdapter requiresAuthenticationAuthorizeInterceptor() {
         final String name = oauthSecConfig.getClients().findClient(CasClient.class).getName();
-        return new OidcSecurityInterceptor(oauthSecConfig, name, oidcAuthorizationRequestSupport());
+        return new OidcSecurityInterceptor(taraProperties, oauthSecConfig, name, oidcAuthorizationRequestSupport());
     }
 
     @Bean

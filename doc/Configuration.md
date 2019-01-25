@@ -19,6 +19,8 @@ _CAS tarkvaras tehtud kohanduste ja täienduste kirjeldus._
   * [Test environment warning message](#test_environment_warning)
   * [Audit logging](#audit_logging)
   * [Enabling additional OpenID Connect endpoints](#oidc_optional_endpoints)
+  * [Client secret handling](#oidc_client_secret)
+  * [Always force re-authentication](#oidc_force_reauthentication)    
 - [TARA truststore](#tara_truststore)
   * [DigiDocService CA certs](#dds_ca_certs)
   * [Smart-ID CA certs](#smart-id_ca_certs)
@@ -630,6 +632,37 @@ oidc.profile-endpoint.enabled=true
 oidc.revocation-endpoint.enabled=true
 oidc.introspection-endpoint.enabled=true
 ````
+
+<a name="oidc_client_secret"></a>
+### Client secret handling
+
+Table 21 - Parameters regarding the handling of client secrets
+
+| Property        | Mandatory | Description |
+| :---------------- | :---------- | :----------------|
+| `tara.digestAlgorithm` | N | Algorithm used to hash client secret on the fly, before comparing it to registered client secret. One of the values specified by the [Java Cryptography Architecture Standard Algorithm Name Documentation](https://docs.oracle.com/javase/8/docs/technotes/guides/security/StandardNames.html#MessageDigest). Defaults to `SHA-256` if not specified. |
+
+Example:
+
+````
+tara.digestAlgorithm=SHA-256
+````
+  
+<a name="oidc_force_reauthentication"></a>
+### Forcing re-authentication
+Force re-authentication
+
+Table 22 - Parameters for users to reauthenticate 
+
+| Property        | Mandatory | Description |
+| :---------------- | :---------- | :----------------|
+| `oidc.authorize.force-auth-renewal.enabled` | N | A boolean flag that always forces /oidc/authorize user to reauthenticate. Defaults to `true`, if not specified.  |
+
+Example:
+
+````
+oidc.authorize.force-auth-renewal.enabled=false
+````    
 
 
 <a name="tara_truststore"></a>

@@ -7,8 +7,8 @@
         <div class="alert alert-error">
             <p><strong><span th:text="#{message.error.general}" th:remove="tag"></span></strong></p>
         </div>
-        <p th:if="${@taraProperties.getBackUrl(session.pac4jRequestedUrl, #locale) != '#'}" class="link-back">
-            <a th:href="${@taraProperties.getBackUrl(session.pac4jRequestedUrl, #locale)}" th:text="#{label.common.back}">Back</a>
+        <p th:if="${@thymeleafSupport.getBackUrl(session.pac4jRequestedUrl, #locale) != '#'}" class="link-back">
+            <a th:href="${@thymeleafSupport.getBackUrl(session.pac4jRequestedUrl, #locale)}" th:text="#{label.common.back}">Back</a>
         </p>
     </div>
 </div>

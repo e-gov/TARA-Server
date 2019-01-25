@@ -1,6 +1,7 @@
 package ee.ria.sso.config;
 
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import org.apereo.cas.CentralAuthenticationService;
 import org.apereo.cas.audit.AuditTrailExecutionPlan;
 import org.apereo.cas.audit.AuditTrailRecordResolutionPlan;
 import org.apereo.cas.audit.AuditableExecution;
@@ -9,6 +10,7 @@ import org.apereo.cas.authentication.principal.PrincipalFactory;
 import org.apereo.cas.authentication.principal.ServiceFactory;
 import org.apereo.cas.authentication.principal.WebApplicationService;
 import org.apereo.cas.oidc.token.OidcIdTokenSigningAndEncryptionService;
+import org.apereo.cas.oidc.util.OidcAuthorizationRequestSupport;
 import org.apereo.cas.services.OidcRegisteredService;
 import org.apereo.cas.services.ServicesManager;
 import org.apereo.cas.support.oauth.authenticator.OAuth20CasAuthenticationBuilder;
@@ -54,12 +56,14 @@ import java.util.Set;
 @Import( TaraConfiguration.class)
 public class TestTaraConfiguration {
 
-    @Autowired
-    private TaraProperties taraProperties;
+    @Bean
+    public CentralAuthenticationService centralAuthenticationService() {
+        return Mockito.mock(CentralAuthenticationService.class);
+    }
 
-    @PostConstruct
-    protected void init() {
-        this.taraProperties.getApplication().setMode(TaraProperties.Mode.development);
+    @Bean
+    public TaraProperties taraProperties() {
+        return Mockito.mock(TaraProperties.class);
     }
 
     @Bean
@@ -82,6 +86,11 @@ public class TestTaraConfiguration {
     public PrincipalFactory oidcPrincipalFactory() {return Mockito.mock(PrincipalFactory.class); }
 
     @Bean
+    public OidcAuthorizationRequestSupport authorizationRequestSupport() {
+        return Mockito.mock(OidcAuthorizationRequestSupport.class);
+    }
+
+    @Bean
     public AuditTrailRecordResolutionPlan auditTrailRecordResolutionPlan() {
         return Mockito.mock(DefaultAuditTrailRecordResolutionPlan.class);
     }
@@ -94,8 +103,9 @@ public class TestTaraConfiguration {
         return Mockito.mock(FlowBuilderServices.class);
     }
     @Bean
-    public ObjectProvider<Config> oauthSecConfig() {
-        return Mockito.mock(ObjectProvider.class);
+    @Qualifier("oauthSecConfig")
+    public Config oauthSecConfig() {
+        return Mockito.mock(Config.class);
     }
     @Bean
     public TicketRegistry ticketRegistry() {
