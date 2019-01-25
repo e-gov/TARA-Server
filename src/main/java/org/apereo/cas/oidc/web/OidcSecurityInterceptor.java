@@ -41,7 +41,7 @@ public class OidcSecurityInterceptor extends SecurityInterceptor {
 
         boolean clearCreds = false;
 
-        int visitCount = getVisitCount(ctx);
+        int visitCount = getAndUpdateVisitCountInSession(ctx);
 
         final Optional<Authentication> authentication = authorizationRequestSupport.isCasAuthenticationAvailable(ctx);
         if (!authentication.isPresent()) {
@@ -78,7 +78,7 @@ public class OidcSecurityInterceptor extends SecurityInterceptor {
         return super.preHandle(request, response, handler);
     }
 
-    private int getVisitCount(J2EContext ctx) {
+    private int getAndUpdateVisitCountInSession(J2EContext ctx) {
         int visitCount = 1;
         if (ctx.getSessionStore().get(ctx, OIDC_AUTHORIZE_VISIT_COUNT) == null) {
             ctx.getSessionStore().set(ctx, OIDC_AUTHORIZE_VISIT_COUNT, visitCount);
