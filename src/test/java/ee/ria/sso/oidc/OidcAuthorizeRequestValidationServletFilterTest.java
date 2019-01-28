@@ -3,10 +3,6 @@ package ee.ria.sso.oidc;
 import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.LevelOfAssurance;
-import ee.ria.sso.oidc.OidcAuthorizeRequestValidationServletFilter;
-import ee.ria.sso.oidc.OidcAuthorizeRequestParameter;
-import ee.ria.sso.oidc.OidcAuthorizeRequestValidator;
-import ee.ria.sso.oidc.TaraScope;
 import org.apereo.cas.util.spring.ApplicationContextProvider;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
@@ -36,18 +32,13 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
     public ExpectedException expectedEx = ExpectedException.none();
 
     @Mock
-    private ApplicationContext applicationContext;
-
-    @Mock
     private OidcAuthorizeRequestValidator oidcRequestValidator;
 
     private OidcAuthorizeRequestValidationServletFilter servletFilter;
 
     @Before
     public void setUp() throws Exception {
-        new ApplicationContextProvider().setApplicationContext(applicationContext);
-        Mockito.when(applicationContext.getBean(Mockito.eq("oidcAuthorizeRequestValidator"), Mockito.any(Class.class))).thenReturn(oidcRequestValidator);
-        servletFilter = new OidcAuthorizeRequestValidationServletFilter();
+        servletFilter = new OidcAuthorizeRequestValidationServletFilter(oidcRequestValidator);
         servletFilter.init(Mockito.mock(FilterConfig.class));
     }
 
@@ -125,7 +116,71 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
     }
 
     @Test
+    public void assertAllAuthMethodsInSession() throws Exception {
+        assertAllAuthMethodsInSession(TaraScope.OPENID.getFormalName());
+        assertAllAuthMethodsInSession(String.join(" ", TaraScope.OPENID.getFormalName(), "unkonwn"));
+        assertAllAuthMethodsInSession(String.join(" ", TaraScope.OPENID.getFormalName(), "IDCARD"));
+        assertAllAuthMethodsInSession(String.join(" ", TaraScope.OPENID.getFormalName() ,
+                TaraScope.IDCARD.getFormalName(),
+                TaraScope.MID.getFormalName(),
+                TaraScope.EIDAS.getFormalName(),
+                TaraScope.BANKLINK.getFormalName(),
+                TaraScope.SMARTID.getFormalName()));
+    }
+
+    @Test
+    public void assertSingleAuthMethodsInSession() throws Exception {
+        for (AuthenticationType authenticationType : Arrays.stream(AuthenticationType.values()).filter(e -> e != AuthenticationType.Default).collect(Collectors.toList())) {
+
+            String scope = authenticationType.getScope().getFormalName();
+
+            assertAuthMethodInSession("Assert single scope",
+                    String.join(" ", TaraScope.OPENID.getFormalName(), scope),
+                    authenticationType
+            );
+
+            assertAuthMethodInSession("Assert invalid scope is ignored",
+                    String.join(" ", TaraScope.OPENID.getFormalName(), scope, "unknown"),
+                    authenticationType
+            );
+
+            assertAuthMethodInSession("Assert redundant scope is ignored",
+                    String.join(" ", TaraScope.OPENID.getFormalName(), scope, scope),
+                    authenticationType
+            );
+        }
+    }
+
+    @Test
+    public void assertSelectionOfAuthMethodsInSession() throws Exception {
+            AuthenticationType authenticationType1 = AuthenticationType.IDCard;
+            AuthenticationType authenticationType2 = AuthenticationType.eIDAS;
+            String scope1 = authenticationType1.getScope().getFormalName();
+            String scope2 = authenticationType2.getScope().getFormalName();
+
+            assertAuthMethodInSession("Assert single occurrence of valid scope",
+                    String.join(" ", TaraScope.OPENID.getFormalName(), scope1, scope2),
+                    authenticationType1,
+                    authenticationType2
+            );
+
+            assertAuthMethodInSession("Assert invalid scope is ignored",
+                    String.join(" ", TaraScope.OPENID.getFormalName(), scope1, "unknown", scope2),
+                    authenticationType1,
+                    authenticationType2
+            );
+
+            assertAuthMethodInSession("Assert redundant scope is ignored",
+                    String.join(" ", TaraScope.OPENID.getFormalName(), scope1, scope1, scope2, scope2, scope2),
+                    authenticationType1,
+                    authenticationType2
+            );
+    }
+
+
+    @Test
     public void assertAllAuthMethodsInSessionWhenValidationSucceedsAndOnlyOpenidScopeProvided() throws Exception {
+
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addParameter(OidcAuthorizeRequestParameter.SCOPE.getParameterKey(),
                 TaraScope.OPENID.getFormalName()
@@ -138,17 +193,23 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
         );
     }
 
+
+
     @Test
     public void assertOnlyEidasAuthMethodInSessionWhenValidationSucceedsAndEidasonlyScopeProvided() throws Exception {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.addParameter(OidcAuthorizeRequestParameter.SCOPE.getParameterKey(),
-                Arrays.asList(TaraScope.OPENID, TaraScope.EIDASONLY).stream()
-                        .map(s -> s.getFormalName()).collect(Collectors.joining(" "))
+        assertAuthMethodInSession("Assert single occurrence of valid scope",
+                String.join(" ", TaraScope.OPENID.getFormalName(), TaraScope.EIDASONLY.getFormalName()),
+                AuthenticationType.eIDAS
         );
 
-        servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
-        Assert.assertEquals(Arrays.asList(AuthenticationType.eIDAS),
-                request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_AUTH_METHODS)
+        assertAuthMethodInSession("Assert eidasonly overrides all other auth selection scopes",
+                String.join(" ", TaraScope.OPENID.getFormalName(), TaraScope.EIDASONLY.getFormalName(), TaraScope.EIDAS.getFormalName()),
+                AuthenticationType.eIDAS
+        );
+
+        assertAuthMethodInSession("Assert eidasonly overrides eidas",
+                String.join(" ", TaraScope.OPENID.getFormalName(), TaraScope.EIDASONLY.getFormalName(), TaraScope.IDCARD.getFormalName()),
+                AuthenticationType.eIDAS
         );
     }
 
@@ -183,6 +244,29 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
         List<OidcAuthorizeRequestParameter> parameters = new ArrayList<OidcAuthorizeRequestParameter>(Arrays.asList(OidcAuthorizeRequestParameter.values()));
         parameters.removeAll(Arrays.asList(parametersToBeExcluded));
         return parameters.toArray(new OidcAuthorizeRequestParameter[parameters.size()]);
+    }
+
+
+    private void assertAllAuthMethodsInSession(String scopeValue) throws IOException, ServletException {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addParameter(OidcAuthorizeRequestParameter.SCOPE.getParameterKey(), scopeValue);
+
+        servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
+        Assert.assertEquals(
+                Arrays.asList(AuthenticationType.values()).stream().filter(at -> at != AuthenticationType.Default).collect(Collectors.toList()),
+                request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_AUTH_METHODS)
+        );
+    }
+
+    private void assertAuthMethodInSession(String message, String scopeValue, AuthenticationType... authMethodInSession) throws IOException, ServletException {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addParameter(OidcAuthorizeRequestParameter.SCOPE.getParameterKey(), scopeValue);
+
+        servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
+        Assert.assertEquals(message,
+                Arrays.asList(authMethodInSession),
+                request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_AUTH_METHODS)
+        );
     }
 
     @After

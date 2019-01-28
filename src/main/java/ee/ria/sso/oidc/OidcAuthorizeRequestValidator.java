@@ -1,12 +1,9 @@
 package ee.ria.sso.oidc;
 
 import ee.ria.sso.authentication.LevelOfAssurance;
-import ee.ria.sso.flow.JSONFlowExecutionException;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apereo.cas.services.ServicesManager;
-import org.apereo.cas.support.oauth.OAuth20GrantTypes;
 import org.apereo.cas.support.oauth.services.OAuthRegisteredService;
 import org.apereo.cas.support.oauth.util.OAuth20Utils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,9 +12,7 @@ import org.springframework.util.Assert;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -31,19 +26,6 @@ public class OidcAuthorizeRequestValidator {
 
     @Autowired
     private ServicesManager servicesManager;
-
-    public static void checkGrantType(HttpServletRequest request) {
-        Optional<String> grantType = Optional.ofNullable(request.getParameter("grant_type"));
-        if (grantType.isPresent()) {
-            if (!OAuth20GrantTypes.AUTHORIZATION_CODE.getType().equals(grantType.get())) {
-                throw JSONFlowExecutionException.ofBadRequest(Collections.singletonMap("error", "unsupported_grant_type"),
-                        new RuntimeException("Unsupported grant type"));
-            }
-        } else {
-            throw JSONFlowExecutionException.ofBadRequest(Collections.singletonMap("error", "invalid_request"),
-                    new RuntimeException("No grant type found"));
-        }
-    }
 
     public void validateAuthenticationRequestParameters(final HttpServletRequest request) {
 
@@ -118,16 +100,8 @@ public class OidcAuthorizeRequestValidator {
 
         if (scopes.isEmpty() || !scopes.contains(TaraScope.OPENID.getFormalName())) {
             throw new InvalidRequestException(OidcAuthorizeRequestParameter.SCOPE, "invalid_scope", String.format(
-                    "Required scope <%s> not provided. TARA do not allow this request to be processed",
+                    "Required scope <%s> not provided",
                     TaraScope.OPENID.getFormalName()
-            ));
-        }
-
-        List<String> allowedScopes = Stream.of(TaraScope.values()).map(TaraScope::getFormalName).collect(Collectors.toList());
-        if (!ListUtils.subtract(scopes, allowedScopes).isEmpty()) {
-            throw new InvalidRequestException(OidcAuthorizeRequestParameter.SCOPE, "invalid_scope", String.format(
-                    "One or some of the provided scopes are not allowed by TARA, only <%s> are permitted. TARA do not allow this request to be processed",
-                    allowedScopes.stream().collect(Collectors.joining(", "))
             ));
         }
     }
@@ -136,7 +110,7 @@ public class OidcAuthorizeRequestValidator {
         String responseType = request.getParameter(OidcAuthorizeRequestParameter.RESPONSE_TYPE.getParameterKey());
         if (!"code".equals(responseType)) {
             throw new InvalidRequestException(OidcAuthorizeRequestParameter.RESPONSE_TYPE, "unsupported_response_type", String.format(
-                    "Provided response type is not allowed by TARA, only <%s> is permitted. TARA do not allow this request to be processed", "code"
+                    "Provided response type is not allowed by TARA, only <%s> is permitted", "code"
             ));
         }
     }
@@ -150,7 +124,7 @@ public class OidcAuthorizeRequestValidator {
 
             if (!allowedValues.contains(acrValues)) {
                 throw new InvalidRequestException(OidcAuthorizeRequestParameter.ACR_VALUES, "unsupported_acr_values", String.format(
-                        "Provided acr_values is not allowed by TARA, only <%s> are permitted. TARA do not allow this request to be processed",
+                        "Provided acr_values is not allowed by TARA, only <%s> are permitted",
                         allowedValues.stream().collect(Collectors.joining(", ")
                         )));
             }

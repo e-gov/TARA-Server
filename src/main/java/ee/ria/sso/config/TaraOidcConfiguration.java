@@ -231,10 +231,10 @@ public class TaraOidcConfiguration {
     }
 
     @Bean
-    public FilterRegistrationBean oidcAuthorizeCheckingServletFilter() {
+    public FilterRegistrationBean oidcAuthorizeCheckingServletFilter(OidcAuthorizeRequestValidator oidcAuthorizeRequestValidator) {
         final Map<String, String> initParams = new HashMap<>();
         final FilterRegistrationBean bean = new FilterRegistrationBean();
-        bean.setFilter(new OidcAuthorizeRequestValidationServletFilter());
+        bean.setFilter(new OidcAuthorizeRequestValidationServletFilter(oidcAuthorizeRequestValidator));
         bean.setUrlPatterns(Collections.singleton("/oidc/authorize"));
         bean.setInitParameters(initParams);
         bean.setName("oidcAuthorizeCheckingServletFilter");

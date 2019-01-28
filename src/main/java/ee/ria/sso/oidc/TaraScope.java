@@ -1,23 +1,27 @@
 package ee.ria.sso.oidc;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@Getter
+@AllArgsConstructor
 public enum TaraScope {
 
-    OPENID("openid", true),
-    EIDASONLY("eidasonly", false);
+    OPENID("openid"),
+    IDCARD("idcard"),
+    MID("mid"),
+    EIDAS("eidas"),
+    BANKLINK("banklink"),
+    SMARTID("smartid"),
+    EIDASONLY("eidasonly");
 
     private String formalName;
-    private boolean required;
 
-    TaraScope(String formalName, boolean required) {
-        this.formalName = formalName;
-        this.required = required;
-    }
+    public static TaraScope getScope(String value) {
+        for(TaraScope v : values())
+            if(v.formalName.equals(value))
+                return v;
 
-    public String getFormalName() {
-        return this.formalName;
-    }
-
-    public boolean isRequired() {
-        return this.required;
+        throw new IllegalArgumentException();
     }
 }
