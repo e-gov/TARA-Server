@@ -31,6 +31,7 @@ import org.springframework.webflow.engine.builder.support.FlowBuilderServices;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -54,7 +55,7 @@ public class TaraConfiguration extends WebMvcConfigurerAdapter {
 
     @Bean
     public ThymeleafSupport thymeleafSupport(ManagerService managerService, CasConfigurationProperties casProperties, TaraProperties taraProperties) {
-        return new ThymeleafSupport(managerService, casProperties, taraProperties);
+        return new ThymeleafSupport(managerService, casProperties, taraProperties, getDefaultLocaleChangeParam());
     }
 
     @Bean
@@ -76,6 +77,11 @@ public class TaraConfiguration extends WebMvcConfigurerAdapter {
         localeInterceptor.setParamNames(names);
         log.info("Supported locale parameters: " + Arrays.asList(localeInterceptor.getParamNames()));
         return localeInterceptor;
+    }
+
+    private String getDefaultLocaleChangeParam() {
+        Optional<String> localeParam = Arrays.asList(casProperties.getLocale().getParamName().split(",")).stream().findFirst();
+        return localeParam.isPresent() ? localeParam.get() : TaraLocaleChangeInterceptor.DEFAULT_OIDC_LOCALE_PARAM;
     }
 
     @Configuration("TaraWebFlowConfiguration")

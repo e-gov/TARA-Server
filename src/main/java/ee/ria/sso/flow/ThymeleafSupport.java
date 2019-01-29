@@ -11,8 +11,6 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apereo.cas.configuration.CasConfigurationProperties;
 import org.apereo.cas.services.OidcRegisteredService;
 import org.slf4j.MDC;
-import org.springframework.web.context.request.RequestAttributes;
-import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.webflow.execution.RequestContextHolder;
@@ -27,8 +25,9 @@ import java.util.Locale;
 public class ThymeleafSupport {
 
     private final ManagerService managerService;
-    private final CasConfigurationProperties casConfigurationProperties;
+    private final CasConfigurationProperties casProperties;
     private final TaraProperties taraProperties;
+    private final String defaultLocaleChangeParam;
 
     public boolean isAuthMethodAllowed(final AuthenticationType method) {
         if (method != null && taraProperties.isPropertyEnabled(method.getPropertyName() + ".enabled")) {
@@ -45,39 +44,22 @@ public class ThymeleafSupport {
         return false;
     }
 
-    public String getApplicationUrl() {
-        return this.casConfigurationProperties.getServer().getName();
-    }
-
     public boolean isNotLocale(String code, Locale locale) {
         return !locale.getLanguage().equalsIgnoreCase(code);
     }
 
     public String getLocaleUrl(String locale) throws URISyntaxException {
-        UriComponentsBuilder builder = ServletUriComponentsBuilder.fromCurrentRequest().replaceQueryParam("locale", locale);
-        RequestAttributes attributes = org.springframework.web.context.request.RequestContextHolder.currentRequestAttributes();
-        if (attributes instanceof ServletRequestAttributes) {
-            int statusCode = ((ServletRequestAttributes) attributes).getResponse().getStatus();
-            switch (statusCode) {
-                case 200:
-                    break;
-                case 404:
-                    builder.replacePath(Integer.toString(statusCode));
-                    break;
-                default:
-                    builder.replacePath("error");
-            }
-        }
-        URI serverUri = new URI(this.casConfigurationProperties.getServer().getName());
+        UriComponentsBuilder builder = ServletUriComponentsBuilder.fromCurrentRequest().replaceQueryParam(defaultLocaleChangeParam, locale);
+        URI serverUri = new URI(this.casProperties.getServer().getName());
         if ("https".equalsIgnoreCase(serverUri.getScheme())) {
             builder.port((serverUri.getPort() == -1) ? 443 : serverUri.getPort());
         }
         return builder.scheme(serverUri.getScheme()).host(serverUri.getHost()).build(true).toUriString();
     }
 
-    public String getBackUrl(String pac4jRequestedUrl, Locale locale) throws URISyntaxException {
-        if (StringUtils.isNotBlank(pac4jRequestedUrl)) {
-            return new URIBuilder(pac4jRequestedUrl).setParameter("lang", locale.getLanguage()).build().toString();
+    public String getBackUrl(String url, Locale locale) throws URISyntaxException {
+        if (StringUtils.isNotBlank(url)) {
+            return new URIBuilder(url).setParameter(defaultLocaleChangeParam, locale.getLanguage()).build().toString();
         }
         return "#";
     }
