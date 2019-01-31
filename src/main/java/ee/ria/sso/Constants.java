@@ -20,6 +20,7 @@ public final class Constants {
 
     public static final String MESSAGE_KEY_GENERAL_ERROR = "message.error.general";
     public static final String MESSAGE_KEY_SESSION_EXPIRED = "message.error.sessionExpired";
+    public static final String MESSAGE_KEY_AUTH_METHOD_RESTRICTED_BY_SCOPE = "message.error.authMethodNotAllowedByScope";
 
     public static final String MDC_ATTRIBUTE_REQUEST_ID = "requestId";
     public static final String MDC_ATTRIBUTE_SESSION_ID = "sessionId";

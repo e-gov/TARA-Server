@@ -1,5 +1,6 @@
 package ee.ria.sso.flow.action;
 
+import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.service.idcard.IDCardAuthenticationService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
@@ -29,4 +30,8 @@ public class IDCardAuthenticationAction extends AbstractAuthenticationAction {
         return this.authenticationService.loginByIDCard(requestContext);
     }
 
+    @Override
+    protected AuthenticationType getAuthenticationType() {
+        return AuthenticationType.IDCard;
+    }
 }

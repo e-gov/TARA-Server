@@ -1,6 +1,7 @@
 package ee.ria.sso.config;
 
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import ee.ria.sso.flow.ThymeleafSupport;
 import org.apereo.cas.CentralAuthenticationService;
 import org.apereo.cas.audit.AuditTrailExecutionPlan;
 import org.apereo.cas.audit.AuditTrailRecordResolutionPlan;
@@ -59,6 +60,11 @@ public class TestTaraConfiguration {
     @Bean
     public CentralAuthenticationService centralAuthenticationService() {
         return Mockito.mock(CentralAuthenticationService.class);
+    }
+
+    @Bean
+    public ThymeleafSupport thyemeleafSupport() {
+        return Mockito.mock(ThymeleafSupport.class);
     }
 
     @Bean
