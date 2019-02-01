@@ -9,8 +9,12 @@ import org.apereo.cas.configuration.CasConfigurationProperties;
 import org.apereo.cas.configuration.model.core.CasServerProperties;
 import org.apereo.cas.services.OidcRegisteredService;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.runners.MockitoJUnitRunner;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -26,15 +30,24 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.*;
 
-public class ThymeleafSupportTest extends AbstractTest {
+@RunWith(MockitoJUnitRunner.class)
+public class ThymeleafSupportTest {
 
-    @Autowired
+    @Mock
+    ManagerService managerService;
+
+    @Mock
     CasConfigurationProperties casProperties;
 
-    @Autowired TaraProperties taraProperties;
+    @Mock
+    TaraProperties taraProperties;
 
-    @Autowired
     private ThymeleafSupport thymeleafSupport;
+
+    @Before
+    public void setUp() {
+        thymeleafSupport = new ThymeleafSupport(managerService, casProperties, taraProperties, "paramName");
+    }
 
     @Test
     public void isAuthMethodAllowedShouldReturnTrueWhenMethodsEnabledAndAllowedInSession() {
@@ -131,7 +144,9 @@ public class ThymeleafSupportTest extends AbstractTest {
     public void getLocaleUrlShouldReturn() throws Exception {
         setRequestContextWithSessionMap(new HashMap<>());
 
-        casProperties.getServer().setName("https://example.tara.url");
+        CasServerProperties casServerProperties =  new CasServerProperties();
+        casServerProperties.setName("https://example.tara.url");
+        Mockito.when(casProperties.getServer()).thenReturn(casServerProperties);
 
         ThymeleafSupport thymeleafSupport = new ThymeleafSupport(null, casProperties, null, "somelocaleparam");
         Assert.assertEquals("https://example.tara.url:443?somelocaleparam=et", thymeleafSupport.getLocaleUrl("et"));
