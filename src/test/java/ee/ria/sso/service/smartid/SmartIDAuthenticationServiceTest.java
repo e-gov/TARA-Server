@@ -23,6 +23,7 @@ import ee.sk.smartid.exception.UserAccountNotFoundException;
 import ee.sk.smartid.rest.dao.AuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import org.apache.commons.lang3.StringUtils;
+import org.apereo.cas.web.flow.CasWebflowConstants;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
@@ -434,11 +435,11 @@ public class SmartIDAuthenticationServiceTest {
     }
 
     private void assertEventSuccessful(Event event) {
-        assertEvent(event, SmartIDAuthenticationService.EVENT_SUCCESSFUL);
+        assertEvent(event, CasWebflowConstants.TRANSITION_ID_SUCCESS);
     }
 
     private void assertEventOutstanding(Event event) {
-        assertEvent(event, SmartIDAuthenticationService.EVENT_OUTSTANDING);
+        assertEvent(event, Constants.EVENT_OUTSTANDING);
     }
 
     private void assertEvent(Event event, String expectedId) {
@@ -472,7 +473,7 @@ public class SmartIDAuthenticationServiceTest {
     }
 
     private void assertCertPersonCredentialsInFlowContext(MockRequestContext requestContext, AuthenticationIdentity authIdentity) {
-        TaraCredential credential = requestContext.getFlowExecutionContext().getActiveSession().getScope().get(Constants.CREDENTIAL, TaraCredential.class);
+        TaraCredential credential = requestContext.getFlowExecutionContext().getActiveSession().getScope().get(CasWebflowConstants.VAR_ID_CREDENTIAL, TaraCredential.class);
         assertEquals(authIdentity.getCountry() + authIdentity.getIdentityCode(), credential.getPrincipalCode());
         assertEquals(authIdentity.getGivenName(), credential.getFirstName());
         assertEquals(authIdentity.getSurName(), credential.getLastName());

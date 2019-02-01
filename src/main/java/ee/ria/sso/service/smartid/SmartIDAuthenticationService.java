@@ -22,6 +22,7 @@ import ee.sk.smartid.exception.UserAccountNotFoundException;
 import ee.sk.smartid.rest.dao.AuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import org.apache.commons.lang3.StringUtils;
+import org.apereo.cas.web.flow.CasWebflowConstants;
 import org.apereo.inspektr.audit.annotation.Audit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,9 +41,6 @@ import java.time.LocalDateTime;
 public class SmartIDAuthenticationService extends AbstractService {
 
     public static final CertificateLevel DEFAULT_CERTIFICATE_LEVEL = CertificateLevel.QUALIFIED;
-
-    protected static final String EVENT_SUCCESSFUL = "success";
-    protected static final String EVENT_OUTSTANDING = "outstanding";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SmartIDAuthenticationService.class);
     private static final AuthenticationType AUTHENTICATION_TYPE = AuthenticationType.SmartID;
@@ -71,7 +69,7 @@ public class SmartIDAuthenticationService extends AbstractService {
             resourceResolverName = "TARA_AUTHENTICATION_RESOURCE_RESOLVER"
     )
     public Event initSmartIdAuthenticationSession(RequestContext context) {
-        final PreAuthenticationCredential credential = context.getFlowExecutionContext().getActiveSession().getScope().get(Constants.CREDENTIAL, PreAuthenticationCredential.class);
+        final PreAuthenticationCredential credential = context.getFlowExecutionContext().getActiveSession().getScope().get(CasWebflowConstants.VAR_ID_CREDENTIAL, PreAuthenticationCredential.class);
         final String personIdentifier = credential.getPrincipalCode();
 
         /* Currently only EE supported */
@@ -87,7 +85,7 @@ public class SmartIDAuthenticationService extends AbstractService {
 
             LOGGER.info("Authentication response received");
             writeAuthSessionToFlowContext(context, authRequest, authResponse.getSessionId());
-            return new Event(this, EVENT_SUCCESSFUL);
+            return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
         } catch (TaraCredentialsException e) {
             throw handleException(context, e, e.getKey());
         } catch (UserAccountNotFoundException e) {
@@ -121,11 +119,11 @@ public class SmartIDAuthenticationService extends AbstractService {
 
                 collectStatistics(context, StatisticsOperation.SUCCESSFUL_AUTH);
                 writePersonDetailsToFlowContext(context, validationResult.getAuthenticationIdentity());
-                return new Event(this, EVENT_SUCCESSFUL);
+                return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
             } else {
                 LOGGER.info("Authentication session not complete yet");
                 authSession.increaseStatusCheckCount();
-                return new Event(this, EVENT_OUTSTANDING);
+                return new Event(this, Constants.EVENT_OUTSTANDING);
             }
         } catch (SessionNotFoundException e) {
             throw handleException(context, e, SmartIDErrorMessage.SESSION_NOT_FOUND);
@@ -171,7 +169,7 @@ public class SmartIDAuthenticationService extends AbstractService {
 
     private void writePersonDetailsToFlowContext(RequestContext context, AuthenticationIdentity authIdentity) {
         TaraCredential credential = formTaraCredentials(authIdentity);
-        context.getFlowExecutionContext().getActiveSession().getScope().put(Constants.CREDENTIAL, credential);
+        context.getFlowExecutionContext().getActiveSession().getScope().put(CasWebflowConstants.VAR_ID_CREDENTIAL, credential);
     }
 
     private TaraCredential formTaraCredentials(AuthenticationIdentity authIdentity) {

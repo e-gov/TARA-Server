@@ -11,7 +11,7 @@ public final class Constants {
     public static final String MOBILE_SESSION = "mobileSession";
     public static final String AUTH_COUNT = "authCount";
     public static final String ERROR_MESSAGE = "TARA_ERROR_MESSAGE";
-    public static final String CREDENTIAL = "credential";
+    public static final String EVENT_OUTSTANDING = "outstanding";
 
     public static final String CAS_SERVICE_ATTRIBUTE_NAME = "service";
 

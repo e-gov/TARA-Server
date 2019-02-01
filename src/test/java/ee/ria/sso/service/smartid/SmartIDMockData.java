@@ -10,6 +10,7 @@ import ee.sk.smartid.rest.dao.SessionCertificate;
 import ee.sk.smartid.rest.dao.SessionResult;
 import ee.sk.smartid.rest.dao.SessionSignature;
 import ee.sk.smartid.rest.dao.SessionStatus;
+import org.apereo.cas.web.flow.CasWebflowConstants;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.webflow.test.MockExternalContext;
 import org.springframework.webflow.test.MockRequestContext;
@@ -39,7 +40,7 @@ public class SmartIDMockData {
     public static MockRequestContext mockAuthInitRequestContext(PreAuthenticationCredential credential) {
         MockRequestContext requestContext = new MockRequestContext();
         setMockContextExternalContext(requestContext);
-        requestContext.getFlowExecutionContext().getActiveSession().getScope().put(Constants.CREDENTIAL, credential);
+        requestContext.getFlowExecutionContext().getActiveSession().getScope().put(CasWebflowConstants.VAR_ID_CREDENTIAL, credential);
         return requestContext;
     }
 

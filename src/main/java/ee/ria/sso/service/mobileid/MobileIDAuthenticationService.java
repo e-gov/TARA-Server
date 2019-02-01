@@ -16,6 +16,7 @@ import ee.ria.sso.statistics.StatisticsOperation;
 import ee.ria.sso.statistics.StatisticsRecord;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apereo.cas.web.flow.CasWebflowConstants;
 import org.apereo.inspektr.audit.annotation.Audit;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
@@ -76,7 +77,7 @@ public class MobileIDAuthenticationService extends AbstractService {
             context.getFlowScope().put(Constants.MOBILE_SESSION, mobileIDSession);
             context.getFlowScope().put(Constants.AUTH_COUNT, 0);
 
-            return new Event(this, "success");
+            return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
         } catch (Exception e) {
             throw this.handleException(context, e);
         }
@@ -96,15 +97,15 @@ public class MobileIDAuthenticationService extends AbstractService {
 
             if (this.mobileIDAuthenticator.isLoginComplete(session)) {
                 TaraCredential credential = new TaraCredential(AuthenticationType.MobileID, "EE" + session.personalCode, session.firstName, session.lastName);
-                context.getFlowExecutionContext().getActiveSession().getScope().put("credential", credential);
+                context.getFlowExecutionContext().getActiveSession().getScope().put(CasWebflowConstants.VAR_ID_CREDENTIAL, credential);
                 this.statistics.collect(new StatisticsRecord(
                         LocalDateTime.now(), getServiceClientId(context), AuthenticationType.MobileID, StatisticsOperation.SUCCESSFUL_AUTH
                 ));
 
-                return new Event(this, "success");
+                return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
             } else {
                 context.getFlowScope().put(Constants.AUTH_COUNT, ++checkCount);
-                return new Event(this, "outstanding");
+                return new Event(this, Constants.EVENT_OUTSTANDING);
             }
         } catch (Exception e) {
             throw this.handleException(context, e);

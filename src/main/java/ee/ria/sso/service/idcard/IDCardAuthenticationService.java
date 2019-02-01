@@ -16,9 +16,9 @@ import ee.ria.sso.statistics.StatisticsRecord;
 import ee.ria.sso.utils.EstonianIdCodeUtil;
 import ee.ria.sso.utils.X509Utils;
 import lombok.extern.slf4j.Slf4j;
+import org.apereo.cas.web.flow.CasWebflowConstants;
 import org.apereo.inspektr.audit.annotation.Audit;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.jose4j.keys.X509Util;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
@@ -42,6 +42,10 @@ import java.util.Map;
 @Service
 @Slf4j
 public class IDCardAuthenticationService extends AbstractService {
+
+    public static final String CN_SERIALNUMBER = "SERIALNUMBER";
+    public static final String CN_GIVEN_NAME = "GIVENNAME";
+    public static final String CN_SURNAME = "SURNAME";
 
     private final StatisticsHandler statistics;
     private final IDCardConfigurationProvider configurationProvider;
@@ -85,13 +89,13 @@ public class IDCardAuthenticationService extends AbstractService {
                 this.checkCert(certificate);
 
             TaraCredential credential = createUserCredential(certificate, context);
-            context.getFlowExecutionContext().getActiveSession().getScope().put("credential", credential);
+            context.getFlowExecutionContext().getActiveSession().getScope().put(CasWebflowConstants.VAR_ID_CREDENTIAL, credential);
 
             this.statistics.collect(new StatisticsRecord(
                     LocalDateTime.now(), getServiceClientId(context), AuthenticationType.IDCard, StatisticsOperation.SUCCESSFUL_AUTH
             ));
 
-            return new Event(this, "success");
+            return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
         } catch (Exception e) {
             throw this.handleException(context, e);
         } finally {
@@ -182,16 +186,16 @@ public class IDCardAuthenticationService extends AbstractService {
         if (isEmailRequested(context)) {
             String email = X509Utils.getRfc822NameSubjectAltName(userCertificate);
             return new IdCardCredential(
-                    EstonianIdCodeUtil.getEEPrefixedEstonianIdCode(params.get("SERIALNUMBER")),
-                    params.get("GIVENNAME"),
-                    params.get("SURNAME"),
+                    EstonianIdCodeUtil.getEEPrefixedEstonianIdCode(params.get(CN_SERIALNUMBER)),
+                    params.get(CN_GIVEN_NAME),
+                    params.get(CN_SURNAME),
                     email
             );
         } else {
             return new IdCardCredential(
-                    EstonianIdCodeUtil.getEEPrefixedEstonianIdCode(params.get("SERIALNUMBER")),
-                    params.get("GIVENNAME"),
-                    params.get("SURNAME")
+                    EstonianIdCodeUtil.getEEPrefixedEstonianIdCode(params.get(CN_SERIALNUMBER)),
+                    params.get(CN_GIVEN_NAME),
+                    params.get(CN_SURNAME)
             );
         }
 

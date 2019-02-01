@@ -16,6 +16,7 @@ import ee.ria.sso.statistics.StatisticsOperation;
 import ee.ria.sso.statistics.StatisticsRecord;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apereo.cas.web.flow.CasWebflowConstants;
 import org.apereo.inspektr.audit.annotation.Audit;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
@@ -36,6 +37,7 @@ import java.util.UUID;
 @Slf4j
 public class EidasAuthenticationService extends AbstractService {
 
+    public static final String SESSION_ATTRIBUTE_RELAY_STATE = "relayState";
     private final StatisticsHandler statistics;
     private final EidasAuthenticator eidasAuthenticator;
 
@@ -63,8 +65,8 @@ public class EidasAuthenticationService extends AbstractService {
             }
 
             String relayState = UUID.randomUUID().toString();
-            context.getExternalContext().getSessionMap().put("service", context.getFlowScope().get("service"));
-            context.getExternalContext().getSessionMap().put("relayState", relayState);
+            context.getExternalContext().getSessionMap().put(Constants.CAS_SERVICE_ATTRIBUTE_NAME, context.getFlowScope().get(Constants.CAS_SERVICE_ATTRIBUTE_NAME));
+            context.getExternalContext().getSessionMap().put(SESSION_ATTRIBUTE_RELAY_STATE, relayState);
             LevelOfAssurance loa = (LevelOfAssurance) context.getExternalContext().getSessionMap().get(Constants.TARA_OIDC_SESSION_LOA);
             byte[] authnRequest = this.eidasAuthenticator.authenticate(credential.getCountry(), relayState, loa);
             HttpServletResponse response = (HttpServletResponse) context.getExternalContext().getNativeResponse();
@@ -75,7 +77,7 @@ public class EidasAuthenticationService extends AbstractService {
                 out.flush();
             }
             context.getExternalContext().recordResponseComplete();
-            return new Event(this, "success");
+            return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
         } catch (Exception e) {
             throw this.handleException(context, e);
         }
@@ -95,14 +97,14 @@ public class EidasAuthenticationService extends AbstractService {
                     this.eidasAuthenticator.getAuthenticationResult(request)
             );
 
-            context.getFlowExecutionContext().getActiveSession().getScope().put("credential", credential);
-            context.getFlowScope().put("service", context.getExternalContext().getSessionMap().get("service"));
+            context.getFlowExecutionContext().getActiveSession().getScope().put(CasWebflowConstants.VAR_ID_CREDENTIAL, credential);
+            context.getFlowScope().put(Constants.CAS_SERVICE_ATTRIBUTE_NAME, context.getExternalContext().getSessionMap().get(Constants.CAS_SERVICE_ATTRIBUTE_NAME));
 
             this.statistics.collect(new StatisticsRecord(
                     LocalDateTime.now(), getServiceClientId(context), AuthenticationType.eIDAS, StatisticsOperation.SUCCESSFUL_AUTH
             ));
 
-            return new Event(this, "success");
+            return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
         } catch (Exception e) {
             throw this.handleException(context, e);
         }
@@ -155,8 +157,8 @@ public class EidasAuthenticationService extends AbstractService {
     private void validateRelayState(RequestContext context) {
         String relayState = ((HttpServletRequest)context.getExternalContext().getNativeRequest()).getParameter("RelayState");
 
-        if (context.getExternalContext().getSessionMap().contains("relayState") && context.getExternalContext().getSessionMap().get("relayState").equals(relayState)) {
-            context.getExternalContext().getSessionMap().remove("relayState");
+        if (context.getExternalContext().getSessionMap().contains(SESSION_ATTRIBUTE_RELAY_STATE) && context.getExternalContext().getSessionMap().get(SESSION_ATTRIBUTE_RELAY_STATE).equals(relayState)) {
+            context.getExternalContext().getSessionMap().remove(SESSION_ATTRIBUTE_RELAY_STATE);
         } else {
             throw new IllegalStateException("SAML response's relay state (" + relayState + ") not found among previously stored relay states!");
         }
