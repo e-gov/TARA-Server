@@ -3,13 +3,11 @@ package ee.ria.sso.oidc;
 import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.LevelOfAssurance;
-import org.apereo.cas.util.spring.ApplicationContextProvider;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.context.ApplicationContext;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -105,14 +103,14 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
 
         servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
         Assert.assertEquals(LevelOfAssurance.SUBSTANTIAL,
-                request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_LoA));
+                request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_LOA));
     }
 
     @Test
     public void assertLoaNotInSessionWhenValidationSucceedsAndAcrValuesNotProvided() throws IOException, ServletException {
         MockHttpServletRequest request = new MockHttpServletRequest();
         servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
-        Assert.assertNull(request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_LoA));
+        Assert.assertNull(request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_LOA));
     }
 
     @Test

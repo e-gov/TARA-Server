@@ -4,6 +4,7 @@ import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.TaraAuthenticationException;
 import ee.ria.sso.authentication.TaraCredentialsException;
+import ee.ria.sso.authentication.credential.PreAuthenticationCredential;
 import ee.ria.sso.authentication.credential.TaraCredential;
 import ee.ria.sso.service.AbstractService;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
@@ -70,7 +71,7 @@ public class SmartIDAuthenticationService extends AbstractService {
             resourceResolverName = "TARA_AUTHENTICATION_RESOURCE_RESOLVER"
     )
     public Event initSmartIdAuthenticationSession(RequestContext context) {
-        final TaraCredential credential = context.getFlowExecutionContext().getActiveSession().getScope().get(Constants.CREDENTIAL, TaraCredential.class);
+        final PreAuthenticationCredential credential = context.getFlowExecutionContext().getActiveSession().getScope().get(Constants.CREDENTIAL, PreAuthenticationCredential.class);
         final String personIdentifier = credential.getPrincipalCode();
 
         /* Currently only EE supported */

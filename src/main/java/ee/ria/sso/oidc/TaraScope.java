@@ -3,6 +3,9 @@ package ee.ria.sso.oidc;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.util.Arrays;
+import java.util.List;
+
 @Getter
 @AllArgsConstructor
 public enum TaraScope {
@@ -13,7 +16,10 @@ public enum TaraScope {
     EIDAS("eidas"),
     BANKLINK("banklink"),
     SMARTID("smartid"),
-    EIDASONLY("eidasonly");
+    EIDASONLY("eidasonly"),
+    EMAIL("email");
+
+    public static final List<TaraScope> SUPPORTS_AUTHENTICATION_METHOD_SELECTION = Arrays.asList(IDCARD, MID, BANKLINK, EIDAS, SMARTID, EIDASONLY);
 
     private String formalName;
 

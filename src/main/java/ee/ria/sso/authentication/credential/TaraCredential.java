@@ -22,10 +22,6 @@ public class TaraCredential implements Credential {
     private String principalCode;
     private String firstName;
     private String lastName;
-    private String mobileNumber;
-    private String country;
-    private String dateOfBirth;
-    private LevelOfAssurance levelOfAssurance;
 
     public TaraCredential() {
         this.type = AuthenticationType.Default;

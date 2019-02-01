@@ -92,7 +92,7 @@ public class OidcAuthorizeRequestValidationServletFilter implements Filter {
         );
 
         final String acrValues = request.getParameter(OidcAuthorizeRequestParameter.ACR_VALUES.getParameterKey());
-        if (acrValues != null) session.setAttribute(Constants.TARA_OIDC_SESSION_LoA,
+        if (acrValues != null) session.setAttribute(Constants.TARA_OIDC_SESSION_LOA,
                 LevelOfAssurance.findByAcrName(acrValues));
     }
 
@@ -118,15 +118,19 @@ public class OidcAuthorizeRequestValidationServletFilter implements Filter {
     private List<AuthenticationType> getListOfAllowedAuthenticationMethods(final List<TaraScope> scopes) {
         if (scopes.contains(TaraScope.EIDASONLY)) {
             return Arrays.asList(AuthenticationType.eIDAS);
-        } else if (scopes.size() == 1 && scopes.contains(TaraScope.OPENID)) {
-            return Arrays.stream(AuthenticationType.values())
-                    .filter(e -> e != AuthenticationType.Default)
-                    .collect(Collectors.toList());
-        } else {
+        } else if (isAuthMethodSpecificScopePresent(scopes)) {
             return Arrays.stream(AuthenticationType.values())
                     .filter(e -> scopes.contains(e.getScope()) )
                     .collect(Collectors.toList());
+        } else {
+            return Arrays.stream(AuthenticationType.values())
+                    .filter(e -> e != AuthenticationType.Default)
+                    .collect(Collectors.toList());
         }
+    }
+
+    private boolean isAuthMethodSpecificScopePresent(List<TaraScope> scopes) {
+        return !Collections.disjoint(scopes, TaraScope.SUPPORTS_AUTHENTICATION_METHOD_SELECTION);
     }
 
     @Override

@@ -29,7 +29,7 @@ public final class Constants {
     public static final String TARA_OIDC_SESSION_CLIENT_ID = "taraOidcSessionClientId";
     public static final String TARA_OIDC_SESSION_REDIRECT_URI = "taraOidcSessionRedirectUri";
     public static final String TARA_OIDC_SESSION_AUTH_METHODS = "taraOidcSessionAllowedAuthMethods";
-    public static final String TARA_OIDC_SESSION_LoA = "taraOidcSessionLoA";
+    public static final String TARA_OIDC_SESSION_LOA = "taraOidcSessionLoA";
 
     public static final String TARA_OIDC_DYNAMIC_CLIENT_REGISTRATION_ENDPOINT_ENABLED = "oidc.dynamic-client-registration.enabled";
     public static final String TARA_OIDC_PROFILE_ENDPOINT_ENABLED = "oidc.profile-endpoint.enabled";

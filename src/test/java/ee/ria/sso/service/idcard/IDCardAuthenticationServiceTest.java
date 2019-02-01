@@ -3,9 +3,9 @@ package ee.ria.sso.service.idcard;
 import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.TaraAuthenticationException;
-import ee.ria.sso.authentication.credential.TaraCredential;
 import ee.ria.sso.config.idcard.IDCardConfigurationProvider;
 import ee.ria.sso.config.idcard.TestIDCardConfiguration;
+import ee.ria.sso.oidc.TaraScope;
 import ee.ria.sso.service.AbstractAuthenticationServiceTest;
 import ee.ria.sso.statistics.StatisticsOperation;
 import ee.ria.sso.test.SimpleTestAppender;
@@ -25,6 +25,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
+import java.util.Collections;
 import java.util.Map;
 
 @ContextConfiguration(
@@ -148,8 +149,8 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
         Event event = this.authenticationService.loginByIDCard(requestContext);
         Assert.assertEquals("success", event.getId());
 
-        TaraCredential credential = (TaraCredential) requestContext.getFlowExecutionContext().getActiveSession().getScope().get("credential");
-        this.validateUserCredential(credential, "47101010033", "MARI-LIIS", "MÄNNIK");
+        IdCardCredential credential = (IdCardCredential) requestContext.getFlowExecutionContext().getActiveSession().getScope().get("credential");
+        this.validateUserCredentialWithoutEmail(credential, "47101010033", "MARI-LIIS", "MÄNNIK");
 
         this.verifyLogContentsOnSuccessfulAuthentication();
     }
@@ -161,19 +162,24 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
         Event event = this.authenticationService.loginByIDCard(requestContext);
         Assert.assertEquals("success", event.getId());
 
-        TaraCredential credential = (TaraCredential) requestContext.getFlowExecutionContext().getActiveSession().getScope().get("credential");
-        this.validateUserCredential(credential, "38001085718", "JAAK-KRISTJAN", "JÕEORG");
+        IdCardCredential credential = (IdCardCredential) requestContext.getFlowExecutionContext().getActiveSession().getScope().get("credential");
+        this.validateUserCredentialWithoutEmail(credential, "38001085718", "JAAK-KRISTJAN", "JÕEORG");
 
         this.verifyLogContentsOnSuccessfulAuthentication();
     }
 
-    private void validateUserCredential(TaraCredential credential, String serialNumber, String givenName, String surname) {
-        Assert.assertNotNull(credential);
+    @Test
+    public void loginByIDCard2018SucceedsEmailScopeProvided() {
+        RequestContext requestContext = this.getMockRequestContextWith(null, mockUserCertificate2018);
+        requestContext.getExternalContext().getSessionMap().put(Constants.TARA_OIDC_SESSION_SCOPES, Collections.singletonList(TaraScope.EMAIL));
 
-        Assert.assertEquals(AuthenticationType.IDCard, credential.getType());
-        Assert.assertEquals("EE" + serialNumber, credential.getId());
-        Assert.assertEquals(givenName, credential.getFirstName());
-        Assert.assertEquals(surname, credential.getLastName());
+        Event event = this.authenticationService.loginByIDCard(requestContext);
+        Assert.assertEquals("success", event.getId());
+
+        IdCardCredential credential = (IdCardCredential) requestContext.getFlowExecutionContext().getActiveSession().getScope().get("credential");
+        this.validateUserCredentialWithEmail(credential, "38001085718", "JAAK-KRISTJAN", "JÕEORG", "38001085718@eesti.ee", false);
+
+        this.verifyLogContentsOnSuccessfulAuthentication();
     }
 
     private void verifyLogContentsOnSuccessfulAuthentication() {
@@ -210,4 +216,24 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
         return certificate;
     }
 
+    private void assertTaraCredential(IdCardCredential credential, String serialNumber, String givenName, String surname) {
+        Assert.assertNotNull(credential);
+
+        Assert.assertEquals(AuthenticationType.IDCard, credential.getType());
+        Assert.assertEquals("EE" + serialNumber, credential.getId());
+        Assert.assertEquals(givenName, credential.getFirstName());
+        Assert.assertEquals(surname, credential.getLastName());
+    }
+
+    private void validateUserCredentialWithEmail(IdCardCredential credential, String serialNumber, String givenName, String surname, String email, boolean emailVerified) {
+        assertTaraCredential(credential, serialNumber, givenName, surname);
+        Assert.assertEquals(emailVerified, credential.getEmailVerified());
+        Assert.assertEquals(email, credential.getEmail());
+    }
+
+    private void validateUserCredentialWithoutEmail(IdCardCredential credential, String serialNumber, String givenName, String surname) {
+        assertTaraCredential(credential, serialNumber, givenName, surname);
+        Assert.assertEquals(false, credential.getEmailVerified());
+        Assert.assertNull("e-mail should not be present", credential.getEmail());
+    }
 }

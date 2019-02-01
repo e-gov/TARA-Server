@@ -6,7 +6,7 @@ import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.EidasAuthenticationFailedException;
 import ee.ria.sso.authentication.LevelOfAssurance;
 import ee.ria.sso.authentication.TaraAuthenticationException;
-import ee.ria.sso.authentication.credential.TaraCredential;
+import ee.ria.sso.authentication.credential.PreAuthenticationCredential;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.security.CspDirective;
 import ee.ria.sso.security.CspHeaderUtil;
@@ -53,7 +53,7 @@ public class EidasAuthenticationService extends AbstractService {
             resourceResolverName = "TARA_AUTHENTICATION_RESOURCE_RESOLVER"
     )
     public Event startLoginByEidas(RequestContext context) {
-        final TaraCredential credential = context.getFlowExecutionContext().getActiveSession().getScope().get("credential", TaraCredential.class);
+        final PreAuthenticationCredential credential = context.getFlowExecutionContext().getActiveSession().getScope().get("credential", PreAuthenticationCredential.class);
         try {
             this.statistics.collect(new StatisticsRecord(
                     LocalDateTime.now(), getServiceClientId(context), AuthenticationType.eIDAS, StatisticsOperation.START_AUTH
@@ -65,7 +65,7 @@ public class EidasAuthenticationService extends AbstractService {
             String relayState = UUID.randomUUID().toString();
             context.getExternalContext().getSessionMap().put("service", context.getFlowScope().get("service"));
             context.getExternalContext().getSessionMap().put("relayState", relayState);
-            LevelOfAssurance loa = (LevelOfAssurance) context.getExternalContext().getSessionMap().get(Constants.TARA_OIDC_SESSION_LoA);
+            LevelOfAssurance loa = (LevelOfAssurance) context.getExternalContext().getSessionMap().get(Constants.TARA_OIDC_SESSION_LOA);
             byte[] authnRequest = this.eidasAuthenticator.authenticate(credential.getCountry(), relayState, loa);
             HttpServletResponse response = (HttpServletResponse) context.getExternalContext().getNativeResponse();
             configureResponseForWriting(response, authnRequest);
@@ -91,7 +91,7 @@ public class EidasAuthenticationService extends AbstractService {
             HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getNativeRequest();
             validateRelayState(context);
 
-            TaraCredential credential = getCredentialFromAuthResult(
+            EidasCredential credential = getCredentialFromAuthResult(
                     this.eidasAuthenticator.getAuthenticationResult(request)
             );
 
@@ -162,7 +162,7 @@ public class EidasAuthenticationService extends AbstractService {
         }
     }
 
-    private TaraCredential getCredentialFromAuthResult(byte[] authResultBytes) throws IOException {
+    private EidasCredential getCredentialFromAuthResult(byte[] authResultBytes) throws IOException {
         EidasAuthenticationResult authResult = new ObjectMapper().readValue(
                 new String(authResultBytes, StandardCharsets.UTF_8), EidasAuthenticationResult.class
         );
@@ -171,14 +171,9 @@ public class EidasAuthenticationService extends AbstractService {
         String principalCode = getFormattedPersonIdentifier(authResultAttributes.get("PersonIdentifier"));
         String firstName = authResultAttributes.get("FirstName");
         String lastName = authResultAttributes.get("FamilyName");
-
-        TaraCredential credential = new TaraCredential(AuthenticationType.eIDAS, principalCode, firstName, lastName);
-        credential.setDateOfBirth(authResultAttributes.get("DateOfBirth"));
-
-        String loa = authResult.getLevelOfAssurance();
-        if (loa != null) credential.setLevelOfAssurance(LevelOfAssurance.findByFormalName(loa));
-
-        return credential;
+        String dateOfBirth = authResultAttributes.get("DateOfBirth");
+        LevelOfAssurance loa = LevelOfAssurance.findByFormalName(authResult.getLevelOfAssurance());
+        return new EidasCredential(principalCode, firstName, lastName, dateOfBirth, loa);
     }
 
     private String getFormattedPersonIdentifier(String personIdentifier) {

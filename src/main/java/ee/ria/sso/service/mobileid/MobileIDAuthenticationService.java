@@ -6,6 +6,7 @@ import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.TaraAuthenticationException;
 import ee.ria.sso.authentication.TaraCredentialsException;
+import ee.ria.sso.authentication.credential.PreAuthenticationCredential;
 import ee.ria.sso.authentication.credential.TaraCredential;
 import ee.ria.sso.service.AbstractService;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
@@ -56,7 +57,7 @@ public class MobileIDAuthenticationService extends AbstractService {
             resourceResolverName = "TARA_AUTHENTICATION_RESOURCE_RESOLVER"
     )
     public Event startLoginByMobileID(RequestContext context) {
-        final TaraCredential credential = context.getFlowExecutionContext().getActiveSession().getScope().get("credential", TaraCredential.class);
+        final PreAuthenticationCredential credential = context.getFlowExecutionContext().getActiveSession().getScope().get("credential", PreAuthenticationCredential.class);
         try {
             this.statistics.collect(new StatisticsRecord(
                     LocalDateTime.now(), getServiceClientId(context), AuthenticationType.MobileID, StatisticsOperation.START_AUTH
@@ -144,7 +145,7 @@ public class MobileIDAuthenticationService extends AbstractService {
         context.getFlowExecutionContext().getActiveSession().getScope().clear();
     }
 
-    private void validateCredential(TaraCredential credential) {
+    private void validateCredential(PreAuthenticationCredential credential) {
         if (!StringUtils.isNumeric(credential.getPrincipalCode())) {
             throw new TaraCredentialsException("message.mid.invalidcode", credential.getPrincipalCode());
         }

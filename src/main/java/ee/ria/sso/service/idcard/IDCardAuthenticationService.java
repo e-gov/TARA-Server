@@ -8,6 +8,7 @@ import ee.ria.sso.authentication.TaraAuthenticationException;
 import ee.ria.sso.authentication.credential.TaraCredential;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.config.idcard.IDCardConfigurationProvider;
+import ee.ria.sso.oidc.TaraScope;
 import ee.ria.sso.service.AbstractService;
 import ee.ria.sso.statistics.StatisticsHandler;
 import ee.ria.sso.statistics.StatisticsOperation;
@@ -17,6 +18,7 @@ import ee.ria.sso.utils.X509Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.apereo.inspektr.audit.annotation.Audit;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.jose4j.keys.X509Util;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
@@ -33,6 +35,7 @@ import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 @ConditionalOnProperty("id-card.enabled")
@@ -81,7 +84,7 @@ public class IDCardAuthenticationService extends AbstractService {
             if (this.configurationProvider.isOcspEnabled())
                 this.checkCert(certificate);
 
-            TaraCredential credential = createUserCredential(certificate);
+            TaraCredential credential = createUserCredential(certificate, context);
             context.getFlowExecutionContext().getActiveSession().getScope().put("credential", credential);
 
             this.statistics.collect(new StatisticsRecord(
@@ -171,17 +174,32 @@ public class IDCardAuthenticationService extends AbstractService {
         return trustedCertificates.get(issuerCN);
     }
 
-    private TaraCredential createUserCredential(X509Certificate userCertificate) {
+    private TaraCredential createUserCredential(X509Certificate userCertificate, RequestContext context) {
         Map<String, String> params = Splitter.on(", ").withKeyValueSeparator("=").split(
                 userCertificate.getSubjectDN().getName()
         );
 
-        return new TaraCredential(
-                AuthenticationType.IDCard,
-                EstonianIdCodeUtil.getEEPrefixedEstonianIdCode(params.get("SERIALNUMBER")),
-                params.get("GIVENNAME"),
-                params.get("SURNAME")
-        );
+        if (isEmailRequested(context)) {
+            String email = X509Utils.getRfc822NameSubjectAltName(userCertificate);
+            return new IdCardCredential(
+                    EstonianIdCodeUtil.getEEPrefixedEstonianIdCode(params.get("SERIALNUMBER")),
+                    params.get("GIVENNAME"),
+                    params.get("SURNAME"),
+                    email
+            );
+        } else {
+            return new IdCardCredential(
+                    EstonianIdCodeUtil.getEEPrefixedEstonianIdCode(params.get("SERIALNUMBER")),
+                    params.get("GIVENNAME"),
+                    params.get("SURNAME")
+            );
+        }
+
+    }
+
+    private boolean isEmailRequested(RequestContext context) {
+        List<TaraScope > scopes = context.getExternalContext().getSessionMap().get(Constants.TARA_OIDC_SESSION_SCOPES, List.class, null);
+        return scopes != null && scopes.contains(TaraScope.EMAIL);
     }
 
 }

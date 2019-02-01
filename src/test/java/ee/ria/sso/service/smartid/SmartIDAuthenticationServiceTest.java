@@ -4,6 +4,7 @@ import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.TaraAuthenticationException;
 import ee.ria.sso.authentication.TaraCredentialsException;
+import ee.ria.sso.authentication.credential.PreAuthenticationCredential;
 import ee.ria.sso.authentication.credential.TaraCredential;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.config.smartid.SmartIDConfigurationProvider;
@@ -95,7 +96,7 @@ public class SmartIDAuthenticationServiceTest {
 
     @Test
     public void authenticationSessionInitiationSuccessful() {
-        TaraCredential credential = mockCredential();
+        PreAuthenticationCredential credential = mockCredential();
         MockRequestContext requestContext = mockAuthInitRequestContext(credential);
 
         String sessionId = UUID.randomUUID().toString();
@@ -165,7 +166,7 @@ public class SmartIDAuthenticationServiceTest {
         try {
             // Override test conf parameter, must switched back after the test run
             confProvider.setAuthenticationHashType(HashType.SHA256);
-            TaraCredential credential = mockCredential();
+            PreAuthenticationCredential credential = mockCredential();
             MockRequestContext requestContext = mockAuthInitRequestContext(credential);
 
             String sessionId = UUID.randomUUID().toString();
@@ -188,7 +189,7 @@ public class SmartIDAuthenticationServiceTest {
 
     @Test
     public void authenticationSessionInitiation_personIdentifierInvalidFormat() {
-        List<TaraCredential> invalidCredentials = Arrays.asList(
+        List<PreAuthenticationCredential> invalidCredentials = Arrays.asList(
                 mockCredential(StringUtils.repeat('1', 10)),
                 mockCredential(StringUtils.repeat('1', 12)),
                 mockCredential(StringUtils.repeat('1', 1)),
@@ -211,7 +212,7 @@ public class SmartIDAuthenticationServiceTest {
 
     @Test
     public void authenticationSessionInitiation_personIdentifierMissing() {
-        TaraCredential credential = mockCredential();
+        PreAuthenticationCredential credential = mockCredential();
         credential.setPrincipalCode("");
         credential.setCountry("EE");
         MockRequestContext requestContext = mockAuthInitRequestContext(credential);
@@ -348,7 +349,7 @@ public class SmartIDAuthenticationServiceTest {
     }
 
     private void initAuthSessionAndExpectSmartIdClientException(Exception mockException, String expectedErrorMessageKey) {
-        TaraCredential credential = mockCredential();
+        PreAuthenticationCredential credential = mockCredential();
         MockRequestContext requestContext = mockAuthInitRequestContext(credential);
         mockSubjectAuthenticationCallException(mockException);
 
@@ -528,7 +529,7 @@ public class SmartIDAuthenticationServiceTest {
                 .thenThrow(exception);
     }
 
-    private void assertAuthenticationRequestCreation(TaraCredential credential) {
+    private void assertAuthenticationRequestCreation(PreAuthenticationCredential credential) {
         verify(smartIdClient, times(1)).authenticateSubject(authenticationRequestCaptor.capture());
         SmartIDClient.AuthenticationRequest authRequest = authenticationRequestCaptor.getValue();
         assertEquals(credential.getCountry(), authRequest.getPersonCountry());

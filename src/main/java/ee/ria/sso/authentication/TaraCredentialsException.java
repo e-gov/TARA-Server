@@ -6,30 +6,14 @@ package ee.ria.sso.authentication;
 
 public class TaraCredentialsException extends RuntimeException {
 
-    private final String error = "invalid_client";
-    private String key;
-    private Object value;
+    private final String key;
 
-    public TaraCredentialsException(String key, Object value) {
+    public TaraCredentialsException(String key, String value) {
         super(String.format("Credential value <%s> is invalid", value));
         this.key = key;
-        this.value = value;
-    }
-
-    /*
-     * ACCESSORS
-     */
-
-    public String getError() {
-        return error;
     }
 
     public String getKey() {
         return key;
     }
-
-    public Object getValue() {
-        return value;
-    }
-
 }
