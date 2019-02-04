@@ -124,7 +124,9 @@ public class TaraOidcIdTokenGeneratorServiceTest extends AbstractTest {
                 "\"iat\":1545337304," +
                 "\"nbf\":1545337004," +
                 "\"sub\":\"EE47101010033\"," +
-                "\"profile_attributes\":{\"family_name\":\"Family-Name-ŠÕäÖü\",\"given_name\":\"Given-Name-ŠÕäÖü\",\"date_of_birth\":\"1971-01-01\",\"email\":\"givenname.familyname@eesti.ee\",\"email_verified\":false}," +
+                "\"email\":\"givenname.familyname@eesti.ee\"," +
+                "\"email_verified\":false," +
+                "\"profile_attributes\":{\"family_name\":\"Family-Name-ŠÕäÖü\",\"given_name\":\"Given-Name-ŠÕäÖü\",\"date_of_birth\":\"1971-01-01\"}," +
                 "\"amr\":[\"idcard\"]," +
                 "\"state\":\"state123abc\"," +
                 "\"nonce\":\"1234567890nonce\"," +
