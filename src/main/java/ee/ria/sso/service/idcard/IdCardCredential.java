@@ -8,16 +8,16 @@ import lombok.Setter;
 import lombok.ToString;
 
 @Getter
-@Setter
 @EqualsAndHashCode
 @ToString
 public class IdCardCredential extends TaraCredential {
 
-    private String email;
-    private Boolean emailVerified = false;
+    private final String email;
+    private final Boolean emailVerified = false;
 
     public IdCardCredential(String principalCode, String firstName, String lastName) {
         super(AuthenticationType.IDCard, principalCode, firstName, lastName);
+        this.email = null;
     }
 
     public IdCardCredential(String principalCode, String firstName, String lastName, String email) {

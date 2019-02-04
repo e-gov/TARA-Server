@@ -51,7 +51,7 @@ public class ThymeleafSupportTest {
 
     @Test
     public void isAuthMethodAllowedShouldReturnTrueWhenMethodsEnabledAndAllowedInSession() {
-        Arrays.stream(AuthenticationType.values()).filter(at -> at != AuthenticationType.Default)
+        Arrays.stream(AuthenticationType.values())
                 .forEach(method -> {
                     Mockito.when(taraProperties.isPropertyEnabled(Mockito.eq(method.getPropertyName()+ ".enabled"))).thenReturn(true);
                     setRequestContextWithSessionMap(Collections.singletonMap(
@@ -66,13 +66,13 @@ public class ThymeleafSupportTest {
         setRequestContextWithSessionMap(Collections.singletonMap(
                 Constants.TARA_OIDC_SESSION_AUTH_METHODS, Collections.emptyList()
         ));
-        Arrays.stream(AuthenticationType.values()).filter(at -> at != AuthenticationType.Default)
+        Arrays.stream(AuthenticationType.values())
                 .forEach(method -> Assert.assertFalse(this.thymeleafSupport.isAuthMethodAllowed(method)));
     }
 
     @Test
     public void isAuthMethodAllowedWhenNoAttrSetInSession() {
-        Arrays.stream(AuthenticationType.values()).filter(at -> at != AuthenticationType.Default)
+        Arrays.stream(AuthenticationType.values())
                 .forEach(method -> {
                     Mockito.when(taraProperties.isPropertyEnabled(Mockito.eq(method.getPropertyName()+ ".enabled"))).thenReturn(true);
                     setRequestContextWithSessionMap(new HashMap<>());
@@ -84,7 +84,7 @@ public class ThymeleafSupportTest {
     public void isAuthMethodAllowedShouldReturnFalseWhenMethodsDisabledButAllowedInSession() {
         final ThymeleafSupport thymeleafSupport = new ThymeleafSupport(null,
                 casProperties, taraProperties, null);
-        Arrays.stream(AuthenticationType.values()).filter(at -> at != AuthenticationType.Default)
+        Arrays.stream(AuthenticationType.values())
                 .forEach(method -> {
                     Mockito.when(taraProperties.isPropertyEnabled(Mockito.eq(method.getPropertyName()+ ".enabled"))).thenReturn(false);
                     setRequestContextWithSessionMap(Collections.singletonMap(
@@ -101,7 +101,7 @@ public class ThymeleafSupportTest {
         setRequestContextWithSessionMap(Collections.singletonMap(
                 Constants.TARA_OIDC_SESSION_AUTH_METHODS, Collections.emptyList()
         ));
-        Arrays.stream(AuthenticationType.values()).filter(at -> at != AuthenticationType.Default)
+        Arrays.stream(AuthenticationType.values())
                 .forEach(method -> Assert.assertFalse("Method " + method + " should be allowed", thymeleafSupport.isAuthMethodAllowed(method)));
     }
 

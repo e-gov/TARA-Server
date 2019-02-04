@@ -7,8 +7,6 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum AuthenticationType {
-
-    Default("", "", null),
     IDCard("idcard", "id-card", TaraScope.IDCARD),
     MobileID("mID", "mobile-id", TaraScope.MID),
     eIDAS("eIDAS", "eidas", TaraScope.EIDAS),

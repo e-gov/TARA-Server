@@ -128,7 +128,7 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
 
     @Test
     public void assertSingleAuthMethodsInSession() throws Exception {
-        for (AuthenticationType authenticationType : Arrays.stream(AuthenticationType.values()).filter(e -> e != AuthenticationType.Default).collect(Collectors.toList())) {
+        for (AuthenticationType authenticationType : Arrays.stream(AuthenticationType.values()).collect(Collectors.toList())) {
 
             String scope = authenticationType.getScope().getFormalName();
 
@@ -186,7 +186,7 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
 
         servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
         Assert.assertEquals(
-                Arrays.asList(AuthenticationType.values()).stream().filter(at -> at != AuthenticationType.Default).collect(Collectors.toList()),
+                Arrays.asList(AuthenticationType.values()).stream().collect(Collectors.toList()),
                 request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_AUTH_METHODS)
         );
     }
@@ -251,7 +251,7 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
 
         servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
         Assert.assertEquals(
-                Arrays.asList(AuthenticationType.values()).stream().filter(at -> at != AuthenticationType.Default).collect(Collectors.toList()),
+                Arrays.asList(AuthenticationType.values()).stream().collect(Collectors.toList()),
                 request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_AUTH_METHODS)
         );
     }

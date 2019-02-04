@@ -91,7 +91,7 @@ public abstract class AbstractAuthenticationActionTest {
 
             @Override
             protected AuthenticationType getAuthenticationType() {
-                return AuthenticationType.Default;
+                return AuthenticationType.BankLink;
             }
         }.doExecute(requestContext);
     }

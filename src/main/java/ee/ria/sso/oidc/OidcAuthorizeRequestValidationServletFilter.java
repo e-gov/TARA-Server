@@ -123,9 +123,7 @@ public class OidcAuthorizeRequestValidationServletFilter implements Filter {
                     .filter(e -> scopes.contains(e.getScope()) )
                     .collect(Collectors.toList());
         } else {
-            return Arrays.stream(AuthenticationType.values())
-                    .filter(e -> e != AuthenticationType.Default)
-                    .collect(Collectors.toList());
+            return Arrays.asList(AuthenticationType.values());
         }
     }
 

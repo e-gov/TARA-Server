@@ -53,13 +53,13 @@ public class TaraAuthenticationHandlerTest {
 
     @Test
     public void supportsShouldReturnTrueWhenCredentialIsTaraCredential() {
-        boolean result = authenticationHandler.supports(new TaraCredential());
+        boolean result = authenticationHandler.supports(new TaraCredential(AuthenticationType.IDCard, "", "", ""));
         Assert.assertTrue("TaraAuthenticationHandler is expected to support TaraCredential!", result);
     }
 
     @Test
     public void supportsShouldReturnTrueWhenCredentialExtendsTaraCredential() {
-        boolean result = authenticationHandler.supports(new TaraCredential() {});
+        boolean result = authenticationHandler.supports(new TaraCredential(AuthenticationType.IDCard, "", "","") {});
         Assert.assertTrue("TaraAuthenticationHandler is expected to support TaraCredential!", result);
     }
 

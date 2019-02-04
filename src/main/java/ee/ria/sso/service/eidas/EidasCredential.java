@@ -10,13 +10,12 @@ import lombok.ToString;
 import org.springframework.util.Assert;
 
 @Getter
-@Setter
 @EqualsAndHashCode
 @ToString
 public class EidasCredential extends TaraCredential {
 
-    private String dateOfBirth;
-    private LevelOfAssurance levelOfAssurance;
+    private final String dateOfBirth;
+    private final LevelOfAssurance levelOfAssurance;
 
     public EidasCredential(String principalCode, String firstName, String lastName, String dateOfBirth, LevelOfAssurance levelOfAssurance) {
         super(AuthenticationType.eIDAS, principalCode, firstName, lastName);
