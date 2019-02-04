@@ -5,6 +5,7 @@ import com.codeborne.security.mobileid.MobileIDSession;
 import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.TaraAuthenticationException;
+import ee.ria.sso.authentication.credential.PreAuthenticationCredential;
 import ee.ria.sso.authentication.credential.TaraCredential;
 import ee.ria.sso.config.mobileid.MobileIDConfigurationProvider;
 import ee.ria.sso.config.mobileid.TestMobileIDConfiguration;
@@ -64,7 +65,7 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
         expectedEx.expect(TaraAuthenticationException.class);
         expectedEx.expectMessage("ee.ria.sso.authentication.TaraCredentialsException: Credential value <null> is invalid");
 
-        TaraCredential credential = createCredentialWithIdAndNumber();
+        PreAuthenticationCredential credential = createCredentialWithIdAndNumber();
         credential.setMobileNumber(null);
 
         RequestContext requestContext = this.getMockRequestContext(null);
@@ -81,7 +82,7 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
         expectedEx.expect(TaraAuthenticationException.class);
         expectedEx.expectMessage("ee.ria.sso.authentication.TaraCredentialsException: Credential value <null> is invalid");
 
-        TaraCredential credential = createCredentialWithIdAndNumber();
+        PreAuthenticationCredential credential = createCredentialWithIdAndNumber();
         credential.setPrincipalCode(null);
 
         RequestContext requestContext = this.getMockRequestContext(null);
@@ -169,8 +170,8 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
         this.verifyLogContents(StatisticsOperation.SUCCESSFUL_AUTH);
     }
 
-    private TaraCredential createCredentialWithIdAndNumber() {
-        TaraCredential taraCredential = new TaraCredential();
+    private PreAuthenticationCredential createCredentialWithIdAndNumber() {
+        PreAuthenticationCredential taraCredential = new PreAuthenticationCredential();
         taraCredential.setPrincipalCode(MOCK_PERSONAL_CODE);
         taraCredential.setMobileNumber(MOCK_PHONE_NUMBER);
         return taraCredential;

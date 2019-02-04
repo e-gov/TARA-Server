@@ -1,6 +1,6 @@
 package ee.ria.sso.flow;
 
-import ee.ria.sso.authentication.credential.TaraCredential;
+import ee.ria.sso.authentication.credential.PreAuthenticationCredential;
 import org.apereo.cas.authentication.RememberMeUsernamePasswordCredential;
 import org.apereo.cas.configuration.CasConfigurationProperties;
 import org.apereo.cas.web.flow.CasWebflowConstants;
@@ -35,11 +35,7 @@ public class TaraWebflowConfigurer extends DefaultLoginWebflowConfigurer {
             BinderConfiguration cfg = this.getViewStateBinderConfiguration(state);
             cfg.addBinding(new BinderConfiguration.Binding("rememberMe", null, false));
         } else {
-            this.createFlowVariable(flow, CasWebflowConstants.VAR_ID_CREDENTIAL, TaraCredential.class);
+            this.createFlowVariable(flow, CasWebflowConstants.VAR_ID_CREDENTIAL, PreAuthenticationCredential.class);
         }
     }
-
-    // TODO: TaraCredential is added to the flow scope here, before any authentication starts
-    // TaraCredential is used to forward pre-authentication data to authentication services
-
 }

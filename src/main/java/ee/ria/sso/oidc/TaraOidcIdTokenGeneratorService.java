@@ -45,7 +45,7 @@ public class TaraOidcIdTokenGeneratorService extends OidcIdTokenGeneratorService
     public static final String GENERATED_AND_ENCODED_ID_TOKEN_STRING = "generatedAndEncodedIdTokenString";
     public static final String CLAIM_PROFILE_ATTRIBUTES = "profile_attributes";
     private static final List<TaraPrincipal.Attribute> validProfileAttributesToClaimsList = Arrays.asList(
-            FAMILY_NAME, GIVEN_NAME, DATE_OF_BIRTH
+        FAMILY_NAME, GIVEN_NAME, DATE_OF_BIRTH, EMAIL, EMAIL_VERIFIED
     );
 
     public TaraOidcIdTokenGeneratorService(final CasConfigurationProperties casProperties,

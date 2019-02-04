@@ -18,6 +18,7 @@ import ee.ria.sso.statistics.StatisticsRecord;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
+import org.apereo.cas.web.flow.CasWebflowConstants;
 import org.apereo.inspektr.audit.annotation.Audit;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -74,7 +75,7 @@ public class BanklinkAuthenticationService extends AbstractService {
                     LocalDateTime.now(), getServiceClientId(context), bankEnum, StatisticsOperation.START_AUTH
             ));
 
-            return new Event(this, "success");
+            return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
         } catch (Exception e) {
             throw this.handleException(context, e);
         }
@@ -97,13 +98,13 @@ public class BanklinkAuthenticationService extends AbstractService {
             String lastName = getUnescapedNameField(authInfo.getLastName());
 
             TaraCredential credential = new TaraCredential(AuthenticationType.BankLink, principalCode, firstName, lastName);
-            context.getFlowExecutionContext().getActiveSession().getScope().put("credential", credential);
+            context.getFlowExecutionContext().getActiveSession().getScope().put(CasWebflowConstants.VAR_ID_CREDENTIAL, credential);
 
             this.statistics.collect(new StatisticsRecord(
                     LocalDateTime.now(), getServiceClientId(context), getBankEnum(context), StatisticsOperation.SUCCESSFUL_AUTH
             ));
 
-            return new Event(this, "success");
+            return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
         } catch (Exception e) {
             throw this.handleException(context, e);
         }

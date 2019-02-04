@@ -2,16 +2,16 @@ package ee.ria.sso.utils;
 
 
 import java.io.ByteArrayInputStream;
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
+import java.security.cert.*;
+import java.util.Collection;
+import java.util.List;
 
 import org.apache.axis.encoding.Base64;
 import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.asn1.x500.style.IETFUtils;
+import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,6 +59,24 @@ public class X509Utils {
     public static String getFirstCNFromX500Name(X500Name x500Name) {
         final RDN cn = x500Name.getRDNs(BCStyle.CN)[0];
         return IETFUtils.valueToString(cn.getFirst().getValue());
+    }
+
+    public static String getRfc822NameSubjectAltName(X509Certificate certificate) {
+        try {
+            Collection<List<?>> sanFields = certificate.getSubjectAlternativeNames();
+
+            if (sanFields == null)
+                throw new IllegalArgumentException("This certificate does not contain any Subject Alternative Name fields!");
+
+            return certificate.getSubjectAlternativeNames()
+                    .stream()
+                    .filter(e -> e.get(0).equals(GeneralName.rfc822Name))
+                    .findFirst()
+                    .map(e -> e.get(1).toString())
+                    .orElseGet(null);
+        } catch (CertificateParsingException e) {
+            return null;
+        }
     }
 
 }
