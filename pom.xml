@@ -6,7 +6,7 @@
     <groupId>ee.ria.tara</groupId>
     <artifactId>tara-server</artifactId>
     <packaging>war</packaging>
-    <version>1.4.0</version>
+    <version>1.4.1</version>
 
     <properties>
         <cas.version>5.3.7</cas.version>
