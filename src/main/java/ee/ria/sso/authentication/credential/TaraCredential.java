@@ -8,28 +8,15 @@ import lombok.Setter;
 import lombok.ToString;
 import org.apereo.cas.authentication.Credential;
 
-/**
- * Created by Janar Rahumeel (CGI Estonia)
- */
-
 @Getter
-@Setter
 @EqualsAndHashCode
 @ToString
 public class TaraCredential implements Credential {
 
     private final AuthenticationType type;
-    private String principalCode;
-    private String firstName;
-    private String lastName;
-    private String mobileNumber;
-    private String country;
-    private String dateOfBirth;
-    private LevelOfAssurance levelOfAssurance;
-
-    public TaraCredential() {
-        this.type = AuthenticationType.Default;
-    }
+    private final String principalCode;
+    private final String firstName;
+    private final String lastName;
 
     public TaraCredential(AuthenticationType authenticationType, String principalCode, String firstName, String lastName) {
         this.type = authenticationType;

@@ -1,5 +1,6 @@
 package ee.ria.sso.flow.action;
 
+import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.service.eidas.EidasAuthenticationService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
@@ -25,4 +26,8 @@ public class EidasStartAuthenticationAction extends AbstractAuthenticationAction
         return this.authenticationService.startLoginByEidas(requestContext);
     }
 
+    @Override
+    protected AuthenticationType getAuthenticationType() {
+        return AuthenticationType.eIDAS;
+    }
 }

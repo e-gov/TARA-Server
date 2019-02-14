@@ -3,7 +3,9 @@ package ee.ria.sso.config;
 import ee.ria.sso.authentication.TaraAuthenticationHandler;
 import ee.ria.sso.authentication.principal.TaraPrincipalFactory;
 import ee.ria.sso.flow.TaraWebflowConfigurer;
+import ee.ria.sso.flow.ThymeleafSupport;
 import ee.ria.sso.i18n.TaraLocaleChangeInterceptor;
+import ee.ria.sso.service.manager.ManagerService;
 import lombok.extern.slf4j.Slf4j;
 import org.apereo.cas.authentication.AuthenticationEventExecutionPlan;
 import org.apereo.cas.authentication.AuthenticationEventExecutionPlanConfigurer;
@@ -29,6 +31,7 @@ import org.springframework.webflow.engine.builder.support.FlowBuilderServices;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -37,9 +40,9 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Configuration
-@PropertySource("classpath:dynamic.properties")
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 @ComponentScan(basePackages = {"ee.ria.sso"})
+@EnableConfigurationProperties(TaraProperties.class)
 public class TaraConfiguration extends WebMvcConfigurerAdapter {
 
     @Autowired
@@ -48,6 +51,11 @@ public class TaraConfiguration extends WebMvcConfigurerAdapter {
     @Bean
     public PrincipalFactory taraPrincipalFactory() {
         return new TaraPrincipalFactory();
+    }
+
+    @Bean
+    public ThymeleafSupport thymeleafSupport(ManagerService managerService, CasConfigurationProperties casProperties, TaraProperties taraProperties) {
+        return new ThymeleafSupport(managerService, casProperties, taraProperties, getDefaultLocaleChangeParam());
     }
 
     @Bean
@@ -69,6 +77,11 @@ public class TaraConfiguration extends WebMvcConfigurerAdapter {
         localeInterceptor.setParamNames(names);
         log.info("Supported locale parameters: " + Arrays.asList(localeInterceptor.getParamNames()));
         return localeInterceptor;
+    }
+
+    private String getDefaultLocaleChangeParam() {
+        Optional<String> localeParam = Arrays.asList(casProperties.getLocale().getParamName().split(",")).stream().findFirst();
+        return localeParam.isPresent() ? localeParam.get() : TaraLocaleChangeInterceptor.DEFAULT_OIDC_LOCALE_PARAM;
     }
 
     @Configuration("TaraWebFlowConfiguration")

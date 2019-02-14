@@ -12,9 +12,11 @@ import org.apereo.cas.authentication.principal.Principal;
 import org.apereo.cas.configuration.CasConfigurationProperties;
 import org.apereo.cas.oidc.token.OidcIdTokenSigningAndEncryptionService;
 import org.apereo.cas.services.OidcRegisteredService;
+import org.apereo.cas.services.RegexRegisteredService;
 import org.apereo.cas.services.ServicesManager;
 import org.apereo.cas.support.oauth.OAuth20Constants;
 import org.apereo.cas.support.oauth.OAuth20ResponseTypes;
+import org.apereo.cas.support.oauth.services.OAuthRegisteredService;
 import org.apereo.cas.ticket.ExpirationPolicy;
 import org.apereo.cas.ticket.TicketGrantingTicketImpl;
 import org.apereo.cas.ticket.accesstoken.AccessToken;
@@ -40,6 +42,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -90,7 +93,48 @@ public class TaraOidcIdTokenGeneratorServiceTest extends AbstractTest {
     }
 
     @Test
-    public void successfulTokenGeneration() throws Exception {
+    public void failGenerateWhenNotOidcRegisteredService() {
+        expectedEx.expect(IllegalArgumentException.class);
+        expectedEx.expectMessage("Registered service instance is not an OIDC service");
+        taraOidcIdTokenGeneratorService.generate(request, response, accessToken, 1, OAuth20ResponseTypes.CODE, new OAuthRegisteredService());
+    }
+
+    @Test
+    public void failGenerateWhenNoAuthenticationProfilePresentInSession() {
+        MockHttpSession session = getMockSession();
+        session.setAttribute(Pac4jConstants.USER_PROFILES, new ArrayList<>());
+        request.setSession(session);
+
+        expectedEx.expect(IllegalArgumentException.class);
+        expectedEx.expectMessage("Unable to determine the user profile from the context");
+        taraOidcIdTokenGeneratorService.generate(request, response, accessToken, 1, OAuth20ResponseTypes.CODE, oidcRegisteredService);
+    }
+
+    @Test
+    public void successfulTokenGenerationIdCard() throws Exception {
+
+        Mockito.when(accessToken.getTicketGrantingTicket()).thenReturn(getMockUserAuthentication(getMockIdCardAuthPrincipalAttributes()));
+
+        String encodedToken = taraOidcIdTokenGeneratorService.generate(request, response, accessToken, 1, OAuth20ResponseTypes.CODE, oidcRegisteredService );
+        verifyRequestAttributes(request, encodedToken);
+        verifyToken("{\"jti\":\"e7767849-49e5-412d-9148-1099a3b3325f\"," +
+                "\"iss\":\"http://localhost:8080/cas/oidc\"," +
+                "\"aud\":\"openIdDemo\"," +
+                "\"exp\":1545337305," +
+                "\"iat\":1545337304," +
+                "\"nbf\":1545337004," +
+                "\"sub\":\"EE47101010033\"," +
+                "\"email\":\"givenname.familyname@eesti.ee\"," +
+                "\"email_verified\":false," +
+                "\"profile_attributes\":{\"family_name\":\"Family-Name-ŠÕäÖü\",\"given_name\":\"Given-Name-ŠÕäÖü\",\"date_of_birth\":\"1971-01-01\"}," +
+                "\"amr\":[\"idcard\"]," +
+                "\"state\":\"state123abc\"," +
+                "\"nonce\":\"1234567890nonce\"," +
+                "\"at_hash\":\"fzJWdj0Xhq8b62dU7qGx9g==\"}", encodedToken);
+    }
+
+    @Test
+    public void successfulTokenGenerationMid() throws Exception {
 
         String encodedToken = taraOidcIdTokenGeneratorService.generate(request, response, accessToken, 1, OAuth20ResponseTypes.CODE, oidcRegisteredService );
         verifyRequestAttributes(request, encodedToken);
@@ -181,6 +225,18 @@ public class TaraOidcIdTokenGeneratorServiceTest extends AbstractTest {
         map.put(FAMILY_NAME.name(), Arrays.asList("Family-Name-ŠÕäÖü"));
         map.put(DATE_OF_BIRTH.name(), Arrays.asList("1971-01-01"));
         map.put(AUTHENTICATION_TYPE.name(), Arrays.asList(AuthenticationType.MobileID.getAmrName()));
+        return map;
+    }
+
+    private HashMap<String, Object> getMockIdCardAuthPrincipalAttributes() {
+        HashMap<String, Object> map = new HashMap<>();
+        map.put(PRINCIPAL_CODE.name(), Arrays.asList("EE47101010033"));
+        map.put(GIVEN_NAME.name(), Arrays.asList("Given-Name-ŠÕäÖü"));
+        map.put(FAMILY_NAME.name(), Arrays.asList("Family-Name-ŠÕäÖü"));
+        map.put(DATE_OF_BIRTH.name(), Arrays.asList("1971-01-01"));
+        map.put(EMAIL.name(), Arrays.asList("givenname.familyname@eesti.ee"));
+        map.put(EMAIL_VERIFIED.name(), Arrays.asList(false));
+        map.put(AUTHENTICATION_TYPE.name(), Arrays.asList(AuthenticationType.IDCard.getAmrName()));
         return map;
     }
 

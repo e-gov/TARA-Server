@@ -3,11 +3,9 @@ package ee.ria.sso.oidc;
 import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.LevelOfAssurance;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apereo.cas.util.spring.ApplicationContextProvider;
-import org.springframework.context.ApplicationContext;
-import org.springframework.util.Assert;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -20,19 +18,18 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
+@AllArgsConstructor
 public class OidcAuthorizeRequestValidationServletFilter implements Filter {
 
-    private OidcAuthorizeRequestValidator oidcAuthorizeRequestValidator;
+    private final OidcAuthorizeRequestValidator oidcAuthorizeRequestValidator;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
-        ApplicationContext ctx = ApplicationContextProvider.getApplicationContext();
-        Assert.notNull(ctx, "Spring context could not be found!");
-        this.oidcAuthorizeRequestValidator = ctx.getBean("oidcAuthorizeRequestValidator", OidcAuthorizeRequestValidator.class);
-        Assert.notNull(ctx, "OidcRequestValidator could not be not be found in Spring context!");
+        log.debug("Initialize filter: {}", OidcAuthorizeRequestValidationServletFilter.class.getName());
     }
 
     @Override
@@ -95,7 +92,7 @@ public class OidcAuthorizeRequestValidationServletFilter implements Filter {
         );
 
         final String acrValues = request.getParameter(OidcAuthorizeRequestParameter.ACR_VALUES.getParameterKey());
-        if (acrValues != null) session.setAttribute(Constants.TARA_OIDC_SESSION_LoA,
+        if (acrValues != null) session.setAttribute(Constants.TARA_OIDC_SESSION_LOA,
                 LevelOfAssurance.findByAcrName(acrValues));
     }
 
@@ -103,23 +100,40 @@ public class OidcAuthorizeRequestValidationServletFilter implements Filter {
         final String scope = request.getParameter(OidcAuthorizeRequestParameter.SCOPE.getParameterKey());
         if (StringUtils.isBlank(scope)) return Collections.emptyList();
 
+
+
         return Arrays.stream(scope.split(" "))
-                .map(s -> TaraScope.valueOf(s.toUpperCase()))
+                .map(s -> {
+                        try {
+                            return TaraScope.getScope(s);
+                        } catch (IllegalArgumentException e) {
+                            log.warn("Invalid scope value ignored!");
+                            return null;
+                        }
+                    })
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
     private List<AuthenticationType> getListOfAllowedAuthenticationMethods(final List<TaraScope> scopes) {
         if (scopes.contains(TaraScope.EIDASONLY)) {
             return Arrays.asList(AuthenticationType.eIDAS);
-        } else {
+        } else if (isAuthMethodSpecificScopePresent(scopes)) {
             return Arrays.stream(AuthenticationType.values())
-                    .filter(e -> e != AuthenticationType.Default)
+                    .filter(e -> scopes.contains(e.getScope()) )
                     .collect(Collectors.toList());
+        } else {
+            return Arrays.asList(AuthenticationType.values());
         }
+    }
+
+    private boolean isAuthMethodSpecificScopePresent(List<TaraScope> scopes) {
+        return !Collections.disjoint(scopes, TaraScope.SUPPORTS_AUTHENTICATION_METHOD_SELECTION);
     }
 
     @Override
     public void destroy() {
+        log.debug("Destroy filter: {}", OidcAuthorizeRequestValidationServletFilter.class.getName());
     }
 
 }

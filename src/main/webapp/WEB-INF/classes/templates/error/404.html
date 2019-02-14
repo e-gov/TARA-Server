@@ -9,8 +9,8 @@
             <p th:text="#{message.error.404.error}"></p>
             <p th:text="#{message.error.404.footer}"></p>
         </div>
-        <p th:if="${@taraProperties.getBackUrl(session.pac4jRequestedUrl, #locale) != '#'}" class="link-back">
-            <a th:href="${@taraProperties.getBackUrl(session.pac4jRequestedUrl, #locale)}" th:text="#{label.common.back}">Back</a>
+        <p th:if="${@thymeleafSupport.getBackUrl(session.pac4jRequestedUrl, #locale) != '#'}" class="link-back">
+            <a th:href="${@thymeleafSupport.getBackUrl(session.pac4jRequestedUrl, #locale)}" th:text="#{label.common.back}">Back</a>
         </p>
     </div>
 </div>

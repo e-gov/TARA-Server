@@ -126,6 +126,32 @@ public class OidcAuthorizeRequestValidatorTest {
         oidcAuthorizeRequestValidator.validateAuthenticationRequestParameters(request);
     }
 
+    @Test
+    public void invalidScopeValueIsIgnored() {
+        MockHttpServletRequest request = new MockOidcRequestBuilder()
+                .addAllMandatoryParameters()
+                .addAllOptionalParameters()
+                .removeParameter("scope")
+                .addParameter("scope", "openid unknown")
+                .build();
+        oidcAuthorizeRequestValidator.validateAuthenticationRequestParameters(request);
+    }
+
+    @Test
+    public void openIdScopeValueIsMandatory() {
+        MockHttpServletRequest request = new MockOidcRequestBuilder()
+                .addAllMandatoryParameters()
+                .addAllOptionalParameters()
+                .removeParameter("scope")
+                .addParameter("scope", "eidasonly")
+                .build();
+
+        expectedEx.expect(OidcAuthorizeRequestValidator.InvalidRequestException.class);
+        expectedEx.expectMessage("Required scope <openid> not provided");
+
+        oidcAuthorizeRequestValidator.validateAuthenticationRequestParameters(request);
+    }
+
     public static class MockOidcRequestBuilder {
 
         MockHttpServletRequest httpServletRequest;

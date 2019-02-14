@@ -1,7 +1,7 @@
 package ee.ria.sso.service.smartid;
 
 import ee.ria.sso.Constants;
-import ee.ria.sso.authentication.credential.TaraCredential;
+import ee.ria.sso.authentication.credential.PreAuthenticationCredential;
 import ee.sk.smartid.AuthenticationHash;
 import ee.sk.smartid.AuthenticationIdentity;
 import ee.sk.smartid.HashType;
@@ -10,6 +10,7 @@ import ee.sk.smartid.rest.dao.SessionCertificate;
 import ee.sk.smartid.rest.dao.SessionResult;
 import ee.sk.smartid.rest.dao.SessionSignature;
 import ee.sk.smartid.rest.dao.SessionStatus;
+import org.apereo.cas.web.flow.CasWebflowConstants;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.webflow.test.MockExternalContext;
 import org.springframework.webflow.test.MockRequestContext;
@@ -25,21 +26,21 @@ public class SmartIDMockData {
 
     public static final String INVALID_SIGNATURE_IN_BASE64 = "XDzm10vKbvMMKv+o7i/Sz726hbcKPiWxtmP8Wc68v5BnJOp+STDhyq18CEAyIG/ucmlRi/TtTFn+7r6jNEczZ+2wIlDq7J8WJ3TKbAiCUUAoFccon2fqXAZHGceO/pRfrEbVsy6Oh9HodOwr/7A1a46JCCif9w/1ZE84Tm1RVsJHSkBdKYFOPTCEbN2AXZXDU9qshIyjLHrIyZ3ve6ay6L2xCyK1VOY6y3zsavzxd2CjAkvk9l1MrMLKOoI4lHXmIqDTr1I5ixMZ/g05aua0AHGE/cOp1XRj5lRJW48kjISidH9lPdnEHTKZJ6SFc/ZpZOYt7W+BNMb2dcvgOWrRXICPy0KfAh6gRAJIOUe6kPhIqvGnZ450fX1eO5wd957a1Tjlw6+h7AGf1YFYciLBpC+D3k/E8VDJUoicJBfzGFjEhd4xJYFGw3ZqUWr7dF/6LLSBpL1B87kHhsFhpn+3h0AWJaSqkD1DW3upSdlTZOV+IqoPlTMzV6HJn1yOGrg+yWBiCX1Xs7NbbMveyg/7E/wxVYOaaXGeXp4yaLxS1YJMu0PiQByvhZyarEPWEc6imlmg6LKUYzu6rklcQL7dW8xUW7n6gLx+Jyh+4KVyom968LtjC8zXCkL+VkiWRQIbOx6+k/q+4/aR9tG9rgjMCSV5kYn+kLRGfNA8eHp891c=";
 
-    public static TaraCredential mockCredential() {
+    public static PreAuthenticationCredential mockCredential() {
         return mockCredential(VALID_EE_PERSON_IDENTIFIER);
     }
 
-    public static TaraCredential mockCredential(String personIdentifier) {
-        TaraCredential credential = new TaraCredential();
+    public static PreAuthenticationCredential mockCredential(String personIdentifier) {
+        PreAuthenticationCredential credential = new PreAuthenticationCredential();
         credential.setCountry("EE");
         credential.setPrincipalCode(personIdentifier);
         return credential;
     }
 
-    public static MockRequestContext mockAuthInitRequestContext(TaraCredential credential) {
+    public static MockRequestContext mockAuthInitRequestContext(PreAuthenticationCredential credential) {
         MockRequestContext requestContext = new MockRequestContext();
         setMockContextExternalContext(requestContext);
-        requestContext.getFlowExecutionContext().getActiveSession().getScope().put(Constants.CREDENTIAL, credential);
+        requestContext.getFlowExecutionContext().getActiveSession().getScope().put(CasWebflowConstants.VAR_ID_CREDENTIAL, credential);
         return requestContext;
     }
 

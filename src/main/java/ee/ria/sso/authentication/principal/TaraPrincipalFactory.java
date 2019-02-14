@@ -1,32 +1,26 @@
 package ee.ria.sso.authentication.principal;
 
-import java.util.Map;
-
 import lombok.EqualsAndHashCode;
-import org.apache.commons.collections4.MapUtils;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
+import lombok.NoArgsConstructor;
 import org.apereo.cas.authentication.principal.Principal;
 import org.apereo.cas.authentication.principal.PrincipalFactory;
+import org.springframework.util.Assert;
 
-/**
- * Created by Janar Rahumeel (CGI Estonia)
- */
+import java.util.Map;
+
+@NoArgsConstructor
 @EqualsAndHashCode
 public class TaraPrincipalFactory implements PrincipalFactory {
 
     private static final long serialVersionUID = 1L;
 
-    public TaraPrincipalFactory() {
-    }
-
+    @Override
     public Principal createPrincipal(String id) {
         throw new IllegalArgumentException("Attributes are mandatory when creating principal");
     }
 
     public Principal createPrincipal(String id, Map<String, Object> attributes) {
-        if (MapUtils.isEmpty(attributes)) {
-            throw new IllegalArgumentException("No attributes found when creating principal");
-        }
+        Assert.notEmpty(attributes, "No attributes found when creating principal");
         return new TaraPrincipal(id, attributes);
     }
 }

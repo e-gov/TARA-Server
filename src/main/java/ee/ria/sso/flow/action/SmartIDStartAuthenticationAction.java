@@ -1,5 +1,6 @@
 package ee.ria.sso.flow.action;
 
+import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.service.smartid.SmartIDAuthenticationService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
@@ -19,5 +20,10 @@ public class SmartIDStartAuthenticationAction extends AbstractAuthenticationActi
     @Override
     protected Event doAuthenticationExecute(RequestContext requestContext) {
         return authenticationService.initSmartIdAuthenticationSession(requestContext);
+    }
+
+    @Override
+    protected AuthenticationType getAuthenticationType() {
+        return AuthenticationType.SmartID;
     }
 }

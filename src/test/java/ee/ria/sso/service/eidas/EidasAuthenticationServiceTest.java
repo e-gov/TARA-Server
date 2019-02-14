@@ -5,7 +5,7 @@ import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.LevelOfAssurance;
 import ee.ria.sso.authentication.TaraAuthenticationException;
-import ee.ria.sso.authentication.credential.TaraCredential;
+import ee.ria.sso.authentication.credential.PreAuthenticationCredential;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.config.eidas.EidasConfigurationProvider;
 import ee.ria.sso.config.eidas.TestEidasConfiguration;
@@ -84,7 +84,7 @@ public class EidasAuthenticationServiceTest extends AbstractAuthenticationServic
 
     @Test
     public void startLoginByEidasWithoutLoaShouldSucceedAndWriteAuthenticatorResponse() throws Exception {
-        TaraCredential credential = new TaraCredential();
+        PreAuthenticationCredential credential = new PreAuthenticationCredential();
         credential.setCountry("someCountry");
 
         MockRequestContext requestContext = this.getMockRequestContext(null, credential);
@@ -99,11 +99,11 @@ public class EidasAuthenticationServiceTest extends AbstractAuthenticationServic
 
     @Test
     public void startLoginByEidasWithLoaShouldSucceedAndWriteAuthenticatorResponse() throws Exception {
-        TaraCredential credential = new TaraCredential();
+        PreAuthenticationCredential credential = new PreAuthenticationCredential();
         credential.setCountry("someCountry");
 
         MockRequestContext requestContext = this.getMockRequestContext(null, credential);
-        requestContext.getExternalContext().getSessionMap().put(Constants.TARA_OIDC_SESSION_LoA, LevelOfAssurance.HIGH);
+        requestContext.getExternalContext().getSessionMap().put(Constants.TARA_OIDC_SESSION_LOA, LevelOfAssurance.HIGH);
         setAuthenticatorMockUpForAuthentication("someCountry", LevelOfAssurance.HIGH,"someAuthenticationResult");
 
         Event event = this.authenticationService.startLoginByEidas(requestContext);
@@ -115,7 +115,7 @@ public class EidasAuthenticationServiceTest extends AbstractAuthenticationServic
 
     @Test
     public void startLoginByEidasShouldFailWhenEidasAuthenticatorThrowsException() throws Exception {
-        TaraCredential credential = new TaraCredential();
+        PreAuthenticationCredential credential = new PreAuthenticationCredential();
         credential.setCountry("someCountry");
 
         MockRequestContext requestContext = this.getMockRequestContext(null, credential);
@@ -137,7 +137,7 @@ public class EidasAuthenticationServiceTest extends AbstractAuthenticationServic
         Assert.fail("Should not reach this!");
     }
 
-    protected MockRequestContext getMockRequestContext(Map<String, String> requestParameters, TaraCredential credential) {
+    protected MockRequestContext getMockRequestContext(Map<String, String> requestParameters, PreAuthenticationCredential credential) {
         final MockRequestContext mockRequestContext = super.getMockRequestContext(requestParameters);
         ((MockExternalContext) mockRequestContext.getExternalContext()).setNativeResponse(
                 new MockHttpServletResponse()
@@ -224,7 +224,7 @@ public class EidasAuthenticationServiceTest extends AbstractAuthenticationServic
         Event event = this.authenticationService.checkLoginForEidas(requestContext);
         Assert.assertEquals("success", event.getId());
 
-        validateUserCredential((TaraCredential) requestContext.getFlowExecutionContext().getActiveSession().getScope().get("credential"));
+        validateUserCredential((EidasCredential) requestContext.getFlowExecutionContext().getActiveSession().getScope().get("credential"));
         Assert.assertEquals(serviceValueStoredAsRelayState, requestContext.getFlowScope().get("service"));
         Assert.assertNull("RelayState not deleted after successful verification", requestContext.getExternalContext().getSessionMap().get("relayState"));
 
@@ -240,6 +240,7 @@ public class EidasAuthenticationServiceTest extends AbstractAuthenticationServic
 
         EidasAuthenticationResult authenticationResult = new EidasAuthenticationResult();
         authenticationResult.setAttributes(attributes);
+        authenticationResult.setLevelOfAssurance("http://eidas.europa.eu/LoA/substantial");
 
         try {
             return new ObjectMapper().writeValueAsString(authenticationResult);
@@ -257,7 +258,7 @@ public class EidasAuthenticationServiceTest extends AbstractAuthenticationServic
         );
     }
 
-    private void validateUserCredential(TaraCredential credential) {
+    private void validateUserCredential(EidasCredential credential) {
         Assert.assertNotNull(credential);
 
         Assert.assertEquals(AuthenticationType.eIDAS, credential.getType());

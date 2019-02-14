@@ -2,8 +2,10 @@ package ee.ria.sso.flow.action;
 
 import ee.ria.sso.AbstractTest;
 import ee.ria.sso.Constants;
+import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.flow.AuthenticationFlowExecutionException;
+import ee.ria.sso.flow.ThymeleafSupport;
 import org.apereo.cas.authentication.principal.AbstractWebApplicationService;
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
@@ -17,7 +19,13 @@ import org.pac4j.core.context.Pac4jConstants;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
 
+import java.util.Collections;
+import java.util.List;
+
 public abstract class AbstractAuthenticationActionTest {
+
+    @Mock
+    private ThymeleafSupport thymeleafSupport;
 
     @Mock
     private TaraResourceBundleMessageSource messageSource;
@@ -34,6 +42,8 @@ public abstract class AbstractAuthenticationActionTest {
         requestContext = AbstractTest.getRequestContext();
         requestContext.getFlowScope().put(Constants.CAS_SERVICE_ATTRIBUTE_NAME, new AbstractWebApplicationService("id", "https://cas.server.url/oauth2.0/callbackAuthorize?client_name=CasOAuthClient&client_id=openIdDemo&redirect_uri=https://tara-client.arendus.kit:8451/response", "artifactId") {});
         requestContext.getExternalContext().getSessionMap().put(Pac4jConstants.REQUESTED_URL, "https://localhost:8451/response");
+        requestContext.getExternalContext().getSessionMap().put(Constants.TARA_OIDC_SESSION_AUTH_METHODS, Collections.singletonList(AuthenticationType.SmartID));
+        Mockito.when(thymeleafSupport.isAuthMethodAllowed(Mockito.any())).thenReturn(true);
     }
 
     @Test
@@ -52,6 +62,16 @@ public abstract class AbstractAuthenticationActionTest {
     }
 
     @Test
+    public void exceptionWhenAuthenticationMethodNotInAllowedList() throws Exception {
+        expectedEx.expect(AuthenticationFlowExecutionException.class);
+        expectedEx.expect(new ExceptionCodeMatches(401, "error", "Unauthorised authentication method!"));
+
+        Mockito.when(messageSource.getMessage(Constants.MESSAGE_KEY_AUTH_METHOD_RESTRICTED_BY_SCOPE)).thenReturn("Unauthorised authentication method!");
+        Mockito.when(thymeleafSupport.isAuthMethodAllowed(Mockito.any())).thenReturn(false);
+        getAction().doExecute(requestContext);
+    }
+
+    @Test
     public void invalidOriginalUrlInService() throws Exception {
         requestContext.getFlowScope().put(Constants.CAS_SERVICE_ATTRIBUTE_NAME, new AbstractWebApplicationService("id", null, "artifactId") {});
         getAction().doExecute(requestContext);
@@ -59,15 +79,19 @@ public abstract class AbstractAuthenticationActionTest {
 
     @Test
     public void exceptionOccursDuringAuthentication() throws Exception {
-        Mockito.when(messageSource.getMessage(Constants.MESSAGE_KEY_SESSION_EXPIRED)).thenReturn("Session expired");
-
         expectedEx.expect(AuthenticationFlowExecutionException.class);
         expectedEx.expect(new ExceptionCodeMatches(500, "error", "Unexpected exception during authentication action execution"));
 
-        new AbstractAuthenticationAction() {
+        new AbstractAuthenticationAction(messageSource, thymeleafSupport) {
+
             @Override
             protected Event doAuthenticationExecute(RequestContext requestContext) {
                 throw new IllegalStateException("Unexpected exception during authentication action execution");
+            }
+
+            @Override
+            protected AuthenticationType getAuthenticationType() {
+                return AuthenticationType.BankLink;
             }
         }.doExecute(requestContext);
     }

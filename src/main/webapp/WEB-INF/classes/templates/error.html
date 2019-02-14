@@ -8,13 +8,13 @@
             <p><strong><span th:text="#{message.error.auth.title}" th:remove="tag"></span></strong></p>
             <p th:if="${TARA_ERROR_MESSAGE != null}" th:text="${TARA_ERROR_MESSAGE}"></p>
             <p th:unless="${TARA_ERROR_MESSAGE != null}" th:text="#{message.error.auth.error}"></p>
-            <p th:if="${@taraProperties.getCurrentRequestIdentifier() != null}">
+            <p th:if="${@thymeleafSupport.getCurrentRequestIdentifier() != null}">
                 <span th:text="#{label.error.incidentNumber}" th:remove="tag"></span>&nbsp;
-                <span th:text="${@taraProperties.getCurrentRequestIdentifier()}" th:remove="tag"></span>
+                <span th:text="${@thymeleafSupport.getCurrentRequestIdentifier()}" th:remove="tag"></span>
             </p>
         </div>
-        <p th:if="${@taraProperties.getBackUrl(session.pac4jRequestedUrl, #locale) != '#'}" class="link-back">
-            <a th:href="${@taraProperties.getBackUrl(session.pac4jRequestedUrl, #locale)}" th:text="#{label.common.back}">Back</a>
+        <p th:if="${@thymeleafSupport.getBackUrl(session.pac4jRequestedUrl, #locale) != '#'}" class="link-back">
+            <a th:href="${@thymeleafSupport.getBackUrl(session.pac4jRequestedUrl, #locale)}" th:text="#{label.common.back}">Back</a>
         </p>
     </div>
 </div>

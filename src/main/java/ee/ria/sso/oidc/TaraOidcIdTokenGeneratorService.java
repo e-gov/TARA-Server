@@ -44,8 +44,11 @@ public class TaraOidcIdTokenGeneratorService extends OidcIdTokenGeneratorService
 
     public static final String GENERATED_AND_ENCODED_ID_TOKEN_STRING = "generatedAndEncodedIdTokenString";
     public static final String CLAIM_PROFILE_ATTRIBUTES = "profile_attributes";
+    public static final String CLAIM_EMAIL = "email";
+    public static final String CLAIM_EMAIL_VERIFIED = "email_verified";
+
     private static final List<TaraPrincipal.Attribute> validProfileAttributesToClaimsList = Arrays.asList(
-            FAMILY_NAME, GIVEN_NAME, DATE_OF_BIRTH
+        FAMILY_NAME, GIVEN_NAME, DATE_OF_BIRTH
     );
 
     public TaraOidcIdTokenGeneratorService(final CasConfigurationProperties casProperties,
@@ -124,6 +127,12 @@ public class TaraOidcIdTokenGeneratorService extends OidcIdTokenGeneratorService
 
         Principal taraPrincipal = accessTokenId.getTicketGrantingTicket().getAuthentication().getPrincipal();
         claims.setSubject(getMandatoryPrincipalAttribute(PRINCIPAL_CODE, taraPrincipal));
+
+        if (isEmailClaimsRequested(taraPrincipal)) {
+            claims.setStringClaim(CLAIM_EMAIL, getMandatoryPrincipalAttribute(TaraPrincipal.Attribute.EMAIL, taraPrincipal));
+            claims.setClaim(CLAIM_EMAIL_VERIFIED, getMandatoryPrincipalAttribute(TaraPrincipal.Attribute.EMAIL_VERIFIED, taraPrincipal, Boolean.class));
+        }
+
         claims.setClaim(CLAIM_PROFILE_ATTRIBUTES, getProfileAttributesMap(taraPrincipal));
         claims.setStringListClaim(OidcConstants.AMR, getAmrValuesList(taraPrincipal));
 
@@ -131,6 +140,10 @@ public class TaraOidcIdTokenGeneratorService extends OidcIdTokenGeneratorService
             String levelOfAssurance = getMandatoryPrincipalAttribute(LEVEL_OF_ASSURANCE, taraPrincipal);
             claims.setStringClaim(OidcConstants.ACR, levelOfAssurance);
         }
+    }
+
+    private boolean isEmailClaimsRequested(Principal taraPrincipal) {
+        return taraPrincipal.getAttributes().get(TaraPrincipal.Attribute.EMAIL.name()) != null;
     }
 
     private Map<String, Object> getProfileAttributesMap(Principal principal) {
@@ -177,11 +190,17 @@ public class TaraOidcIdTokenGeneratorService extends OidcIdTokenGeneratorService
     }
 
     private static String getMandatoryPrincipalAttribute(TaraPrincipal.Attribute attribute, Principal principal) {
+        return getMandatoryPrincipalAttribute(attribute, principal, String.class);
+    }
+
+    private static <T> T getMandatoryPrincipalAttribute(TaraPrincipal.Attribute attribute, Principal principal, Class<T> clazz) {
         String attributeName = attribute.name();
         Assert.notNull(principal.getAttributes().get(attributeName), "Mandatory attribute " + attributeName + " not found when generating OIDC token");
         List list = ((List)(principal.getAttributes().get(attributeName)));
         Assert.isTrue(list.size() == 1, "Expected a single profile attribute. Found " + list.size());
-        return String.valueOf(list.get(0));
+        Object o = list.get(0);
+        Assert.isTrue(o.getClass().isAssignableFrom(clazz), "Cannot assign principal value of type " + o.getClass() + " to " + clazz);
+        return (T)o;
     }
 }
 

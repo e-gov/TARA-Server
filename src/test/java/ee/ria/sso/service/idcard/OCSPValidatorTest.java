@@ -240,7 +240,7 @@ public class OCSPValidatorTest {
         ocspResponseTransformer.setThisUpdateProvider(() -> {
             final Instant instant = Instant.now()
                     .plusSeconds(ocspConfiguration.getAcceptedClockSkew())
-                    .plusSeconds(1L);
+                    .plusSeconds(5L);
             return Date.from(instant);
         });
 
