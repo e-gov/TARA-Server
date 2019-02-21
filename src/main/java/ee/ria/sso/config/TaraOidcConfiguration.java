@@ -32,6 +32,7 @@ import org.apereo.cas.support.oauth.web.response.accesstoken.OAuth20TokenGenerat
 import org.apereo.cas.support.oauth.web.response.accesstoken.ext.BaseAccessTokenGrantRequestExtractor;
 import org.apereo.cas.support.oauth.web.response.callback.OAuth20AuthorizationResponseBuilder;
 import org.apereo.cas.support.oauth.web.views.ConsentApprovalViewResolver;
+import org.apereo.cas.support.oauth.web.views.OAuth20UserProfileViewRenderer;
 import org.apereo.cas.ticket.ExpirationPolicy;
 import org.apereo.cas.ticket.UniqueTicketIdGenerator;
 import org.apereo.cas.ticket.accesstoken.AccessTokenFactory;
@@ -99,6 +100,10 @@ public class TaraOidcConfiguration {
     @Autowired
     @Qualifier("oauthTokenGenerator")
     private OAuth20TokenGenerator oauthTokenGenerator;
+
+    @Autowired
+    @Qualifier("oauthUserProfileViewRenderer")
+    private OAuth20UserProfileViewRenderer oauthUserProfileViewRenderer;
 
     @Autowired
     @Qualifier("accessTokenGrantRequestExtractors")
