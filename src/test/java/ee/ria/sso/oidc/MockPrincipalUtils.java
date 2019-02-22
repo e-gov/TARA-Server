@@ -30,6 +30,7 @@ public class MockPrincipalUtils {
     public static final String MOCK_SUBJECT_CODE_EIDAS = "GR1234567890-abcdefge78789768";
     public static final String NONCE = "1234567890nonce";
     public static final String STATE = "state123abc";
+    public static final String TARA_PRINCIPAL_ID = "taraPrincipalId";
 
     public static HashMap<String, Object> getMockMidAuthPrincipalAttributes() {
         HashMap<String, Object> map = new HashMap<>();
@@ -64,8 +65,12 @@ public class MockPrincipalUtils {
         return map;
     }
 
+    public static TicketGrantingTicketImpl getMockUserAuthentication() {
+        return getMockUserAuthentication(getMockMidAuthPrincipalAttributes());
+    }
+
     public static TicketGrantingTicketImpl getMockUserAuthentication(Map<String, Object> attributes) {
-        Principal taraPrincipal = new DefaultPrincipalFactory().createPrincipal("taraPrincipalId", attributes);
+        Principal taraPrincipal = new DefaultPrincipalFactory().createPrincipal(TARA_PRINCIPAL_ID, attributes);
         DefaultAuthentication userAuthentication = new DefaultAuthentication(ZonedDateTime.of(2018, 1, 1,23,59,00,1, ZoneId.systemDefault()), taraPrincipal, new HashMap<>(), new HashMap<>());
         return new TicketGrantingTicketImpl("123", userAuthentication, Mockito.mock(ExpirationPolicy.class));
     }

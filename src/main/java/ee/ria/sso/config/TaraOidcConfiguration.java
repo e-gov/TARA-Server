@@ -102,10 +102,6 @@ public class TaraOidcConfiguration {
     private OAuth20TokenGenerator oauthTokenGenerator;
 
     @Autowired
-    @Qualifier("oauthUserProfileViewRenderer")
-    private OAuth20UserProfileViewRenderer oauthUserProfileViewRenderer;
-
-    @Autowired
     @Qualifier("accessTokenGrantRequestExtractors")
     private Collection<BaseAccessTokenGrantRequestExtractor> accessTokenGrantRequestExtractors;
 

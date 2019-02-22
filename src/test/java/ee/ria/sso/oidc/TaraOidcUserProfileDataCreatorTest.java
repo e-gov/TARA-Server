@@ -38,7 +38,7 @@ public class TaraOidcUserProfileDataCreatorTest {
         Mockito.when(accessToken.getTicketGrantingTicket()).thenReturn(null);
 
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("TGT associated with access token cannot be null!");
+        expectedEx.expectMessage("TGT cannot be null!");
 
         Map<String, Object> jsonModel = new TaraOidcUserProfileDataCreator().createFrom(accessToken, null);
     }

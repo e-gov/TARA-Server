@@ -1,11 +1,11 @@
 package ee.ria.sso.oidc;
 
 import ee.ria.sso.authentication.principal.TaraPrincipal;
+import ee.ria.sso.authentication.principal.TaraPrincipalFactory;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.MessageDigestAlgorithms;
 import org.apereo.cas.authentication.Authentication;
-import org.apereo.cas.authentication.principal.DefaultPrincipalFactory;
 import org.apereo.cas.authentication.principal.Principal;
 import org.apereo.cas.configuration.CasConfigurationProperties;
 import org.apereo.cas.configuration.model.support.oidc.OidcProperties;
@@ -17,7 +17,6 @@ import org.apereo.cas.services.ServicesManager;
 import org.apereo.cas.support.oauth.OAuth20Constants;
 import org.apereo.cas.support.oauth.OAuth20ResponseTypes;
 import org.apereo.cas.support.oauth.services.OAuthRegisteredService;
-import org.apereo.cas.ticket.TicketGrantingTicket;
 import org.apereo.cas.ticket.accesstoken.AccessToken;
 import org.apereo.cas.util.DigestUtils;
 import org.apereo.cas.util.EncodingUtils;
@@ -33,7 +32,6 @@ import org.springframework.util.Assert;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static ee.ria.sso.authentication.principal.TaraPrincipal.Attribute.*;
 
@@ -121,7 +119,7 @@ public class TaraOidcIdTokenGeneratorService extends OidcIdTokenGeneratorService
     private void setTaraClaims(AccessToken accessToken, JwtClaims claims) {
         Assert.notNull(accessToken.getTicketGrantingTicket(), "No TGT associated with this access token!");
         Assert.notNull(accessToken.getTicketGrantingTicket().getAuthentication(), "No authentication associated with this TGT!");
-        Principal taraPrincipal = getTaraPrincipal(accessToken);
+        Principal taraPrincipal = TaraPrincipalFactory.createPrincipal(accessToken.getTicketGrantingTicket());
 
         claims.setSubject(getAttributeValue(SUB, taraPrincipal));
 
@@ -184,27 +182,6 @@ public class TaraOidcIdTokenGeneratorService extends OidcIdTokenGeneratorService
         final NumericDate expirationDate = NumericDate.now();
         expirationDate.addSeconds(timeoutInSeconds);
         return expirationDate;
-    }
-
-    private Principal getTaraPrincipal(AccessToken accessToken) {
-        TicketGrantingTicket tgt = accessToken.getTicketGrantingTicket();
-        Assert.notNull(tgt, "TGT associated with access token cannot be null!");
-        final Principal principal = tgt.getAuthentication().getPrincipal();
-        log.debug("Preparing user profile response based on CAS principal [{}]", principal);
-
-        Map<String, Object> attributes = principal.getAttributes()
-                .entrySet()
-                .stream()
-                .filter(
-                        entry -> entry.getValue() instanceof List
-                                && !((List)entry.getValue()).isEmpty()
-                ).collect(
-                        Collectors.toMap(
-                                entry -> entry.getKey().toLowerCase(),
-                                entry -> ((List)entry.getValue()).stream().findFirst().get()
-                        )
-                );
-        return new DefaultPrincipalFactory().createPrincipal(principal.getId(), attributes);
     }
 }
 
