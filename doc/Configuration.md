@@ -620,7 +620,7 @@ Table 20 - Relevant parameters for enabling/disabling additional OpenID Connect 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
 | `oidc.dynamic-client-registration.enabled` | N | Enables/disables the CAS built-in /oidc/registration endpoint and displays/hides the related information at the /oidc/.well-known/openid-configuration. Defaults to `false`, if not specified. |
-| `oidc.profile-endpoint.enabled` | N | Enables/disables the CAS built-in /oidc/profile endpoint and displays/hides the related information at the /oidc/.well-known/openid-configuration. Defaults to `false`, if not specified. |
+| `oidc.profile-endpoint.enabled` | N | Enables/disables the CAS built-in /oidc/profile endpoint and displays/hides the related information at the /oidc/.well-known/openid-configuration. Defaults to `true`, if not specified. |
 | `oidc.revocation-endpoint.enabled` | N | Enables/disables the CAS built-in /oidc/revocation endpoint and displays/hides the related information at the /oidc/.well-known/openid-configuration. Defaults to `false`, if not specified. |
 | `oidc.introspection-endpoint.enabled` | N | Enables/disables the CAS built-in /oidc/introspection endpoint and displays/hides the related information at the /oidc/.well-known/openid-configuration. Defaults to `false`, if not specified. |
 

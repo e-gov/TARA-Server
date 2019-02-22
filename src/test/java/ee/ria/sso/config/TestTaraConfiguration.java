@@ -16,12 +16,14 @@ import org.apereo.cas.services.OidcRegisteredService;
 import org.apereo.cas.services.ServicesManager;
 import org.apereo.cas.support.oauth.authenticator.OAuth20CasAuthenticationBuilder;
 import org.apereo.cas.support.oauth.profile.OAuth20ProfileScopeToAttributesFilter;
+import org.apereo.cas.support.oauth.profile.OAuth20UserProfileDataCreator;
 import org.apereo.cas.support.oauth.validator.authorization.OAuth20AuthorizationRequestValidator;
 import org.apereo.cas.support.oauth.validator.token.OAuth20TokenRequestValidator;
 import org.apereo.cas.support.oauth.web.response.accesstoken.OAuth20TokenGenerator;
 import org.apereo.cas.support.oauth.web.response.accesstoken.ext.BaseAccessTokenGrantRequestExtractor;
 import org.apereo.cas.support.oauth.web.response.callback.OAuth20AuthorizationResponseBuilder;
 import org.apereo.cas.support.oauth.web.views.ConsentApprovalViewResolver;
+import org.apereo.cas.support.oauth.web.views.OAuth20UserProfileViewRenderer;
 import org.apereo.cas.ticket.ExpirationPolicy;
 import org.apereo.cas.ticket.UniqueTicketIdGenerator;
 import org.apereo.cas.ticket.accesstoken.AccessTokenFactory;
@@ -33,7 +35,6 @@ import org.jose4j.jwk.RsaJwkGenerator;
 import org.mockito.Mockito;
 import org.pac4j.core.config.Config;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.info.BuildProperties;
 import org.springframework.boot.info.GitProperties;
@@ -44,7 +45,6 @@ import org.springframework.webflow.definition.registry.FlowDefinitionRegistry;
 import org.springframework.webflow.definition.registry.FlowDefinitionRegistryImpl;
 import org.springframework.webflow.engine.builder.support.FlowBuilderServices;
 
-import javax.annotation.PostConstruct;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
@@ -60,6 +60,22 @@ public class TestTaraConfiguration {
     @Bean
     public CentralAuthenticationService centralAuthenticationService() {
         return Mockito.mock(CentralAuthenticationService.class);
+    }
+
+    @Bean
+    public OAuth20UserProfileDataCreator oAuth20UserProfileDataCreator() {
+        return Mockito.mock(OAuth20UserProfileDataCreator.class);
+    }
+
+    @Bean
+    @Qualifier("oauthUserProfileViewRenderer")
+    public OAuth20UserProfileViewRenderer oAuth20UserProfileViewRenderer() {
+        return Mockito.mock(OAuth20UserProfileViewRenderer.class);
+    }
+
+    @Bean
+    public CookieRetrievingCookieGenerator cookieRetrievingCookieGenerator() {
+        return Mockito.mock(CookieRetrievingCookieGenerator.class);
     }
 
     @Bean

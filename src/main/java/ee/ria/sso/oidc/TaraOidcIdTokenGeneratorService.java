@@ -1,7 +1,7 @@
 package ee.ria.sso.oidc;
 
-import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.principal.TaraPrincipal;
+import ee.ria.sso.authentication.principal.TaraPrincipalFactory;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.MessageDigestAlgorithms;
@@ -18,7 +18,6 @@ import org.apereo.cas.support.oauth.OAuth20Constants;
 import org.apereo.cas.support.oauth.OAuth20ResponseTypes;
 import org.apereo.cas.support.oauth.services.OAuthRegisteredService;
 import org.apereo.cas.ticket.accesstoken.AccessToken;
-import org.apereo.cas.util.CollectionUtils;
 import org.apereo.cas.util.DigestUtils;
 import org.apereo.cas.util.EncodingUtils;
 import org.apereo.cas.util.Pac4jUtils;
@@ -33,7 +32,6 @@ import org.springframework.util.Assert;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static ee.ria.sso.authentication.principal.TaraPrincipal.Attribute.*;
 
@@ -47,9 +45,9 @@ public class TaraOidcIdTokenGeneratorService extends OidcIdTokenGeneratorService
     public static final String CLAIM_EMAIL = "email";
     public static final String CLAIM_EMAIL_VERIFIED = "email_verified";
 
-    private static final List<TaraPrincipal.Attribute> validProfileAttributesToClaimsList = Arrays.asList(
+    public static final List<TaraPrincipal.Attribute> validProfileAttributesToClaimsList = Collections.unmodifiableList(Arrays.asList(
         FAMILY_NAME, GIVEN_NAME, DATE_OF_BIRTH
-    );
+    ));
 
     public TaraOidcIdTokenGeneratorService(final CasConfigurationProperties casProperties,
                                            final OidcIdTokenSigningAndEncryptionService signingService,
@@ -105,10 +103,7 @@ public class TaraOidcIdTokenGeneratorService extends OidcIdTokenGeneratorService
         claims.setJwtId(UUID.randomUUID().toString());
         claims.setIssuer(oidc.getIssuer());
         claims.setAudience(service.getClientId());
-
-        final NumericDate expirationDate = NumericDate.now();
-        expirationDate.addSeconds(timeoutInSeconds);
-        claims.setExpirationTime(expirationDate);
+        claims.setExpirationTime( getExpirationDate(timeoutInSeconds));
         claims.setIssuedAtToNow();
         claims.setNotBeforeMinutesInThePast(oidc.getSkew());
 
@@ -117,33 +112,28 @@ public class TaraOidcIdTokenGeneratorService extends OidcIdTokenGeneratorService
         claims.setClaim(OAuth20Constants.STATE, authentication.getAttributes().get(OAuth20Constants.STATE));
         claims.setClaim(OAuth20Constants.NONCE, authentication.getAttributes().get(OAuth20Constants.NONCE));
         claims.setClaim(OidcConstants.CLAIM_AT_HASH, generateAccessTokenHash(accessTokenId));
-
         return claims;
     }
 
-    private void setTaraClaims(AccessToken accessTokenId, JwtClaims claims) {
-        Assert.notNull(accessTokenId.getTicketGrantingTicket(), "No TGT associated with this access token!");
-        Assert.notNull(accessTokenId.getTicketGrantingTicket().getAuthentication(), "No authentication associated with this TGT!");
 
-        Principal taraPrincipal = accessTokenId.getTicketGrantingTicket().getAuthentication().getPrincipal();
-        claims.setSubject(getMandatoryPrincipalAttribute(PRINCIPAL_CODE, taraPrincipal));
+    private void setTaraClaims(AccessToken accessToken, JwtClaims claims) {
+        Assert.notNull(accessToken.getTicketGrantingTicket(), "No TGT associated with this access token!");
+        Assert.notNull(accessToken.getTicketGrantingTicket().getAuthentication(), "No authentication associated with this TGT!");
+        Principal taraPrincipal = TaraPrincipalFactory.createPrincipal(accessToken.getTicketGrantingTicket());
 
-        if (isEmailClaimsRequested(taraPrincipal)) {
-            claims.setStringClaim(CLAIM_EMAIL, getMandatoryPrincipalAttribute(TaraPrincipal.Attribute.EMAIL, taraPrincipal));
-            claims.setClaim(CLAIM_EMAIL_VERIFIED, getMandatoryPrincipalAttribute(TaraPrincipal.Attribute.EMAIL_VERIFIED, taraPrincipal, Boolean.class));
+        claims.setSubject(getAttributeValue(SUB, taraPrincipal));
+
+        if (taraPrincipal.getAttributes().containsKey(EMAIL.name()) && taraPrincipal.getAttributes().containsKey(EMAIL_VERIFIED.name())) {
+            claims.setStringClaim(CLAIM_EMAIL, getAttributeValue(EMAIL, taraPrincipal));
+            claims.setClaim(CLAIM_EMAIL_VERIFIED, getAttributeValue(EMAIL_VERIFIED, taraPrincipal, Boolean.class));
         }
 
         claims.setClaim(CLAIM_PROFILE_ATTRIBUTES, getProfileAttributesMap(taraPrincipal));
-        claims.setStringListClaim(OidcConstants.AMR, getAmrValuesList(taraPrincipal));
+        claims.setStringListClaim(OidcConstants.AMR, getAttributeValue(AMR, taraPrincipal, List.class));
 
-        if (isOfAuthenticationType(taraPrincipal, AuthenticationType.eIDAS)) {
-            String levelOfAssurance = getMandatoryPrincipalAttribute(LEVEL_OF_ASSURANCE, taraPrincipal);
-            claims.setStringClaim(OidcConstants.ACR, levelOfAssurance);
+        if (taraPrincipal.getAttributes().containsKey(ACR.name())) {
+            claims.setStringClaim(OidcConstants.ACR, getAttributeValue(ACR, taraPrincipal));
         }
-    }
-
-    private boolean isEmailClaimsRequested(Principal taraPrincipal) {
-        return taraPrincipal.getAttributes().get(TaraPrincipal.Attribute.EMAIL.name()) != null;
     }
 
     private Map<String, Object> getProfileAttributesMap(Principal principal) {
@@ -153,21 +143,10 @@ public class TaraOidcIdTokenGeneratorService extends OidcIdTokenGeneratorService
         validProfileAttributesToClaimsList.forEach(key -> {
             Object value = principalAttributes.get(key.name().toLowerCase());
             if (value != null)
-                profileAttributes.put(key.name().toLowerCase(), ((List)value).get(0));
+                profileAttributes.put(key.name().toLowerCase(), value);
         });
 
         return profileAttributes;
-    }
-
-    private static boolean isOfAuthenticationType(Principal principal, AuthenticationType type) {
-        String authenticationType = getMandatoryPrincipalAttribute(AUTHENTICATION_TYPE, principal);
-        return type.getAmrName().equals(authenticationType);
-    }
-
-    private List<String> getAmrValuesList(Principal principal) {
-        String authenticationType = getMandatoryPrincipalAttribute(AUTHENTICATION_TYPE, principal);
-        return CollectionUtils.toCollection(authenticationType).stream()
-                .map(e -> e.toString()).collect(Collectors.toList());
     }
 
     private String generateAccessTokenHash(final AccessToken accessTokenId) {
@@ -189,18 +168,20 @@ public class TaraOidcIdTokenGeneratorService extends OidcIdTokenGeneratorService
         return EncodingUtils.encodeBase64(hashBytesLeftHalf);
     }
 
-    private static String getMandatoryPrincipalAttribute(TaraPrincipal.Attribute attribute, Principal principal) {
-        return getMandatoryPrincipalAttribute(attribute, principal, String.class);
+    private static String getAttributeValue(TaraPrincipal.Attribute attribute, Principal principal) {
+        return getAttributeValue(attribute, principal, String.class);
     }
 
-    private static <T> T getMandatoryPrincipalAttribute(TaraPrincipal.Attribute attribute, Principal principal, Class<T> clazz) {
+    private static <T> T getAttributeValue(TaraPrincipal.Attribute attribute, Principal principal, Class<T> clazz) {
         String attributeName = attribute.name();
         Assert.notNull(principal.getAttributes().get(attributeName), "Mandatory attribute " + attributeName + " not found when generating OIDC token");
-        List list = ((List)(principal.getAttributes().get(attributeName)));
-        Assert.isTrue(list.size() == 1, "Expected a single profile attribute. Found " + list.size());
-        Object o = list.get(0);
-        Assert.isTrue(o.getClass().isAssignableFrom(clazz), "Cannot assign principal value of type " + o.getClass() + " to " + clazz);
-        return (T)o;
+        return (T)principal.getAttributes().get(attributeName);
+    }
+
+    private NumericDate getExpirationDate(long timeoutInSeconds) {
+        final NumericDate expirationDate = NumericDate.now();
+        expirationDate.addSeconds(timeoutInSeconds);
+        return expirationDate;
     }
 }
 

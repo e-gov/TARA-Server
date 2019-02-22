@@ -12,14 +12,14 @@ import java.util.TreeMap;
 public class TaraPrincipal implements Principal {
 
     public enum Attribute {
-        PRINCIPAL_CODE,
+        SUB,
         GIVEN_NAME,
         FAMILY_NAME,
-        AUTHENTICATION_TYPE,
         DATE_OF_BIRTH,
+        AMR,
         EMAIL,
         EMAIL_VERIFIED,
-        LEVEL_OF_ASSURANCE;
+        ACR;
     }
 
     private String id;

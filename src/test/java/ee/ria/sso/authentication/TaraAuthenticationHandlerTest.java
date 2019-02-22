@@ -15,10 +15,9 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.security.GeneralSecurityException;
-import java.util.*;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class TaraAuthenticationHandlerTest {
 
@@ -118,7 +117,7 @@ public class TaraAuthenticationHandlerTest {
 
         Map<String, Object> expectedAttributes = buildCommonExpectedAttributesMap(AuthenticationType.eIDAS);
         expectedAttributes.put(TaraPrincipal.Attribute.DATE_OF_BIRTH.name(), MOCK_DATE_OF_BIRTH);
-        expectedAttributes.put(TaraPrincipal.Attribute.LEVEL_OF_ASSURANCE.name(), LevelOfAssurance.SUBSTANTIAL.getAcrName());
+        expectedAttributes.put(TaraPrincipal.Attribute.ACR.name(), LevelOfAssurance.SUBSTANTIAL.getAcrName());
         verifyAuthenticationHandlerExecutionResult(authenticationHandlerExecutionResult, expectedAttributes);
     }
 
@@ -152,8 +151,8 @@ public class TaraAuthenticationHandlerTest {
 
     private Map<String, Object> buildCommonExpectedAttributesMap(AuthenticationType type) {
         Map<String, Object> expectedAttributes = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-        expectedAttributes.put(TaraPrincipal.Attribute.AUTHENTICATION_TYPE.name(), type.getAmrName());
-        expectedAttributes.put(TaraPrincipal.Attribute.PRINCIPAL_CODE.name(), MOCK_PRINCIPAL_CODE);
+        expectedAttributes.put(TaraPrincipal.Attribute.AMR.name(), Arrays.asList(Arrays.asList(type.getAmrName())));
+        expectedAttributes.put(TaraPrincipal.Attribute.SUB.name(), MOCK_PRINCIPAL_CODE);
         expectedAttributes.put(TaraPrincipal.Attribute.GIVEN_NAME.name(), MOCK_FIRST_NAME);
         expectedAttributes.put(TaraPrincipal.Attribute.FAMILY_NAME.name(), MOCK_LAST_NAME);
         expectedAttributes.put(TaraPrincipal.Attribute.DATE_OF_BIRTH.name(), MOCK_DATE_OF_BIRTH);

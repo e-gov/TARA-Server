@@ -401,6 +401,12 @@
             <version>1.4.0</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apereo.cas</groupId>
+            <artifactId>cas-server-core-cookie</artifactId>
+            <version>${cas.version}</version>
+            <scope>test</scope>
+        </dependency>
 
     </dependencies>
 
