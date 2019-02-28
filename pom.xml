@@ -6,7 +6,7 @@
     <groupId>ee.ria.tara</groupId>
     <artifactId>tara-server</artifactId>
     <packaging>war</packaging>
-    <version>1.4.1</version>
+    <version>1.4.2</version>
 
     <properties>
         <cas.version>5.3.7</cas.version>
@@ -399,6 +399,12 @@
             <groupId>com.fasterxml</groupId>
             <artifactId>classmate</artifactId>
             <version>1.4.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apereo.cas</groupId>
+            <artifactId>cas-server-core-cookie</artifactId>
+            <version>${cas.version}</version>
             <scope>test</scope>
         </dependency>
 

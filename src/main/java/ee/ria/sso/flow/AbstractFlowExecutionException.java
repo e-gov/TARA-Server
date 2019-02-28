@@ -12,7 +12,7 @@ import org.springframework.webflow.execution.RequestContext;
 
 public abstract class AbstractFlowExecutionException extends ActionExecutionException {
 
-    protected final ModelAndView modelAndView;
+    protected final transient ModelAndView modelAndView;
 
     public AbstractFlowExecutionException(String flowId, ModelAndView modelAndView, Exception e) {
         super(flowId, null, null, new LocalAttributeMap(), e);

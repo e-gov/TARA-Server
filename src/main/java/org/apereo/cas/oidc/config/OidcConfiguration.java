@@ -5,6 +5,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import ee.ria.sso.Constants;
 import ee.ria.sso.config.TaraProperties;
+import ee.ria.sso.oidc.TaraOidcUserProfileDataCreator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apereo.cas.CentralAuthenticationService;
@@ -403,7 +404,7 @@ public class OidcConfiguration extends WebMvcConfigurerAdapter implements CasWeb
                 ticketGrantingTicketCookieGenerator.getIfAvailable());
     }
 
-    @ConditionalOnProperty(name = Constants.TARA_OIDC_PROFILE_ENDPOINT_ENABLED)
+    @ConditionalOnProperty(name = Constants.TARA_OIDC_PROFILE_ENDPOINT_ENABLED, matchIfMissing = true)
     @RefreshScope
     @Bean
     public OidcUserProfileEndpointController oidcProfileController() {
@@ -413,12 +414,13 @@ public class OidcConfiguration extends WebMvcConfigurerAdapter implements CasWeb
                 profileScopeToAttributesFilter(),
                 casProperties,
                 ticketGrantingTicketCookieGenerator.getIfAvailable(),
-                oauthUserProfileViewRenderer, oidcUserProfileDataCreator());
+                oauthUserProfileViewRenderer,
+                taraOidcUserProfileDataCreator());
     }
 
     @Bean
-    public OAuth20UserProfileDataCreator oidcUserProfileDataCreator() {
-        return new OidcUserProfileDataCreator(servicesManager, profileScopeToAttributesFilter());
+    public OAuth20UserProfileDataCreator taraOidcUserProfileDataCreator() {
+        return new TaraOidcUserProfileDataCreator();
     }
 
     @ConditionalOnMissingBean(name = "oidcAuthorizeController")

@@ -13,9 +13,7 @@ import org.apereo.cas.services.ServicesManager;
 import org.springframework.util.Assert;
 
 import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 import static ee.ria.sso.authentication.principal.TaraPrincipal.Attribute.*;
 
@@ -42,7 +40,7 @@ public class TaraAuthenticationHandler extends AbstractPreAndPostProcessingAuthe
                 principalAttributes.put(EMAIL_VERIFIED.name(), ((IdCardCredential)taraCredential).getEmailVerified());
             } else if (credential instanceof EidasCredential) {
                 principalAttributes.put(DATE_OF_BIRTH.name(), ((EidasCredential)taraCredential).getDateOfBirth());
-                principalAttributes.put(LEVEL_OF_ASSURANCE.name(), ((EidasCredential)taraCredential).getLevelOfAssurance().getAcrName());
+                principalAttributes.put(ACR.name(),((EidasCredential)taraCredential).getLevelOfAssurance().getAcrName());
             }
 
             return this.createHandlerResult(credential, this.principalFactory
@@ -60,10 +58,10 @@ public class TaraAuthenticationHandler extends AbstractPreAndPostProcessingAuthe
         }, "Cannot authenticate without missing mandatory credential parameters! Provided credential: " + taraCredential);
 
         final Map<String, Object> map = new LinkedHashMap<>();
-        map.put(PRINCIPAL_CODE.name(), taraCredential.getPrincipalCode());
+        map.put(SUB.name(), taraCredential.getPrincipalCode());
         map.put(GIVEN_NAME.name(), taraCredential.getFirstName());
         map.put(FAMILY_NAME.name(), taraCredential.getLastName());
-        map.put(AUTHENTICATION_TYPE.name(), taraCredential.getType().getAmrName());
+        map.put(AMR.name(), Arrays.asList(Arrays.asList(taraCredential.getType().getAmrName())));
 
         if (EstonianIdCodeUtil.isEEPrefixedEstonianIdCode(taraCredential.getPrincipalCode())) {
             map.put(DATE_OF_BIRTH.name(), EstonianIdCodeUtil.extractDateOfBirthFromEEPrefixedEstonianIdCode(taraCredential.getPrincipalCode()));
