@@ -1,5 +1,10 @@
 package ee.ria.sso.config.idcard;
 
+import ee.ria.sso.config.TaraResourceBundleMessageSource;
+import ee.ria.sso.service.idcard.IDCardAuthenticationService;
+import ee.ria.sso.service.idcard.OCSPConfigurationResolver;
+import ee.ria.sso.service.idcard.OCSPValidator;
+import ee.ria.sso.statistics.StatisticsHandler;
 import ee.ria.sso.utils.X509Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,11 +14,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
+import java.security.KeyStore;
+import java.security.cert.*;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -25,38 +28,53 @@ public class IDCardConfiguration {
     @Autowired
     private IDCardConfigurationProvider configurationProvider;
 
-    @Autowired
-    private ResourceLoader resourceLoader;
+    @Bean
+    KeyStore idcardKeystore(ResourceLoader resourceLoader) {
+        try {
+            KeyStore keystore = KeyStore.getInstance(configurationProvider.getTruststoreType());
+            Resource resource = resourceLoader.getResource(configurationProvider.getTruststore());
+            keystore.load(resource.getInputStream(), configurationProvider.getTruststorePass().toCharArray());
+            return keystore;
+        } catch (Exception e) {
+            throw new IllegalStateException("Could not load truststore of type " + configurationProvider.getTruststoreType() + " from " + configurationProvider.getTruststore() + "!", e);
+        }
+    }
 
     @Bean
-    @ConditionalOnProperty("id-card.ocsp-enabled")
-    public Map<String, X509Certificate> idCardTrustedCertificatesMap() {
+    public Map<String, X509Certificate> idCardTrustedCertificatesMap(KeyStore idcardKeystore) {
         final Map<String, X509Certificate> trustedCertificates = new LinkedHashMap<>();
 
-        configurationProvider.getOcspCertificates().forEach(ocspCertificate -> {
-            try {
-                final X509Certificate certificate = readCertFromResource(ocspCertificate);
-                final String commonName = X509Utils.getSubjectCNFromCertificate(certificate);
-                trustedCertificates.put(commonName, certificate);
-            } catch (Exception e) {
-                throw new IllegalArgumentException("Failed to read certificate " + ocspCertificate, e);
+        try {
+            PKIXParameters params = new PKIXParameters(idcardKeystore);
+            Iterator it = params.getTrustAnchors().iterator();
+            while( it.hasNext() ) {
+                TrustAnchor ta = (TrustAnchor)it.next();
+                final String commonName = X509Utils.getSubjectCNFromCertificate(ta.getTrustedCert());
+                trustedCertificates.put(commonName, ta.getTrustedCert());
             }
-        });
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Failed to read trusted certificates from id-card truststore: "  + e.getMessage(), e);
+        }
 
         return trustedCertificates;
     }
 
-    private X509Certificate readCertFromResource(String resourceName) throws CertificateException, IOException {
-        String resourcePath = configurationProvider.getOcspCertificateLocation() + "/" + resourceName;
-        Resource resource = resourceLoader.getResource(resourcePath);
-        if (!resource.exists()) {
-            throw new IllegalArgumentException("Could not find resource " + resourcePath);
-        }
+    @Bean
+    public IDCardAuthenticationService idCardAuthenticationService(TaraResourceBundleMessageSource messageSource,
+                                                                   StatisticsHandler statistics,
+                                                                   IDCardConfigurationProvider configurationProvider,
+                                                                   OCSPValidator ocspValidator) {
 
-        try (InputStream inputStream = resource.getInputStream()) {
-            CertificateFactory cf = CertificateFactory.getInstance("X.509");
-            return (X509Certificate) cf.generateCertificate(inputStream);
-        }
+        return new IDCardAuthenticationService(messageSource, statistics, configurationProvider, ocspValidator);
     }
 
+    @Bean
+    public OCSPConfigurationResolver ocspConfigurationResolver(IDCardConfigurationProvider configurationProvider) {
+        return new OCSPConfigurationResolver(configurationProvider);
+    }
+
+    @Bean
+    public OCSPValidator ocspValidator(Map<String, X509Certificate> idCardTrustedCertificatesMap, OCSPConfigurationResolver ocspConfigurationResolver) {
+        return new OCSPValidator(idCardTrustedCertificatesMap, ocspConfigurationResolver);
+    }
 }

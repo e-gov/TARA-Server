@@ -2,10 +2,14 @@ package ee.ria.sso.config;
 
 import ee.ria.sso.authentication.TaraAuthenticationHandler;
 import ee.ria.sso.authentication.principal.TaraPrincipalFactory;
+import ee.ria.sso.config.idcard.IDCardConfigurationProvider;
 import ee.ria.sso.flow.TaraWebflowConfigurer;
 import ee.ria.sso.flow.ThymeleafSupport;
 import ee.ria.sso.i18n.TaraLocaleChangeInterceptor;
+import ee.ria.sso.service.idcard.IDCardAuthenticationService;
+import ee.ria.sso.service.idcard.OCSPValidator;
 import ee.ria.sso.service.manager.ManagerService;
+import ee.ria.sso.statistics.StatisticsHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.apereo.cas.authentication.AuthenticationEventExecutionPlan;
 import org.apereo.cas.authentication.AuthenticationEventExecutionPlanConfigurer;
@@ -18,9 +22,11 @@ import org.apereo.cas.web.flow.CasWebflowExecutionPlan;
 import org.apereo.cas.web.flow.CasWebflowExecutionPlanConfigurer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.*;
+import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
@@ -28,10 +34,8 @@ import org.springframework.web.servlet.i18n.SessionLocaleResolver;
 import org.springframework.webflow.definition.registry.FlowDefinitionRegistry;
 import org.springframework.webflow.engine.builder.support.FlowBuilderServices;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
+import java.security.cert.X509Certificate;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
