@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 
+import java.io.InputStream;
 import java.security.KeyStore;
 import java.security.cert.*;
 import java.util.Iterator;
@@ -33,7 +34,9 @@ public class IDCardConfiguration {
         try {
             KeyStore keystore = KeyStore.getInstance(configurationProvider.getTruststoreType());
             Resource resource = resourceLoader.getResource(configurationProvider.getTruststore());
-            keystore.load(resource.getInputStream(), configurationProvider.getTruststorePass().toCharArray());
+            try (InputStream inputStream = resource.getInputStream()) {
+                keystore.load(inputStream, configurationProvider.getTruststorePass().toCharArray());
+            }
             return keystore;
         } catch (Exception e) {
             throw new IllegalStateException("Could not load truststore of type " + configurationProvider.getTruststoreType() + " from " + configurationProvider.getTruststore() + "!", e);

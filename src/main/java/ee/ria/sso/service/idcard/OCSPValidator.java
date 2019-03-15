@@ -3,6 +3,7 @@ package ee.ria.sso.service.idcard;
 import ee.ria.sso.config.idcard.IDCardConfigurationProvider;
 import ee.ria.sso.utils.X509Utils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.Conversion;
 import org.bouncycastle.asn1.DEROctetString;
@@ -17,8 +18,6 @@ import org.bouncycastle.operator.ContentVerifierProvider;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentVerifierProviderBuilder;
 import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
 import java.io.*;
@@ -32,6 +31,7 @@ import java.security.cert.*;
 import java.time.Instant;
 import java.util.*;
 
+@Slf4j
 @RequiredArgsConstructor
 public class OCSPValidator {
 
@@ -39,10 +39,8 @@ public class OCSPValidator {
         Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
     }
 
-    private final Logger log = LoggerFactory.getLogger(OCSPValidator.class);
     private final Map<String, X509Certificate> trustedCertificates;
     private final OCSPConfigurationResolver ocspConfigurationResolver;
-
 
     public void checkCert(X509Certificate userCert) {
         Assert.notNull(userCert, "User certificate cannot be null!");

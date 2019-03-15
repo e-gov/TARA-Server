@@ -2,7 +2,6 @@ package ee.ria.sso.config.idcard;
 
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -14,7 +13,10 @@ import org.springframework.validation.annotation.Validated;
 import javax.annotation.PostConstruct;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 @ConditionalOnProperty("id-card.enabled")
@@ -54,19 +56,6 @@ public class IDCardConfigurationProvider {
         log.info("Using id-card configuration: " + this);
     }
 
-    private Set<String> getFindDuplicateConfigurations() {
-        Set<String> names = new HashSet<>();
-        Set<String> duplicateNames = new HashSet<>();
-        for (Ocsp item : ocsp) {
-            for (String cn : item.getIssuerCn()) {
-                if ( !names.add(cn) ) {
-                    duplicateNames.add(cn);
-                }
-            }
-        }
-        return duplicateNames;
-    }
-
     @Data
     @NoArgsConstructor
     @ToString
@@ -92,5 +81,13 @@ public class IDCardConfigurationProvider {
         private int readTimeoutInMilliseconds = DEFAULT_READ_TIMEOUT_IN_MILLISECONDS;
 
         private String responderCertificateCn;
+    }
+
+    private Set<String> getFindDuplicateConfigurations() {
+        Set<String> names = new HashSet<>();
+        return ocsp.stream()
+                .flatMap(item -> item.getIssuerCn().stream())
+                .filter(cn -> !names.add(cn))
+                .collect(Collectors.toSet());
     }
 }
