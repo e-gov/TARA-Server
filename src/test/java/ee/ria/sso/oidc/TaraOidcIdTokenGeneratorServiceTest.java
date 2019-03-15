@@ -35,7 +35,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.ArrayList;
 
-import static ee.ria.sso.oidc.TaraOidcIdTokenGeneratorService.GENERATED_AND_ENCODED_ID_TOKEN_STRING;
+import static ee.ria.sso.Constants.TARA_OIDC_TOKEN_REQUEST_ATTR_ID_TOKEN;
 
 @Slf4j
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -163,7 +163,7 @@ public class TaraOidcIdTokenGeneratorServiceTest extends AbstractTest {
     }
 
     private void verifyRequestAttributes(MockHttpServletRequest request, String encodedToken) {
-        Assert.assertEquals("encoded token must also be set as a request parameter!", encodedToken, request.getAttribute(GENERATED_AND_ENCODED_ID_TOKEN_STRING));
+        Assert.assertEquals("encoded token must also be set as a request parameter!", encodedToken, request.getAttribute(TARA_OIDC_TOKEN_REQUEST_ATTR_ID_TOKEN));
     }
 
     private void verifyToken(String expectedStr, String encodedToken) throws Exception {

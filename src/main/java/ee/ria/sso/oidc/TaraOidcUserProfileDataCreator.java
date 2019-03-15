@@ -18,10 +18,11 @@ import java.util.Map;
 public class TaraOidcUserProfileDataCreator implements OAuth20UserProfileDataCreator {
 
     @Override
-    @Audit(action = "OAUTH2_USER_PROFILE_DATA",
+    @Audit(action = "USER_INFO_DATA",
             actionResolverName = "OAUTH2_USER_PROFILE_DATA_ACTION_RESOLVER",
-            resourceResolverName = "OAUTH2_USER_PROFILE_DATA_RESOURCE_RESOLVER")
+            resourceResolverName = "TARA_USER_INFO_DATA_RESOURCE_RESOLVER")
     public Map<String, Object> createFrom(final AccessToken accessToken, final J2EContext context) {
+
         Principal principal = TaraPrincipalFactory.createPrincipal(accessToken.getTicketGrantingTicket());
 
         final Map<String, Object> map = new LinkedHashMap<>();
