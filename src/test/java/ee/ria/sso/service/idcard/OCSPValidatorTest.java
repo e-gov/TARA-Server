@@ -13,18 +13,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Setter;
 import org.apache.commons.codec.binary.Hex;
-import org.bouncycastle.asn1.ASN1InputStream;
-import org.bouncycastle.asn1.ASN1ObjectIdentifier;
-import org.bouncycastle.asn1.ASN1Primitive;
-import org.bouncycastle.asn1.DEROctetString;
+import org.bouncycastle.asn1.*;
 import org.bouncycastle.asn1.ocsp.OCSPObjectIdentifiers;
 import org.bouncycastle.asn1.x500.X500Name;
-import org.bouncycastle.asn1.x509.BasicConstraints;
-import org.bouncycastle.asn1.x509.CRLReason;
-import org.bouncycastle.asn1.x509.Extension;
-import org.bouncycastle.asn1.x509.Extensions;
+import org.bouncycastle.asn1.x509.*;
 import org.bouncycastle.cert.CertIOException;
 import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.cert.ocsp.*;
@@ -44,13 +39,16 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import javax.security.auth.x500.X500PrivateCredential;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.PrivateKey;
-import java.security.cert.*;
+import java.security.*;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.function.Function;
@@ -130,9 +128,11 @@ public class OCSPValidatorTest {
         Mockito.when(trustedCertificates.get("TEST of ESTEID-SK 2015")).thenReturn(loadCertificateFromResource(MOCK_ISSUER_CERT_2015_PATH));
         Mockito.when(trustedCertificates.get("TEST of ESTEID-SK 2011")).thenReturn(loadCertificateFromResource(MOCK_ISSUER_CERT_2011_PATH));
 
-        responderCert = generateCertificate(responderKeys, "C=EE,O=AS Sertifitseerimiskeskus,OU=OCSP,CN=TEST of SK OCSP RESPONDER 2011,E=pki@sk.ee");
+        responderCert = generateOcspResponderCertificate(
+                "C=EE,O=AS Sertifitseerimiskeskus,OU=OCSP,CN=ESTEID2018 AIA OCSP RESPONDER 201903,E=pki@sk.ee",
+                responderKeys, keyPairGenerator.generateKeyPair(),
+                "CN=MOCK CA").getCertificate();
         Mockito.when(trustedCertificates.get("TEST of SK OCSP RESPONDER 2011")).thenReturn(responderCert);
-
     }
 
     @Test
@@ -202,7 +202,7 @@ public class OCSPValidatorTest {
         setUpMockOcspResponse(OCSPResp.SUCCESSFUL, org.bouncycastle.cert.ocsp.CertificateStatus.GOOD, ocspConfiguration);
 
         expectedEx.expect(IllegalStateException.class);
-        expectedEx.expectMessage("OCSP validation failed: OCSP certificate with CN: 'TEST of SK OCSP RESPONDER 2011' was not found! Please check your configuration!");
+        expectedEx.expectMessage("OCSP validation failed: Certificate with CN: 'TEST of SK OCSP RESPONDER 2011' is not trusted! Please check your configuration!");
 
         ocspValidator.checkCert(userCert);
     }
@@ -271,9 +271,11 @@ public class OCSPValidatorTest {
     @Test
     public void checkCertShouldThrowExceptionWhenOcspResponseSignatureIsInvalid() throws Exception {
         Mockito.when(trustedCertificates.get("TEST of SK OCSP RESPONDER 2011")).thenReturn(
-                generateCertificate(
+                generateOcspResponderCertificate(
+                        "C=EE,O=AS Sertifitseerimiskeskus,OU=OCSP,CN=TEST of SK OCSP RESPONDER 2011,E=pki@sk.ee",
                         KeyPairGenerator.getInstance("RSA", BouncyCastleProvider.PROVIDER_NAME).generateKeyPair(),
-                        "C=EE,O=AS Sertifitseerimiskeskus,OU=OCSP,CN=TEST of SK OCSP RESPONDER 2011,E=pki@sk.ee")
+                        KeyPairGenerator.getInstance("RSA", BouncyCastleProvider.PROVIDER_NAME).generateKeyPair(),
+                        "CN=MOCK CA").getCertificate()
         );
         X509Certificate userCert = loadCertificateFromResource(MOCK_USER_CERT_2015_PATH);
         setUpMockOcspResponse(OCSPResp.SUCCESSFUL, org.bouncycastle.cert.ocsp.CertificateStatus.GOOD, ocspConfiguration);
@@ -316,6 +318,16 @@ public class OCSPValidatorTest {
 
     @Test
     public void checkCertShouldThrowExceptionWhenOcspResponseDoesNotContainCertificateReferencedByRespId() throws Exception {
+        IDCardConfigurationProvider.Ocsp ocspConfiguration = getMockOcspConfiguration(
+                Arrays.asList("TEST of ESTEID-SK 2015"),
+                String.format("http://localhost:%d/ocsp", mockOcspServer.port()),
+                null, false);
+        Mockito.when(ocspConfigurationResolver.resolve(Mockito.any())).thenReturn(
+                Arrays.asList(
+                        ocspConfiguration
+                )
+        );
+
         setUpMockOcspResponse(MockOcspResponseParams.builder()
                 .ocspServer(mockOcspServer)
                 .responseStatus(OCSPResp.SUCCESSFUL)
@@ -325,9 +337,7 @@ public class OCSPValidatorTest {
                 .responderCertificate(responderCert).build());
 
         expectedEx.expect(IllegalStateException.class);
-        expectedEx.expectMessage("OCSP validation failed: OCSP provider has signed the response using cert " +
-                "with CN: 'TEST', but configuration expects response to be signed with a different " +
-                "certificate (CN: 'TEST of SK OCSP RESPONDER 2011')!");
+        expectedEx.expectMessage("Invalid OCSP response! Responder ID in response contains value: TEST, but there was no cert provided with this CN in the response.");
 
         ocspValidator.checkCert(loadCertificateFromResource(MOCK_USER_CERT_2015_PATH));
     }
@@ -364,8 +374,7 @@ public class OCSPValidatorTest {
                 "must be issued by the authority that issued the user certificate. " +
                 "Expected issuer: 'CN=TEST of ESTEID2018, OID.2.5.4.97=NTREE-10747013, O=SK ID Solutions AS, C=EE', " +
                 "but the OCSP responder signing certificate " +
-                "was issued by 'C=EE, CN=\"JÕEORG,JAAK-KRISTJAN,38001085718\", " +
-                "SURNAME=JÕEORG, GIVENNAME=JAAK-KRISTJAN, SERIALNUMBER=PNOEE-38001085718'");
+                "was issued by 'EMAILADDRESS=pki@sk.ee, CN=TEST of ESTEID-SK 2011, O=AS Sertifitseerimiskeskus, C=EE'");
 
         IDCardConfigurationProvider.Ocsp ocspConfiguration = getMockOcspConfiguration(
                 Arrays.asList("TEST of ESTEID2018"),
@@ -377,17 +386,18 @@ public class OCSPValidatorTest {
                 )
         );
 
-        // sign the response with a self-signed certificate
-        X509Certificate selfsignedCert = generateCertificate(responderKeys, "SERIALNUMBER=PNOEE-38001085718, GIVENNAME=JAAK-KRISTJAN, SURNAME=JÕEORG, CN=\"JÕEORG,JAAK-KRISTJAN,38001085718\", C=EE");
-        Mockito.when(trustedCertificates.get("JÕEORG\\,JAAK-KRISTJAN\\,38001085718")).thenReturn(selfsignedCert);
+        KeyPair certKeys = KeyPairGenerator.getInstance("RSA", BouncyCastleProvider.PROVIDER_NAME).generateKeyPair();
+        X509Certificate ocspResponseSignCert = generateOcspResponderCertificate("C=EE,O=AS Sertifitseerimiskeskus,OU=OCSP,CN=ESTEID2018 AIA OCSP RESPONDER 201903,E=pki@sk.ee", certKeys, responderKeys, "CN=MOCK CA").getCertificate();
+        Mockito.when(trustedCertificates.get("MOCK CA")).thenReturn(loadCertificateFromResource(MOCK_ISSUER_CERT_2011_PATH));
+
         setUpMockOcspResponse(MockOcspResponseParams.builder()
                 .ocspServer(mockOcspServer)
                 .responseStatus(OCSPResp.SUCCESSFUL)
                 .certificateStatus(CertificateStatus.GOOD)
-                .responseId("SERIALNUMBER=PNOEE-38001085718, GIVENNAME=JAAK-KRISTJAN, SURNAME=JÕEORG, CN=\"JÕEORG,JAAK-KRISTJAN,38001085718\", C=EE")
+                .responseId("C=EE,O=AS Sertifitseerimiskeskus,OU=OCSP,CN=ESTEID2018 AIA OCSP RESPONDER 201903,E=pki@sk.ee")
                 .ocspConf(this.ocspConfiguration)
                 .responderCertificate(
-                        selfsignedCert
+                        ocspResponseSignCert
                 ).build());
         X509Certificate userCert = loadCertificateFromResource(MOCK_USER_CERT_2018_PATH);
 
@@ -426,21 +436,36 @@ public class OCSPValidatorTest {
     }
 
     @Test
-    public void checkCertShouldSucceedWithEsteId2011() throws Exception {
+    public void checkCertShouldThrowExceptionWhenOcspResponseCertDoesNotContainCn() throws Exception {
 
-        IDCardConfigurationProvider.Ocsp ocspConfiguration = getMockOcspConfiguration(Arrays.asList("TEST of ESTEID-SK 2011"), String.format("http://localhost:%d/ocsp", mockOcspServer.port()), "TEST of SK OCSP RESPONDER 2011", true);
-        Mockito.when(ocspConfigurationResolver.resolve(Mockito.any())).thenReturn(
-                Arrays.asList(ocspConfiguration)
-        );
+        expectedEx.expect(IllegalStateException.class);
+        expectedEx.expectMessage("OCSP validation failed: Unable to find responder CN from OCSP response");
 
-        X509Certificate userCert = loadCertificateFromResource(MOCK_USER_CERT_2011_PATH);
-        setUpMockOcspResponse(OCSPResp.SUCCESSFUL, org.bouncycastle.cert.ocsp.CertificateStatus.GOOD, ocspConfiguration);
+        setUpMockOcspResponse(MockOcspResponseParams.builder()
+                .ocspServer(mockOcspServer)
+                .responseStatus(OCSPResp.SUCCESSFUL)
+                .certificateStatus(org.bouncycastle.cert.ocsp.CertificateStatus.GOOD)
+                .responseId("C=\"EE\"")
+                .ocspConf(ocspConfiguration)
+                .responderCertificate(
+                        generateOcspResponderCertificate("C=\"EE\"", responderKeys, responderKeys, "CN=MOCK CA").getCertificate()
+                ).build());
 
-        ocspValidator.checkCert(userCert);
+
+        ocspValidator.checkCert(loadCertificateFromResource(MOCK_USER_CERT_2015_PATH));
     }
 
     @Test
-    public void checkCertShouldSucceedWithEsteId2015() throws Exception {
+    public void checkCertShouldThrowExceptionWhenUserCertNotSignedByTrustedCa() throws Exception {
+        expectedEx.expect(IllegalStateException.class);
+        expectedEx.expectMessage("Failed to verify user certificate");
+
+        Mockito.when(trustedCertificates.get("MOCK CA")).thenReturn(loadCertificateFromResource(MOCK_ISSUER_CERT_2011_PATH));
+        ocspValidator.checkCert(generateOcspResponderCertificate("CN=\"TEST\"", responderKeys, responderKeys, "CN=MOCK CA").getCertificate());
+    }
+
+    @Test
+    public void checkCertShouldSucceedWithExplicitResponderCert() throws Exception {
         IDCardConfigurationProvider.Ocsp ocspConfiguration = getMockOcspConfiguration(Arrays.asList("TEST of ESTEID-SK 2015"),
                         String.format("http://localhost:%d/ocsp", mockOcspServer.port()),
                         "TEST of SK OCSP RESPONDER 2011",
@@ -457,7 +482,7 @@ public class OCSPValidatorTest {
     }
 
     @Test
-    public void checkCertShouldSucceedWithEsteId2018() throws Exception {
+    public void checkCertShouldSucceedWhenNoExplicitResponderCertConfiguredAndSignerCertNotInTruststore() throws Exception {
         IDCardConfigurationProvider.Ocsp ocspConfiguration = getMockOcspConfiguration(Arrays.asList("TEST of ESTEID2018"), String.format("http://localhost:%d/ocsp", mockOcspServer.port()), null, false);
         Mockito.when(ocspConfigurationResolver.resolve(Mockito.any())).thenReturn(
                 Arrays.asList(
@@ -465,27 +490,60 @@ public class OCSPValidatorTest {
                 )
         );
 
+        KeyPairGenerator rsa = KeyPairGenerator.getInstance("RSA");
+        rsa.initialize(2048);
+        KeyPair certKeyPair = rsa.generateKeyPair();
 
-        X509Certificate selfsignedCert = generateCertificate(responderKeys, "SERIALNUMBER=PNOEE-38001085718, GIVENNAME=JAAK-KRISTJAN, SURNAME=JÕEORG, CN=\"JÕEORG,JAAK-KRISTJAN,38001085718\", C=EE");
-
-        Mockito.when(trustedCertificates.get("JÕEORG\\,JAAK-KRISTJAN\\,38001085718")).thenReturn(selfsignedCert);
+        X509Certificate ocspResponderCert = generateOcspResponderCertificate("CN=\"MOCK OCSP RESPONDER\", C=EE", certKeyPair, responderKeys, "CN=MOCK CA").getCertificate();
+        ocspResponseTransformer.setSignerKey(certKeyPair.getPrivate());
+        Mockito.when(trustedCertificates.get("MOCK CA")).thenReturn(generateCertificate(responderKeys, "CN=\"MOCK_CA\""));
 
         setUpMockOcspResponse(MockOcspResponseParams.builder()
                 .ocspServer(mockOcspServer)
                 .responseStatus(OCSPResp.SUCCESSFUL)
                 .certificateStatus(org.bouncycastle.cert.ocsp.CertificateStatus.GOOD)
-                .responseId("SERIALNUMBER=PNOEE-38001085718, GIVENNAME=JAAK-KRISTJAN, SURNAME=JÕEORG, CN=\"JÕEORG,JAAK-KRISTJAN,38001085718\", C=EE")
+                .responseId("CN=\"MOCK OCSP RESPONDER\"")
                 .ocspConf(ocspConfiguration)
                 .responderCertificate(
-                        selfsignedCert
+                        ocspResponderCert
                 ).build());
 
-        new OCSPValidator(trustedCertificates, ocspConfigurationResolver) {
-            @Override
-            protected void verifyOcspResponderCertIssuer(X509Certificate userCertIssuer, X509Certificate responseSignCertificate) {
-                System.out.println("ignore");
-            }
-        }.checkCert(loadCertificateFromResource(MOCK_USER_CERT_2018_PATH));
+        X509Certificate userCert = generateUserCertificate("SERIALNUMBER=PNOEE-38001085718, GIVENNAME=JAAK-KRISTJAN, SURNAME=JÕEORG, CN=\"JÕEORG,JAAK-KRISTJAN,38001085718\", C=EE", responderKeys, "CN=MOCK CA").getCertificate();
+
+        new OCSPValidator(trustedCertificates, ocspConfigurationResolver).checkCert(userCert);
+    }
+
+    @Test
+    public void checkCertShouldSucceedWhenNoExplicitResponderCertConfiguredAndSignerCertFoundInTruststore() throws Exception {
+        IDCardConfigurationProvider.Ocsp ocspConfiguration = getMockOcspConfiguration(Arrays.asList("TEST of ESTEID2018"), String.format("http://localhost:%d/ocsp", mockOcspServer.port()), null, false);
+        Mockito.when(ocspConfigurationResolver.resolve(Mockito.any())).thenReturn(
+                Arrays.asList(
+                        ocspConfiguration
+                )
+        );
+
+        KeyPairGenerator rsa = KeyPairGenerator.getInstance("RSA");
+        rsa.initialize(2048);
+        KeyPair certKeyPair = rsa.generateKeyPair();
+
+        X509Certificate ocspResponderCert = generateOcspResponderCertificate("CN=\"MOCK OCSP RESPONDER\", C=EE", certKeyPair, responderKeys, "CN=MOCK CA").getCertificate();
+        ocspResponseTransformer.setSignerKey(certKeyPair.getPrivate());
+        Mockito.when(trustedCertificates.get("MOCK CA")).thenReturn(generateCertificate(responderKeys, "CN=\"MOCK_CA\""));
+        Mockito.when(trustedCertificates.get("MOCK OCSP RESPONDER")).thenReturn(ocspResponderCert);
+
+        setUpMockOcspResponse(MockOcspResponseParams.builder()
+                .ocspServer(mockOcspServer)
+                .responseStatus(OCSPResp.SUCCESSFUL)
+                .certificateStatus(org.bouncycastle.cert.ocsp.CertificateStatus.GOOD)
+                .responseId("CN=\"MOCK OCSP RESPONDER\"")
+                .ocspConf(ocspConfiguration)
+                .responderCertificate(
+                        ocspResponderCert
+                ).build());
+
+        X509Certificate userCert = generateUserCertificate("SERIALNUMBER=PNOEE-38001085718, GIVENNAME=JAAK-KRISTJAN, SURNAME=JÕEORG, CN=\"JÕEORG,JAAK-KRISTJAN,38001085718\", C=EE", responderKeys, "CN=MOCK CA").getCertificate();
+
+        new OCSPValidator(trustedCertificates, ocspConfigurationResolver).checkCert(userCert);
     }
 
     @Test
@@ -698,6 +756,52 @@ public class OCSPValidatorTest {
         ocsp.setResponseLifetimeInSeconds(900);
         ocsp.setResponderCertificateCn(responderCertificateCn);
         return ocsp;
+    }
+
+
+    public static X500PrivateCredential generateOcspResponderCertificate(String certDn, KeyPair certKeyPair, KeyPair caKeyPair, String issuerDn) throws NoSuchAlgorithmException, CertificateException, OperatorCreationException, CertIOException {
+        X500Name issuerName = new X500Name(issuerDn);
+        X500Name subjectName = new X500Name(certDn);
+        BigInteger serial = BigInteger.valueOf(Math.abs(new SecureRandom().nextInt()));
+
+        X509v3CertificateBuilder builder = new JcaX509v3CertificateBuilder(issuerName, serial, Date.from(Instant.now().minus(Duration.ofHours(1))), Date.from(Instant.now().plus(Duration.ofHours(1))), subjectName, certKeyPair.getPublic());
+        builder.addExtension(Extension.extendedKeyUsage, true, new DERSequence(new ASN1Encodable[] {
+                KeyPurposeId.id_kp_OCSPSigning.toOID()
+        }));
+
+        X509Certificate cert = signCertificate(builder, caKeyPair.getPrivate());
+
+        return new X500PrivateCredential(cert, certKeyPair.getPrivate());
+    }
+
+    public static X500PrivateCredential generateUserCertificate(String certDn, KeyPair caKeyPair, String issuerDn) throws NoSuchAlgorithmException, CertificateException, OperatorCreationException, CertIOException {
+        X500Name issuerName = new X500Name(issuerDn);
+        X500Name subjectName = new X500Name(certDn);
+        BigInteger serial = BigInteger.valueOf(Math.abs(new SecureRandom().nextInt()));
+
+        KeyPairGenerator rsa = KeyPairGenerator.getInstance("RSA");
+        rsa.initialize(2048);
+        KeyPair kp = rsa.generateKeyPair();
+
+        X509v3CertificateBuilder builder = new JcaX509v3CertificateBuilder(issuerName, serial, Date.from(Instant.now().minus(Duration.ofHours(1))), Date.from(Instant.now().plus(Duration.ofHours(1))), subjectName, kp.getPublic());
+
+        AccessDescription caIssuers = new AccessDescription(AccessDescription.id_ad_caIssuers, new GeneralName(GeneralName.uniformResourceIdentifier, new DERIA5String("http://mock.ocsp.url")));
+        ASN1EncodableVector aiaAsn = new ASN1EncodableVector();
+        aiaAsn.add(caIssuers);
+        builder.addExtension(Extension.authorityInfoAccess, false, new DERSequence(aiaAsn));
+
+        X509Certificate cert = signCertificate(builder, caKeyPair.getPrivate());
+
+        return new X500PrivateCredential(cert, kp.getPrivate());
+    }
+
+    public static X509Certificate signCertificate(X509v3CertificateBuilder certificateBuilder, PrivateKey caPrivateKey) throws OperatorCreationException, CertificateException {
+        ContentSigner signer = new JcaContentSignerBuilder("SHA256WithRSAEncryption")
+                .setProvider(BouncyCastleProvider.PROVIDER_NAME)
+                .build(caPrivateKey);
+        return new JcaX509CertificateConverter()
+                .setProvider(BouncyCastleProvider.PROVIDER_NAME)
+                .getCertificate(certificateBuilder.build(signer));
     }
 
 }
