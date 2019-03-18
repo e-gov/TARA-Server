@@ -18,6 +18,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 
+import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.security.*;
 import java.security.cert.Certificate;
@@ -46,7 +47,9 @@ public class BanklinkConfiguration {
         try {
             KeyStore keystore = KeyStore.getInstance(banklinkConfigurationProvider.getKeystoreType());
             Resource resource = resourceLoader.getResource(banklinkConfigurationProvider.getKeystore());
-            keystore.load(resource.getInputStream(), banklinkConfigurationProvider.getKeystorePass().toCharArray());
+            try (InputStream inputStream = resource.getInputStream()) {
+                keystore.load(inputStream, banklinkConfigurationProvider.getKeystorePass().toCharArray());
+            }
             return keystore;
         } catch (Exception e) {
             throw new IllegalStateException("Could not load keystore of type " + banklinkConfigurationProvider.getKeystoreType() + " from " + banklinkConfigurationProvider.getKeystore() + "!", e);

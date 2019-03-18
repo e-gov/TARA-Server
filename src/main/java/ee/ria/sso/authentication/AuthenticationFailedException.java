@@ -1,5 +1,8 @@
 package ee.ria.sso.authentication;
 
+import lombok.Getter;
+
+@Getter
 public class AuthenticationFailedException extends RuntimeException {
 
     private final String errorMessageKey;
@@ -13,13 +16,4 @@ public class AuthenticationFailedException extends RuntimeException {
         super(exceptionMessage, cause);
         this.errorMessageKey = errorMessageKey;
     }
-
-    public String getErrorMessageKey() {
-        return errorMessageKey;
-    }
-
-    public String getErrorMessageKeyOrDefault(String defaultMesageKey) {
-        return (errorMessageKey != null) ? errorMessageKey : defaultMesageKey;
-    }
-
 }

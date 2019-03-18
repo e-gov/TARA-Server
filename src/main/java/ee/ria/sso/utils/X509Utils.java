@@ -1,28 +1,32 @@
 package ee.ria.sso.utils;
 
 
-import java.io.ByteArrayInputStream;
-import java.security.cert.*;
-import java.util.Collection;
-import java.util.List;
-
+import lombok.extern.slf4j.Slf4j;
 import org.apache.axis.encoding.Base64;
+import org.bouncycastle.asn1.*;
 import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.asn1.x500.style.IETFUtils;
-import org.bouncycastle.asn1.x509.GeneralName;
+import org.bouncycastle.asn1.x509.*;
+import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import javax.security.auth.x500.X500Principal;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.security.cert.*;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Created by serkp on 7.10.2017.
  */
 
+@Slf4j
 public class X509Utils {
 
-    private static final Logger log = LoggerFactory.getLogger(X509Utils.class);
     private static final String BEGIN_CERT = "-----BEGIN CERTIFICATE-----";
     private static final String END_CERT = "-----END CERTIFICATE-----";
 
@@ -79,4 +83,42 @@ public class X509Utils {
         }
     }
 
+    public static String getOCSPUrl(X509Certificate certificate) {
+        ASN1Primitive obj;
+        try {
+            obj = getExtensionValue(certificate, Extension.authorityInfoAccess.getId());
+        } catch (IOException ex) {
+            log.error("Failed to get OCSP URL", ex);
+            return null;
+        }
+
+        if (obj == null) {
+            return null;
+        }
+
+        AuthorityInformationAccess authorityInformationAccess = AuthorityInformationAccess.getInstance(obj);
+
+        AccessDescription[] accessDescriptions = authorityInformationAccess.getAccessDescriptions();
+        for (AccessDescription accessDescription : accessDescriptions) {
+            if (accessDescription.getAccessMethod().equals(X509ObjectIdentifiers.ocspAccessMethod)
+                    && accessDescription.getAccessLocation().getTagNo() == GeneralName.uniformResourceIdentifier) {
+
+                DERIA5String derStr = DERIA5String.getInstance((ASN1TaggedObject) accessDescription.getAccessLocation().toASN1Primitive(), false);
+                return derStr.getString();
+            }
+        }
+
+        return null;
+    }
+
+    private static ASN1Primitive getExtensionValue(X509Certificate certificate, String oid) throws IOException {
+        byte[] bytes = certificate.getExtensionValue(oid);
+        if (bytes == null) {
+            return null;
+        }
+        ASN1InputStream aIn = new ASN1InputStream(new ByteArrayInputStream(bytes));
+        ASN1OctetString octs = (ASN1OctetString) aIn.readObject();
+        aIn = new ASN1InputStream(new ByteArrayInputStream(octs.getOctets()));
+        return aIn.readObject();
+    }
 }

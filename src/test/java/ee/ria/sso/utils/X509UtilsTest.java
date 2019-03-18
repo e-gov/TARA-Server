@@ -59,6 +59,22 @@ public class X509UtilsTest {
     }
 
     @Test
+    public void getAiaOcspUrlFrom2015Cert() throws Exception {
+        Assert.assertEquals("http://aia.demo.sk.ee/esteid2015" , X509Utils.getOCSPUrl(loadCertificate("classpath:id-card/47101010033(TEST_of_ESTEID-SK_2015).pem")));
+    }
+
+    @Test
+    public void getAiaOcspUrlFrom2018Cert() throws Exception {
+        Assert.assertEquals("http://aia.demo.sk.ee/esteid2018" , X509Utils.getOCSPUrl(loadCertificate("classpath:id-card/38001085718(TEST_of_ESTEID2018).pem")));
+    }
+
+    @Test
+    public void getAiaOcspUrlFromUnknownCert() throws Exception {
+        Assert.assertEquals(null , X509Utils.getOCSPUrl(X509Utils.toX509Certificate(certWithNoSanFields)));
+    }
+
+
+    @Test
     public void getRfc822NameSubjectAltNameShouldExtractEmailFromEsteid2018Certificate() throws Exception {
         Assert.assertEquals("38001085718@eesti.ee" , X509Utils.getRfc822NameSubjectAltName(loadCertificate("classpath:id-card/38001085718(TEST_of_ESTEID2018).pem")));
     }

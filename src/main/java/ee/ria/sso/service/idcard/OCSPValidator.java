@@ -1,14 +1,17 @@
 package ee.ria.sso.service.idcard;
 
+import ee.ria.sso.config.idcard.IDCardConfigurationProvider;
 import ee.ria.sso.utils.X509Utils;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.Conversion;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.ocsp.OCSPObjectIdentifiers;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.Extensions;
+import org.bouncycastle.asn1.x509.KeyPurposeId;
+import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
 import org.bouncycastle.cert.ocsp.*;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -16,106 +19,129 @@ import org.bouncycastle.operator.ContentVerifierProvider;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentVerifierProviderBuilder;
 import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
-import java.io.BufferedOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.math.BigInteger;
+import java.net.ConnectException;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
-import java.security.Security;
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.CertificateExpiredException;
-import java.security.cert.CertificateNotYetValidException;
-import java.security.cert.X509Certificate;
+import java.security.*;
+import java.security.cert.*;
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
-
-/**
- * Created by serkp on 7.10.2017.
- */
-
-@Component
+@Slf4j
+@RequiredArgsConstructor
 public class OCSPValidator {
 
     static {
         Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
     }
 
-    private final Logger log = LoggerFactory.getLogger(OCSPValidator.class);
+    private final Map<String, X509Certificate> trustedCertificates;
+    private final OCSPConfigurationResolver ocspConfigurationResolver;
 
-    public void validate(X509Certificate userCert, X509Certificate issuerCert, OCSPConfiguration ocsp) {
+    public void checkCert(X509Certificate userCert) {
         Assert.notNull(userCert, "User certificate cannot be null!");
-        Assert.notNull(issuerCert, "Issuer certificate cannot be null!");
-        Assert.notNull(ocsp, "OCSP configuration cannot be null!");
+        log.info("OCSP certificate validation. Serialnumber=<{}>, SubjectDN=<{}>, issuerDN=<{}>",
+                userCert.getSerialNumber(), userCert.getSubjectDN().getName(), userCert.getIssuerDN().getName());
+        List<IDCardConfigurationProvider.Ocsp> ocspConfiguration = ocspConfigurationResolver.resolve(userCert);
+        Assert.isTrue(CollectionUtils.isNotEmpty(ocspConfiguration), "At least one OCSP configuration must be present");
 
-        this.log.debug("OCSP certificate validation called for userCert: {}, issuerCert: {}, certID: {}",
-            userCert.getSubjectDN().getName(), issuerCert.getSubjectDN().getName(), userCert.getSerialNumber());
+        int count = 0;
+        int maxTries = ocspConfiguration.size();
+        while (true) {
+            try {
+                if (count > 0) {
+                    log.info("Retrying OCSP request with {}. Configuration: {}", ocspConfiguration.get(count).getUrl(), ocspConfiguration.get(count));
+                }
 
-        try {
-            CertificateID certificateID = this.generateCertificateIdForRequest(userCert, issuerCert);
-            DEROctetString nonce = this.generateDerOctetStringForNonce(UUID.randomUUID());
-
-            OCSPResp response = this.sendOCSPReq(buildOCSPReq(certificateID, nonce), ocsp.getServiceUrl());
-            BasicOCSPResp basicOCSPResponse = (BasicOCSPResp) response.getResponseObject();
-            Assert.notNull(basicOCSPResponse,"Invalid OCSP response! OCSP response object bytes could not be read!");
-
-            validateResponseNonce(basicOCSPResponse, nonce);
-            validateResponseSignature(basicOCSPResponse, ocsp.getTrustedCertificates());
-
-            SingleResp singleResponse = getSingleResp(basicOCSPResponse, certificateID);
-            validateResponseThisUpdate(singleResponse, ocsp.getAcceptedClockSkew(), ocsp.getResponseLifetime());
-            org.bouncycastle.cert.ocsp.CertificateStatus status = singleResponse.getCertStatus();
-
-            if (status == org.bouncycastle.cert.ocsp.CertificateStatus.GOOD) {
+                checkCert(userCert, ocspConfiguration.get(count));
                 return;
-            } else if (status instanceof RevokedStatus) {
-                throw OCSPValidationException.of(CertificateStatus.REVOKED);
-            } else if (status instanceof UnknownStatus) {
-                throw OCSPValidationException.of(CertificateStatus.UNKNOWN);
-            } else {
-                throw new IllegalStateException(String.format("Unknown OCSP certificate status <%s> received", status));
+            } catch (OCSPConnectionFailedException e) {
+                log.error("OCSP request timed out...");
+                if (++count == maxTries) throw e;
+            } catch (OCSPValidationException e) {
+                throw e;
             }
-        } catch (OCSPValidationException e) {
-            throw e;
-        } catch (Exception e) {
-            throw OCSPValidationException.of(e);
         }
     }
 
-    /*
-     * RESTRICTED METHODS
-     */
+    protected void checkCert(X509Certificate userCert, IDCardConfigurationProvider.Ocsp ocspConf) {
+        X509Certificate issuerCert = findIssuerCertificate(userCert);
+        validateCertSignedBy(userCert, issuerCert);
 
-    private OCSPReq buildOCSPReq(CertificateID certificateID, DEROctetString nonce) throws OCSPException {
+        try {
+            OCSPReq request = buildOCSPReq(userCert, issuerCert, ocspConf);
+            OCSPResp response = sendOCSPReq(request, ocspConf);
+
+            BasicOCSPResp ocspResponse = getResponse(response);
+            validateResponseNonce(request, ocspResponse, ocspConf);
+            validateResponseSignature(ocspResponse, issuerCert, ocspConf);
+
+            SingleResp singleResponse = getSingleResp(ocspResponse, request.getRequestList()[0].getCertID());
+            validateResponseThisUpdate(singleResponse, ocspConf.getAcceptedClockSkewInSeconds(), ocspConf.getResponseLifetimeInSeconds());
+            validateCertStatus(singleResponse);
+        } catch (OCSPValidationException e) {
+            throw e;
+        } catch (SocketTimeoutException | ConnectException e) {
+            throw new OCSPConnectionFailedException(e);
+        } catch (Exception e) {
+            throw new IllegalStateException("OCSP validation failed: " + e.getMessage(), e);
+        }
+    }
+
+    private BasicOCSPResp getResponse(OCSPResp response)
+            throws IOException, OCSPException {
+        log.info("OCSP response received: {}", Base64.getEncoder().encodeToString(response.getEncoded()));
+        BasicOCSPResp basicOCSPResponse = (BasicOCSPResp) response.getResponseObject();
+        Assert.notNull(basicOCSPResponse, "Invalid OCSP response! OCSP response object bytes could not be read!");
+        Assert.notNull(basicOCSPResponse.getCerts(), "Invalid OCSP response! OCSP response is missing mandatory element - the signing certificate");
+        Assert.isTrue(basicOCSPResponse.getCerts().length >= 1, "Invalid OCSP response! Expecting at least one OCSP responder certificate");
+        return basicOCSPResponse;
+    }
+
+    private void validateCertStatus(SingleResp singleResponse) {
+        org.bouncycastle.cert.ocsp.CertificateStatus status = singleResponse.getCertStatus();
+
+        if (status == org.bouncycastle.cert.ocsp.CertificateStatus.GOOD) {
+            return;
+        } else if (status instanceof RevokedStatus) {
+            throw OCSPValidationException.of(CertificateStatus.REVOKED);
+        } else {
+            throw OCSPValidationException.of(CertificateStatus.UNKNOWN);
+        }
+    }
+
+    private OCSPReq buildOCSPReq(X509Certificate userCert, X509Certificate issuerCert, IDCardConfigurationProvider.Ocsp conf)
+            throws OCSPException, IOException, CertificateEncodingException, OperatorCreationException {
         OCSPReqBuilder builder = new OCSPReqBuilder();
+
+        CertificateID certificateID = generateCertificateIdForRequest(userCert, issuerCert);
         builder.addRequest(certificateID);
 
-        Extension extension = new Extension(OCSPObjectIdentifiers.id_pkix_ocsp_nonce, true, nonce);
-        builder.setRequestExtensions(new Extensions(new Extension[] { extension }));
+        if (!conf.isNonceDisabled()) {
+            DEROctetString nonce = generateDerOctetStringForNonce(UUID.randomUUID());
+            Extension extension = new Extension(OCSPObjectIdentifiers.id_pkix_ocsp_nonce, true, nonce);
+            builder.setRequestExtensions(new Extensions(new Extension[]{extension}));
+        }
 
         return builder.build();
     }
 
-    private OCSPResp sendOCSPReq(OCSPReq request, String url) throws IOException {
+    private OCSPResp sendOCSPReq(OCSPReq request, IDCardConfigurationProvider.Ocsp conf) throws IOException {
         byte[] bytes = request.getEncoded();
 
-        HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+        HttpURLConnection connection = (HttpURLConnection) new URL(conf.getUrl()).openConnection();
         connection.setRequestProperty("Content-Type", "application/ocsp-request");
         connection.setRequestProperty("Accept", "application/ocsp-response");
+        connection.setConnectTimeout(conf.getConnectTimeoutInMilliseconds());
+        connection.setReadTimeout(conf.getReadTimeoutInMilliseconds());
         connection.setDoOutput(true);
 
-        this.log.debug("Sending OCSP request to <{}>", url);
-
+        this.log.info("Sending OCSP request to <{}>. Request payload: <{}>. OCSP configuration: <{}>", conf.getUrl(), Base64.getEncoder().encodeToString(bytes), conf);
         try (DataOutputStream outputStream = new DataOutputStream(new BufferedOutputStream(connection.getOutputStream()))) {
             outputStream.write(bytes);
             outputStream.flush();
@@ -137,10 +163,7 @@ public class OCSPValidator {
         Optional<SingleResp> singleResponse = Arrays.stream(basicOCSPResponse.getResponses())
                 .filter(singleResp -> singleResp.getCertID().equals(certificateID))
                 .findFirst();
-
-        if (!singleResponse.isPresent())
-            throw new IllegalStateException("No OCSP response is present");
-
+        Assert.isTrue(singleResponse.isPresent(), "No OCSP response is present");
         return singleResponse.get();
     }
 
@@ -159,14 +182,19 @@ public class OCSPValidator {
         return new DEROctetString(new DEROctetString(uuidBytes));
     }
 
-    private void validateResponseNonce(BasicOCSPResp response, DEROctetString nonce) {
-        Extension extension = response.getExtension(OCSPObjectIdentifiers.id_pkix_ocsp_nonce);
-        if (extension == null)
-            throw new IllegalStateException("No nonce found in OCSP response");
+    private void validateResponseNonce(OCSPReq request, BasicOCSPResp response, IDCardConfigurationProvider.Ocsp ocspConf) {
+        if (!ocspConf.isNonceDisabled()) {
+            Extension requestExtension = request.getExtension(OCSPObjectIdentifiers.id_pkix_ocsp_nonce);
+            DEROctetString nonce = (DEROctetString)requestExtension.getExtnValue();
 
-        DEROctetString receivedNonce = (DEROctetString) extension.getExtnValue();
-        if (!nonce.equals(receivedNonce))
-            throw new IllegalStateException("Invalid OCSP response nonce");
+            Extension responseExtension = response.getExtension(OCSPObjectIdentifiers.id_pkix_ocsp_nonce);
+            if (responseExtension == null)
+                throw new IllegalStateException("No nonce found in OCSP response");
+
+            DEROctetString receivedNonce = (DEROctetString) responseExtension.getExtnValue();
+            if (!nonce.equals(receivedNonce))
+                throw new IllegalStateException("Invalid OCSP response nonce");
+        }
     }
 
     private void validateResponseThisUpdate(SingleResp response, long acceptedClockSkew, long responseLifetime) {
@@ -179,20 +207,75 @@ public class OCSPValidator {
             throw new IllegalStateException("OCSP response cannot be produced in the future");
     }
 
-    private void validateResponseSignature(BasicOCSPResp response, Map<String, X509Certificate> trustedCertificates)
-            throws OCSPException, OperatorCreationException, CertificateNotYetValidException, CertificateExpiredException {
-        X509Certificate certificate = trustedCertificates.get(getResponderCN(response));
-        if (certificate == null) {
-            throw new IllegalStateException("OCSP cert not found from setup");
+    private void validateResponseSignature(BasicOCSPResp response, X509Certificate userCertIssuer, IDCardConfigurationProvider.Ocsp ocspConfiguration)
+            throws OCSPException, OperatorCreationException, CertificateException, IOException {
+
+        X509Certificate signingCert = getResponseSigningCert(response, userCertIssuer, ocspConfiguration);
+        Assert.isTrue(signingCert.getExtendedKeyUsage() != null
+                        && signingCert.getExtendedKeyUsage().contains(KeyPurposeId.id_kp_OCSPSigning.getId()),
+                "This certificate has no OCSP signing extension (subjectDn='" + signingCert.getSubjectDN() + "')");
+        verifyResponseSignature(response, signingCert);
+    }
+
+    private X509Certificate getResponseSigningCert(BasicOCSPResp response, X509Certificate userCertIssuer, IDCardConfigurationProvider.Ocsp ocspConfiguration)
+            throws CertificateException, IOException {
+        String responderCn = getResponderCN(response);
+
+        // if explicit responder cert is set in configuration, then response signature MUST be verified with it
+        if (ocspConfiguration.getResponderCertificateCn() != null) {
+            X509Certificate signCert = trustedCertificates.get(ocspConfiguration.getResponderCertificateCn());
+            Assert.notNull(signCert, "Certificate with CN: '" + ocspConfiguration.getResponderCertificateCn()
+                    + "' is not trusted! Please check your configuration!");
+            Assert.isTrue(responderCn.equals(ocspConfiguration.getResponderCertificateCn()),
+                    "OCSP provider has signed the response using cert with CN: '" + responderCn
+                            + "', but configuration expects response to be signed with a different certificate (CN: '"
+                            + ocspConfiguration.getResponderCertificateCn() + "')!");
+            return signCert;
+        } else {
+            // othwerwise the response must be signed with one of the trusted ocsp responder certs OR it's signer cert must be issued by the same CA as user cert
+            X509Certificate signCert = trustedCertificates.get(responderCn);
+            if (signCert == null) {
+                signCert = getCertFromOcspResponse(response, responderCn);
+                X509Certificate responderCertIssuerCert = findIssuerCertificate(signCert);
+                if (responderCertIssuerCert.equals(userCertIssuer)) {
+                    return signCert;
+                } else {
+                    throw new IllegalStateException("In case of AIA OCSP, the OCSP responder certificate must be issued " +
+                            "by the authority that issued the user certificate. Expected issuer: '" + userCertIssuer.getSubjectX500Principal() + "', " +
+                            "but the OCSP responder signing certificate was issued by '" + responderCertIssuerCert.getSubjectX500Principal() + "'");
+                }
+            } else {
+                return signCert;
+            }
         }
-        certificate.checkValidity();
+    }
+
+    private X509Certificate getCertFromOcspResponse(BasicOCSPResp response, String cn) throws CertificateException, IOException {
+        Optional<X509CertificateHolder> cert = Arrays.stream(response.getCerts()).filter(c -> X509Utils.getFirstCNFromX500Name(c.getSubject()).equals(cn)).findFirst();
+        Assert.isTrue(cert.isPresent(), "Invalid OCSP response! Responder ID in response contains value: " + cn
+                + ", but there was no cert provided with this CN in the response.");
+        return (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(
+                new ByteArrayInputStream(cert.get().getEncoded())
+        );
+    }
+
+    private void verifyResponseSignature(BasicOCSPResp response, X509Certificate responseSignCertificate) throws CertificateExpiredException, CertificateNotYetValidException, OperatorCreationException, OCSPException {
+        responseSignCertificate.checkValidity();
 
         ContentVerifierProvider verifierProvider = new JcaContentVerifierProviderBuilder()
                 .setProvider(BouncyCastleProvider.PROVIDER_NAME)
-                .build(certificate.getPublicKey());
+                .build(responseSignCertificate.getPublicKey());
 
         if (!response.isSignatureValid(verifierProvider))
             throw new IllegalStateException("OCSP response signature is not valid");
+    }
+
+    private X509Certificate findIssuerCertificate(X509Certificate certificate) {
+        String issuerCN = X509Utils.getIssuerCNFromCertificate(certificate);
+        log.debug("IssuerCN extracted: {}", issuerCN);
+        X509Certificate issuerCert = trustedCertificates.get(issuerCN);
+        Assert.notNull(issuerCert, "Issuer certificate with CN '" + issuerCN + "' is not a trusted certificate!");
+        return issuerCert;
     }
 
     private String getResponderCN(BasicOCSPResp response) {
@@ -205,18 +288,11 @@ public class OCSPValidator {
         }
     }
 
-    @Data
-    @AllArgsConstructor
-    public static class OCSPConfiguration {
-
-        @NonNull
-        private String serviceUrl;
-        @NonNull
-        private Map<String, X509Certificate> trustedCertificates;
-
-        private long acceptedClockSkew;
-        private long responseLifetime;
-
+    private void validateCertSignedBy(X509Certificate cert, X509Certificate signedBy) {
+        try {
+            cert.verify(signedBy.getPublicKey(), BouncyCastleProvider.PROVIDER_NAME);
+        } catch (CertificateException | InvalidKeyException | NoSuchAlgorithmException | NoSuchProviderException | SignatureException e) {
+            throw new IllegalStateException("Failed to verify user certificate", e);
+        }
     }
-
 }
