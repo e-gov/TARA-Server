@@ -3,10 +3,7 @@ package ee.ria.sso.config;
 import com.fasterxml.jackson.core.util.MinimalPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import ee.ria.sso.logging.AccessTokenRequestResourceResolver;
-import ee.ria.sso.logging.IncidentLoggingMDCServletFilter;
-import ee.ria.sso.logging.OAuthCodeResourceResolver;
-import ee.ria.sso.logging.RequestContextAsFirstParameterResourceResolver;
+import ee.ria.sso.logging.*;
 import org.apereo.cas.audit.AuditTrailExecutionPlan;
 import org.apereo.cas.audit.AuditTrailRecordResolutionPlan;
 import org.apereo.cas.configuration.CasConfigurationProperties;
@@ -38,9 +35,6 @@ public class TaraLoggingConfiguration {
     private CasConfigurationProperties casProperties;
 
     @Autowired
-    private AuditTrailRecordResolutionPlan auditTrailRecordResolutionPlan;
-
-    @Autowired
     @Qualifier("auditTrailExecutionPlan")
     private AuditTrailExecutionPlan  auditTrailExecutionPlan;
 
@@ -52,11 +46,12 @@ public class TaraLoggingConfiguration {
     }
 
     @Bean
-    public Map<String, AuditResourceResolver> auditResourceResolverMap() {
+    public Map<String, AuditResourceResolver> auditResourceResolverMap(AuditTrailRecordResolutionPlan auditTrailRecordResolutionPlan) {
         final Map<String, AuditResourceResolver> map = new HashMap<>();
         map.put("TARA_AUTHENTICATION_RESOURCE_RESOLVER", new RequestContextAsFirstParameterResourceResolver());
         map.put("TARA_ACCESS_TOKEN_REQUEST_RESOURCE_RESOLVER", new AccessTokenRequestResourceResolver());
         map.put("TARA_CREATE_OAUTH_CODE_RESOURCE_RESOLVER", new OAuthCodeResourceResolver());
+        map.put("TARA_USER_INFO_DATA_RESOURCE_RESOLVER", new UserInfoAuditResourceResolver());
         auditTrailRecordResolutionPlan.registerAuditResourceResolvers(map);
         return map;
     }
@@ -79,6 +74,7 @@ public class TaraLoggingConfiguration {
         private final ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
         private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss,SSSZ");
 
+        @Override
         public void record(final AuditActionContext auditActionContext) {
 
             try {

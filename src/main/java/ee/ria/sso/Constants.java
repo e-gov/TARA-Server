@@ -1,9 +1,11 @@
 package ee.ria.sso;
 
+import lombok.experimental.UtilityClass;
+
 /**
  * @author Janar Rahumeel (CGI Estonia)
  */
-
+@UtilityClass
 public final class Constants {
 
     public static final String CERTIFICATE_SESSION_ATTRIBUTE = "Client-Certificate";
@@ -36,4 +38,6 @@ public final class Constants {
     public static final String TARA_OIDC_REVOCATION_ENDPOINT_ENABLED = "oidc.revocation-endpoint.enabled";
     public static final String TARA_OIDC_INTROSPECTION_ENDPOINT_ENABLED = "oidc.introspection-endpoint.enabled";
 
+    public static final String TARA_OIDC_TOKEN_REQUEST_ATTR_ACCESS_TOKEN_ID = "accessTokenId";
+    public static final String TARA_OIDC_TOKEN_REQUEST_ATTR_ID_TOKEN = "generatedAndEncodedIdTokenString";
 }

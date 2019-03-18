@@ -1,5 +1,6 @@
 package ee.ria.sso.oidc;
 
+import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.principal.TaraPrincipal;
 import ee.ria.sso.authentication.principal.TaraPrincipalFactory;
 import lombok.Getter;
@@ -40,7 +41,6 @@ import static ee.ria.sso.authentication.principal.TaraPrincipal.Attribute.*;
 @Getter
 public class TaraOidcIdTokenGeneratorService extends OidcIdTokenGeneratorService {
 
-    public static final String GENERATED_AND_ENCODED_ID_TOKEN_STRING = "generatedAndEncodedIdTokenString";
     public static final String CLAIM_PROFILE_ATTRIBUTES = "profile_attributes";
     public static final String CLAIM_EMAIL = "email";
     public static final String CLAIM_EMAIL_VERIFIED = "email_verified";
@@ -82,9 +82,10 @@ public class TaraOidcIdTokenGeneratorService extends OidcIdTokenGeneratorService
         log.debug("Produce claims for the id token [{}] as [{}]", accessTokenId, claims);
 
 
-        // Needed for audit log (see "TARA_ID_TOKEN_REQUEST_RESOURCE_RESOLVER")
+        // Needed for audit log (see "TARA_ACCESS_TOKEN_REQUEST_RESOURCE_RESOLVER")
         String encodedIdToken = getSigningService().encode(oidcRegisteredService, claims);
-        request.setAttribute(GENERATED_AND_ENCODED_ID_TOKEN_STRING, encodedIdToken);
+        request.setAttribute(Constants.TARA_OIDC_TOKEN_REQUEST_ATTR_ID_TOKEN, encodedIdToken);
+        request.setAttribute(Constants.TARA_OIDC_TOKEN_REQUEST_ATTR_ACCESS_TOKEN_ID, accessTokenId.getId());
         return encodedIdToken;
     }
 

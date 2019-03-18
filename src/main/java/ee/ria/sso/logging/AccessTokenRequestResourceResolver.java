@@ -1,5 +1,6 @@
 package ee.ria.sso.logging;
 
+import ee.ria.sso.Constants;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apereo.cas.support.oauth.OAuth20Constants;
 import org.apereo.cas.util.AopUtils;
@@ -28,10 +29,17 @@ public class AccessTokenRequestResourceResolver implements AuditResourceResolver
         HttpServletRequest request = (HttpServletRequest) arguments[0];
 
         String result = "Supplied parameters: " + getParameterMapAsString(request.getParameterMap());
-        Object attribute = request.getAttribute("generatedAndEncodedIdTokenString");
+        Object attribute = request.getAttribute(Constants.TARA_OIDC_TOKEN_REQUEST_ATTR_ID_TOKEN);
 
-        if (attribute != null && attribute instanceof String) {
-            result += "; Generated id-token: " + attribute;
+        if (attribute instanceof String) {
+            result += "; id-token: " + attribute;
+        }
+
+        attribute = request.getAttribute(Constants.TARA_OIDC_TOKEN_REQUEST_ATTR_ACCESS_TOKEN_ID);
+        if (attribute instanceof String) {
+            result += "; access-token: " + ResourceResolverHelper.maskString((String)attribute,
+                    ResourceResolverHelper.OAUTH_CODE_PREFIX.length(), ((String) attribute).length() - 10, '*'
+                    );
         }
 
         return result;
@@ -47,7 +55,10 @@ public class AccessTokenRequestResourceResolver implements AuditResourceResolver
 
         for (int i = 0; i < parameterCount; ++i) {
             try {
-                maskedCodeParameters[i] = OAuthCodeResourceResolver.maskOAuthCode(initialCodeParameters[i]);
+                maskedCodeParameters[i] = ResourceResolverHelper.maskString(
+                        initialCodeParameters[i],
+                        ResourceResolverHelper.OAUTH_CODE_PREFIX.length(), initialCodeParameters[i].length() - 10, '*'
+                );
             } catch (Exception e) {
                 maskedCodeParameters[i] = initialCodeParameters[i];
             }

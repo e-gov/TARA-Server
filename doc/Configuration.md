@@ -189,6 +189,8 @@ The following is a complete list of TARA specific audit events:
 | `OAUTH_CODE_NOT_CREATED` | Authentication code creation failed. |
 | `ACCESS_TOKEN_REQUEST_HANDLING_SUCCESS` | Request was successfully processed and an access token was sent as a response. |
 | `ACCESS_TOKEN_REQUEST_HANDLING_FAILED` | An error occurred while processing the request or sending the response. |
+| `USER_INFO_DATA_CREATED`| User profile data for UserInfo endpoint response was successfully created. |
+| `USER_INFO_DATA_NOT_CREATED`| User profile data creation for UserInfo endpoint response has failed. |
 
 NB! See additional list of CAS related events [here](https://apereo.github.io/cas/5.3.x/installation/Audits.html#audit-events)
 
