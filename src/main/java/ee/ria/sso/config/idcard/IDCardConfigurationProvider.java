@@ -90,4 +90,16 @@ public class IDCardConfigurationProvider {
                 .filter(cn -> !names.add(cn))
                 .collect(Collectors.toSet());
     }
+
+    @Override
+    public String toString() {
+        return "IDCardConfigurationProvider{" +
+                "truststore='" + truststore + '\'' +
+                ", truststoreType='" + truststoreType + '\'' +
+                ", truststorePass='*******'" +
+                ", ocspEnabled=" + ocspEnabled +
+                ", ocsp=" + ocsp +
+                ", fallbackOcsp=" + fallbackOcsp +
+                '}';
+    }
 }
