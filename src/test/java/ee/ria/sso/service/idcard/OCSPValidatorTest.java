@@ -40,7 +40,6 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.security.auth.x500.X500PrivateCredential;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
@@ -170,8 +169,27 @@ public class OCSPValidatorTest {
                 .willReturn(WireMock.aResponse().withStatus(500))
         );
 
-        expectedEx.expect(IllegalStateException.class);
-        expectedEx.expectMessage("OCSP request failed with status code 500");
+        expectedEx.expect(OCSPServiceNotAvailableException.class);
+        expectedEx.expectMessage("Service returned HTTP status code 500");
+
+        ocspValidator.checkCert(userCert);
+    }
+
+    @Test
+    public void checkCertShouldThrowExceptionWhenOcspResponseHasInvalidContentType() throws Exception {
+        X509Certificate userCert = loadCertificateFromResource(MOCK_USER_CERT_2015_PATH);
+
+        mockOcspServer.stubFor(WireMock.post("/ocsp")
+                .willReturn(WireMock.aResponse()
+                        .withTransformerParameter("ignore", true)
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/html")
+                        .withBody("<html><body>Hello world!</body></html>")
+                )
+        );
+
+        expectedEx.expect(OCSPServiceNotAvailableException.class);
+        expectedEx.expectMessage("Response Content-Type header is missing or invalid. Expected: 'application/ocsp-response', actual: text/html");
 
         ocspValidator.checkCert(userCert);
     }
@@ -184,7 +202,7 @@ public class OCSPValidatorTest {
                 .willReturn(WireMock.aResponse()
                         .withTransformerParameter("ignore", true)
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/ocsp-request")
+                        .withHeader("Content-Type", "application/ocsp-response")
                         .withBody(Hex.decodeHex("30030a0100"))
                 )
         );
@@ -417,7 +435,7 @@ public class OCSPValidatorTest {
                 .ocspConf(ocspConfiguration)
                 .responderCertificate(responderCert).build());
 
-        expectedEx.expect(OCSPConnectionFailedException.class);
+        expectedEx.expect(OCSPServiceNotAvailableException.class);
         expectedEx.expectMessage("java.net.SocketTimeoutException: Read timed out");
 
         ocspValidator.checkCert(userCert);
@@ -547,7 +565,7 @@ public class OCSPValidatorTest {
     }
 
     @Test
-    public void checkCertShouldSucceedWhenPrimaryOcspFailsButFallbackResponds() throws Exception {
+    public void checkCertShouldSucceedWhenPrimaryOcspFailsWithTimeoutButFallbackResponds() throws Exception {
 
         IDCardConfigurationProvider.Ocsp ocspFallbackConfiguration = getMockOcspConfiguration(
                 Arrays.asList("SOME TRUSTED ISSUER", "TEST of ESTEID-SK 2015", "SOME OTHER TRUSTED ISSUER"),
@@ -569,6 +587,75 @@ public class OCSPValidatorTest {
                 .responseId("C=EE,O=AS Sertifitseerimiskeskus,OU=OCSP,CN=TEST of SK OCSP RESPONDER 2011,E=pki@sk.ee")
                 .ocspConf(ocspConfiguration)
                 .responderCertificate(responderCert).build());
+
+        setUpMockOcspResponse(MockOcspResponseParams.builder()
+                .ocspServer(mockFallbackOcspServer)
+                .responseStatus(OCSPResp.SUCCESSFUL)
+                .delay(0)
+                .certificateStatus(org.bouncycastle.cert.ocsp.CertificateStatus.GOOD)
+                .responseId("C=EE,O=AS Sertifitseerimiskeskus,OU=OCSP,CN=TEST of SK OCSP RESPONDER 2011,E=pki@sk.ee")
+                .ocspConf(ocspFallbackConfiguration)
+                .responderCertificate(responderCert).build());
+
+
+        ocspValidator.checkCert(loadCertificateFromResource(MOCK_USER_CERT_2015_PATH));
+    }
+
+    @Test
+    public void checkCertShouldSucceedWhenPrimaryOcspFailsWithHttp500ButFallbackResponds() throws Exception {
+
+        IDCardConfigurationProvider.Ocsp ocspFallbackConfiguration = getMockOcspConfiguration(
+                Arrays.asList("SOME TRUSTED ISSUER", "TEST of ESTEID-SK 2015", "SOME OTHER TRUSTED ISSUER"),
+                String.format("http://localhost:%d/ocsp", mockFallbackOcspServer.port()), "TEST of SK OCSP RESPONDER 2011", false
+        );
+
+        Mockito.when(ocspConfigurationResolver.resolve(Mockito.any())).thenReturn(
+                Arrays.asList(
+                        ocspConfiguration,
+                        ocspFallbackConfiguration
+                )
+        );
+
+        mockOcspServer.stubFor(WireMock.post("/ocsp")
+                .willReturn(WireMock.aResponse()
+                        .withTransformerParameter("ignore", true)
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/html")
+                        .withBody("<html><body>Hello world!</body></html>")
+                )
+        );
+
+        setUpMockOcspResponse(MockOcspResponseParams.builder()
+                .ocspServer(mockFallbackOcspServer)
+                .responseStatus(OCSPResp.SUCCESSFUL)
+                .delay(0)
+                .certificateStatus(org.bouncycastle.cert.ocsp.CertificateStatus.GOOD)
+                .responseId("C=EE,O=AS Sertifitseerimiskeskus,OU=OCSP,CN=TEST of SK OCSP RESPONDER 2011,E=pki@sk.ee")
+                .ocspConf(ocspFallbackConfiguration)
+                .responderCertificate(responderCert).build());
+
+
+        ocspValidator.checkCert(loadCertificateFromResource(MOCK_USER_CERT_2015_PATH));
+    }
+
+    @Test
+    public void checkCertShouldSucceedWhenPrimaryOcspFailsWithHttp200AndWrongContentTypeButFallbackResponds() throws Exception {
+
+        IDCardConfigurationProvider.Ocsp ocspFallbackConfiguration = getMockOcspConfiguration(
+                Arrays.asList("SOME TRUSTED ISSUER", "TEST of ESTEID-SK 2015", "SOME OTHER TRUSTED ISSUER"),
+                String.format("http://localhost:%d/ocsp", mockFallbackOcspServer.port()), "TEST of SK OCSP RESPONDER 2011", false
+        );
+
+        Mockito.when(ocspConfigurationResolver.resolve(Mockito.any())).thenReturn(
+                Arrays.asList(
+                        ocspConfiguration,
+                        ocspFallbackConfiguration
+                )
+        );
+
+        mockOcspServer.stubFor(WireMock.post("/ocsp")
+                .willReturn(WireMock.aResponse().withStatus(500))
+        );
 
         setUpMockOcspResponse(MockOcspResponseParams.builder()
                 .ocspServer(mockFallbackOcspServer)
@@ -643,7 +730,7 @@ public class OCSPValidatorTest {
                                 .withTransformerParameter("signatureAlgorithm", responseParams.getSignatureAlgorithm() == null ? "SHA256withRSA" : responseParams.getSignatureAlgorithm())
                                 .withTransformerParameter("ocspConf", responseParams.getOcspConf())
                         .withFixedDelay(responseParams.getDelay())
-                        .withHeader("Content-Type", "application/ocsp-request")
+                        .withHeader("Content-Type", "application/ocsp-response")
                 )
         );
     }

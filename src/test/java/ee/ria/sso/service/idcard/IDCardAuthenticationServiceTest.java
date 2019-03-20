@@ -12,7 +12,6 @@ import ee.ria.sso.test.SimpleTestAppender;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -147,7 +146,7 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
         expectedEx.expectMessage("OCSP service is currently not available, please try again later");
 
         RequestContext requestContext = this.getMockRequestContextWith(null, mockUserCertificate2015);
-        Exception cause = new OCSPConnectionFailedException(new SocketTimeoutException("timeout"));
+        Exception cause = new OCSPServiceNotAvailableException(new SocketTimeoutException("timeout"));
 
         Mockito.doThrow(cause).when(ocspValidatorMock).checkCert(Mockito.eq(mockUserCertificate2015));
 

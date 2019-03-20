@@ -131,7 +131,7 @@ public class OCSPConfigurationResolverTest {
     }
 
     @Test
-    public void resolveShouldSucceedWithFallbackOcsp() {
+    public void resolveShouldSucceedWithASingleFallbackOcsp() {
         Mockito.when(idCardConfigurationProvider.getFallbackOcsp()).thenReturn(Arrays.asList(
                 getMockOcspConfiguration(
                         Arrays.asList("TEST of ESTEID-SK 2011", "TEST of ESTEID-SK 2015", "TEST of ESTEID2018"),
@@ -163,6 +163,92 @@ public class OCSPConfigurationResolverTest {
         Assert.assertEquals(901, conf.get(1).getResponseLifetimeInSeconds());
         Assert.assertEquals(1111, conf.get(1).getConnectTimeoutInMilliseconds());
         Assert.assertEquals(2222, conf.get(1).getReadTimeoutInMilliseconds());
+    }
+
+    @Test
+    public void resolveShouldSucceedWithMultipleFallbackOcspsAndSelectSingleRelevantConf() {
+        Mockito.when(idCardConfigurationProvider.getFallbackOcsp()).thenReturn(Arrays.asList(
+                getMockOcspConfiguration(
+                        Arrays.asList("TEST of ESTEID-SK 2011"),
+                        "http://localhost:1234/ocsp",
+                        false, 3, 901, 1111, 2222,
+                        "TEST_of_SK_OCSP_RESPONDER_2011.pem"),
+                getMockOcspConfiguration(
+                        Arrays.asList("TEST of ESTEID-SK 2015"),
+                        "http://localhost:1234/ocsp",
+                        false, 3, 901, 1111, 2222,
+                        "TEST_of_SK_OCSP_RESPONDER_2011.pem"),
+                getMockOcspConfiguration(
+                        Arrays.asList("TEST of ESTEID2018"),
+                        "http://localhost:1234/ocsp",
+                        false, 3, 901, 1111, 2222,
+                        "TEST_of_SK_OCSP_RESPONDER_2011.pem")
+        ));
+
+
+        List<IDCardConfigurationProvider.Ocsp> conf = new OCSPConfigurationResolver(idCardConfigurationProvider)
+                .resolve(mockUserCertificate2018);
+
+        Assert.assertEquals(2, conf.size());
+
+        Assert.assertEquals("http://aia.demo.sk.ee/esteid2018", conf.get(0).getUrl());
+        Assert.assertEquals(Arrays.asList("TEST of ESTEID2018"), conf.get(0).getIssuerCn());
+        Assert.assertEquals(false, conf.get(0).isNonceDisabled());
+        Assert.assertEquals(null, conf.get(0).getResponderCertificateCn());
+        Assert.assertEquals(DEFAULT_ACCEPTED_CLOCK_SKEW_IN_SECONDS, conf.get(0).getAcceptedClockSkewInSeconds());
+        Assert.assertEquals(DEFAULT_RESPONSE_LIFETIME_IN_SECONDS, conf.get(0).getResponseLifetimeInSeconds());
+        Assert.assertEquals(DEFAULT_CONNECT_TIMEOUT_IN_MILLISECONDS, conf.get(0).getConnectTimeoutInMilliseconds());
+        Assert.assertEquals(DEFAULT_READ_TIMEOUT_IN_MILLISECONDS, conf.get(0).getReadTimeoutInMilliseconds());
+
+        Assert.assertEquals("http://localhost:1234/ocsp", conf.get(1).getUrl());
+        Assert.assertEquals(Arrays.asList("TEST of ESTEID2018"), conf.get(1).getIssuerCn());
+        Assert.assertEquals(false, conf.get(1).isNonceDisabled());
+        Assert.assertEquals("TEST_of_SK_OCSP_RESPONDER_2011.pem", conf.get(1).getResponderCertificateCn());
+        Assert.assertEquals(3, conf.get(1).getAcceptedClockSkewInSeconds());
+        Assert.assertEquals(901, conf.get(1).getResponseLifetimeInSeconds());
+        Assert.assertEquals(1111, conf.get(1).getConnectTimeoutInMilliseconds());
+        Assert.assertEquals(2222, conf.get(1).getReadTimeoutInMilliseconds());
+    }
+
+    @Test
+    public void resolveShouldSucceedWithMultipleFallbackOcspsAndSelectMultipleRelevantConfs() {
+        Mockito.when(idCardConfigurationProvider.getFallbackOcsp()).thenReturn(Arrays.asList(
+                getMockOcspConfiguration(
+                        Arrays.asList("TEST of ESTEID2018"),
+                        "http://localhost:1234/ocsp1",
+                        false, 3, 901, 1111, 2222,
+                        "TEST_RESPONDER1.pem"),
+                getMockOcspConfiguration(
+                        Arrays.asList("TEST of ESTEID2018"),
+                        "http://localhost:1234/ocsp2",
+                        true, 3, 901, 1111, 2222,
+                        "TEST_RESPONDER2.pem")
+        ));
+
+
+        List<IDCardConfigurationProvider.Ocsp> conf = new OCSPConfigurationResolver(idCardConfigurationProvider)
+                .resolve(mockUserCertificate2018);
+
+        Assert.assertEquals(3, conf.size());
+
+        Assert.assertEquals("http://aia.demo.sk.ee/esteid2018", conf.get(0).getUrl());
+        Assert.assertEquals(Arrays.asList("TEST of ESTEID2018"), conf.get(0).getIssuerCn());
+        Assert.assertEquals(false, conf.get(0).isNonceDisabled());
+        Assert.assertEquals(null, conf.get(0).getResponderCertificateCn());
+        Assert.assertEquals(DEFAULT_ACCEPTED_CLOCK_SKEW_IN_SECONDS, conf.get(0).getAcceptedClockSkewInSeconds());
+        Assert.assertEquals(DEFAULT_RESPONSE_LIFETIME_IN_SECONDS, conf.get(0).getResponseLifetimeInSeconds());
+        Assert.assertEquals(DEFAULT_CONNECT_TIMEOUT_IN_MILLISECONDS, conf.get(0).getConnectTimeoutInMilliseconds());
+        Assert.assertEquals(DEFAULT_READ_TIMEOUT_IN_MILLISECONDS, conf.get(0).getReadTimeoutInMilliseconds());
+
+        Assert.assertEquals("http://localhost:1234/ocsp1", conf.get(1).getUrl());
+        Assert.assertEquals(Arrays.asList("TEST of ESTEID2018"), conf.get(1).getIssuerCn());
+        Assert.assertEquals(false, conf.get(1).isNonceDisabled());
+        Assert.assertEquals("TEST_RESPONDER1.pem", conf.get(1).getResponderCertificateCn());
+
+        Assert.assertEquals("http://localhost:1234/ocsp2", conf.get(2).getUrl());
+        Assert.assertEquals(Arrays.asList("TEST of ESTEID2018"), conf.get(2).getIssuerCn());
+        Assert.assertEquals(true, conf.get(2).isNonceDisabled());
+        Assert.assertEquals("TEST_RESPONDER2.pem", conf.get(2).getResponderCertificateCn());
     }
 
 

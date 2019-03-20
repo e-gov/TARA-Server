@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.Conversion;
+import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.ocsp.OCSPObjectIdentifiers;
 import org.bouncycastle.asn1.x509.Extension;
@@ -23,10 +24,7 @@ import org.springframework.util.Assert;
 
 import java.io.*;
 import java.math.BigInteger;
-import java.net.ConnectException;
-import java.net.HttpURLConnection;
-import java.net.SocketTimeoutException;
-import java.net.URL;
+import java.net.*;
 import java.security.*;
 import java.security.cert.*;
 import java.time.Instant;
@@ -60,8 +58,8 @@ public class OCSPValidator {
 
                 checkCert(userCert, ocspConfiguration.get(count));
                 return;
-            } catch (OCSPConnectionFailedException e) {
-                log.error("OCSP request timed out...");
+            } catch (OCSPServiceNotAvailableException e) {
+                log.error("OCSP request has failed...");
                 if (++count == maxTries) throw e;
             } catch (OCSPValidationException e) {
                 throw e;
@@ -84,10 +82,10 @@ public class OCSPValidator {
             SingleResp singleResponse = getSingleResp(ocspResponse, request.getRequestList()[0].getCertID());
             validateResponseThisUpdate(singleResponse, ocspConf.getAcceptedClockSkewInSeconds(), ocspConf.getResponseLifetimeInSeconds());
             validateCertStatus(singleResponse);
-        } catch (OCSPValidationException e) {
+        } catch (OCSPValidationException | OCSPServiceNotAvailableException e) {
             throw e;
-        } catch (SocketTimeoutException | ConnectException e) {
-            throw new OCSPConnectionFailedException(e);
+        } catch (SocketTimeoutException | ConnectException | UnknownHostException e) {
+            throw new OCSPServiceNotAvailableException(e);
         } catch (Exception e) {
             throw new IllegalStateException("OCSP validation failed: " + e.getMessage(), e);
         }
@@ -147,15 +145,21 @@ public class OCSPValidator {
             outputStream.flush();
         }
 
-        if (connection.getResponseCode() != 200) {
-            this.log.error("OCSP request has been failed (HTTP {}) - {}",
-                    connection.getResponseCode(), connection.getResponseMessage());
-            throw new IllegalStateException(String.format("OCSP request failed with status code %d",
-                    connection.getResponseCode()));
-        }
+        if (connection.getResponseCode() == 200) {
+            String contentType = connection.getHeaderField("Content-Type");
+            if (StringUtils.isEmpty(contentType) || !contentType.equals("application/ocsp-response")) {
+                throw new OCSPServiceNotAvailableException("Response Content-Type header is missing or invalid. " +
+                        "Expected: 'application/ocsp-response', actual: " + contentType);
+            }
 
-        try (InputStream in = (InputStream) connection.getContent()) {
-            return new OCSPResp(in);
+            try (InputStream in = (InputStream) connection.getContent()) {
+                return new OCSPResp(in);
+            }
+        } else {
+            this.log.error("OCSP request has failed (HTTP {}) - {}",
+                    connection.getResponseCode(), connection.getResponseMessage());
+            throw new OCSPServiceNotAvailableException(String.format("Service returned HTTP status code %d",
+                    connection.getResponseCode()));
         }
     }
 

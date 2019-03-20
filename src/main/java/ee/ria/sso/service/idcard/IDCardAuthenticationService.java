@@ -89,7 +89,7 @@ public class IDCardAuthenticationService extends AbstractService {
         if (this.configurationProvider.isOcspEnabled()) {
             try {
                 ocspValidator.checkCert(certificate);
-            } catch (OCSPConnectionFailedException exception) {
+            } catch (OCSPServiceNotAvailableException exception) {
                 throw new AuthenticationFailedException(
                         "message.idc.error.ocsp.not.available",
                         "OCSP service is currently not available, please try again later",
