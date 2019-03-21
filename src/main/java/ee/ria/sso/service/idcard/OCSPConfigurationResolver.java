@@ -28,7 +28,7 @@ public class OCSPConfigurationResolver {
         String issuerCN = X509Utils.getIssuerCNFromCertificate(userCert);
 
         IDCardConfigurationProvider.Ocsp primaryConf = getOcspConfiguration(issuerCN, configurationProvider.getOcsp())
-                .orElse(getDefaultConf(userCert, issuerCN));
+                .orElseGet(() -> getDefaultConf(userCert, issuerCN));
         log.debug("Primary ocsp configuration to verify cert issued by '{}': {}", issuerCN, primaryConf);
         ocspConfiguration.add(primaryConf);
 

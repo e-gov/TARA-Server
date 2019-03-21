@@ -41,6 +41,11 @@ public class TestIDCardConfiguration {
     }
 
     @Bean
+    X509Certificate mockIDCardUserCertificate2015withoutAiaExtension() throws CertificateException, IOException {
+        return loadCertificate("classpath:id-card/37101010021(TEST_of_ESTEID-SK_2015)-no_aia_extension.pem");
+    }
+
+    @Bean
     X509Certificate mockIDCardUserCertificate2018() throws CertificateException, IOException {
         return loadCertificate("classpath:id-card/38001085718(TEST_of_ESTEID2018).pem");
     }

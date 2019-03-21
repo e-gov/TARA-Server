@@ -41,6 +41,10 @@ public class OCSPConfigurationResolverTest {
     private X509Certificate mockUserCertificate2011;
 
     @Autowired
+    @Qualifier("mockIDCardUserCertificate2015withoutAiaExtension")
+    private X509Certificate mockIDCardUserCertificate2015withoutAiaExtension;
+
+    @Autowired
     @Qualifier("mockIDCardUserCertificate2018")
     private X509Certificate mockUserCertificate2018;
 
@@ -88,7 +92,7 @@ public class OCSPConfigurationResolverTest {
     }
 
     @Test
-    public void resolveShouldSucceedWithEsteid2015CertWithoutExplicitConfiguration() {
+    public void resolveShouldSucceedWithEsteid2015CertWithAiaExtensionAndWithoutExplicitConfiguration() {
 
         Mockito.when(idCardConfigurationProvider.getOcsp()).thenReturn(Arrays.asList());
 
@@ -104,6 +108,40 @@ public class OCSPConfigurationResolverTest {
         Assert.assertEquals(DEFAULT_RESPONSE_LIFETIME_IN_SECONDS, conf.get(0).getResponseLifetimeInSeconds());
         Assert.assertEquals(DEFAULT_CONNECT_TIMEOUT_IN_MILLISECONDS, conf.get(0).getConnectTimeoutInMilliseconds());
         Assert.assertEquals(DEFAULT_READ_TIMEOUT_IN_MILLISECONDS, conf.get(0).getReadTimeoutInMilliseconds());
+    }
+
+    @Test
+    public void resolveShouldSucceedithEsteid2015CertWithoutAiaExtensionAndWithExplicitConfiguration() {
+
+        Mockito.when(idCardConfigurationProvider.getOcsp()).thenReturn(Arrays.asList(getMockOcspConfiguration(
+                Arrays.asList("TEST of ESTEID-SK 2015", "ESTEID-SK 2015"),
+                "http://localhost:1234/ocsp",
+                true, 3, 901, 1111, 2222,
+                "Responder.pem")));
+
+        List<IDCardConfigurationProvider.Ocsp> conf = new OCSPConfigurationResolver(idCardConfigurationProvider)
+                .resolve(mockIDCardUserCertificate2015withoutAiaExtension);
+
+        Assert.assertEquals(1, conf.size());
+        Assert.assertEquals("http://localhost:1234/ocsp", conf.get(0).getUrl());
+        Assert.assertEquals(Arrays.asList("TEST of ESTEID-SK 2015", "ESTEID-SK 2015"), conf.get(0).getIssuerCn());
+        Assert.assertEquals(true, conf.get(0).isNonceDisabled());
+        Assert.assertEquals("Responder.pem", conf.get(0).getResponderCertificateCn());
+        Assert.assertEquals(3, conf.get(0).getAcceptedClockSkewInSeconds());
+        Assert.assertEquals(901, conf.get(0).getResponseLifetimeInSeconds());
+        Assert.assertEquals(1111, conf.get(0).getConnectTimeoutInMilliseconds());
+        Assert.assertEquals(2222, conf.get(0).getReadTimeoutInMilliseconds());
+    }
+
+    @Test
+    public void resolveShouldFailWithEsteid2015CertWithoutAiaExtensionAndWithoutExplicitConfiguration() {
+        Mockito.when(idCardConfigurationProvider.getOcsp()).thenReturn(Arrays.asList());
+
+        expectedEx.expect(IllegalArgumentException.class);
+        expectedEx.expectMessage("OCSP configuration invalid! This user certificate's issuer, issued by 'TEST of ESTEID-SK 2015', has no explicitly configured OCSP nor can it be configured automatically since this certificate does not contain the OCSP url in the AIA extension! Please check your configuration");
+
+        List<IDCardConfigurationProvider.Ocsp> conf = new OCSPConfigurationResolver(idCardConfigurationProvider)
+                .resolve(mockIDCardUserCertificate2015withoutAiaExtension);
     }
 
     @Test
