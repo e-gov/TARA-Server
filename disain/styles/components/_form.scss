@@ -74,6 +74,7 @@
   .form-control {
     flex: 1 1 auto;
     padding: 13px 20px;
+    overflow-x: hidden;
     border: 0;
   }
   &.is-invalid {
