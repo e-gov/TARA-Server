@@ -21,7 +21,7 @@
         <Logger name="com.codeborne.security" level="DEBUG"/>
         <Logger name="com.brsanthu.googleanalytics" level="DEBUG"/>
         <Logger name="ee.ria" level="DEBUG"/>
-        <Logger name="ee.ria.sso.endpoints" level="DEBUG">
+        <Logger name="ee.ria.sso.service.idcard.IDCardController" level="DEBUG">
             <appender-ref ref="TestAppender"/>
         </Logger>
         <Logger name="org.apereo" level="DEBUG" includeLocation="true"/>

@@ -4,7 +4,6 @@ import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.credential.TaraCredential;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 
 @Getter

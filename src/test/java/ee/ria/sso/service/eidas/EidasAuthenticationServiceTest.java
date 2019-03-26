@@ -3,8 +3,8 @@ package ee.ria.sso.service.eidas;
 import ee.ria.sso.CommonConstants;
 import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
+import ee.ria.sso.service.ExternalServiceHasFailedException;
 import ee.ria.sso.authentication.LevelOfAssurance;
-import ee.ria.sso.authentication.TaraAuthenticationException;
 import ee.ria.sso.authentication.credential.PreAuthenticationCredential;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.config.eidas.EidasConfigurationProvider;
@@ -122,8 +122,8 @@ public class EidasAuthenticationServiceTest extends AbstractAuthenticationServic
         Mockito.doThrow(new IOException("Something went wrong in EidasAuthenticator.authenticate()"))
                 .when(authenticatorMock).authenticate(Mockito.any(), Mockito.any(), Mockito.any());
 
-        expectedEx.expect(TaraAuthenticationException.class);
-        expectedEx.expectMessage("java.io.IOException: Something went wrong in EidasAuthenticator.authenticate()");
+        expectedEx.expect(ExternalServiceHasFailedException.class);
+        expectedEx.expectMessage("eidas-client connection has failed: Something went wrong in EidasAuthenticator.authenticate()");
 
         try {
             Event event = this.authenticationService.startLoginByEidas(requestContext);
@@ -173,8 +173,8 @@ public class EidasAuthenticationServiceTest extends AbstractAuthenticationServic
     public void checkLoginForEidasShouldFailWhenRelayStateNotPresent() {
         RequestContext requestContext = this.getMockRequestContext(null);
 
-        expectedEx.expect(TaraAuthenticationException.class);
-        expectedEx.expectMessage("java.lang.IllegalStateException: SAML response's relay state (null) not found among previously stored relay states!");
+        expectedEx.expect(IllegalStateException.class);
+        expectedEx.expectMessage("SAML response's relay state (null) not found among previously stored relay states!");
 
         try {
             Event event = this.authenticationService.checkLoginForEidas(requestContext);
@@ -188,8 +188,8 @@ public class EidasAuthenticationServiceTest extends AbstractAuthenticationServic
 
     @Test
     public void checkLoginForEidasShouldFailWhenRelayStateNotPreviouslyStored() {
-        expectedEx.expect(TaraAuthenticationException.class);
-        expectedEx.expectMessage("java.lang.IllegalStateException: SAML response's relay state (someRelayState) not found among previously stored relay states!");
+        expectedEx.expect(IllegalStateException.class);
+        expectedEx.expectMessage("SAML response's relay state (someRelayState) not found among previously stored relay states!");
 
         RequestContext requestContext = this.getMockRequestContext(null);
         ((MockHttpServletRequest) (requestContext.getExternalContext().getNativeRequest()))

@@ -1,8 +1,9 @@
 package ee.ria.sso.service.idcard;
 
 import ee.ria.sso.Constants;
+import ee.ria.sso.service.ExternalServiceHasFailedException;
+import ee.ria.sso.service.UserAuthenticationFailedException;
 import ee.ria.sso.authentication.AuthenticationType;
-import ee.ria.sso.authentication.TaraAuthenticationException;
 import ee.ria.sso.config.idcard.IDCardConfigurationProvider;
 import ee.ria.sso.config.idcard.TestIDCardConfiguration;
 import ee.ria.sso.oidc.TaraScope;
@@ -71,7 +72,7 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
 
     @Test
     public void loginByIDCardShouldFailWhenNoCertificatePresentInSession() {
-        expectedEx.expect(TaraAuthenticationException.class);
+        expectedEx.expect(IllegalStateException.class);
         expectedEx.expectMessage("Unable to find certificate from session");
 
         try {
@@ -86,7 +87,7 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
 
     @Test
     public void loginByIDCardShouldFailWhenCertificateIsNotValidYet() throws Exception {
-        expectedEx.expect(TaraAuthenticationException.class);
+        expectedEx.expect(UserAuthenticationFailedException.class);
         expectedEx.expectMessage("User certificate is not yet valid");
 
         X509Certificate certificate = mockInvalidCertificate(new CertificateNotYetValidException());
@@ -104,7 +105,7 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
 
     @Test
     public void loginByIDCardShouldFailWhenCertificateIsExpired() throws Exception {
-        expectedEx.expect(TaraAuthenticationException.class);
+        expectedEx.expect(UserAuthenticationFailedException.class);
         expectedEx.expectMessage("User certificate is expired");
 
         X509Certificate certificate = mockInvalidCertificate(new CertificateExpiredException());
@@ -122,7 +123,7 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
 
     @Test
     public void loginByIDCardShouldFailWhenOCSPValidatorThrowsUnexcpectedException() {
-        expectedEx.expect(TaraAuthenticationException.class);
+        expectedEx.expect(RuntimeException.class);
         expectedEx.expectMessage("Unexpected exception");
 
         RequestContext requestContext = this.getMockRequestContextWith(null, mockUserCertificate2015);
@@ -142,7 +143,7 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
 
     @Test
     public void loginByIDCardShouldFailWhenOCSPValidatorThrowsOCSPConnectionFailedException() {
-        expectedEx.expect(TaraAuthenticationException.class);
+        expectedEx.expect(ExternalServiceHasFailedException.class);
         expectedEx.expectMessage("OCSP service is currently not available, please try again later");
 
         RequestContext requestContext = this.getMockRequestContextWith(null, mockUserCertificate2015);
@@ -162,7 +163,7 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
 
     @Test
     public void loginByIDCardShouldFailWhenOCSPValidatorThrowsOCSPValidationFailedException() {
-        expectedEx.expect(TaraAuthenticationException.class);
+        expectedEx.expect(UserAuthenticationFailedException.class);
         expectedEx.expectMessage("Invalid certificate status <REVOKED> received");
 
         RequestContext requestContext = this.getMockRequestContextWith(null, mockUserCertificate2015);

@@ -2,6 +2,8 @@ package ee.ria.sso.flow.action;
 
 import ee.ria.sso.AbstractTest;
 import ee.ria.sso.Constants;
+import ee.ria.sso.service.ExternalServiceHasFailedException;
+import ee.ria.sso.service.UserAuthenticationFailedException;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.flow.AuthenticationFlowExecutionException;
@@ -20,7 +22,8 @@ import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
 
 import java.util.Collections;
-import java.util.List;
+
+import static org.junit.Assert.assertTrue;
 
 public abstract class AbstractAuthenticationActionTest {
 
@@ -64,10 +67,11 @@ public abstract class AbstractAuthenticationActionTest {
     @Test
     public void exceptionWhenAuthenticationMethodNotInAllowedList() throws Exception {
         expectedEx.expect(AuthenticationFlowExecutionException.class);
-        expectedEx.expect(new ExceptionCodeMatches(401, "error", "Unauthorised authentication method!"));
+        expectedEx.expect(new ExceptionCodeMatches(401, "Unauthorised authentication method!"));
 
         Mockito.when(messageSource.getMessage(Constants.MESSAGE_KEY_AUTH_METHOD_RESTRICTED_BY_SCOPE)).thenReturn("Unauthorised authentication method!");
         Mockito.when(thymeleafSupport.isAuthMethodAllowed(Mockito.any())).thenReturn(false);
+
         getAction().doExecute(requestContext);
     }
 
@@ -78,28 +82,88 @@ public abstract class AbstractAuthenticationActionTest {
     }
 
     @Test
-    public void exceptionOccursDuringAuthentication() throws Exception {
+    public void unexpectedExceptionOccursDuringAuthentication() throws Exception {
         expectedEx.expect(AuthenticationFlowExecutionException.class);
-        expectedEx.expect(new ExceptionCodeMatches(500, "error", "Unexpected exception during authentication action execution"));
+        expectedEx.expect(new ExceptionCodeMatches(500, "mock general error"));
 
-        new AbstractAuthenticationAction(messageSource, thymeleafSupport) {
+        try {
 
-            @Override
-            protected Event doAuthenticationExecute(RequestContext requestContext) {
-                throw new IllegalStateException("Unexpected exception during authentication action execution");
-            }
+            Mockito.when(messageSource.getMessage(Mockito.eq(Constants.MESSAGE_KEY_GENERAL_ERROR))).thenReturn("mock general error");
+            new AbstractAuthenticationAction(messageSource, thymeleafSupport) {
 
-            @Override
-            protected AuthenticationType getAuthenticationType() {
-                return AuthenticationType.BankLink;
-            }
-        }.doExecute(requestContext);
+                @Override
+                protected Event doAuthenticationExecute(RequestContext requestContext) {
+                    throw new IllegalStateException("Unexpected exception during authentication action execution");
+                }
+
+                @Override
+                protected AuthenticationType getAuthenticationType() {
+                    return AuthenticationType.BankLink;
+                }
+            }.doExecute(requestContext);
+
+        } catch (Exception e){
+            assertContextCleared(requestContext);
+            throw e;
+        }
+    }
+
+    @Test
+    public void upstreamServiceExceptionOccursDuringAuthentication() throws Exception {
+        expectedEx.expect(AuthenticationFlowExecutionException.class);
+        expectedEx.expect(new ExceptionCodeMatches(503, "mock translation"));
+
+        try {
+            Mockito.when(messageSource.getMessage(Mockito.eq("msg.key"))).thenReturn("mock translation");
+            new AbstractAuthenticationAction(messageSource, thymeleafSupport) {
+
+                @Override
+                protected Event doAuthenticationExecute(RequestContext requestContext) {
+                    throw new ExternalServiceHasFailedException("msg.key", "mock error message");
+                }
+
+                @Override
+                protected AuthenticationType getAuthenticationType() {
+                    return AuthenticationType.BankLink;
+                }
+            }.doExecute(requestContext);
+
+        } catch (Exception e){
+            assertContextCleared(requestContext);
+            throw e;
+        }
+    }
+
+    @Test
+    public void authFailedExceptionOccursDuringAuthentication() throws Exception {
+        expectedEx.expect(AuthenticationFlowExecutionException.class);
+        expectedEx.expect(new ExceptionCodeMatches(401, "Mock translation"));
+
+        try {
+            Mockito.when(messageSource.getMessage(Mockito.eq("msg.key"))).thenReturn("Mock translation");
+            new AbstractAuthenticationAction(messageSource, thymeleafSupport) {
+
+                @Override
+                protected Event doAuthenticationExecute(RequestContext requestContext) {
+                    throw new UserAuthenticationFailedException("msg.key", "Error description");
+                }
+
+                @Override
+                protected AuthenticationType getAuthenticationType() {
+                    return AuthenticationType.BankLink;
+                }
+            }.doExecute(requestContext);
+
+        } catch (Exception e){
+            assertContextCleared(requestContext);
+            throw e;
+        }
     }
 
     @Test
     public void exceptionWhenServiceMissingFromFlowContextAndSession() throws Exception {
         expectedEx.expect(AuthenticationFlowExecutionException.class);
-        expectedEx.expect(new ExceptionCodeMatches(401, "error", "Session expired"));
+        expectedEx.expect(new ExceptionCodeMatches(401, "Session expired"));
 
         Mockito.when(messageSource.getMessage(Constants.MESSAGE_KEY_SESSION_EXPIRED)).thenReturn("Session expired");
 
@@ -115,7 +179,7 @@ public abstract class AbstractAuthenticationActionTest {
         Mockito.when(messageSource.getMessage(Constants.MESSAGE_KEY_SESSION_EXPIRED)).thenReturn("Session expired");
 
         expectedEx.expect(AuthenticationFlowExecutionException.class);
-        expectedEx.expect(new ExceptionCodeMatches(401, "error", "Session expired"));
+        expectedEx.expect(new ExceptionCodeMatches(401, "Session expired"));
 
         requestContext.getExternalContext().getSessionMap().remove(Pac4jConstants.REQUESTED_URL);
         getAction().doExecute(requestContext);
@@ -127,15 +191,14 @@ public abstract class AbstractAuthenticationActionTest {
         private String viewName;
         private String errorMessage;
 
-        public ExceptionCodeMatches(int code, String viewName, String errorMessage) {
+        public ExceptionCodeMatches(int code, String errorMessage) {
             this.code = code;
-            this.viewName = viewName;
             this.errorMessage = errorMessage;
         }
 
         @Override
         protected boolean matchesSafely(AuthenticationFlowExecutionException item) {
-            return item.getModelAndView().getStatus().value() == code && item.getModelAndView().getViewName().equals(viewName) && item.getModelAndView().getModel().get(Constants.ERROR_MESSAGE) != null && item.getModelAndView().getModel().get(Constants.ERROR_MESSAGE).equals(errorMessage);
+            return item.getHttpStatusCode().value() == code && item.getLocalizedMessage() != null && item.getLocalizedMessage().equals(errorMessage);
         }
 
         @Override
@@ -147,12 +210,13 @@ public abstract class AbstractAuthenticationActionTest {
         @Override
         protected void describeMismatchSafely(AuthenticationFlowExecutionException item, Description mismatchDescription) {
             mismatchDescription.appendText("was code: ")
-                    .appendValue(item.getModelAndView().getStatus().value())
-                    .appendText(", view name: ")
-                    .appendValue(item.getModelAndView().getViewName())
+                    .appendValue(item.getHttpStatusCode().value())
                     .appendText(", msg: ")
-                    .appendValue(item.getModelAndView().getModel().containsKey(Constants.ERROR_MESSAGE) ? item.getModelAndView().getModel().get(Constants.ERROR_MESSAGE) : "<missing error message in model!>");
+                    .appendValue(item.getLocalizedMessage() != null ? item.getLocalizedMessage() : "<missing error message in model!>");
         }
     }
 
+    private void assertContextCleared(RequestContext requestContext) {
+        assertTrue("flow context was not cleared!", requestContext.getFlowScope().isEmpty());
+    }
 }

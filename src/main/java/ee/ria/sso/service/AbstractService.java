@@ -1,7 +1,12 @@
 package ee.ria.sso.service;
 
 import ee.ria.sso.Constants;
+import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
+import ee.ria.sso.statistics.StatisticsHandler;
+import ee.ria.sso.statistics.StatisticsOperation;
+import ee.ria.sso.statistics.StatisticsRecord;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apereo.cas.authentication.principal.WebApplicationService;
@@ -10,19 +15,15 @@ import org.springframework.webflow.core.collection.SharedAttributeMap;
 import org.springframework.webflow.execution.RequestContext;
 
 import javax.servlet.http.HttpServletRequest;
+import java.time.LocalDateTime;
 
-/**
- * @author Janar Rahumeel (CGI Estonia)
- */
 
 @Slf4j
+@RequiredArgsConstructor
 public class AbstractService {
 
+    private final StatisticsHandler statistics;
     private final TaraResourceBundleMessageSource messageSource;
-
-    public AbstractService(TaraResourceBundleMessageSource messageSource) {
-        this.messageSource = messageSource;
-    }
 
     protected SharedAttributeMap<Object> getSessionMap(RequestContext context) {
         return context.getExternalContext().getSessionMap();
@@ -32,7 +33,7 @@ public class AbstractService {
         final Object attribute = context.getExternalContext().getSessionMap()
                 .get(Constants.TARA_OIDC_SESSION_CLIENT_ID);
 
-        if (attribute != null && attribute instanceof String)
+        if (attribute instanceof String)
             return (String) attribute;
 
         String serviceParameter = ((HttpServletRequest) context.getExternalContext().getNativeRequest())
@@ -48,23 +49,29 @@ public class AbstractService {
 
     private String getServiceUrlFromFlowContext(RequestContext context) {
         Object attribute = context.getFlowScope().get(Constants.CAS_SERVICE_ATTRIBUTE_NAME);
-        if (attribute != null && attribute instanceof WebApplicationService) {
+        if (attribute instanceof WebApplicationService) {
             return ((WebApplicationService) attribute).getOriginalUrl();
         } else {
             return null;
         }
     }
 
-    protected String getMessage(String key) {
-        return messageSource.getMessage(key);
+    protected void logEvent(StatisticsRecord eventRecord) {
+        try {
+            this.statistics.collect(eventRecord);
+        } catch (Exception ex) {
+            log.error("Failed to collect error statistics!", ex);
+        }
     }
 
-    protected String getMessage(String key, String defaultMessageKey) {
-        return messageSource.getMessage(key, defaultMessageKey);
+    protected void logEvent(RequestContext context, AuthenticationType authenticationType, StatisticsOperation eventType) {
+        logEvent(new StatisticsRecord(
+                LocalDateTime.now(), getServiceClientId(context), authenticationType, eventType
+        ));
     }
 
-    protected String getMessage(String key, String defaultMessageKey, Object... parameters) {
-        return messageSource.getMessage(key, defaultMessageKey, parameters);
+    protected void logEvent(RequestContext context, Exception e, AuthenticationType authenticationType) {
+        logEvent(new StatisticsRecord(
+                LocalDateTime.now(), getServiceClientId(context), authenticationType, e.getMessage()));
     }
-
 }

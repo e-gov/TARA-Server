@@ -1,6 +1,5 @@
 package ee.ria.sso.service.eidas;
 
-import ee.ria.sso.authentication.EidasAuthenticationFailedException;
 import ee.ria.sso.authentication.LevelOfAssurance;
 import ee.ria.sso.config.eidas.EidasConfigurationProvider;
 import ee.ria.sso.logging.CorrelationIdUtil;

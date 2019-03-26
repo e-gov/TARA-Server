@@ -1,9 +1,10 @@
 package ee.ria.sso.service.smartid;
 
 import ee.ria.sso.Constants;
+import ee.ria.sso.service.ExternalServiceHasFailedException;
+import ee.ria.sso.service.TaraAuthenticationException;
+import ee.ria.sso.service.UserAuthenticationFailedException;
 import ee.ria.sso.authentication.AuthenticationType;
-import ee.ria.sso.authentication.TaraAuthenticationException;
-import ee.ria.sso.authentication.TaraCredentialsException;
 import ee.ria.sso.authentication.credential.PreAuthenticationCredential;
 import ee.ria.sso.authentication.credential.TaraCredential;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
@@ -48,6 +49,7 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 
 import static ee.ria.sso.service.smartid.SmartIDMockData.*;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -116,49 +118,49 @@ public class SmartIDAuthenticationServiceTest {
     @Test
     public void authenticationSessionInitiation_userAccountNotFoundException() {
         initAuthSessionAndExpectSmartIdClientException(
-                new UserAccountNotFoundException(), SmartIDErrorMessage.USER_ACCOUNT_NOT_FOUND);
+                new UserAccountNotFoundException(), SmartIDErrorMessage.USER_ACCOUNT_NOT_FOUND, UserAuthenticationFailedException.class);
     }
 
     @Test
     public void authenticationSessionInitiation_requestForbiddenException() {
         initAuthSessionAndExpectSmartIdClientException(
-                new RequestForbiddenException(), SmartIDErrorMessage.REQUEST_FORBIDDEN);
+                new RequestForbiddenException(), SmartIDErrorMessage.REQUEST_FORBIDDEN, UserAuthenticationFailedException.class);
     }
 
     @Test
     public void authenticationSessionInitiation_smartIdClientException471() {
         initAuthSessionAndExpectSmartIdClientException(
-                new ClientErrorException("HTTP 471", 471), SmartIDErrorMessage.USER_DOES_NOT_HAVE_QUERY_MATCHING_ACCOUNT);
+                new ClientErrorException("HTTP 471", 471), SmartIDErrorMessage.USER_DOES_NOT_HAVE_QUERY_MATCHING_ACCOUNT, UserAuthenticationFailedException.class);
     }
 
     @Test
     public void authenticationSessionInitiation_smartIdClientException472() {
         initAuthSessionAndExpectSmartIdClientException(
-                new ClientErrorException("HTTP 472", 472), SmartIDErrorMessage.UNKNOWN_REASON_INSTRUCTIONS_IN_USER_DEVICE);
+                new ClientErrorException("HTTP 472", 472), SmartIDErrorMessage.UNKNOWN_REASON_INSTRUCTIONS_IN_USER_DEVICE, UserAuthenticationFailedException.class);
     }
 
     @Test
     public void authenticationSessionInitiation_smartIdClientException480() {
         initAuthSessionAndExpectSmartIdClientException(
-                new ClientErrorException("HTTP 480", 480), SmartIDErrorMessage.GENERAL);
+                new ClientErrorException("HTTP 480", 480), SmartIDErrorMessage.GENERAL, UserAuthenticationFailedException.class);
     }
 
     @Test
     public void authenticationSessionInitiation_smartIdClientException580() {
         initAuthSessionAndExpectSmartIdClientException(
-                new ClientErrorException("HTTP 580", 400), SmartIDErrorMessage.SMART_ID_SYSTEM_UNDER_MAINTENANCE);
+                new ClientErrorException("HTTP 580", 400), SmartIDErrorMessage.SMART_ID_SYSTEM_UNDER_MAINTENANCE, ExternalServiceHasFailedException.class);
     }
 
     @Test
     public void authenticationSessionInitiation_unhandledSmartIdClientException() {
         initAuthSessionAndExpectSmartIdClientException(
-                new ClientErrorException("UNHANDLED", 400), SmartIDErrorMessage.GENERAL);
+                new ClientErrorException("UNHANDLED", 400), SmartIDErrorMessage.GENERAL, ExternalServiceHasFailedException.class);
     }
 
     @Test
     public void authenticationSessionInitiation_unexpectedException() {
         initAuthSessionAndExpectSmartIdClientException(
-                new IllegalStateException("UNKNOWN RUNTIME EXCEPTION"), SmartIDErrorMessage.GENERAL);
+                new IllegalStateException("UNKNOWN RUNTIME EXCEPTION"), SmartIDErrorMessage.GENERAL, IllegalStateException.class);
     }
 
     @Test
@@ -204,8 +206,8 @@ public class SmartIDAuthenticationServiceTest {
 
             assertExceptionThrownDuringAuthSessionInit(
                     requestContext,
-                    TaraCredentialsException.class,
-                    SmartIDErrorMessage.INVALID_PERSON_IDENTIFIER
+                    new UserAuthenticationFailedException(SmartIDErrorMessage.INVALID_PERSON_IDENTIFIER, invalidCredential.getPrincipalCode()),
+                    SmartIDErrorMessage.INVALID_PERSON_IDENTIFIER, UserAuthenticationFailedException.class
             );
             Mockito.reset(statisticsHandler);
         });
@@ -220,8 +222,8 @@ public class SmartIDAuthenticationServiceTest {
 
         assertExceptionThrownDuringAuthSessionInit(
                 requestContext,
-                TaraCredentialsException.class,
-                SmartIDErrorMessage.PERSON_IDENTIFIER_MISSING
+                new UserAuthenticationFailedException(SmartIDErrorMessage.PERSON_IDENTIFIER_MISSING, credential.getPrincipalCode()),
+                SmartIDErrorMessage.PERSON_IDENTIFIER_MISSING, UserAuthenticationFailedException.class
         );
     }
 
@@ -261,43 +263,43 @@ public class SmartIDAuthenticationServiceTest {
     @Test
     public void getAuthenticationSessionStatus_sessionNotFoundException() {
         getAuthSessionStatusAndExpectSmartIdClientException(
-                new SessionNotFoundException(), SmartIDErrorMessage.SESSION_NOT_FOUND);
+                new SessionNotFoundException(), SmartIDErrorMessage.SESSION_NOT_FOUND, UserAuthenticationFailedException.class);
     }
 
     @Test
     public void getAuthenticationSessionStatus_smartIdClientException471() {
         getAuthSessionStatusAndExpectSmartIdClientException(
-                new ClientErrorException("HTTP 471", 471), SmartIDErrorMessage.USER_DOES_NOT_HAVE_QUERY_MATCHING_ACCOUNT);
+                new ClientErrorException("HTTP 471", 471), SmartIDErrorMessage.USER_DOES_NOT_HAVE_QUERY_MATCHING_ACCOUNT, UserAuthenticationFailedException.class);
     }
 
     @Test
     public void getAuthenticationSessionStatus_smartIdClientException472() {
         getAuthSessionStatusAndExpectSmartIdClientException(
-                new ClientErrorException("HTTP 472", 472), SmartIDErrorMessage.UNKNOWN_REASON_INSTRUCTIONS_IN_USER_DEVICE);
+                new ClientErrorException("HTTP 472", 472), SmartIDErrorMessage.UNKNOWN_REASON_INSTRUCTIONS_IN_USER_DEVICE, UserAuthenticationFailedException.class);
     }
 
     @Test
     public void getAuthenticationSessionStatus_smartIdClientException480() {
         getAuthSessionStatusAndExpectSmartIdClientException(
-                new ClientErrorException("HTTP 480", 480), SmartIDErrorMessage.GENERAL);
+                new ClientErrorException("HTTP 480", 480), SmartIDErrorMessage.GENERAL, UserAuthenticationFailedException.class);
     }
 
     @Test
     public void getAuthenticationSessionStatus_smartIdClientException580() {
         getAuthSessionStatusAndExpectSmartIdClientException(
-                new ClientErrorException("HTTP 580", 400), SmartIDErrorMessage.SMART_ID_SYSTEM_UNDER_MAINTENANCE);
+                new ClientErrorException("HTTP 580", 400), SmartIDErrorMessage.SMART_ID_SYSTEM_UNDER_MAINTENANCE, ExternalServiceHasFailedException.class);
     }
 
     @Test
     public void getAuthenticationSessionStatus_unhandledSmartIdClientException() {
         getAuthSessionStatusAndExpectSmartIdClientException(
-                new ClientErrorException("UNHANDLED", 400), SmartIDErrorMessage.GENERAL);
+                new ClientErrorException("UNHANDLED", 400), SmartIDErrorMessage.GENERAL, ExternalServiceHasFailedException.class);
     }
 
     @Test
     public void getAuthenticationSessionStatus_unexpectedException() {
         getAuthSessionStatusAndExpectSmartIdClientException(
-                new IllegalStateException("UNKNOWN RUNTIME EXCEPTION"), SmartIDErrorMessage.GENERAL);
+                new IllegalStateException("UNKNOWN RUNTIME EXCEPTION"), SmartIDErrorMessage.GENERAL, IllegalStateException.class);
     }
 
     @Test
@@ -315,9 +317,9 @@ public class SmartIDAuthenticationServiceTest {
 
         assertExceptionThrownDuringAuthSessionStatusCheck(
                 requestContext,
-                expectedException.getClass(),
+                expectedException,
                 expectedException.getErrorMessageKey(),
-                expectedException.getMessage()
+                expectedException.getMessage(), UserAuthenticationFailedException.class
         );
     }
 
@@ -330,50 +332,43 @@ public class SmartIDAuthenticationServiceTest {
         SessionStatus sessionStatus = mockCompleteSessionStatus(SessionEndResult.OK);
         mockAuthSessionStatusCheckCall(sessionId, sessionStatus);
 
-        IllegalStateException expectedException = new IllegalStateException("Unknown end result");
+        IllegalStateException mockException = new IllegalStateException("Unknown end result");
         when(authResponseValidator.validateAuthenticationResponse(sessionStatus, authHash, CertificateLevel.QUALIFIED))
-                .thenThrow(expectedException);
+                .thenThrow(mockException);
 
         assertExceptionThrownDuringAuthSessionStatusCheck(
                 requestContext,
-                expectedException.getClass(),
+                mockException,
                 SmartIDErrorMessage.GENERAL,
-                expectedException.getMessage()
+                mockException.getMessage(), IllegalStateException.class
         );
     }
 
-    private void assertErrorMessage(String expectedErrorMessageKey) {
-        verify(messageSource, times(1)).getMessage(any());
-        verify(messageSource).getMessage(errorMessageKeyCaptor.capture());
-        reset(messageSource);
-        assertEquals(expectedErrorMessageKey, errorMessageKeyCaptor.getValue());
-    }
-
-    private void initAuthSessionAndExpectSmartIdClientException(Exception mockException, String expectedErrorMessageKey) {
+    private void initAuthSessionAndExpectSmartIdClientException(Exception mockException, String expectedErrorMessageKey, Class<? extends Exception> expectedException) {
         PreAuthenticationCredential credential = mockCredential();
         MockRequestContext requestContext = mockAuthInitRequestContext(credential);
         mockSubjectAuthenticationCallException(mockException);
 
         assertExceptionThrownDuringAuthSessionInit(
                 requestContext,
-                mockException.getClass(),
-                expectedErrorMessageKey
+                mockException,
+                expectedErrorMessageKey, expectedException
         );
 
         assertAuthenticationRequestCreation(credential);
     }
 
-    private void assertExceptionThrownDuringAuthSessionInit(MockRequestContext requestContext, Class<? extends Exception> exceptionType, String errorMessageKey) {
+    private void assertExceptionThrownDuringAuthSessionInit(MockRequestContext requestContext, Exception mockException, String errorMessageKey, Class<? extends Exception> expectedException) {
         expectException(
                 () -> authenticationService.initSmartIdAuthenticationSession(requestContext),
                 requestContext,
-                exceptionType,
-                errorMessageKey);
+                mockException,
+                errorMessageKey, expectedException);
 
         assertAuthStartStatisticsCollected();
     }
 
-    private void getAuthSessionStatusAndExpectSmartIdClientException(Exception mockException, String expectedErrorMessageKey) {
+    private void getAuthSessionStatusAndExpectSmartIdClientException(Exception mockException, String expectedErrorMessageKey, Class<? extends Exception> expectedException) {
         String sessionId = UUID.randomUUID().toString();
         AuthenticationHash authHash = AuthenticationHash.generateRandomHash();
         MockRequestContext requestContext = mockSessionStatusRequestContext(authHash, sessionId, 0);
@@ -382,55 +377,42 @@ public class SmartIDAuthenticationServiceTest {
 
         assertExceptionThrownDuringAuthSessionStatusCheck(
                 requestContext,
-                mockException.getClass(),
+                mockException,
                 expectedErrorMessageKey,
-                null
+                mockException.getMessage(), expectedException
         );
     }
 
     private void assertExceptionThrownDuringAuthSessionStatusCheck(
             MockRequestContext requestContext,
-            Class<? extends Exception> exceptionType,
+            Exception mockException,
             String expectedErrorMessageKey,
-            String exceptionMessage) {
+            String exceptionMessage, Class<? extends Exception> expectedException) {
 
         expectException(
                 () -> authenticationService.checkSmartIdAuthenticationSessionStatus(requestContext),
-                requestContext,
-                exceptionType,
                 expectedErrorMessageKey,
-                exceptionMessage);
+                exceptionMessage, expectedException);
     }
 
-    private void expectException(Callable processToThrowException, MockRequestContext requestContext, Class<? extends Exception> exceptionType, String errorMessageKey) {
-        expectException(processToThrowException, requestContext, exceptionType, errorMessageKey, null);
+    private void expectException(Callable processToThrowException, MockRequestContext requestContext, Exception mockException, String errorMessageKey, Class<? extends Exception> expectedException) {
+        expectException(processToThrowException, errorMessageKey, mockException.getMessage(), expectedException);
     }
 
     private void expectException(
             Callable processToThrowException,
-            MockRequestContext requestContext,
-            Class<? extends Exception> exceptionType,
             String errorMessageKey,
-            String exceptionMessage) {
+            String exceptionMessage, Class<? extends Exception> expectedException) {
 
         try {
             processToThrowException.call();
         } catch (Exception e) {
-            if (!(e instanceof TaraAuthenticationException)) {
-                fail("Invalid exception caught! Is <" + e.getClass() + ">, but expected to be <" + TaraAuthenticationException.class + ">");
+            assertThat(e, instanceOf(expectedException));
+            assertEquals(exceptionMessage, e.getMessage());
+            assertErrorStatisticsCollected(e.getMessage());
+            if (e instanceof TaraAuthenticationException) {
+                assertEquals(errorMessageKey,((TaraAuthenticationException) e).getErrorMessageKey());
             }
-            Throwable cause = e.getCause();
-            if (!exceptionType.isInstance(cause)) {
-                fail("Invalid inner exception caught! Is <" + cause.getClass() + ">, but expected to be <" + exceptionType + ">");
-            }
-
-            if (exceptionMessage != null) {
-                assertEquals(exceptionMessage, cause.getMessage());
-            }
-
-            assertContextCleared(requestContext);
-            assertErrorStatisticsCollected(cause.getMessage());
-            assertErrorMessage(errorMessageKey);
         }
     }
 
@@ -445,10 +427,6 @@ public class SmartIDAuthenticationServiceTest {
     private void assertEvent(Event event, String expectedId) {
         assertEquals(expectedId, event.getId());
         assertTrue(event.getSource() instanceof SmartIDAuthenticationService);
-    }
-
-    private void assertContextCleared(MockRequestContext requestContext) {
-        assertTrue(requestContext.getFlowScope().isEmpty());
     }
 
     private void assertAuthSessionInFlowContext(MockRequestContext requestContext, String sessionId, int sessionStatusCheckCount) {

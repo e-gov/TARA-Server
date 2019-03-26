@@ -2,6 +2,7 @@ package ee.ria.sso.service.banklink;
 
 import com.nortal.banklink.authentication.AuthLinkManager;
 import com.nortal.banklink.authentication.link.standard.IPizzaStandardAuthLink;
+import com.nortal.banklink.core.BanklinkException;
 import com.nortal.banklink.core.algorithm.Algorithm008;
 import com.nortal.banklink.core.packet.Packet;
 import com.nortal.banklink.core.packet.PacketFactory;
@@ -9,7 +10,6 @@ import com.nortal.banklink.core.packet.param.PacketParameter;
 import com.nortal.banklink.link.BankLinkConfig;
 import ee.ria.sso.CommonConstants;
 import ee.ria.sso.Constants;
-import ee.ria.sso.authentication.TaraAuthenticationException;
 import ee.ria.sso.authentication.credential.TaraCredential;
 import ee.ria.sso.config.banklink.BanklinkConfigurationProvider;
 import ee.ria.sso.config.banklink.TestBanklinkConfiguration;
@@ -94,7 +94,7 @@ public class BanklinkAuthenticationServiceTest {
 
     @Test
     public void startLoginByBankLinkFailsWhenNoBankParam() {
-        expectedEx.expect(TaraAuthenticationException.class);
+        expectedEx.expect(IllegalStateException.class);
         expectedEx.expectMessage("Requested bank parameter cannot be null nor empty!");
 
         Map<String, String> map = new HashMap<>();
@@ -103,7 +103,7 @@ public class BanklinkAuthenticationServiceTest {
 
     @Test
     public void startLoginByBankLinkFailsWhenEmptyBankParam() {
-        expectedEx.expect(TaraAuthenticationException.class);
+        expectedEx.expect(IllegalStateException.class);
         expectedEx.expectMessage("Requested bank parameter cannot be null nor empty!");
 
         Map<String, String> map = new HashMap<>();
@@ -114,7 +114,7 @@ public class BanklinkAuthenticationServiceTest {
 
     @Test
     public void startLoginByBankLinkFailsWhenIncorrectBankParam() {
-        expectedEx.expect(TaraAuthenticationException.class);
+        expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage(String.format("No enum constant ee.ria.sso.service.banklink.BankEnum.????",
                 Arrays.stream(BankEnum.values()).map(be -> be.getAuthLinkBank().getSpec()).collect(Collectors.toList())
         ));
@@ -133,7 +133,7 @@ public class BanklinkAuthenticationServiceTest {
 
     @Test
     public void checkLoginForBankLinkFailsWhenNoInput() {
-        expectedEx.expect(TaraAuthenticationException.class);
+        expectedEx.expect(BanklinkException.class);
         expectedEx.expectMessage("Banklink 1.1.5.1 cause: Unknown banklink message format");
 
         RequestContext requestContext = this.getRequestContext(new HashMap<>());
@@ -142,7 +142,7 @@ public class BanklinkAuthenticationServiceTest {
 
     @Test
     public void checkLoginForBankLinkFailsWhenInvalidFormatResponsePacket() {
-        expectedEx.expect(TaraAuthenticationException.class);
+        expectedEx.expect(BanklinkException.class);
         expectedEx.expectMessage("Unknown banklink message format");
 
         RequestContext requestContext = this.getRequestContext(new HashMap<>());
@@ -204,7 +204,7 @@ public class BanklinkAuthenticationServiceTest {
 
     @Test
     public void checkLoginForBankLinkFailsWhenInvalidNonceInResponsePacket() {
-        expectedEx.expect(TaraAuthenticationException.class);
+        expectedEx.expect(BanklinkException.class);
         expectedEx.expectMessage("Invalid banklink message");
 
         startSuccessfulLoginByBanklink("seb");
@@ -219,7 +219,7 @@ public class BanklinkAuthenticationServiceTest {
 
     @Test
     public void checkLoginForBankLinkFailsWhenDateTimeBeforeAllowedLimit() {
-        expectedEx.expect(TaraAuthenticationException.class);
+        expectedEx.expect(BanklinkException.class);
         expectedEx.expectMessage("Invalid banklink message");
 
         RequestContext startLoginRequestCtx = startSuccessfulLoginByBanklink("seb");
@@ -238,7 +238,7 @@ public class BanklinkAuthenticationServiceTest {
 
     @Test
     public void checkLoginForBankLinkFailsWhenDateTimeInTheFuture() {
-        expectedEx.expect(TaraAuthenticationException.class);
+        expectedEx.expect(BanklinkException.class);
         expectedEx.expectMessage("Invalid banklink message");
 
         RequestContext startLoginRequestCtx = startSuccessfulLoginByBanklink("seb");
