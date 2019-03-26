@@ -15,7 +15,6 @@ import ee.ria.sso.service.AbstractAuthenticationServiceTest;
 import ee.ria.sso.statistics.StatisticsOperation;
 import ee.ria.sso.test.SimpleTestAppender;
 import org.hamcrest.Matchers;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -211,16 +210,9 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
     public void checkLoginForMobileIDShouldFailWhenUserError() {
 
         for (AuthenticationException.Code code : Arrays.asList(EXPIRED_TRANSACTION,
-                USER_CANCEL, MID_NOT_READY, PHONE_ABSENT, SENDING_ERROR, SIM_ERROR, INTERNAL_ERROR)) {
+                USER_CANCEL, MID_NOT_READY, PHONE_ABSENT, SENDING_ERROR, SIM_ERROR)) {
 
-            SimpleTestAppender.events.clear();
-            RequestContext requestContext = this.getMockRequestContext(null);
-            final MobileIDSession mobileIDSession = createMobileIDSession();
-
-            fillRequestContextFlowScope(requestContext, mobileIDSession, 0);
-            Mockito.when(authenticatorMock.isLoginComplete(mobileIDSession)).thenThrow(
-                    new AuthenticationException(code)
-            );
+            RequestContext requestContext = mockIsLoginComplete(code);
 
             try {
                 authenticationService.checkLoginForMobileID(requestContext);
@@ -230,6 +222,24 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
                 assertThat(e.getMessage(), containsString("User authentication failed! DDS GetMobileAuthenticateStatus returned an error (code: " + code + ")"));
                 assertEquals(String.format("message.mid.%s", code.name().toLowerCase().replace("_", "")),
                         (((UserAuthenticationFailedException)e).getErrorMessageKey()));
+                this.verifyLogContentsOnFailure(code.name().toUpperCase());
+            }
+        }
+    }
+
+    @Test
+    public void checkLoginForMobileIDShouldFailWhenDdsInternalError() {
+
+        for (AuthenticationException.Code code : Arrays.asList(INTERNAL_ERROR)) {
+
+            RequestContext requestContext = mockIsLoginComplete(code);
+
+            try {
+                authenticationService.checkLoginForMobileID(requestContext);
+                Assert.fail("Should not reach this!");
+            } catch (Exception e) {
+                assertThat(e, instanceOf(ExternalServiceHasFailedException.class));
+                assertThat(e.getMessage(), containsString("Technical problems with DDS! DDS GetMobileAuthenticateStatus returned an error (code: " + code.name() + ")"));
                 this.verifyLogContentsOnFailure(code.name().toUpperCase());
             }
         }
@@ -261,14 +271,7 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
 
         for (AuthenticationException.Code code : Arrays.asList(SERVICE_ERROR)) {
 
-            SimpleTestAppender.events.clear();
-            RequestContext requestContext = this.getMockRequestContext(null);
-            final MobileIDSession mobileIDSession = createMobileIDSession();
-
-            fillRequestContextFlowScope(requestContext, mobileIDSession, 0);
-            Mockito.when(authenticatorMock.isLoginComplete(mobileIDSession)).thenThrow(
-                    new AuthenticationException(code)
-            );
+            RequestContext requestContext = mockIsLoginComplete(code);
 
             try {
                 authenticationService.checkLoginForMobileID(requestContext);
@@ -398,5 +401,17 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
             assertEquals(expectedErrorKey, e.getErrorMessageKey());
             this.verifyLogContentsOnFailure(StatisticsOperation.START_AUTH, errorCode.name().toUpperCase());
         }
+    }
+
+    private RequestContext mockIsLoginComplete(AuthenticationException.Code code) {
+        SimpleTestAppender.events.clear();
+        RequestContext requestContext = this.getMockRequestContext(null);
+        final MobileIDSession mobileIDSession = createMobileIDSession();
+
+        fillRequestContextFlowScope(requestContext, mobileIDSession, 0);
+        Mockito.when(authenticatorMock.isLoginComplete(mobileIDSession)).thenThrow(
+                new AuthenticationException(code)
+        );
+        return requestContext;
     }
 }

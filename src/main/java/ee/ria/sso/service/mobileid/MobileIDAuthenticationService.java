@@ -122,10 +122,10 @@ public class MobileIDAuthenticationService extends AbstractService {
 
         } catch (AuthenticationException e) {
             logEvent(context, e, AuthenticationType.MobileID);
-            if (Arrays.asList(EXPIRED_TRANSACTION, USER_CANCEL, MID_NOT_READY, PHONE_ABSENT, SENDING_ERROR, SIM_ERROR, INTERNAL_ERROR, NOT_VALID).contains(e.getCode())) {
+            if (Arrays.asList(EXPIRED_TRANSACTION, USER_CANCEL, MID_NOT_READY, PHONE_ABSENT, SENDING_ERROR, SIM_ERROR, NOT_VALID).contains(e.getCode())) {
                 String messageKey = String.format("message.mid.%s", e.getCode().name().toLowerCase().replace("_", ""));
                 throw new UserAuthenticationFailedException(messageKey, String.format("User authentication failed! DDS GetMobileAuthenticateStatus returned an error (code: %s)", e.getCode()));
-            } else if (e.getCode() == SERVICE_ERROR && e.getCause() instanceof IOException) {
+            } else if (INTERNAL_ERROR == e.getCode() || e.getCode() == SERVICE_ERROR && e.getCause() instanceof IOException) {
                 throw new ExternalServiceHasFailedException("message.mid.error", String.format("Technical problems with DDS! DDS GetMobileAuthenticateStatus returned an error (code: %s)", e.getCode()));
             } else {
                 throw new IllegalStateException(String.format("Unexpected error returned by DDS GetMobileAuthenticateStatus (code: %s)", e.getCode()), e);
