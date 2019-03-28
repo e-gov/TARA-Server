@@ -15,7 +15,6 @@ import org.apereo.cas.support.oauth.authenticator.Authenticators;
 import org.apereo.cas.web.support.WebUtils;
 import org.pac4j.core.context.Pac4jConstants;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.Assert;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.webflow.action.AbstractAction;
 import org.springframework.webflow.execution.Event;
@@ -80,7 +79,6 @@ public abstract class AbstractAuthenticationAction extends AbstractAction {
     }
 
     private boolean isOauth2Client(WebApplicationService service) {
-        Assert.notNull(service, "service paramater cannot be null!");
         String clientName = getParameterValueFromUrl(service.getOriginalUrl(), "client_name");
         return clientName != null && clientName.equals(Authenticators.CAS_OAUTH_CLIENT);
     }
@@ -90,8 +88,7 @@ public abstract class AbstractAuthenticationAction extends AbstractAction {
 
         if (service != null) {
             return service;
-        } else if (service == null
-                && requestContext.getExternalContext().getSessionMap().contains(CAS_SERVICE_ATTRIBUTE_NAME)
+        } else if (requestContext.getExternalContext().getSessionMap().contains(CAS_SERVICE_ATTRIBUTE_NAME)
                 && requestContext.getExternalContext().getSessionMap().get(CAS_SERVICE_ATTRIBUTE_NAME) instanceof WebApplicationService) {
             return (WebApplicationService) requestContext.getExternalContext().getSessionMap().get(CAS_SERVICE_ATTRIBUTE_NAME);
         } else {

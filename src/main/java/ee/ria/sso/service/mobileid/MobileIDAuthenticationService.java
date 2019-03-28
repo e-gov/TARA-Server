@@ -6,7 +6,6 @@ import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.credential.PreAuthenticationCredential;
 import ee.ria.sso.authentication.credential.TaraCredential;
-import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.config.mobileid.MobileIDConfigurationProvider;
 import ee.ria.sso.service.AbstractService;
 import ee.ria.sso.service.ExternalServiceHasFailedException;
@@ -37,11 +36,10 @@ public class MobileIDAuthenticationService extends AbstractService {
     private final MobileIDConfigurationProvider configurationProvider;
     private final MobileIDAuthenticatorWrapper mobileIDAuthenticator;
 
-    public MobileIDAuthenticationService(TaraResourceBundleMessageSource messageSource,
-                                         StatisticsHandler statistics,
+    public MobileIDAuthenticationService(StatisticsHandler statistics,
                                          MobileIDConfigurationProvider configurationProvider,
                                          MobileIDAuthenticatorWrapper mobileIDAuthenticator) {
-        super(statistics, messageSource);
+        super(statistics);
         this.configurationProvider = configurationProvider;
         this.mobileIDAuthenticator = mobileIDAuthenticator;
         this.initMobileIDAuthenticator();
@@ -81,16 +79,7 @@ public class MobileIDAuthenticationService extends AbstractService {
             return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
 
         } catch (AuthenticationException e) {
-            logEvent(context, e, AuthenticationType.MobileID);
-            if (Arrays.asList(USER_PHONE_ERROR, NO_AGREEMENT, CERTIFICATE_REVOKED, NOT_ACTIVATED, NOT_VALID).contains(e.getCode())) {
-                String messageKey = String.format("message.mid.%s", e.getCode().name().toLowerCase().replace("_", ""));
-                throw new UserAuthenticationFailedException(messageKey, String.format("User authentication failed! DDS MobileAuthenticate returned an error (code: %s)", e.getCode()));
-            } else if (Arrays.asList(AUTHENTICATION_ERROR, USER_CERTIFICATE_MISSING, UNABLE_TO_TEST_USER_CERTIFICATE).contains(e.getCode())
-                    || (e.getCode() == SERVICE_ERROR && e.getCause() instanceof IOException)) {
-                throw new ExternalServiceHasFailedException("message.mid.error", String.format("Technical problems with DDS! DDS MobileAuthenticate returned an error (code: %s)", e.getCode()));
-            } else {
-                throw new IllegalStateException(String.format("Unexpected error returned by DDS MobileAuthenticate (code: %s)!", e.getCode()), e);
-            }
+            return handleMobileAuthenticateException(context, e);
         } catch (Exception e) {
             logEvent(context, e, AuthenticationType.MobileID);
             throw e;
@@ -121,18 +110,35 @@ public class MobileIDAuthenticationService extends AbstractService {
             }
 
         } catch (AuthenticationException e) {
-            logEvent(context, e, AuthenticationType.MobileID);
-            if (Arrays.asList(EXPIRED_TRANSACTION, USER_CANCEL, MID_NOT_READY, PHONE_ABSENT, SENDING_ERROR, SIM_ERROR, NOT_VALID).contains(e.getCode())) {
-                String messageKey = String.format("message.mid.%s", e.getCode().name().toLowerCase().replace("_", ""));
-                throw new UserAuthenticationFailedException(messageKey, String.format("User authentication failed! DDS GetMobileAuthenticateStatus returned an error (code: %s)", e.getCode()));
-            } else if (INTERNAL_ERROR == e.getCode() || e.getCode() == SERVICE_ERROR && e.getCause() instanceof IOException) {
-                throw new ExternalServiceHasFailedException("message.mid.error", String.format("Technical problems with DDS! DDS GetMobileAuthenticateStatus returned an error (code: %s)", e.getCode()));
-            } else {
-                throw new IllegalStateException(String.format("Unexpected error returned by DDS GetMobileAuthenticateStatus (code: %s)", e.getCode()), e);
-            }
+            return handleGetMobileAuthenticateStatusException(context, e);
         } catch (Exception e) {
             logEvent(context, e, AuthenticationType.MobileID);
             throw e;
+        }
+    }
+
+    private Event handleGetMobileAuthenticateStatusException(RequestContext context, AuthenticationException e) {
+        logEvent(context, e, AuthenticationType.MobileID);
+        if (Arrays.asList(EXPIRED_TRANSACTION, USER_CANCEL, MID_NOT_READY, PHONE_ABSENT, SENDING_ERROR, SIM_ERROR, NOT_VALID).contains(e.getCode())) {
+            String messageKey = String.format("message.mid.%s", e.getCode().name().toLowerCase().replace("_", ""));
+            throw new UserAuthenticationFailedException(messageKey, String.format("User authentication failed! DDS GetMobileAuthenticateStatus returned an error (code: %s)", e.getCode()));
+        } else if (INTERNAL_ERROR == e.getCode() || e.getCode() == SERVICE_ERROR && e.getCause() instanceof IOException) {
+            throw new ExternalServiceHasFailedException("message.mid.error", String.format("Technical problems with DDS! DDS GetMobileAuthenticateStatus returned an error (code: %s)", e.getCode()));
+        } else {
+            throw new IllegalStateException(String.format("Unexpected error returned by DDS GetMobileAuthenticateStatus (code: %s)", e.getCode()), e);
+        }
+    }
+
+    private Event handleMobileAuthenticateException(RequestContext context, AuthenticationException e) {
+        logEvent(context, e, AuthenticationType.MobileID);
+        if (Arrays.asList(USER_PHONE_ERROR, NO_AGREEMENT, CERTIFICATE_REVOKED, NOT_ACTIVATED, NOT_VALID).contains(e.getCode())) {
+            String messageKey = String.format("message.mid.%s", e.getCode().name().toLowerCase().replace("_", ""));
+            throw new UserAuthenticationFailedException(messageKey, String.format("User authentication failed! DDS MobileAuthenticate returned an error (code: %s)", e.getCode()));
+        } else if (Arrays.asList(AUTHENTICATION_ERROR, USER_CERTIFICATE_MISSING, UNABLE_TO_TEST_USER_CERTIFICATE).contains(e.getCode())
+                || (e.getCode() == SERVICE_ERROR && e.getCause() instanceof IOException)) {
+            throw new ExternalServiceHasFailedException("message.mid.error", String.format("Technical problems with DDS! DDS MobileAuthenticate returned an error (code: %s)", e.getCode()));
+        } else {
+            throw new IllegalStateException(String.format("Unexpected error returned by DDS MobileAuthenticate (code: %s)!", e.getCode()), e);
         }
     }
 

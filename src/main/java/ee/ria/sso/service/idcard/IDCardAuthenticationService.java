@@ -4,7 +4,6 @@ import com.google.common.base.Splitter;
 import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.credential.TaraCredential;
-import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.config.idcard.IDCardConfigurationProvider;
 import ee.ria.sso.oidc.TaraScope;
 import ee.ria.sso.service.AbstractService;
@@ -39,11 +38,10 @@ public class IDCardAuthenticationService extends AbstractService {
     private final IDCardConfigurationProvider configurationProvider;
     private final OCSPValidator ocspValidator;
 
-    public IDCardAuthenticationService(TaraResourceBundleMessageSource messageSource,
-                                       StatisticsHandler statistics,
+    public IDCardAuthenticationService(StatisticsHandler statistics,
                                        IDCardConfigurationProvider configurationProvider,
                                        OCSPValidator ocspValidator) {
-        super(statistics, messageSource);
+        super(statistics);
         this.configurationProvider = configurationProvider;
         this.ocspValidator = ocspValidator;
     }

@@ -2,7 +2,6 @@ package ee.ria.sso.service;
 
 import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
-import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.statistics.StatisticsHandler;
 import ee.ria.sso.statistics.StatisticsOperation;
 import ee.ria.sso.statistics.StatisticsRecord;
@@ -23,7 +22,6 @@ import java.time.LocalDateTime;
 public class AbstractService {
 
     private final StatisticsHandler statistics;
-    private final TaraResourceBundleMessageSource messageSource;
 
     protected SharedAttributeMap<Object> getSessionMap(RequestContext context) {
         return context.getExternalContext().getSessionMap();

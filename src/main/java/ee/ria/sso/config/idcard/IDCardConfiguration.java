@@ -68,7 +68,7 @@ public class IDCardConfiguration {
                                                                    IDCardConfigurationProvider configurationProvider,
                                                                    OCSPValidator ocspValidator) {
 
-        return new IDCardAuthenticationService(messageSource, statistics, configurationProvider, ocspValidator);
+        return new IDCardAuthenticationService(statistics, configurationProvider, ocspValidator);
     }
 
     @Bean

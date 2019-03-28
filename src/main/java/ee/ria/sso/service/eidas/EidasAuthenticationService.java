@@ -42,7 +42,7 @@ public class EidasAuthenticationService extends AbstractService {
     public EidasAuthenticationService(TaraResourceBundleMessageSource messageSource,
                                       StatisticsHandler statistics,
                                       EidasAuthenticator eidasAuthenticator) {
-        super(statistics, messageSource);
+        super(statistics);
         this.eidasAuthenticator = eidasAuthenticator;
     }
 
@@ -102,6 +102,7 @@ public class EidasAuthenticationService extends AbstractService {
             logEvent(context, AuthenticationType.eIDAS, SUCCESSFUL_AUTH);
             return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
         } catch (EidasAuthenticationFailedException e) {
+            logEvent(context, e, AuthenticationType.eIDAS);
             throw new UserAuthenticationFailedException("message.eidas.authfailed", e.getMessage(), e);
         } catch (IOException e) {
             logEvent(context, e, AuthenticationType.eIDAS);

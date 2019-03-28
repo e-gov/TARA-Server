@@ -55,7 +55,7 @@ public class SmartIDAuthenticationService extends AbstractService {
                                         SmartIDClient smartIdClient,
                                         SmartIDConfigurationProvider confProvider,
                                         SmartIDAuthenticationValidatorWrapper authResponseValidator) {
-        super(statisticsHandler, messageSource);
+        super(statisticsHandler);
         this.smartIdClient = smartIdClient;
         this.confProvider = confProvider;
         this.authResponseValidator = authResponseValidator;

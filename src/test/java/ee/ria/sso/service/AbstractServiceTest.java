@@ -32,7 +32,7 @@ public class AbstractServiceTest {
 
     @Before
     public void setUp() {
-        abstractService = new AbstractService(statistics, messageSource);
+        abstractService = new AbstractService(statistics);
     }
 
     @Test

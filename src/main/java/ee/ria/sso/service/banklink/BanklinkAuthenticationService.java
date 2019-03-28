@@ -40,7 +40,7 @@ public class BanklinkAuthenticationService extends AbstractService {
     private final AuthLinkManager authLinkManager;
 
     public BanklinkAuthenticationService(TaraResourceBundleMessageSource messageSource, StatisticsHandler statistics, AuthLinkManager authLinkManager) {
-        super(statistics, messageSource);
+        super(statistics);
         this.authLinkManager = authLinkManager;
     }
 
