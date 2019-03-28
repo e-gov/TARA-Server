@@ -2,17 +2,14 @@ package ee.ria.sso.service.idcard;
 
 import com.google.common.base.Splitter;
 import ee.ria.sso.Constants;
-import ee.ria.sso.authentication.AuthenticationFailedException;
 import ee.ria.sso.authentication.AuthenticationType;
-import ee.ria.sso.authentication.TaraAuthenticationException;
 import ee.ria.sso.authentication.credential.TaraCredential;
-import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.config.idcard.IDCardConfigurationProvider;
 import ee.ria.sso.oidc.TaraScope;
 import ee.ria.sso.service.AbstractService;
+import ee.ria.sso.service.ExternalServiceHasFailedException;
+import ee.ria.sso.service.UserAuthenticationFailedException;
 import ee.ria.sso.statistics.StatisticsHandler;
-import ee.ria.sso.statistics.StatisticsOperation;
-import ee.ria.sso.statistics.StatisticsRecord;
 import ee.ria.sso.utils.EstonianIdCodeUtil;
 import ee.ria.sso.utils.X509Utils;
 import lombok.extern.slf4j.Slf4j;
@@ -25,9 +22,11 @@ import org.springframework.webflow.execution.RequestContext;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+
+import static ee.ria.sso.statistics.StatisticsOperation.START_AUTH;
+import static ee.ria.sso.statistics.StatisticsOperation.SUCCESSFUL_AUTH;
 
 @Slf4j
 public class IDCardAuthenticationService extends AbstractService {
@@ -36,16 +35,13 @@ public class IDCardAuthenticationService extends AbstractService {
     public static final String CN_GIVEN_NAME = "GIVENNAME";
     public static final String CN_SURNAME = "SURNAME";
 
-    private final StatisticsHandler statistics;
     private final IDCardConfigurationProvider configurationProvider;
     private final OCSPValidator ocspValidator;
 
-    public IDCardAuthenticationService(TaraResourceBundleMessageSource messageSource,
-                                       StatisticsHandler statistics,
+    public IDCardAuthenticationService(StatisticsHandler statistics,
                                        IDCardConfigurationProvider configurationProvider,
                                        OCSPValidator ocspValidator) {
-        super(messageSource);
-        this.statistics = statistics;
+        super(statistics);
         this.configurationProvider = configurationProvider;
         this.ocspValidator = ocspValidator;
     }
@@ -58,13 +54,11 @@ public class IDCardAuthenticationService extends AbstractService {
     public Event loginByIDCard(RequestContext context) {
         SharedAttributeMap<Object> sessionMap = this.getSessionMap(context);
         try {
-            this.statistics.collect(new StatisticsRecord(
-                    LocalDateTime.now(), getServiceClientId(context), AuthenticationType.IDCard, StatisticsOperation.START_AUTH
-            ));
+            logEvent(context, AuthenticationType.IDCard, START_AUTH);
 
             X509Certificate certificate = sessionMap.get(Constants.CERTIFICATE_SESSION_ATTRIBUTE, X509Certificate.class);
             if (certificate == null)
-                throw new AuthenticationFailedException("message.idc.nocertificate", "Unable to find certificate from session");
+                throw new IllegalStateException("Unable to find certificate from session");
             validateUserCert(certificate);
 
             checkCertStatus(certificate);
@@ -72,14 +66,13 @@ public class IDCardAuthenticationService extends AbstractService {
             TaraCredential credential = createUserCredential(certificate, context);
             context.getFlowExecutionContext().getActiveSession().getScope().put(CasWebflowConstants.VAR_ID_CREDENTIAL, credential);
 
-            this.statistics.collect(new StatisticsRecord(
-                    LocalDateTime.now(), getServiceClientId(context), AuthenticationType.IDCard, StatisticsOperation.SUCCESSFUL_AUTH
-            ));
+            logEvent(context, AuthenticationType.IDCard, SUCCESSFUL_AUTH);
 
             return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
 
         } catch (Exception e) {
-            throw this.handleException(context, e);
+            logEvent(context, e, AuthenticationType.IDCard);
+            throw e;
         } finally {
             sessionMap.remove(Constants.CERTIFICATE_SESSION_ATTRIBUTE);
         }
@@ -90,12 +83,12 @@ public class IDCardAuthenticationService extends AbstractService {
             try {
                 ocspValidator.checkCert(certificate);
             } catch (OCSPServiceNotAvailableException exception) {
-                throw new AuthenticationFailedException(
+                throw new ExternalServiceHasFailedException(
                         "message.idc.error.ocsp.not.available",
                         "OCSP service is currently not available, please try again later",
                         exception);
             } catch (OCSPValidationException exception) {
-                throw new AuthenticationFailedException(
+                throw new UserAuthenticationFailedException(
                         String.format("message.idc.%s", exception.getStatus().name().toLowerCase()),
                         exception.getMessage(),
                         exception);
@@ -103,42 +96,16 @@ public class IDCardAuthenticationService extends AbstractService {
         }
     }
 
-    private RuntimeException handleException(RequestContext context, Exception exception) {
-        try {
-            try {
-                this.statistics.collect(new StatisticsRecord(
-                        LocalDateTime.now(), getServiceClientId(context), AuthenticationType.IDCard, exception.getMessage()));
-            } catch (Exception e) {
-                log.error("Failed to collect error statistics!", e);
-            }
-
-            if (exception instanceof AuthenticationFailedException) {
-                String localizedMessage = this.getMessage(((AuthenticationFailedException) exception).getErrorMessageKey());
-                return new TaraAuthenticationException(localizedMessage, exception);
-            } else {
-                String localizedMessage = this.getMessage(Constants.MESSAGE_KEY_GENERAL_ERROR);
-                return new TaraAuthenticationException(localizedMessage, exception);
-            }
-
-        } finally {
-            clearFlowScope(context);
-        }
-    }
-
-    private static void clearFlowScope(RequestContext context) {
-        context.getFlowScope().clear();
-        context.getFlowExecutionContext().getActiveSession().getScope().clear();
-    }
-
-
     private void validateUserCert(X509Certificate x509Certificate) {
         try {
             x509Certificate.checkValidity();
         } catch (CertificateNotYetValidException e) {
-            throw new AuthenticationFailedException("message.idc.certnotyetvalid",
+            throw new UserAuthenticationFailedException(
+                    "message.idc.certnotyetvalid",
                     "User certificate is not yet valid", e);
         } catch (CertificateExpiredException e) {
-            throw new AuthenticationFailedException("message.idc.certexpired",
+            throw new UserAuthenticationFailedException(
+                    "message.idc.certexpired",
                     "User certificate is expired", e);
         }
     }
@@ -163,7 +130,6 @@ public class IDCardAuthenticationService extends AbstractService {
                     params.get(CN_SURNAME)
             );
         }
-
     }
 
     private boolean isEmailRequested(RequestContext context) {

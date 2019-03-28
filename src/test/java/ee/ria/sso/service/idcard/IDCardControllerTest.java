@@ -1,5 +1,6 @@
-package ee.ria.sso.endpoints;
+package ee.ria.sso.service.idcard;
 
+import ee.ria.sso.service.idcard.IDCardController;
 import ee.ria.sso.test.SimpleTestAppender;
 import org.junit.Assert;
 import org.junit.Before;
@@ -10,7 +11,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.web.servlet.ModelAndView;
 
-import static ee.ria.sso.endpoints.IDCardController.HEADER_SSL_CLIENT_CERT;
+import static ee.ria.sso.service.idcard.IDCardController.HEADER_SSL_CLIENT_CERT;
 import static org.hamcrest.Matchers.containsString;
 
 public class IDCardControllerTest {

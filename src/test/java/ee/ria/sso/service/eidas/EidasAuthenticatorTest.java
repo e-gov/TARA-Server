@@ -3,7 +3,6 @@ package ee.ria.sso.service.eidas;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import ee.ria.sso.authentication.EidasAuthenticationFailedException;
 import ee.ria.sso.authentication.LevelOfAssurance;
 import ee.ria.sso.config.eidas.EidasConfigurationProvider;
 import ee.ria.sso.logging.CorrelationIdUtil;

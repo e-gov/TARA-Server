@@ -1,9 +1,9 @@
 package ee.ria.sso.service.smartid;
 
 import ee.ria.sso.Constants;
+import ee.ria.sso.service.ExternalServiceHasFailedException;
+import ee.ria.sso.service.UserAuthenticationFailedException;
 import ee.ria.sso.authentication.AuthenticationType;
-import ee.ria.sso.authentication.TaraAuthenticationException;
-import ee.ria.sso.authentication.TaraCredentialsException;
 import ee.ria.sso.authentication.credential.PreAuthenticationCredential;
 import ee.ria.sso.authentication.credential.TaraCredential;
 import ee.ria.sso.service.AbstractService;
@@ -11,8 +11,6 @@ import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.config.smartid.SmartIDConfigurationProvider;
 import ee.ria.sso.service.smartid.SmartIDClient.AuthenticationRequest;
 import ee.ria.sso.statistics.StatisticsHandler;
-import ee.ria.sso.statistics.StatisticsOperation;
-import ee.ria.sso.statistics.StatisticsRecord;
 import ee.sk.smartid.AuthenticationHash;
 import ee.sk.smartid.AuthenticationIdentity;
 import ee.sk.smartid.SmartIdAuthenticationResult;
@@ -34,7 +32,9 @@ import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
 
 import javax.ws.rs.ClientErrorException;
-import java.time.LocalDateTime;
+
+import static ee.ria.sso.statistics.StatisticsOperation.START_AUTH;
+import static ee.ria.sso.statistics.StatisticsOperation.SUCCESSFUL_AUTH;
 
 @ConditionalOnProperty("smart-id.enabled")
 @Service
@@ -45,7 +45,6 @@ public class SmartIDAuthenticationService extends AbstractService {
     private static final Logger LOGGER = LoggerFactory.getLogger(SmartIDAuthenticationService.class);
     private static final AuthenticationType AUTHENTICATION_TYPE = AuthenticationType.SmartID;
 
-    private final StatisticsHandler statisticsHandler;
     private final SmartIDClient smartIdClient;
     private final SmartIDConfigurationProvider confProvider;
     private final SmartIDAuthenticationValidatorWrapper authResponseValidator;
@@ -56,8 +55,7 @@ public class SmartIDAuthenticationService extends AbstractService {
                                         SmartIDClient smartIdClient,
                                         SmartIDConfigurationProvider confProvider,
                                         SmartIDAuthenticationValidatorWrapper authResponseValidator) {
-        super(messageSource);
-        this.statisticsHandler = statisticsHandler;
+        super(statisticsHandler);
         this.smartIdClient = smartIdClient;
         this.confProvider = confProvider;
         this.authResponseValidator = authResponseValidator;
@@ -77,7 +75,7 @@ public class SmartIDAuthenticationService extends AbstractService {
 
         LOGGER.info("Starting Smart-ID authentication: <country:{}>, <ssn:{}>", personCountry, personIdentifier);
         try {
-            collectStatistics(context, StatisticsOperation.START_AUTH);
+            logEvent(context, AuthenticationType.SmartID, START_AUTH);
             validateLoginFields(personIdentifier);
 
             AuthenticationRequest authRequest = formSubjectAuthenticationRequest(personIdentifier, personCountry);
@@ -86,16 +84,21 @@ public class SmartIDAuthenticationService extends AbstractService {
             LOGGER.info("Authentication response received");
             writeAuthSessionToFlowContext(context, authRequest, authResponse.getSessionId());
             return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
-        } catch (TaraCredentialsException e) {
-            throw handleException(context, e, e.getKey());
+        } catch (UserAuthenticationFailedException e) {
+            logEvent(context, e, AuthenticationType.SmartID);
+            throw e;
         } catch (UserAccountNotFoundException e) {
-            throw handleException(context, e, SmartIDErrorMessage.USER_ACCOUNT_NOT_FOUND);
+            logEvent(context, e, AuthenticationType.SmartID);
+            throw new UserAuthenticationFailedException(SmartIDErrorMessage.USER_ACCOUNT_NOT_FOUND, e.getMessage(), e);
         } catch (RequestForbiddenException e) {
-            throw handleException(context, e, SmartIDErrorMessage.REQUEST_FORBIDDEN);
+            logEvent(context, e, AuthenticationType.SmartID);
+            throw new UserAuthenticationFailedException(SmartIDErrorMessage.REQUEST_FORBIDDEN, e.getMessage(), e);
         } catch (ClientErrorException e) {
-            throw handleSmartIDClientException(context, e);
+            logEvent(context, e, AuthenticationType.SmartID);
+            throw handleSmartIDClientException(e);
         } catch (Exception e) {
-            throw handleException(context, e, SmartIDErrorMessage.GENERAL);
+            logEvent(context, e, AuthenticationType.SmartID);
+            throw e;
         }
     }
 
@@ -117,7 +120,7 @@ public class SmartIDAuthenticationService extends AbstractService {
                 SmartIdAuthenticationResult validationResult = authResponseValidator
                         .validateAuthenticationResponse(sessionStatus, authSession.getAuthenticationHash(), authSession.getCertificateLevel());
 
-                collectStatistics(context, StatisticsOperation.SUCCESSFUL_AUTH);
+                logEvent(context, AuthenticationType.SmartID, SUCCESSFUL_AUTH);
                 writePersonDetailsToFlowContext(context, validationResult.getAuthenticationIdentity());
                 return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
             } else {
@@ -126,23 +129,27 @@ public class SmartIDAuthenticationService extends AbstractService {
                 return new Event(this, Constants.EVENT_OUTSTANDING);
             }
         } catch (SessionNotFoundException e) {
-            throw handleException(context, e, SmartIDErrorMessage.SESSION_NOT_FOUND);
+            logEvent(context, e, AuthenticationType.SmartID);
+            throw new UserAuthenticationFailedException(SmartIDErrorMessage.SESSION_NOT_FOUND, e.getMessage(), e);
         } catch (SessionValidationException e) {
-            throw handleException(context, e, e.getErrorMessageKey());
+            logEvent(context, e, AuthenticationType.SmartID);
+            throw new UserAuthenticationFailedException(e.getErrorMessageKey(), e.getMessage(), e);
         } catch (ClientErrorException e) {
-            throw handleSmartIDClientException(context, e);
+            logEvent(context, e, AuthenticationType.SmartID);
+            throw handleSmartIDClientException(e);
         } catch (Exception e) {
-            throw handleException(context, e, SmartIDErrorMessage.GENERAL);
+            logEvent(context, e, AuthenticationType.SmartID);
+            throw e;
         }
     }
 
     private void validateLoginFields(String personIdentifier) {
         if (StringUtils.isBlank(personIdentifier)) {
-            throw new TaraCredentialsException(SmartIDErrorMessage.PERSON_IDENTIFIER_MISSING, personIdentifier);
+            throw new UserAuthenticationFailedException(SmartIDErrorMessage.PERSON_IDENTIFIER_MISSING, personIdentifier);
         }
 
         if (!StringUtils.isNumeric(personIdentifier) || personIdentifier.length() != 11) {
-            throw new TaraCredentialsException(SmartIDErrorMessage.INVALID_PERSON_IDENTIFIER, personIdentifier);
+            throw new UserAuthenticationFailedException(SmartIDErrorMessage.INVALID_PERSON_IDENTIFIER, personIdentifier);
         }
     }
 
@@ -181,54 +188,18 @@ public class SmartIDAuthenticationService extends AbstractService {
         );
     }
 
-    private void collectStatistics(RequestContext context, StatisticsOperation statisticsOperation) {
-        statisticsHandler.collect(new StatisticsRecord(
-                LocalDateTime.now(), getServiceClientId(context), AUTHENTICATION_TYPE, statisticsOperation
-        ));
-    }
-
-    private void collectErrorStatistics(RequestContext context, String exceptionMessage) {
-        statisticsHandler.collect(new StatisticsRecord(
-                LocalDateTime.now(), getServiceClientId(context), AUTHENTICATION_TYPE, exceptionMessage
-        ));
-    }
-
-    private RuntimeException handleSmartIDClientException(RequestContext context, ClientErrorException e) {
+    private RuntimeException handleSmartIDClientException(ClientErrorException e) {
         switch (e.getMessage()) {
             case "HTTP 471" : /* No suitable account of requested type found, but user has some other accounts. */
-                throw handleException(context, e, SmartIDErrorMessage.USER_DOES_NOT_HAVE_QUERY_MATCHING_ACCOUNT);
+                throw new UserAuthenticationFailedException(SmartIDErrorMessage.USER_DOES_NOT_HAVE_QUERY_MATCHING_ACCOUNT, e.getMessage(), e);
             case "HTTP 472" : /* Person should view app or self-service portal now. */
-                throw handleException(context, e, SmartIDErrorMessage.UNKNOWN_REASON_INSTRUCTIONS_IN_USER_DEVICE);
+                throw new UserAuthenticationFailedException(SmartIDErrorMessage.UNKNOWN_REASON_INSTRUCTIONS_IN_USER_DEVICE, e.getMessage(), e);
             case "HTTP 480" : /* The client (i.e. client-side implementation of this API) is old and not supported any more. Relying Party must contact customer support. */
-                throw handleException(context, e, SmartIDErrorMessage.GENERAL);
+                throw new UserAuthenticationFailedException(SmartIDErrorMessage.GENERAL, e.getMessage(), e);
             case "HTTP 580" : /* System is under maintenance, retry later. */
-                throw handleException(context, e, SmartIDErrorMessage.SMART_ID_SYSTEM_UNDER_MAINTENANCE);
+                throw new ExternalServiceHasFailedException(SmartIDErrorMessage.SMART_ID_SYSTEM_UNDER_MAINTENANCE, e.getMessage(), e);
             default :
-                throw handleException(context, e, SmartIDErrorMessage.GENERAL);
+                throw new ExternalServiceHasFailedException(SmartIDErrorMessage.GENERAL, e.getMessage(), e);
         }
-    }
-
-    private RuntimeException handleException(RequestContext context, Exception exception, String errorMessageKey) {
-        try {
-            LOGGER.info("Process failed due to exception of type <{}> with message <{}> and errorMessageKey <{}>",
-                    exception.getClass(),
-                    exception.getMessage(),
-                    errorMessageKey);
-
-            try {
-                collectErrorStatistics(context, exception.getMessage());
-            } catch (Exception e) {
-                LOGGER.error("Failed to collect error statistics!", e);
-            }
-            String localizedErrorMessage = getMessage(errorMessageKey);
-            return new TaraAuthenticationException(localizedErrorMessage, exception);
-        } finally {
-            clearFlowScope(context);
-        }
-    }
-
-    private static void clearFlowScope(RequestContext context) {
-        context.getFlowScope().clear();
-        context.getFlowExecutionContext().getActiveSession().getScope().clear();
     }
 }

@@ -2,6 +2,7 @@ package ee.ria.sso.service;
 
 import ee.ria.sso.Constants;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
+import ee.ria.sso.statistics.StatisticsHandler;
 import org.apereo.cas.authentication.principal.AbstractWebApplicationService;
 import org.apereo.cas.util.EncodingUtils;
 import org.junit.Assert;
@@ -24,11 +25,14 @@ public class AbstractServiceTest {
     @Autowired
     private TaraResourceBundleMessageSource messageSource;
 
+    @Autowired
+    private StatisticsHandler statistics;
+
     private AbstractService abstractService;
 
     @Before
     public void setUp() {
-        abstractService = new AbstractService(messageSource);
+        abstractService = new AbstractService(statistics);
     }
 
     @Test

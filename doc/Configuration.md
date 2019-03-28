@@ -5,8 +5,8 @@ _CAS tarkvaras tehtud kohanduste ja täienduste kirjeldus._
 - [Logging](#logging)
   * [Log files](#log_files)
   * [Remote syslog server](#tara_syslog)
-  * [TARA audit trail events](#audit_events)
-  * [Tara-Stat](#tara_stat_log)
+  * [TARA audit trail events](#audit_events)  
+  * [Tara-Stat](#tara_stat_log)  
 - [Configuration parameters](#configuration_parameters)
   * [ID-Card authentication](#id_card)
   * [Mobile-ID authentication](#mobile_id)
@@ -276,7 +276,7 @@ Each OCSP configuration can contain the following set of properties:
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
-| `id-card.ocsp[{index}].issuer-cn` | Y | A comma separated list of supported certificate issuer CN-s (CN in the certificate) that this OCSP supports. <br/><br/>Note that the certificate by CN must be present in the truststore (`id-card.truststore`) |
+| `id-card.ocsp[{index}].issuer-cn` | Y | A comma separated list of supported certificate issuer CN-s (CN in the certificate) that this OCSP supports. <br/><br/>Note that the certificate referenced by CN must be present in the truststore (`id-card.truststore`) |
 | `id-card.ocsp[{index}].url` | Y | The HTTP URL of the OCSP service. |
 | `id-card.ocsp[{index}].responder-certificate-cn` | N | Explicit OCSP response signing certificate CN. If not provided, OCSP reponse signer certificate is expected to be issued from the same chain as user-certificate. <br/><br/>Note that responder certificate extended key usage must have the OCSP signing (`1.3.6.1.5.5.7.3.9`) value. |
 | `id-card.ocsp[{index}].nonce-disabled` | N | Boolean value, that determines whether the nonce extension usage is disabled. Defaults to `false` if not specified. |

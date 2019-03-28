@@ -3,6 +3,7 @@ package ee.ria.sso.config.idcard;
 import ee.ria.sso.config.AbstractDisabledConfigurationTest;
 import ee.ria.sso.flow.action.IDCardAuthenticationAction;
 import ee.ria.sso.service.idcard.IDCardAuthenticationService;
+import ee.ria.sso.service.idcard.IDCardController;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
@@ -22,6 +23,7 @@ public class IDCardDisabledConfigurationTest extends AbstractDisabledConfigurati
     @Test
     public void whenIDCardDisabledThenIDCardBeansNotInitiated() {
         assertBeanNotInitiated(IDCardConfiguration.class);
+        assertBeanNotInitiated(IDCardController.class);
         assertBeanNotInitiated(IDCardAuthenticationService.class);
         assertBeanNotInitiated(IDCardConfigurationProvider.class);
         assertBeanNotInitiated(IDCardAuthenticationAction.class);
