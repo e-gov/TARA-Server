@@ -16,13 +16,12 @@ import ee.ria.sso.config.TaraResourceBundleMessageSource;
  */
 
 @Service
-public class ManagerServiceImpl extends AbstractService implements ManagerService {
+public class ManagerServiceImpl implements ManagerService {
 
     private final Logger log = LoggerFactory.getLogger(ManagerServiceImpl.class);
     private final ServicesManager servicesManager;
 
     public ManagerServiceImpl(ServicesManager servicesManager, TaraResourceBundleMessageSource messageSource) {
-        super(messageSource);
         this.servicesManager = servicesManager;
     }
 

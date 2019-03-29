@@ -3,6 +3,7 @@ package ee.ria.sso.config.idcard;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.service.idcard.OCSPValidator;
 import ee.ria.sso.statistics.StatisticsHandler;
+import ee.ria.sso.utils.X509Utils;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -16,6 +17,8 @@ import java.io.InputStream;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @EnableConfigurationProperties
 @ComponentScan(basePackages = {
@@ -38,8 +41,18 @@ public class TestIDCardConfiguration {
     }
 
     @Bean
+    X509Certificate mockIDCardUserCertificate2015withoutAiaExtension() throws CertificateException, IOException {
+        return loadCertificate("classpath:id-card/37101010021(TEST_of_ESTEID-SK_2015)-no_aia_extension.pem");
+    }
+
+    @Bean
     X509Certificate mockIDCardUserCertificate2018() throws CertificateException, IOException {
         return loadCertificate("classpath:id-card/38001085718(TEST_of_ESTEID2018).pem");
+    }
+
+    @Bean
+    X509Certificate mockIDCardUserCertificate2011() throws CertificateException, IOException {
+        return loadCertificate("classpath:id-card/48812040138(TEST_of_ESTEID-SK_2011).pem");
     }
 
     private X509Certificate loadCertificate(String resourcePath) throws CertificateException, IOException {
@@ -61,5 +74,4 @@ public class TestIDCardConfiguration {
         OCSPValidator ocspValidator = Mockito.mock(OCSPValidator.class);
         return ocspValidator;
     }
-
 }

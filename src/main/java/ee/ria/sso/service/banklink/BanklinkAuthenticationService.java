@@ -4,9 +4,7 @@ import com.nortal.banklink.authentication.AuthLink;
 import com.nortal.banklink.authentication.AuthLinkInfo;
 import com.nortal.banklink.authentication.AuthLinkManager;
 import com.nortal.banklink.core.packet.Packet;
-import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
-import ee.ria.sso.authentication.TaraAuthenticationException;
 import ee.ria.sso.authentication.credential.TaraCredential;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.security.CspDirective;
@@ -30,20 +28,19 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
 
+import static ee.ria.sso.Constants.CAS_SERVICE_ATTRIBUTE_NAME;
+
 @ConditionalOnProperty("banklinks.enabled")
 @Service
 @Slf4j
 public class BanklinkAuthenticationService extends AbstractService {
 
-    private static final String SERVICE_ATTRIBUTE = "service";
     private static final String BANK_ENUM_ATTRIBUTE = "banklinkBankEnum";
 
-    private final StatisticsHandler statistics;
     private final AuthLinkManager authLinkManager;
 
     public BanklinkAuthenticationService(TaraResourceBundleMessageSource messageSource, StatisticsHandler statistics, AuthLinkManager authLinkManager) {
-        super(messageSource);
-        this.statistics = statistics;
+        super(statistics);
         this.authLinkManager = authLinkManager;
     }
 
@@ -68,16 +65,15 @@ public class BanklinkAuthenticationService extends AbstractService {
             Packet outgoingPacket = banklink.createOutgoingPacket();
             outgoingPacket.setParameter("VK_LANG", LocaleContextHolder.getLocale().getISO3Language().toUpperCase());
             context.getRequestScope().put("packet", outgoingPacket);
-            context.getExternalContext().getSessionMap().put(SERVICE_ATTRIBUTE, context.getFlowScope().get(SERVICE_ATTRIBUTE));
+            context.getExternalContext().getSessionMap().put(CAS_SERVICE_ATTRIBUTE_NAME, context.getFlowScope().get(CAS_SERVICE_ATTRIBUTE_NAME));
             addBankUrlToResponseCspFormActionDirective(context, banklink);
 
-            this.statistics.collect(new StatisticsRecord(
-                    LocalDateTime.now(), getServiceClientId(context), bankEnum, StatisticsOperation.START_AUTH
-            ));
+            logEvent(new StatisticsRecord(LocalDateTime.now(), getServiceClientId(context), bankEnum, StatisticsOperation.START_AUTH));
 
             return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
         } catch (Exception e) {
-            throw this.handleException(context, e);
+            logFailureEvent(context, e);
+            throw e;
         }
     }
 
@@ -89,7 +85,7 @@ public class BanklinkAuthenticationService extends AbstractService {
     public Event checkLoginForBankLink(RequestContext context) {
         try {
             HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getNativeRequest();
-            context.getFlowScope().put(SERVICE_ATTRIBUTE, context.getExternalContext().getSessionMap().get(SERVICE_ATTRIBUTE));
+            context.getFlowScope().put(CAS_SERVICE_ATTRIBUTE_NAME, context.getExternalContext().getSessionMap().get(CAS_SERVICE_ATTRIBUTE_NAME));
 
             AuthLinkInfo authInfo = authLinkManager.getPacketInfo(request);
 
@@ -100,32 +96,19 @@ public class BanklinkAuthenticationService extends AbstractService {
             TaraCredential credential = new TaraCredential(AuthenticationType.BankLink, principalCode, firstName, lastName);
             context.getFlowExecutionContext().getActiveSession().getScope().put(CasWebflowConstants.VAR_ID_CREDENTIAL, credential);
 
-            this.statistics.collect(new StatisticsRecord(
-                    LocalDateTime.now(), getServiceClientId(context), getBankEnum(context), StatisticsOperation.SUCCESSFUL_AUTH
-            ));
+            logEvent(new StatisticsRecord(LocalDateTime.now(), getServiceClientId(context), getBankEnum(context), StatisticsOperation.SUCCESSFUL_AUTH));
 
             return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
         } catch (Exception e) {
-            throw this.handleException(context, e);
+            logFailureEvent(context, e);
+            throw e;
         }
     }
 
-    private RuntimeException handleException(RequestContext context, Exception exception) {
-        try {
-            try {
-                BankEnum bankEnum = getBankEnum(context);
-                if (bankEnum != null)
-                    this.statistics.collect(new StatisticsRecord(
-                            LocalDateTime.now(), getServiceClientId(context), bankEnum, exception.getMessage()));
-            } catch (Exception e) {
-                log.error("Failed to collect error statistics!", e);
-            }
-
-            String localizedErrorMessage = this.getMessage(Constants.MESSAGE_KEY_GENERAL_ERROR);
-            return new TaraAuthenticationException(localizedErrorMessage, exception);
-        } finally {
-            clearFlowScope(context);
-        }
+    private void logFailureEvent(RequestContext context, Exception e) {
+        BankEnum bankEnum = getBankEnum(context);
+        if (bankEnum != null)
+            logEvent(new StatisticsRecord(LocalDateTime.now(), getServiceClientId(context), bankEnum, e.getMessage()));
     }
 
     private static BankEnum getBankEnum(RequestContext context) {
@@ -135,11 +118,6 @@ public class BanklinkAuthenticationService extends AbstractService {
     private static void addBankUrlToResponseCspFormActionDirective(RequestContext context, AuthLink banklink) {
         HttpServletResponse response = (HttpServletResponse) context.getExternalContext().getNativeResponse();
         CspHeaderUtil.addValueToExistingDirectiveInCspHeader(response, CspDirective.FORM_ACTION, banklink.getUrl());
-    }
-
-    private static void clearFlowScope(RequestContext context) {
-        context.getFlowScope().clear();
-        context.getFlowExecutionContext().getActiveSession().getScope().clear();
     }
 
     protected static String getUnescapedNameField(String name) {

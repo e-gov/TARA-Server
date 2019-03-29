@@ -2,18 +2,15 @@ package ee.ria.sso.service.eidas;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ee.ria.sso.Constants;
-import ee.ria.sso.authentication.AuthenticationType;
-import ee.ria.sso.authentication.EidasAuthenticationFailedException;
-import ee.ria.sso.authentication.LevelOfAssurance;
-import ee.ria.sso.authentication.TaraAuthenticationException;
+import ee.ria.sso.authentication.*;
 import ee.ria.sso.authentication.credential.PreAuthenticationCredential;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.security.CspDirective;
 import ee.ria.sso.security.CspHeaderUtil;
 import ee.ria.sso.service.AbstractService;
+import ee.ria.sso.service.ExternalServiceHasFailedException;
+import ee.ria.sso.service.UserAuthenticationFailedException;
 import ee.ria.sso.statistics.StatisticsHandler;
-import ee.ria.sso.statistics.StatisticsOperation;
-import ee.ria.sso.statistics.StatisticsRecord;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apereo.cas.web.flow.CasWebflowConstants;
@@ -28,9 +25,11 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
+
+import static ee.ria.sso.statistics.StatisticsOperation.START_AUTH;
+import static ee.ria.sso.statistics.StatisticsOperation.SUCCESSFUL_AUTH;
 
 @ConditionalOnProperty("eidas.enabled")
 @Service
@@ -38,14 +37,12 @@ import java.util.UUID;
 public class EidasAuthenticationService extends AbstractService {
 
     public static final String SESSION_ATTRIBUTE_RELAY_STATE = "relayState";
-    private final StatisticsHandler statistics;
     private final EidasAuthenticator eidasAuthenticator;
 
     public EidasAuthenticationService(TaraResourceBundleMessageSource messageSource,
                                       StatisticsHandler statistics,
                                       EidasAuthenticator eidasAuthenticator) {
-        super(messageSource);
-        this.statistics = statistics;
+        super(statistics);
         this.eidasAuthenticator = eidasAuthenticator;
     }
 
@@ -57,9 +54,7 @@ public class EidasAuthenticationService extends AbstractService {
     public Event startLoginByEidas(RequestContext context) {
         final PreAuthenticationCredential credential = context.getFlowExecutionContext().getActiveSession().getScope().get("credential", PreAuthenticationCredential.class);
         try {
-            this.statistics.collect(new StatisticsRecord(
-                    LocalDateTime.now(), getServiceClientId(context), AuthenticationType.eIDAS, StatisticsOperation.START_AUTH
-            ));
+            logEvent(context, AuthenticationType.eIDAS, START_AUTH);
             if (log.isDebugEnabled()) {
                 log.debug("Starting eIDAS login: <country:{}>", credential.getCountry());
             }
@@ -78,8 +73,12 @@ public class EidasAuthenticationService extends AbstractService {
             }
             context.getExternalContext().recordResponseComplete();
             return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
+        } catch (IOException e) {
+            logEvent(context, e, AuthenticationType.eIDAS);
+            throw new ExternalServiceHasFailedException("message.eidas.error", "eidas-client connection has failed: " + e.getMessage(), e);
         } catch (Exception e) {
-            throw this.handleException(context, e);
+            logEvent(context, e, AuthenticationType.eIDAS);
+            throw e;
         }
     }
 
@@ -100,44 +99,18 @@ public class EidasAuthenticationService extends AbstractService {
             context.getFlowExecutionContext().getActiveSession().getScope().put(CasWebflowConstants.VAR_ID_CREDENTIAL, credential);
             context.getFlowScope().put(Constants.CAS_SERVICE_ATTRIBUTE_NAME, context.getExternalContext().getSessionMap().get(Constants.CAS_SERVICE_ATTRIBUTE_NAME));
 
-            this.statistics.collect(new StatisticsRecord(
-                    LocalDateTime.now(), getServiceClientId(context), AuthenticationType.eIDAS, StatisticsOperation.SUCCESSFUL_AUTH
-            ));
-
+            logEvent(context, AuthenticationType.eIDAS, SUCCESSFUL_AUTH);
             return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
+        } catch (EidasAuthenticationFailedException e) {
+            logEvent(context, e, AuthenticationType.eIDAS);
+            throw new UserAuthenticationFailedException("message.eidas.authfailed", e.getMessage(), e);
+        } catch (IOException e) {
+            logEvent(context, e, AuthenticationType.eIDAS);
+            throw new ExternalServiceHasFailedException("message.eidas.error", "eidas-client connection has failed: " + e.getMessage(), e);
         } catch (Exception e) {
-            throw this.handleException(context, e);
+            logEvent(context, e, AuthenticationType.eIDAS);
+            throw e;
         }
-    }
-
-    private RuntimeException handleException(RequestContext context, Exception exception) {
-        try {
-            try {
-                this.statistics.collect(new StatisticsRecord(
-                        LocalDateTime.now(), getServiceClientId(context), AuthenticationType.eIDAS, exception.getMessage()));
-            } catch (Exception e) {
-                log.error("Failed to collect error statistics!", e);
-            }
-
-            String localizedErrorMessage = null;
-
-            if (exception instanceof EidasAuthenticationFailedException) {
-                localizedErrorMessage = this.getMessage("message.eidas.authfailed", "message.eidas.error");
-            }
-
-            if (StringUtils.isEmpty(localizedErrorMessage)) {
-                localizedErrorMessage = this.getMessage(Constants.MESSAGE_KEY_GENERAL_ERROR);
-            }
-
-            return new TaraAuthenticationException(localizedErrorMessage, exception);
-        } finally {
-            clearFlowScope(context);
-        }
-    }
-
-    private static void clearFlowScope(RequestContext context) {
-        context.getFlowScope().clear();
-        context.getFlowExecutionContext().getActiveSession().getScope().clear();
     }
 
     private static void configureResponseForWriting(HttpServletResponse response, byte[] html) {

@@ -1,26 +1,23 @@
-package ee.ria.sso.endpoints;
+package ee.ria.sso.service.idcard;
 
-import java.security.cert.X509Certificate;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
-
+import ee.ria.sso.Constants;
+import ee.ria.sso.utils.X509Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.apereo.inspektr.audit.annotation.Audit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.json.MappingJackson2JsonView;
 
-import ee.ria.sso.Constants;
-import ee.ria.sso.utils.X509Utils;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import java.security.cert.X509Certificate;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Created by Janar Rahumeel (CGI Estonia)
@@ -28,6 +25,7 @@ import ee.ria.sso.utils.X509Utils;
 
 @Slf4j
 @Controller
+@ConditionalOnProperty("id-card.enabled")
 public class IDCardController {
 
     public static final String HEADER_SSL_CLIENT_CERT = "XCLIENTCERTIFICATE";

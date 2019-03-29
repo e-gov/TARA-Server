@@ -1,8 +1,9 @@
 package ee.ria.sso.service.idcard;
 
 import ee.ria.sso.Constants;
+import ee.ria.sso.service.ExternalServiceHasFailedException;
+import ee.ria.sso.service.UserAuthenticationFailedException;
 import ee.ria.sso.authentication.AuthenticationType;
-import ee.ria.sso.authentication.TaraAuthenticationException;
 import ee.ria.sso.config.idcard.IDCardConfigurationProvider;
 import ee.ria.sso.config.idcard.TestIDCardConfiguration;
 import ee.ria.sso.oidc.TaraScope;
@@ -13,6 +14,8 @@ import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -21,6 +24,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
 
+import java.net.SocketTimeoutException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
@@ -41,12 +45,12 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
     private IDCardAuthenticationService authenticationService;
 
     @Autowired
-    @Qualifier("idCardTrustedCertificatesMap")
-    private Map<String, X509Certificate> trustedCertificates;
-
-    @Autowired
     @Qualifier("mockIDCardUserCertificate2015")
     private X509Certificate mockUserCertificate2015;
+
+    @Autowired
+    @Qualifier("mockIDCardUserCertificate2011")
+    private X509Certificate mockUserCertificate2011;
 
     @Autowired
     @Qualifier("mockIDCardUserCertificate2018")
@@ -54,6 +58,9 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
 
     @Autowired
     private OCSPValidator ocspValidatorMock;
+
+    @Captor
+    ArgumentCaptor<IDCardConfigurationProvider.Ocsp> ocspConfiguration;
 
 
 
@@ -65,7 +72,7 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
 
     @Test
     public void loginByIDCardShouldFailWhenNoCertificatePresentInSession() {
-        expectedEx.expect(TaraAuthenticationException.class);
+        expectedEx.expect(IllegalStateException.class);
         expectedEx.expectMessage("Unable to find certificate from session");
 
         try {
@@ -80,7 +87,7 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
 
     @Test
     public void loginByIDCardShouldFailWhenCertificateIsNotValidYet() throws Exception {
-        expectedEx.expect(TaraAuthenticationException.class);
+        expectedEx.expect(UserAuthenticationFailedException.class);
         expectedEx.expectMessage("User certificate is not yet valid");
 
         X509Certificate certificate = mockInvalidCertificate(new CertificateNotYetValidException());
@@ -98,7 +105,7 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
 
     @Test
     public void loginByIDCardShouldFailWhenCertificateIsExpired() throws Exception {
-        expectedEx.expect(TaraAuthenticationException.class);
+        expectedEx.expect(UserAuthenticationFailedException.class);
         expectedEx.expectMessage("User certificate is expired");
 
         X509Certificate certificate = mockInvalidCertificate(new CertificateExpiredException());
@@ -115,27 +122,59 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
     }
 
     @Test
-    public void loginByIDCardShouldFailWhenOCSPValidatorThrowsException() {
-        expectedEx.expect(TaraAuthenticationException.class);
-        expectedEx.expectMessage("OCSP validation failed");
+    public void loginByIDCardShouldFailWhenOCSPValidatorThrowsUnexcpectedException() {
+        expectedEx.expect(RuntimeException.class);
+        expectedEx.expectMessage("Unexpected exception");
 
         RequestContext requestContext = this.getMockRequestContextWith(null, mockUserCertificate2015);
-        Exception cause = OCSPValidationException.of(new RuntimeException());
+        Exception cause = new RuntimeException("Unexpected exception");
 
-        Mockito.doThrow(cause).when(ocspValidatorMock).validate(mockUserCertificate2015,
-                trustedCertificates.get("TEST of ESTEID-SK 2015"),
-                new OCSPValidator.OCSPConfiguration(
-                        configurationProvider.getOcspUrl(),
-                        trustedCertificates,
-                        configurationProvider.getOcspAcceptedClockSkew(),
-                        configurationProvider.getOcspResponseLifetime()
-                )
-        );
+        Mockito.doThrow(cause).when(ocspValidatorMock).checkCert(Mockito.eq(mockUserCertificate2015));
 
         try {
             Event event = this.authenticationService.loginByIDCard(requestContext);
         } catch (Exception e) {
-            this.verifyLogContentsOnUnsuccessfulAuthentication("OCSP validation failed");
+            this.verifyLogContentsOnUnsuccessfulAuthentication("Unexpected exception");
+            throw e;
+        }
+
+        Assert.fail("Should not reach this!");
+    }
+
+    @Test
+    public void loginByIDCardShouldFailWhenOCSPValidatorThrowsOCSPConnectionFailedException() {
+        expectedEx.expect(ExternalServiceHasFailedException.class);
+        expectedEx.expectMessage("OCSP service is currently not available, please try again later");
+
+        RequestContext requestContext = this.getMockRequestContextWith(null, mockUserCertificate2015);
+        Exception cause = new OCSPServiceNotAvailableException(new SocketTimeoutException("timeout"));
+
+        Mockito.doThrow(cause).when(ocspValidatorMock).checkCert(Mockito.eq(mockUserCertificate2015));
+
+        try {
+            Event event = this.authenticationService.loginByIDCard(requestContext);
+        } catch (Exception e) {
+            this.verifyLogContentsOnUnsuccessfulAuthentication("OCSP service is currently not available, please try again later");
+            throw e;
+        }
+
+        Assert.fail("Should not reach this!");
+    }
+
+    @Test
+    public void loginByIDCardShouldFailWhenOCSPValidatorThrowsOCSPValidationFailedException() {
+        expectedEx.expect(UserAuthenticationFailedException.class);
+        expectedEx.expectMessage("Invalid certificate status <REVOKED> received");
+
+        RequestContext requestContext = this.getMockRequestContextWith(null, mockUserCertificate2015);
+        Exception cause = OCSPValidationException.of(CertificateStatus.REVOKED);
+
+        Mockito.doThrow(cause).when(ocspValidatorMock).checkCert(Mockito.eq(mockUserCertificate2015));
+
+        try {
+            Event event = this.authenticationService.loginByIDCard(requestContext);
+        } catch (Exception e) {
+            this.verifyLogContentsOnUnsuccessfulAuthentication("Invalid certificate status <REVOKED> received");
             throw e;
         }
 
@@ -166,6 +205,34 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
         this.validateUserCredentialWithoutEmail(credential, "38001085718", "JAAK-KRISTJAN", "JÕEORG");
 
         this.verifyLogContentsOnSuccessfulAuthentication();
+    }
+
+    @Test
+    public void loginByIDCard2018SucceedsWithAiaOcsp() {
+        RequestContext requestContext = this.getMockRequestContextWith(null, mockUserCertificate2018);
+
+        Event event = this.authenticationService.loginByIDCard(requestContext);
+        Assert.assertEquals("success", event.getId());
+
+        IdCardCredential credential = (IdCardCredential) requestContext.getFlowExecutionContext().getActiveSession().getScope().get("credential");
+        this.validateUserCredentialWithoutEmail(credential, "38001085718", "JAAK-KRISTJAN", "JÕEORG");
+
+        this.verifyLogContentsOnSuccessfulAuthentication();
+    }
+
+    @Test
+    public void loginByIDCard2011SucceedsWithAiaOcsp() {
+        RequestContext requestContext = this.getMockRequestContextWith(null, mockUserCertificate2011);
+
+        Event event = this.authenticationService.loginByIDCard(requestContext);
+        Assert.assertEquals("success", event.getId());
+
+        IdCardCredential credential = (IdCardCredential) requestContext.getFlowExecutionContext().getActiveSession().getScope().get("credential");
+        this.validateUserCredentialWithoutEmail(credential, "48812040138", "KRÕÕT", "VÄRNICK");
+
+        this.verifyLogContentsOnSuccessfulAuthentication();
+
+        Mockito.verify(ocspValidatorMock).checkCert(Mockito.eq(mockUserCertificate2011));
     }
 
     @Test

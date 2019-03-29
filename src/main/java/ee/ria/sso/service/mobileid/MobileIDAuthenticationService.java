@@ -4,42 +4,42 @@ import com.codeborne.security.AuthenticationException;
 import com.codeborne.security.mobileid.MobileIDSession;
 import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
-import ee.ria.sso.authentication.TaraAuthenticationException;
-import ee.ria.sso.authentication.TaraCredentialsException;
 import ee.ria.sso.authentication.credential.PreAuthenticationCredential;
 import ee.ria.sso.authentication.credential.TaraCredential;
-import ee.ria.sso.service.AbstractService;
-import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.config.mobileid.MobileIDConfigurationProvider;
+import ee.ria.sso.service.AbstractService;
+import ee.ria.sso.service.ExternalServiceHasFailedException;
+import ee.ria.sso.service.UserAuthenticationFailedException;
 import ee.ria.sso.statistics.StatisticsHandler;
-import ee.ria.sso.statistics.StatisticsOperation;
-import ee.ria.sso.statistics.StatisticsRecord;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apereo.cas.web.flow.CasWebflowConstants;
 import org.apereo.inspektr.audit.annotation.Audit;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
 
-import java.time.LocalDateTime;
+import java.io.IOException;
+import java.util.Arrays;
+
+import static com.codeborne.security.AuthenticationException.Code.*;
+import static ee.ria.sso.statistics.StatisticsOperation.START_AUTH;
+import static ee.ria.sso.statistics.StatisticsOperation.SUCCESSFUL_AUTH;
 
 @ConditionalOnProperty("mobile-id.enabled")
 @Service
 @Slf4j
 public class MobileIDAuthenticationService extends AbstractService {
 
-    private final StatisticsHandler statistics;
     private final MobileIDConfigurationProvider configurationProvider;
     private final MobileIDAuthenticatorWrapper mobileIDAuthenticator;
 
-    public MobileIDAuthenticationService(TaraResourceBundleMessageSource messageSource,
-                                         StatisticsHandler statistics,
+    public MobileIDAuthenticationService(StatisticsHandler statistics,
                                          MobileIDConfigurationProvider configurationProvider,
                                          MobileIDAuthenticatorWrapper mobileIDAuthenticator) {
-        super(messageSource);
-        this.statistics = statistics;
+        super(statistics);
         this.configurationProvider = configurationProvider;
         this.mobileIDAuthenticator = mobileIDAuthenticator;
         this.initMobileIDAuthenticator();
@@ -59,10 +59,9 @@ public class MobileIDAuthenticationService extends AbstractService {
     )
     public Event startLoginByMobileID(RequestContext context) {
         final PreAuthenticationCredential credential = context.getFlowExecutionContext().getActiveSession().getScope().get("credential", PreAuthenticationCredential.class);
+        Assert.notNull(credential, "PreAuthenticationCredential is missing!");
         try {
-            this.statistics.collect(new StatisticsRecord(
-                    LocalDateTime.now(), getServiceClientId(context), AuthenticationType.MobileID, StatisticsOperation.START_AUTH
-            ));
+            logEvent(context, AuthenticationType.MobileID, START_AUTH);
             if (log.isDebugEnabled()) {
                 log.debug("Starting mobile ID login: <number:{}>, <ssn:{}>", credential.getMobileNumber(), credential.getPrincipalCode());
             }
@@ -78,8 +77,12 @@ public class MobileIDAuthenticationService extends AbstractService {
             context.getFlowScope().put(Constants.AUTH_COUNT, 0);
 
             return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
+
+        } catch (AuthenticationException e) {
+            return handleMobileAuthenticateException(context, e);
         } catch (Exception e) {
-            throw this.handleException(context, e);
+            logEvent(context, e, AuthenticationType.MobileID);
+            throw e;
         }
     }
 
@@ -98,61 +101,53 @@ public class MobileIDAuthenticationService extends AbstractService {
             if (this.mobileIDAuthenticator.isLoginComplete(session)) {
                 TaraCredential credential = new TaraCredential(AuthenticationType.MobileID, "EE" + session.personalCode, session.firstName, session.lastName);
                 context.getFlowExecutionContext().getActiveSession().getScope().put(CasWebflowConstants.VAR_ID_CREDENTIAL, credential);
-                this.statistics.collect(new StatisticsRecord(
-                        LocalDateTime.now(), getServiceClientId(context), AuthenticationType.MobileID, StatisticsOperation.SUCCESSFUL_AUTH
-                ));
+                logEvent(context, AuthenticationType.MobileID, SUCCESSFUL_AUTH);
 
                 return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
             } else {
                 context.getFlowScope().put(Constants.AUTH_COUNT, ++checkCount);
                 return new Event(this, Constants.EVENT_OUTSTANDING);
             }
+
+        } catch (AuthenticationException e) {
+            return handleGetMobileAuthenticateStatusException(context, e);
         } catch (Exception e) {
-            throw this.handleException(context, e);
+            logEvent(context, e, AuthenticationType.MobileID);
+            throw e;
         }
     }
 
-    private RuntimeException handleException(RequestContext context, Exception exception) {
-        try {
-            try {
-                this.statistics.collect(new StatisticsRecord(
-                        LocalDateTime.now(), getServiceClientId(context), AuthenticationType.MobileID, exception.getMessage()));
-            } catch (Exception e) {
-                log.error("Failed to collect error statistics!", e);
-            }
-
-            String localizedErrorMessage = null;
-
-            if (exception instanceof TaraCredentialsException) {
-                localizedErrorMessage = this.getMessage(((TaraCredentialsException) exception).getKey(), "message.mid.error");
-            } else if (exception instanceof AuthenticationException) {
-                String messageKey = String.format("message.mid.%s", ((AuthenticationException) exception).getCode().name()
-                        .toLowerCase().replace("_", ""));
-                localizedErrorMessage = this.getMessage(messageKey, "message.mid.error");
-            }
-
-            if (StringUtils.isEmpty(localizedErrorMessage)) {
-                localizedErrorMessage = this.getMessage(Constants.MESSAGE_KEY_GENERAL_ERROR);
-            }
-
-            return new TaraAuthenticationException(localizedErrorMessage, exception);
-        } finally {
-            clearFlowScope(context);
+    private Event handleGetMobileAuthenticateStatusException(RequestContext context, AuthenticationException e) {
+        logEvent(context, e, AuthenticationType.MobileID);
+        if (Arrays.asList(EXPIRED_TRANSACTION, USER_CANCEL, MID_NOT_READY, PHONE_ABSENT, SENDING_ERROR, SIM_ERROR, NOT_VALID).contains(e.getCode())) {
+            String messageKey = String.format("message.mid.%s", e.getCode().name().toLowerCase().replace("_", ""));
+            throw new UserAuthenticationFailedException(messageKey, String.format("User authentication failed! DDS GetMobileAuthenticateStatus returned an error (code: %s)", e.getCode()));
+        } else if (INTERNAL_ERROR == e.getCode() || e.getCode() == SERVICE_ERROR && e.getCause() instanceof IOException) {
+            throw new ExternalServiceHasFailedException("message.mid.error", String.format("Technical problems with DDS! DDS GetMobileAuthenticateStatus returned an error (code: %s)", e.getCode()));
+        } else {
+            throw new IllegalStateException(String.format("Unexpected error returned by DDS GetMobileAuthenticateStatus (code: %s)", e.getCode()), e);
         }
     }
 
-    private static void clearFlowScope(RequestContext context) {
-        context.getFlowScope().clear();
-        context.getFlowExecutionContext().getActiveSession().getScope().clear();
+    private Event handleMobileAuthenticateException(RequestContext context, AuthenticationException e) {
+        logEvent(context, e, AuthenticationType.MobileID);
+        if (Arrays.asList(USER_PHONE_ERROR, NO_AGREEMENT, CERTIFICATE_REVOKED, NOT_ACTIVATED, NOT_VALID).contains(e.getCode())) {
+            String messageKey = String.format("message.mid.%s", e.getCode().name().toLowerCase().replace("_", ""));
+            throw new UserAuthenticationFailedException(messageKey, String.format("User authentication failed! DDS MobileAuthenticate returned an error (code: %s)", e.getCode()));
+        } else if (Arrays.asList(AUTHENTICATION_ERROR, USER_CERTIFICATE_MISSING, UNABLE_TO_TEST_USER_CERTIFICATE).contains(e.getCode())
+                || (e.getCode() == SERVICE_ERROR && e.getCause() instanceof IOException)) {
+            throw new ExternalServiceHasFailedException("message.mid.error", String.format("Technical problems with DDS! DDS MobileAuthenticate returned an error (code: %s)", e.getCode()));
+        } else {
+            throw new IllegalStateException(String.format("Unexpected error returned by DDS MobileAuthenticate (code: %s)!", e.getCode()), e);
+        }
     }
 
     private void validateCredential(PreAuthenticationCredential credential) {
         if (!StringUtils.isNumeric(credential.getPrincipalCode())) {
-            throw new TaraCredentialsException("message.mid.invalidcode", credential.getPrincipalCode());
+            throw new UserAuthenticationFailedException("message.mid.invalidcode", String.format("User provided invalid idCode: <%s>", credential.getPrincipalCode()));
         }
         if (StringUtils.isBlank(credential.getMobileNumber()) || !credential.getMobileNumber().matches("^\\d+$")) {
-            throw new TaraCredentialsException("message.mid.invalidnumber", credential.getMobileNumber());
+            throw new UserAuthenticationFailedException("message.mid.invalidnumber", String.format("User provided invalid mobileNumber: <%s>", credential.getMobileNumber()));
         }
     }
-
 }

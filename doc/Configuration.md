@@ -5,8 +5,8 @@ _CAS tarkvaras tehtud kohanduste ja täienduste kirjeldus._
 - [Logging](#logging)
   * [Log files](#log_files)
   * [Remote syslog server](#tara_syslog)
-  * [TARA audit trail events](#audit_events)
-  * [Tara-Stat](#tara_stat_log)
+  * [TARA audit trail events](#audit_events)  
+  * [Tara-Stat](#tara_stat_log)  
 - [Configuration parameters](#configuration_parameters)
   * [ID-Card authentication](#id_card)
   * [Mobile-ID authentication](#mobile_id)
@@ -189,6 +189,8 @@ The following is a complete list of TARA specific audit events:
 | `OAUTH_CODE_NOT_CREATED` | Authentication code creation failed. |
 | `ACCESS_TOKEN_REQUEST_HANDLING_SUCCESS` | Request was successfully processed and an access token was sent as a response. |
 | `ACCESS_TOKEN_REQUEST_HANDLING_FAILED` | An error occurred while processing the request or sending the response. |
+| `USER_INFO_DATA_CREATED`| User profile data for UserInfo endpoint response was successfully created. |
+| `USER_INFO_DATA_NOT_CREATED`| User profile data creation for UserInfo endpoint response has failed. |
 
 NB! See additional list of CAS related events [here](https://apereo.github.io/cas/5.3.x/installation/Audits.html#audit-events)
 
@@ -257,28 +259,123 @@ Table 2 - Enabling ID-card certificate validation
 | :---------------- | :---------- | :----------------|
 | `id-card.ocsp-enabled` | N | Enables ID-card certificate validation if set to `true`, otherwise ignores all other ocsp related configuration. Defaults to `true`, if not specified. |
 
-Table 3 - Configuring ID-card OCSP 
+Table 3 - Configuring ID-card truststore 
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
-| `id-card.ocsp-url` | Y | HTTP URL of the OCSP service. |
-| `id-card.ocsp-certificate-location` | Y | Path to the location of the trusted OCSP certificates. In case the certificate files are to be loaded from classpath, this path should be prefixed with `classpath:`. In case the certificate files are to be loaded from disk, this path should be prefixed with `file:`. |
-| `id-card.ocsp-certificates` | Y | A comma separated list of OCSP responder certificates and ID-card issuer certificates. |
-| `id-card.ocsp-accepted-clock-skew` | N | Maximum accepted time difference in seconds between OCSP provider and TARA-Server. Defaults to `2`, if not specified. |
-| `id-card.ocsp-response-lifetime` | N | Maximum accepted age of an OCSP response in seconds. Defaults to `900` if not specified. |
+| `id-card.truststore` | Y | Path to the truststore that holds list of OCSP responder certificates and ID-card issuer certificates. For example: `classpath:id-card-truststore.p12`, when the file is to be accessed from the classpath or `file:/etc/cas/id-card-truststore.p12` when the file is referenced in the local filesystem.  |
+| `id-card.truststore-type` | N | Truststore type. Defaults to `PKCS12` |
+| `id-card.truststore-pass` | Y | Truststore password |
 
-Example:
+Table 4 - Explicit configuration of the OCSP service(s) 
+
+TARA allows multiple sets of OCSP configurations to be defined by using the `id-card.ocsp[{index}]` notation. 
+
+Each OCSP configuration can contain the following set of properties: 
+
+
+| Property        | Mandatory | Description |
+| :---------------- | :---------- | :----------------|
+| `id-card.ocsp[{index}].issuer-cn` | Y | A comma separated list of supported certificate issuer CN-s (CN in the certificate) that this OCSP supports. <br/><br/>Note that the certificate referenced by CN must be present in the truststore (`id-card.truststore`) |
+| `id-card.ocsp[{index}].url` | Y | The HTTP URL of the OCSP service. |
+| `id-card.ocsp[{index}].responder-certificate-cn` | N | Explicit OCSP response signing certificate CN. If not provided, OCSP reponse signer certificate is expected to be issued from the same chain as user-certificate. <br/><br/>Note that responder certificate extended key usage must have the OCSP signing (`1.3.6.1.5.5.7.3.9`) value. |
+| `id-card.ocsp[{index}].nonce-disabled` | N | Boolean value, that determines whether the nonce extension usage is disabled. Defaults to `false` if not specified. |
+| `id-card.ocsp[{index}].accepted-clock-skew-in-seconds` | N | Maximum accepted time difference in seconds between OCSP provider and TARA-Server. Defaults to `2`, if not specified. |
+| `id-card.ocsp[{index}].response-lifetime-inseconds` | N | Maximum accepted age of an OCSP response in seconds. Defaults to `900` if not specified. |
+| `id-card.ocsp[{index}].connect-timeout-in-milliseconds` | N | Connection timout in milliseconds. Defaults to `3000`, if not specified. |
+| `id-card.ocsp[{index}].read-timeout-in-milliseconds` | N | Connection read timeout in milliseconds. Defaults to `3000` if not specified. |
+
+NB! A default configuration is used when a user certificate is encountered by a trusted issuer, that has no matching OCSP configuration by the issuer's CN and the user certificate contains the AIA OCSP URL (the configuration will use the default values of the properties listed in Table 4)
+
+
+Example 1: using SK AIA OCSP only (a non-commercial, best-effort service):
 
 ````
 id-card.enabled = true
 id-card.ocsp-enabled=true
-id-card.ocsp-url=http://demo.sk.ee/ocsp
-id-card.ocsp-certificate-location=file:/etc/ocspcerts/test
-id-card.ocsp-certificates=TEST_of_SK_OCSP_RESPONDER_2011.crt,TEST_of_ESTEID-SK_2011.crt,TEST_of_ESTEID-SK_2015.crt,TEST_of_ESTEID2018.crt
-id-card.ocsp-accepted-clock-skew=2
-id-card.ocsp-response-lifetime=900
+
+id-card.truststore=classpath:/id-card/idcard-truststore-test.p12
+id-card.truststore-type=PKCS12
+id-card.truststore-pass=changeit
+
+id-card.ocsp[0].issuer-cn=TEST of ESTEID-SK 2011
+id-card.ocsp[0].url=http://aia.sk.ee/esteid2011
+id-card.ocsp[0].nonce-disabled=true
+
+id-card.ocsp[1].issuer-cn=TEST of ESTEID-SK 2015
+id-card.ocsp[1].url=http://aia.sk.ee/esteid2015
+id-card.ocsp[1].nonce-disabled=true
+
+id-card.ocsp[2].issuer-cn=ESTEID2018
+id-card.ocsp[2].url=http://aia.sk.ee/esteid2018
+id-card.ocsp[2].nonce-disabled=false
 ````
 
+Example 2:  using SK's commercial OCSP only (with subscription only):
+
+````
+id-card.enabled = true
+id-card.ocsp-enabled=true
+
+id-card.truststore=classpath:/id-card/idcard-truststore-test.p12
+id-card.truststore-type=PKCS12
+id-card.truststore-pass=changeit
+
+id-card.ocsp[0].issuer-cn=ESTEID-SK 2011, ESTEID-SK 2015, ESTEID2018
+id-card.ocsp[0].url=http://ocsp.sk.ee/
+id-card.ocsp[0].responder-certificate-cn=SK OCSP RESPONDER 2011
+````
+
+
+Table 5 - Configuring fallback OCSP service(s)
+
+When the primary OCSP service is not available (ie returns other than HTTP 200 status code, an invalid response Content-Type or the connection times out) a fallback OCSP connection(s) can be configured to query for the certificate status.
+
+In case of multiple fallback configurations per issuer, the execution order is determined by the order of definition in the configuration. 
+ 
+The following properties can be used to configure a fallback OCSP service:
+  
+
+| Property        | Mandatory | Description |
+| :---------------- | :---------- | :----------------|
+| `id-card.fallback-ocsp[{index}].issuer-cn` | Y | A comma separated list of certificate issuer CN's. Determines the issuer(s) this fallback configuration will be applied to. <br/><br/>Note that the certificate by CN must be present in the truststore (`id-card.truststore`) |
+| `id-card.fallback-ocsp[{index}].url` | Y | HTTP URL of the OCSP service. |
+| `id-card.fallback-ocsp[{index}].responder-certificate-cn` | N | Explicit OCSP response signing certificate CN. If not provided, OCSP reponse signer certificate is expected to be issued from the same chain as user-certificate. |
+| `id-card.fallback-ocsp[{index}].nonce-disabled` | N | Boolean value, that determines whether the nonce extension usage is disabled. Defaults to `false` if not specified. |
+| `id-card.fallback-ocsp[{index}].accepted-clock-skew-in-seconds` | N | Maximum accepted time difference in seconds between OCSP provider and TARA-Server. Defaults to `2`, if not specified. |
+| `id-card.fallback-ocsp[{index}].response-lifetime-inseconds` | N | Maximum accepted age of an OCSP response in seconds. Defaults to `900` if not specified. |
+| `id-card.fallback-ocsp[{index}].connect-timeout-in-milliseconds` | N | Connection timout in milliseconds. Defaults to `3000`, if not specified. |
+| `id-card.fallback-ocsp[{index}].read-timeout-in-milliseconds` | N | Connection read timeout in milliseconds. Defaults to `3000` if not specified. |
+
+
+Example: AIA OCSP by default using a static backup OCSP 
+
+````
+id-card.enabled = true
+id-card.ocsp-enabled=true
+
+id-card.truststore=classpath:/id-card/idcard-truststore-test.p12
+id-card.truststore-type=PKCS12
+id-card.truststore-pass=changeit
+
+# configure AIA ocsp
+id-card.ocsp[0].issuer-cn=ESTEID-SK 2011
+id-card.ocsp[0].url=http://aia.sk.ee/esteid2011
+id-card.ocsp[0].nonce-disabled=true
+
+id-card.ocsp[1].issuer-cn=ESTEID-SK 2015
+id-card.ocsp[1].url=http://aia.sk.ee/esteid2015
+id-card.ocsp[1].nonce-disabled=true
+
+id-card.ocsp[2].issuer-cn=ESTEID2018
+id-card.ocsp[2].url=http://aia.sk.ee/esteid2018
+id-card.ocsp[2].nonce-disabled=false
+
+# use as fallback
+id-card.fallback-ocsp[0].issuer-cn=ESTEID-SK 2011, ESTEID-SK 2015, ESTEID2018
+id-card.fallback-ocsp[0].url=http://ocsp.sk.ee/
+id-card.fallback-ocsp[0].responder-certificate-cn=SK OCSP RESPONDER 2011
+````
 
 <a name="mobile_id"></a>
 ### Mobile-ID authentication

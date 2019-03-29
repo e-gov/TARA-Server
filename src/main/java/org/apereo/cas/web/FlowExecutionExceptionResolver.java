@@ -1,6 +1,7 @@
 package org.apereo.cas.web;
 
-import ee.ria.sso.flow.AbstractFlowExecutionException;
+import ee.ria.sso.Constants;
+import ee.ria.sso.flow.AuthenticationFlowExecutionException;
 import org.apache.commons.text.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +13,7 @@ import org.springframework.webflow.execution.repository.FlowExecutionRepositoryE
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,13 +36,18 @@ public class FlowExecutionExceptionResolver implements HandlerExceptionResolver 
             Map<String, Object> model = new HashMap();
             model.put(this.modelKey, StringEscapeUtils.escapeHtml4(exception.getMessage()));
             return new ModelAndView(new RedirectView(urlToRedirectTo), model);
-        } else if (exception instanceof AbstractFlowExecutionException) {
+        } else if (exception instanceof AuthenticationFlowExecutionException) {
             if (log.isTraceEnabled()) {
                 log.trace("Flow execution error", exception);
             } else {
                 log.debug("Flow execution error: {}", exception.getMessage());
             }
-            return ((AbstractFlowExecutionException) exception).getModelAndView();
+
+            return new ModelAndView(
+                    "error",
+                    Collections.singletonMap(Constants.ERROR_MESSAGE,
+                    ((AuthenticationFlowExecutionException) exception).getLocalizedMessage()),
+                    ((AuthenticationFlowExecutionException) exception).getHttpStatusCode());
         } else {
             log.debug("Ignoring the received exception due to a type mismatch", exception);
             return null;
