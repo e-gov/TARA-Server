@@ -44,7 +44,12 @@ public class StatisticsHandlerTest {
 
     private void assertMessageLogged(String clientId, AuthenticationType authenticationType, StatisticsOperation operation, String expectedMessage) {
         SimpleTestAppender.events.clear();
-        new StatisticsHandler().collect(new StatisticsRecord(FIXED_TIME, clientId, authenticationType, operation));
+        new StatisticsHandler().collect(StatisticsRecord.builder()
+                .time(FIXED_TIME)
+                .clientId(clientId)
+                .method(authenticationType)
+                .operation(operation)
+                .build());
         SimpleTestAppender.verifyLogEventsExistInOrder(containsString(expectedMessage));
     }
 
@@ -57,7 +62,13 @@ public class StatisticsHandlerTest {
 
     private void assertErrorLogged(String clientId, AuthenticationType authenticationType, String errorMessage, String expectedMessage) {
         SimpleTestAppender.events.clear();
-        new StatisticsHandler().collect(new StatisticsRecord(FIXED_TIME, clientId, authenticationType, errorMessage));
+        new StatisticsHandler().collect(StatisticsRecord.builder()
+                .time(FIXED_TIME)
+                .clientId(clientId)
+                .method(authenticationType)
+                .operation(StatisticsOperation.ERROR)
+                .error(errorMessage)
+                .build());
         SimpleTestAppender.verifyLogEventsExistInOrder(containsString(expectedMessage));
     }
 
