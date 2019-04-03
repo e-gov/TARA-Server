@@ -63,13 +63,23 @@ public class AbstractService {
     }
 
     protected void logEvent(RequestContext context, AuthenticationType authenticationType, StatisticsOperation eventType) {
-        logEvent(new StatisticsRecord(
-                LocalDateTime.now(), getServiceClientId(context), authenticationType, eventType
-        ));
+        logEvent(StatisticsRecord.builder()
+                .time(LocalDateTime.now())
+                .clientId(getServiceClientId(context))
+                .method(authenticationType)
+                .operation(eventType)
+                .build()
+        );
     }
 
     protected void logEvent(RequestContext context, Exception e, AuthenticationType authenticationType) {
-        logEvent(new StatisticsRecord(
-                LocalDateTime.now(), getServiceClientId(context), authenticationType, e.getMessage()));
+        logEvent(StatisticsRecord.builder()
+                .time(LocalDateTime.now())
+                .clientId(getServiceClientId(context))
+                .method(authenticationType)
+                .operation(StatisticsOperation.ERROR)
+                .error(e.getMessage())
+                .build()
+        );
     }
 }

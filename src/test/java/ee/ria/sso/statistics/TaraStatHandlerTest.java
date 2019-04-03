@@ -52,7 +52,12 @@ public class TaraStatHandlerTest {
         final AuthenticationType authenticationType = AuthenticationType.IDCard;
         final StatisticsOperation operationCode = StatisticsOperation.START_AUTH;
 
-        taraStatHandler.collect(new StatisticsRecord(time, clientId, authenticationType, operationCode));
+        taraStatHandler.collect(StatisticsRecord.builder()
+                .time(time)
+                .clientId(clientId)
+                .method(authenticationType)
+                .operation(operationCode)
+                .build());
         SimpleTestAppender.verifyLogEventsExistInOrder(Matchers.containsString(String.format(
                 "{\"time\":\"%s\",\"clientId\":\"%s\",\"method\":\"%s\",\"operation\":\"%s\"}",
                 time.toString(),
@@ -69,7 +74,12 @@ public class TaraStatHandlerTest {
         final AuthenticationType authenticationType = AuthenticationType.IDCard;
         final StatisticsOperation operationCode = StatisticsOperation.SUCCESSFUL_AUTH;
 
-        taraStatHandler.collect(new StatisticsRecord(time, clientId, authenticationType, operationCode));
+        taraStatHandler.collect(StatisticsRecord.builder()
+                .time(time)
+                .clientId(clientId)
+                .method(authenticationType)
+                .operation(operationCode)
+                .build());
         SimpleTestAppender.verifyLogEventsExistInOrder(Matchers.containsString(String.format(
                 "{\"time\":\"%s\",\"clientId\":\"%s\",\"method\":\"%s\",\"operation\":\"%s\"}",
                 time.toString(),
@@ -87,7 +97,13 @@ public class TaraStatHandlerTest {
         final StatisticsOperation operationCode = StatisticsOperation.ERROR;
         final String causeOfError = "Cause of error.";
 
-        taraStatHandler.collect(new StatisticsRecord(time, clientId, authenticationType, causeOfError));
+        taraStatHandler.collect(StatisticsRecord.builder()
+                .time(time)
+                .clientId(clientId)
+                .method(authenticationType)
+                .operation(operationCode)
+                .error(causeOfError)
+                .build());
         SimpleTestAppender.verifyLogEventsExistInOrder(Matchers.containsString(String.format(
                 "{\"time\":\"%s\",\"clientId\":\"%s\",\"method\":\"%s\",\"operation\":\"%s\",\"error\":\"%s\"}",
                 time.toString(),
@@ -105,7 +121,13 @@ public class TaraStatHandlerTest {
         final StatisticsOperation operationCode = StatisticsOperation.START_AUTH;
         final BankEnum bank = BankEnum.SEB;
 
-        taraStatHandler.collect(new StatisticsRecord(time, clientId, bank, operationCode));
+        taraStatHandler.collect(StatisticsRecord.builder()
+                .time(time)
+                .clientId(clientId)
+                .method(AuthenticationType.BankLink)
+                .bank(bank.getName())
+                .operation(operationCode)
+                .build());
         SimpleTestAppender.verifyLogEventsExistInOrder(Matchers.containsString(String.format(
                 "{\"time\":\"%s\",\"clientId\":\"%s\",\"method\":\"%s\",\"bank\":\"%s\",\"operation\":\"%s\"}",
                 time.toString(),
@@ -123,7 +145,13 @@ public class TaraStatHandlerTest {
         final StatisticsOperation operationCode = StatisticsOperation.SUCCESSFUL_AUTH;
         final BankEnum bank = BankEnum.SEB;
 
-        taraStatHandler.collect(new StatisticsRecord(time, clientId, bank, operationCode));
+        taraStatHandler.collect(StatisticsRecord.builder()
+                .time(time)
+                .clientId(clientId)
+                .method(AuthenticationType.BankLink)
+                .bank(bank.getName())
+                .operation(operationCode)
+                .build());
         SimpleTestAppender.verifyLogEventsExistInOrder(Matchers.containsString(String.format(
                 "{\"time\":\"%s\",\"clientId\":\"%s\",\"method\":\"%s\",\"bank\":\"%s\",\"operation\":\"%s\"}",
                 time.toString(),
@@ -141,8 +169,14 @@ public class TaraStatHandlerTest {
         final StatisticsOperation operationCode = StatisticsOperation.ERROR;
         final String causeOfError = "Cause of error.";
         final BankEnum bank = BankEnum.SEB;
-
-        taraStatHandler.collect(new StatisticsRecord(time, clientId, bank, causeOfError));
+        taraStatHandler.collect(StatisticsRecord.builder()
+                .time(time)
+                .clientId(clientId)
+                .method(AuthenticationType.BankLink)
+                .bank(bank.getName())
+                .operation(operationCode)
+                .error(causeOfError)
+                .build());
         SimpleTestAppender.verifyLogEventsExistInOrder(Matchers.containsString(String.format(
                 "{\"time\":\"%s\",\"clientId\":\"%s\",\"method\":\"%s\",\"bank\":\"%s\",\"operation\":\"%s\",\"error\":\"%s\"}",
                 time.toString(),

@@ -21,171 +21,135 @@ public class StatisticsRecordTest {
     public ExpectedException expectedEx = ExpectedException.none();
 
     @Test
-    public void missingTimeShouldThrowException1() {
+    public void missingTimeShouldThrowException() {
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("Authentication time cannot be null!");
 
-        new StatisticsRecord(null, MOCK_CLIENT_ID, AuthenticationType.IDCard, StatisticsOperation.START_AUTH);
+        StatisticsRecord.builder()
+                .time(null)
+                .clientId(MOCK_CLIENT_ID)
+                .method(AuthenticationType.IDCard)
+                .operation(StatisticsOperation.START_AUTH).build();
     }
 
     @Test
-    public void missingTimeShouldThrowException2() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("Authentication time cannot be null!");
-
-        new StatisticsRecord(null, MOCK_CLIENT_ID, AuthenticationType.IDCard, MOCK_ERROR_DESCRIPTION);
-    }
-
-    @Test
-    public void missingTimeShouldThrowException3() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("Authentication time cannot be null!");
-
-        new StatisticsRecord(null, MOCK_CLIENT_ID, BankEnum.SEB, StatisticsOperation.START_AUTH);
-    }
-
-    @Test
-    public void missingTimeShouldThrowException4() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("Authentication time cannot be null!");
-
-        new StatisticsRecord(null, MOCK_CLIENT_ID, BankEnum.SEB, MOCK_ERROR_DESCRIPTION);
-    }
-
-
-    @Test
-    public void missingClientIdShouldThrowException1() {
+    public void missingClientIdShouldThrowException() {
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("Client-ID cannot be null!");
 
-        new StatisticsRecord(LocalDateTime.now(), null, AuthenticationType.IDCard, StatisticsOperation.START_AUTH);
+        StatisticsRecord.builder()
+                .time(LocalDateTime.now())
+                .clientId(null)
+                .method(AuthenticationType.IDCard)
+                .operation(StatisticsOperation.START_AUTH).build();
     }
 
     @Test
-    public void missingClientIdShouldThrowException2() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("Client-ID cannot be null!");
-
-        new StatisticsRecord(LocalDateTime.now(), null, AuthenticationType.IDCard, MOCK_ERROR_DESCRIPTION);
-    }
-
-    @Test
-    public void missingClientIdShouldThrowException3() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("Client-ID cannot be null!");
-
-        new StatisticsRecord(LocalDateTime.now(), null, BankEnum.SEB, StatisticsOperation.START_AUTH);
-    }
-
-    @Test
-    public void missingClientIdShouldThrowException4() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("Client-ID cannot be null!");
-
-        new StatisticsRecord(LocalDateTime.now(), null, BankEnum.SEB, MOCK_ERROR_DESCRIPTION);
-    }
-
-
-    @Test
-    public void missingMethodShouldThrowException1() {
+    public void missingMethodShouldThrowException() {
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("Authentication method cannot be null!");
 
-        new StatisticsRecord(LocalDateTime.now(), MOCK_CLIENT_ID, (AuthenticationType) null, StatisticsOperation.START_AUTH);
+        StatisticsRecord.builder()
+                .time(LocalDateTime.now())
+                .clientId("client")
+                .method((AuthenticationType)null)
+                .operation(StatisticsOperation.ERROR).build();
     }
 
     @Test
-    public void missingMethodShouldThrowException2() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("Authentication method cannot be null!");
-
-        new StatisticsRecord(LocalDateTime.now(), MOCK_CLIENT_ID, (AuthenticationType) null, MOCK_ERROR_DESCRIPTION);
-    }
-
-
-    @Test
-    public void missingOperationShouldThrowException1() {
+    public void missingOperationShouldThrowException() {
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("Statistics operation cannot be null!");
 
-        new StatisticsRecord(LocalDateTime.now(), MOCK_CLIENT_ID, AuthenticationType.IDCard, (StatisticsOperation) null);
+        StatisticsRecord.builder()
+                .time(LocalDateTime.now())
+                .clientId("client")
+                .method(AuthenticationType.eIDAS)
+                .operation((StatisticsOperation)null).build();
     }
 
     @Test
-    public void missingOperationShouldThrowException2() {
+    public void missingBankCodeShouldThrowExceptionWhenMethodBanklink() {
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("Statistics operation cannot be null!");
+        expectedEx.expectMessage("Bank cannot be null!");
 
-        new StatisticsRecord(LocalDateTime.now(), MOCK_CLIENT_ID, BankEnum.SEB, (StatisticsOperation) null);
-    }
-
-
-    @Test
-    public void missingErrorDescriptionShouldSucceedOnErrorOperation2() {
-        StatisticsRecord statisticsRecord = new StatisticsRecord(LocalDateTime.now(), MOCK_CLIENT_ID, AuthenticationType.IDCard, (String) null);
-        Assert.assertEquals("", statisticsRecord.getError());
+        StatisticsRecord.builder()
+                .time(LocalDateTime.now())
+                .clientId("client")
+                .method(AuthenticationType.BankLink)
+                .operation(StatisticsOperation.START_AUTH).build();
     }
 
     @Test
-    public void missingErrorDescriptionShouldSucceedOnErrorOperation4() {
-        StatisticsRecord statisticsRecord = new StatisticsRecord(LocalDateTime.now(), MOCK_CLIENT_ID, BankEnum.SEB, (String) null);
-        Assert.assertEquals("", statisticsRecord.getError());
+    public void missingCountryShouldThrowExceptionWhenMethodEidas() {
+        expectedEx.expect(IllegalArgumentException.class);
+        expectedEx.expectMessage("Country cannot be null!");
+
+        StatisticsRecord.builder()
+                .time(LocalDateTime.now())
+                .clientId("client")
+                .method(AuthenticationType.eIDAS)
+                .operation(StatisticsOperation.START_AUTH).build();
     }
-
-
-    @Test
-    public void missingBankShouldThrowExceptionOnBanklinkMethod3() {
-        expectedEx.expect(NullPointerException.class);
-
-        new StatisticsRecord(LocalDateTime.now(), MOCK_CLIENT_ID, (BankEnum) null, StatisticsOperation.START_AUTH);
-    }
-
-    @Test
-    public void missingBankShouldThrowExceptionOnBanklinkMethod4() {
-        expectedEx.expect(NullPointerException.class);
-
-        new StatisticsRecord(LocalDateTime.now(), MOCK_CLIENT_ID, (BankEnum) null, MOCK_ERROR_DESCRIPTION);
-    }
-
 
     @Test
     public void validTimeAndClientIdAndMethodAndStartAuthOperationShouldSucceed1() {
         LocalDateTime time = LocalDateTime.now();
-
-        StatisticsRecord statisticsRecord = new StatisticsRecord(time, MOCK_CLIENT_ID, AuthenticationType.IDCard, StatisticsOperation.START_AUTH);
-        validateValidStatisticsRecord(statisticsRecord, time, AuthenticationType.IDCard, StatisticsOperation.START_AUTH, null);
+        StatisticsRecord statisticsRecord = StatisticsRecord.builder()
+                .time(time)
+                .clientId(MOCK_CLIENT_ID)
+                .method(AuthenticationType.IDCard)
+                .operation(StatisticsOperation.START_AUTH).build();
+        validateValidStatisticsRecord(statisticsRecord, time, AuthenticationType.IDCard, StatisticsOperation.START_AUTH, null, null);
     }
 
     @Test
     public void validTimeAndClientIdAndMethodAndSuccessfulAuthOperationShouldSucceed1() {
         LocalDateTime time = LocalDateTime.now();
 
-        StatisticsRecord statisticsRecord = new StatisticsRecord(time, MOCK_CLIENT_ID, AuthenticationType.IDCard, StatisticsOperation.SUCCESSFUL_AUTH);
-        validateValidStatisticsRecord(statisticsRecord, time, AuthenticationType.IDCard, StatisticsOperation.SUCCESSFUL_AUTH, null);
+        StatisticsRecord statisticsRecord = StatisticsRecord.builder()
+                .time(time)
+                .clientId(MOCK_CLIENT_ID)
+                .method(AuthenticationType.IDCard)
+                .operation(StatisticsOperation.SUCCESSFUL_AUTH).build();
+        validateValidStatisticsRecord(statisticsRecord, time, AuthenticationType.IDCard, StatisticsOperation.SUCCESSFUL_AUTH, null, null);
     }
 
     @Test
-    public void validTimeAndClientIdAndMethodAndErrorOperationAndErrorDescriptionShouldSucceed2() {
+    public void validEIDASShouldSucceed() {
         LocalDateTime time = LocalDateTime.now();
-
-        StatisticsRecord statisticsRecord = new StatisticsRecord(time, MOCK_CLIENT_ID, AuthenticationType.IDCard, MOCK_ERROR_DESCRIPTION);
-        validateErroneousStatisticsRecord(statisticsRecord, time, AuthenticationType.IDCard, null);
+        StatisticsRecord statisticsRecord = StatisticsRecord.builder()
+                .time(time)
+                .clientId(MOCK_CLIENT_ID)
+                .method(AuthenticationType.eIDAS)
+                .country("ee")
+                .operation(StatisticsOperation.START_AUTH).build();
+        validateValidStatisticsRecord(statisticsRecord, time, AuthenticationType.eIDAS, StatisticsOperation.START_AUTH, null, "EE");
     }
 
     @Test
     public void validTimeAndClientIdAndBankAndStartAuthOperationShouldSucceed1() {
         LocalDateTime time = LocalDateTime.now();
-
-        StatisticsRecord statisticsRecord = new StatisticsRecord(time, MOCK_CLIENT_ID, BankEnum.SEB, StatisticsOperation.START_AUTH);
-        validateValidStatisticsRecord(statisticsRecord, time, AuthenticationType.BankLink, StatisticsOperation.START_AUTH, BankEnum.SEB);
+        StatisticsRecord statisticsRecord = StatisticsRecord.builder()
+                .time(time)
+                .clientId(MOCK_CLIENT_ID)
+                .method(AuthenticationType.BankLink)
+                .bank(BankEnum.SEB.getName())
+                .operation(StatisticsOperation.START_AUTH).build();
+        validateValidStatisticsRecord(statisticsRecord, time, AuthenticationType.BankLink, StatisticsOperation.START_AUTH, BankEnum.SEB, null);
     }
 
     @Test
     public void validTimeAndClientIdAndBankAndSuccessfulAuthOperationShouldSucceed2() {
         LocalDateTime time = LocalDateTime.now();
 
-        StatisticsRecord statisticsRecord = new StatisticsRecord(time, MOCK_CLIENT_ID, BankEnum.SEB, StatisticsOperation.SUCCESSFUL_AUTH);
-        validateValidStatisticsRecord(statisticsRecord, time, AuthenticationType.BankLink, StatisticsOperation.SUCCESSFUL_AUTH, BankEnum.SEB);
+        StatisticsRecord statisticsRecord = StatisticsRecord.builder()
+                .time(time)
+                .clientId(MOCK_CLIENT_ID)
+                .method(AuthenticationType.BankLink)
+                .bank(BankEnum.SEB.getName())
+                .operation(StatisticsOperation.SUCCESSFUL_AUTH).build();
+        validateValidStatisticsRecord(statisticsRecord, time, AuthenticationType.BankLink, StatisticsOperation.SUCCESSFUL_AUTH, BankEnum.SEB, null);
     }
 
 
@@ -193,18 +157,25 @@ public class StatisticsRecordTest {
     public void validTimeAndClientIdAndBankAndErrorOperationAndErrorDescriptionShouldSucceed2() {
         LocalDateTime time = LocalDateTime.now();
 
-        StatisticsRecord statisticsRecord = new StatisticsRecord(time, MOCK_CLIENT_ID, BankEnum.SEB, MOCK_ERROR_DESCRIPTION);
+        StatisticsRecord statisticsRecord = StatisticsRecord.builder()
+                .time(time)
+                .clientId(MOCK_CLIENT_ID)
+                .method(AuthenticationType.BankLink)
+                .bank(BankEnum.SEB.getName())
+                .operation(StatisticsOperation.ERROR)
+                .error(MOCK_ERROR_DESCRIPTION)
+                .build();
         validateErroneousStatisticsRecord(statisticsRecord, time, AuthenticationType.BankLink, BankEnum.SEB);
     }
 
-
-    private void validateValidStatisticsRecord(StatisticsRecord statisticsRecord, LocalDateTime time, AuthenticationType method, StatisticsOperation operation, BankEnum bank) {
+    private void validateValidStatisticsRecord(StatisticsRecord statisticsRecord, LocalDateTime time, AuthenticationType method, StatisticsOperation operation, BankEnum bank, String country) {
         Assert.assertNotNull("StatisticsRecord cannot be null!");
 
         Assert.assertEquals(time.toString(), statisticsRecord.getTime());
         Assert.assertEquals(MOCK_CLIENT_ID, statisticsRecord.getClientId());
         Assert.assertEquals(method.getAmrName(), statisticsRecord.getMethod());
         Assert.assertEquals(operation.name(), statisticsRecord.getOperation());
+        Assert.assertEquals(country, statisticsRecord.getCountry());
         Assert.assertNull(statisticsRecord.getError());
 
         String compoundMethod = method.name();
@@ -212,6 +183,9 @@ public class StatisticsRecordTest {
         if (bank != null) {
             Assert.assertEquals(bank.getName().toUpperCase(), statisticsRecord.getBank());
             compoundMethod += (METHOD_BANK_SEPARATOR + bank.getName().toUpperCase());
+        } else if (country != null) {
+                Assert.assertEquals(country.toUpperCase(), statisticsRecord.getCountry());
+                compoundMethod += (METHOD_BANK_SEPARATOR + country.toUpperCase());
         } else {
             Assert.assertNull(statisticsRecord.getBank());
         }

@@ -21,7 +21,7 @@ public class ManagerServiceImpl implements ManagerService {
     private final Logger log = LoggerFactory.getLogger(ManagerServiceImpl.class);
     private final ServicesManager servicesManager;
 
-    public ManagerServiceImpl(ServicesManager servicesManager, TaraResourceBundleMessageSource messageSource) {
+    public ManagerServiceImpl(ServicesManager servicesManager) {
         this.servicesManager = servicesManager;
     }
 

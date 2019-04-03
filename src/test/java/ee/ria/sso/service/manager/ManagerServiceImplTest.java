@@ -10,14 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 public class ManagerServiceImplTest {
 
-    @Autowired
-    private TaraResourceBundleMessageSource messageSource;
-
     @Test
     public void getServiceByID_managerReturnsValidService_shouldReturnNonEmptyOptional() {
         ServicesManager servicesManager = createValidServicesManagerWith("ServiceID",
                 Mockito.mock(OidcRegisteredService.class));
-        ManagerService managerService = new ManagerServiceImpl(servicesManager, messageSource);
+        ManagerService managerService = new ManagerServiceImpl(servicesManager);
 
         Assert.assertTrue(managerService.getServiceByID("ServiceID").isPresent());
     }
@@ -25,7 +22,7 @@ public class ManagerServiceImplTest {
     @Test
     public void getServiceByID_managerReturnsNoService_shouldReturnEmptyOptional() {
         ServicesManager servicesManager = createValidServicesManagerWith("ServiceID", null);
-        ManagerService managerService = new ManagerServiceImpl(servicesManager, messageSource);
+        ManagerService managerService = new ManagerServiceImpl(servicesManager);
 
         Assert.assertFalse(managerService.getServiceByID("ServiceID").isPresent());
     }
@@ -34,7 +31,7 @@ public class ManagerServiceImplTest {
     public void getServiceByID_serviceManagerThrowsRuntimeException_shouldReturnEmptyOptional() {
         ServicesManager servicesManager = Mockito.mock(ServicesManager.class);
         Mockito.when(servicesManager.findServiceBy("ServiceID")).thenThrow(RuntimeException.class);
-        ManagerService managerService = new ManagerServiceImpl(servicesManager, messageSource);
+        ManagerService managerService = new ManagerServiceImpl(servicesManager);
 
         Assert.assertFalse(managerService.getServiceByID("ServiceID").isPresent());
     }
