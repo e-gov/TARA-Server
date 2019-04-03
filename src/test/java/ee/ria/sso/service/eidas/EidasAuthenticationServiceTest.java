@@ -127,8 +127,7 @@ public class EidasAuthenticationServiceTest extends AbstractAuthenticationServic
         try {
             Event event = this.authenticationService.startLoginByEidas(requestContext);
         } catch (Exception e) {
-            verifyLogContentsOnFailure(
-                    "User provided invalid country code: <S>", "<UNKNOWN>");
+            Assert.assertTrue("Should not log to statistics when input is invalid", SimpleTestAppender.events.isEmpty());
             throw e;
         }
 

@@ -14,7 +14,7 @@ import java.time.format.DateTimeFormatter;
 @Builder
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({"time","clientId","method","bank","operation","error"})
+@JsonPropertyOrder({"time","clientId","method","bank","country","operation","error"})
 public class StatisticsRecord {
     private static final String SEPARATOR = "/";
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss");
