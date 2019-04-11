@@ -6,7 +6,6 @@ import com.nortal.banklink.authentication.AuthLinkManager;
 import com.nortal.banklink.core.packet.Packet;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.credential.TaraCredential;
-import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.security.CspDirective;
 import ee.ria.sso.security.CspHeaderUtil;
 import ee.ria.sso.service.AbstractService;
@@ -39,7 +38,7 @@ public class BanklinkAuthenticationService extends AbstractService {
 
     private final AuthLinkManager authLinkManager;
 
-    public BanklinkAuthenticationService(TaraResourceBundleMessageSource messageSource, StatisticsHandler statistics, AuthLinkManager authLinkManager) {
+    public BanklinkAuthenticationService(StatisticsHandler statistics, AuthLinkManager authLinkManager) {
         super(statistics);
         this.authLinkManager = authLinkManager;
     }
@@ -68,7 +67,14 @@ public class BanklinkAuthenticationService extends AbstractService {
             context.getExternalContext().getSessionMap().put(CAS_SERVICE_ATTRIBUTE_NAME, context.getFlowScope().get(CAS_SERVICE_ATTRIBUTE_NAME));
             addBankUrlToResponseCspFormActionDirective(context, banklink);
 
-            logEvent(new StatisticsRecord(LocalDateTime.now(), getServiceClientId(context), bankEnum, StatisticsOperation.START_AUTH));
+            logEvent(StatisticsRecord.builder()
+                    .time(LocalDateTime.now())
+                    .clientId(getServiceClientId(context))
+                    .method(AuthenticationType.BankLink)
+                    .operation(StatisticsOperation.START_AUTH)
+                    .bank(bankEnum.getName().toUpperCase())
+                    .build()
+            );
 
             return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
         } catch (Exception e) {
@@ -96,7 +102,14 @@ public class BanklinkAuthenticationService extends AbstractService {
             TaraCredential credential = new TaraCredential(AuthenticationType.BankLink, principalCode, firstName, lastName);
             context.getFlowExecutionContext().getActiveSession().getScope().put(CasWebflowConstants.VAR_ID_CREDENTIAL, credential);
 
-            logEvent(new StatisticsRecord(LocalDateTime.now(), getServiceClientId(context), getBankEnum(context), StatisticsOperation.SUCCESSFUL_AUTH));
+            logEvent(StatisticsRecord.builder()
+                    .time(LocalDateTime.now())
+                    .clientId(getServiceClientId(context))
+                    .method(AuthenticationType.BankLink)
+                    .operation(StatisticsOperation.SUCCESSFUL_AUTH)
+                    .bank(getBankEnum(context).getName().toUpperCase())
+                    .build()
+            );
 
             return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
         } catch (Exception e) {
@@ -108,7 +121,15 @@ public class BanklinkAuthenticationService extends AbstractService {
     private void logFailureEvent(RequestContext context, Exception e) {
         BankEnum bankEnum = getBankEnum(context);
         if (bankEnum != null)
-            logEvent(new StatisticsRecord(LocalDateTime.now(), getServiceClientId(context), bankEnum, e.getMessage()));
+            logEvent(StatisticsRecord.builder()
+                    .time(LocalDateTime.now())
+                    .clientId(getServiceClientId(context))
+                    .method(AuthenticationType.BankLink)
+                    .operation(StatisticsOperation.ERROR)
+                    .bank(bankEnum.getName().toUpperCase())
+                    .error(e.getMessage())
+                    .build()
+            );
     }
 
     private static BankEnum getBankEnum(RequestContext context) {

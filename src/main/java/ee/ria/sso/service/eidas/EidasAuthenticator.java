@@ -93,7 +93,7 @@ public class EidasAuthenticator {
                 HttpEntity entity = response.getEntity();
                 return entity != null ? EntityUtils.toByteArray(entity) : null;
             } else if (status == HttpStatus.SC_UNAUTHORIZED) {
-                throw new EidasAuthenticationFailedException();
+                throw new EidasAuthenticationFailedException("eIDAS-Client responded with " + status +" HTTP status code");
             } else {
                 throw new IllegalStateException("eIDAS-Client responded with " + status + " HTTP status code");
             }

@@ -40,7 +40,7 @@ public class StatisticsRecordMatcher extends ArgumentMatcher<StatisticsRecord> {
                 clientIdMatcher.matches(ReflectionTestUtils.getField(statisticsRecord, "clientId")) &&
                 methodMatcher.matches(ReflectionTestUtils.getField(statisticsRecord, "method")) &&
                 operationMatcher.matches(ReflectionTestUtils.getField(statisticsRecord, "operation")) &&
-                errorDescriptionMatcher.matches(ReflectionTestUtils.getField(statisticsRecord, "errorDescription")) &&
+                errorDescriptionMatcher.matches(ReflectionTestUtils.getField(statisticsRecord, "error")) &&
                 bankMatcher.matches(ReflectionTestUtils.getField(statisticsRecord, "bank"));
     }
 

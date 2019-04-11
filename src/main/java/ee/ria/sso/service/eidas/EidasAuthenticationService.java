@@ -2,15 +2,17 @@ package ee.ria.sso.service.eidas;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ee.ria.sso.Constants;
-import ee.ria.sso.authentication.*;
+import ee.ria.sso.authentication.AuthenticationType;
+import ee.ria.sso.authentication.LevelOfAssurance;
 import ee.ria.sso.authentication.credential.PreAuthenticationCredential;
-import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.security.CspDirective;
 import ee.ria.sso.security.CspHeaderUtil;
 import ee.ria.sso.service.AbstractService;
 import ee.ria.sso.service.ExternalServiceHasFailedException;
 import ee.ria.sso.service.UserAuthenticationFailedException;
 import ee.ria.sso.statistics.StatisticsHandler;
+import ee.ria.sso.statistics.StatisticsOperation;
+import ee.ria.sso.statistics.StatisticsRecord;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apereo.cas.web.flow.CasWebflowConstants;
@@ -25,22 +27,27 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import static ee.ria.sso.statistics.StatisticsOperation.START_AUTH;
-import static ee.ria.sso.statistics.StatisticsOperation.SUCCESSFUL_AUTH;
+import static ee.ria.sso.Constants.TARA_OIDC_SESSION_LOA;
 
 @ConditionalOnProperty("eidas.enabled")
 @Service
 @Slf4j
 public class EidasAuthenticationService extends AbstractService {
 
+    public static final Pattern VALID_PERSON_IDENTIFIER_PATTERN = Pattern.compile("^([A-Z]{2,2})\\/([A-Z]{2,2})\\/(.*)$");
+    public static final Pattern VALID_COUNTRY_PATTERN = Pattern.compile("^[A-Z]{2,2}$");
+    public static final String SESSION_ATTRIBUTE_COUNTRY = "country";
     public static final String SESSION_ATTRIBUTE_RELAY_STATE = "relayState";
+
     private final EidasAuthenticator eidasAuthenticator;
 
-    public EidasAuthenticationService(TaraResourceBundleMessageSource messageSource,
-                                      StatisticsHandler statistics,
+    public EidasAuthenticationService(StatisticsHandler statistics,
                                       EidasAuthenticator eidasAuthenticator) {
         super(statistics);
         this.eidasAuthenticator = eidasAuthenticator;
@@ -53,31 +60,21 @@ public class EidasAuthenticationService extends AbstractService {
     )
     public Event startLoginByEidas(RequestContext context) {
         final PreAuthenticationCredential credential = context.getFlowExecutionContext().getActiveSession().getScope().get("credential", PreAuthenticationCredential.class);
+        log.debug("Starting eIDAS login: <country:{}>", credential.getCountry());
+
         try {
-            logEvent(context, AuthenticationType.eIDAS, START_AUTH);
-            if (log.isDebugEnabled()) {
-                log.debug("Starting eIDAS login: <country:{}>", credential.getCountry());
-            }
-
-            String relayState = UUID.randomUUID().toString();
-            context.getExternalContext().getSessionMap().put(Constants.CAS_SERVICE_ATTRIBUTE_NAME, context.getFlowScope().get(Constants.CAS_SERVICE_ATTRIBUTE_NAME));
-            context.getExternalContext().getSessionMap().put(SESSION_ATTRIBUTE_RELAY_STATE, relayState);
-            LevelOfAssurance loa = (LevelOfAssurance) context.getExternalContext().getSessionMap().get(Constants.TARA_OIDC_SESSION_LOA);
-            byte[] authnRequest = this.eidasAuthenticator.authenticate(credential.getCountry(), relayState, loa);
-            HttpServletResponse response = (HttpServletResponse) context.getExternalContext().getNativeResponse();
-            configureResponseForWriting(response, authnRequest);
-
-            try (OutputStream out = response.getOutputStream()) {
-                out.write(authnRequest);
-                out.flush();
-            }
-            context.getExternalContext().recordResponseComplete();
+            validateAndStoreCountry(credential, context);
+            logEvent(context, StatisticsOperation.START_AUTH);
+            String relayState = generateAndStoreRelayState(context);
+            LevelOfAssurance loa = context.getExternalContext().getSessionMap().get(TARA_OIDC_SESSION_LOA, LevelOfAssurance.class);
+            byte[] authnRequest = eidasAuthenticator.authenticate(credential.getCountry(), relayState, loa);
+            writeServletResponse(context, authnRequest);
             return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
         } catch (IOException e) {
-            logEvent(context, e, AuthenticationType.eIDAS);
+            logFailureEvent(context, e);
             throw new ExternalServiceHasFailedException("message.eidas.error", "eidas-client connection has failed: " + e.getMessage(), e);
         } catch (Exception e) {
-            logEvent(context, e, AuthenticationType.eIDAS);
+            logFailureEvent(context, e);
             throw e;
         }
     }
@@ -99,18 +96,30 @@ public class EidasAuthenticationService extends AbstractService {
             context.getFlowExecutionContext().getActiveSession().getScope().put(CasWebflowConstants.VAR_ID_CREDENTIAL, credential);
             context.getFlowScope().put(Constants.CAS_SERVICE_ATTRIBUTE_NAME, context.getExternalContext().getSessionMap().get(Constants.CAS_SERVICE_ATTRIBUTE_NAME));
 
-            logEvent(context, AuthenticationType.eIDAS, SUCCESSFUL_AUTH);
+            logEvent(context, StatisticsOperation.SUCCESSFUL_AUTH);
             return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
         } catch (EidasAuthenticationFailedException e) {
-            logEvent(context, e, AuthenticationType.eIDAS);
+            logFailureEvent(context, e);
             throw new UserAuthenticationFailedException("message.eidas.authfailed", e.getMessage(), e);
         } catch (IOException e) {
-            logEvent(context, e, AuthenticationType.eIDAS);
+            logFailureEvent(context, e);
             throw new ExternalServiceHasFailedException("message.eidas.error", "eidas-client connection has failed: " + e.getMessage(), e);
         } catch (Exception e) {
-            logEvent(context, e, AuthenticationType.eIDAS);
+            logFailureEvent(context, e);
             throw e;
         }
+    }
+
+    private void writeServletResponse(RequestContext context, byte[] authnRequest) throws IOException {
+        HttpServletResponse response = (HttpServletResponse) context.getExternalContext().getNativeResponse();
+        configureResponseForWriting(response, authnRequest);
+
+        try (OutputStream out = response.getOutputStream()) {
+            out.write(authnRequest);
+            out.flush();
+        }
+        context.getExternalContext().getSessionMap().put(Constants.CAS_SERVICE_ATTRIBUTE_NAME, context.getFlowScope().get(Constants.CAS_SERVICE_ATTRIBUTE_NAME));
+        context.getExternalContext().recordResponseComplete();
     }
 
     private static void configureResponseForWriting(HttpServletResponse response, byte[] html) {
@@ -152,8 +161,56 @@ public class EidasAuthenticationService extends AbstractService {
     }
 
     private String getFormattedPersonIdentifier(String personIdentifier) {
-        String[] parts = personIdentifier.split("/");
-        return parts[0] + parts[2];
+        Matcher matcher = VALID_PERSON_IDENTIFIER_PATTERN.matcher(personIdentifier);
+        if (matcher.matches()) {
+            return matcher.group(1) + matcher.group(3);
+        } else {
+            throw new ExternalServiceHasFailedException("message.eidas.error", "The person identifier has invalid format! <" + personIdentifier + ">");
+        }
     }
 
+    private String generateAndStoreRelayState(RequestContext context) {
+        String relayState = UUID.randomUUID().toString();
+        context.getExternalContext().getSessionMap().put(SESSION_ATTRIBUTE_RELAY_STATE, relayState);
+        return relayState;
+    }
+
+    private String getCountry(RequestContext context) {
+        return context.getExternalContext().getSessionMap().getString(SESSION_ATTRIBUTE_COUNTRY);
+    }
+
+    private void validateAndStoreCountry(PreAuthenticationCredential credential, RequestContext context) {
+        if (StringUtils.isBlank(credential.getCountry()) || !VALID_COUNTRY_PATTERN.matcher(credential.getCountry()).matches()) {
+            throw new UserAuthenticationFailedException("message.eidas.invalidcountry", String.format("User provided invalid country code: <%s>", credential.getCountry()));
+        }
+        context.getExternalContext().getSessionMap().put(SESSION_ATTRIBUTE_COUNTRY, credential.getCountry().toUpperCase());
+    }
+
+    private void logEvent(RequestContext context, StatisticsOperation operation) {
+        String country = getCountry(context);
+        if (country != null) {
+            logEvent(StatisticsRecord.builder()
+                    .time(LocalDateTime.now())
+                    .clientId(getServiceClientId(context))
+                    .method(AuthenticationType.eIDAS)
+                    .operation(operation)
+                    .country(country)
+                    .build()
+            );
+        }
+    }
+
+    private void logFailureEvent(RequestContext context, Exception e) {
+        String country = getCountry(context);
+        if (country != null)
+            logEvent(StatisticsRecord.builder()
+                    .time(LocalDateTime.now())
+                    .clientId(getServiceClientId(context))
+                    .method(AuthenticationType.eIDAS)
+                    .operation(StatisticsOperation.ERROR)
+                    .country(country.toUpperCase())
+                    .error(e.getMessage())
+                    .build()
+            );
+    }
 }
