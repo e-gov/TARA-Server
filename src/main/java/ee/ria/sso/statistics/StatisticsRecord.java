@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import ee.ria.sso.authentication.AuthenticationType;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NonNull;
 import org.springframework.util.Assert;
 
 import java.time.LocalDateTime;
@@ -26,8 +25,9 @@ public class StatisticsRecord {
     private final String error;
     private final String bank;
     private final String country;
+    private final String ocsp;
 
-    public StatisticsRecord(LocalDateTime time, String clientId, AuthenticationType method, StatisticsOperation operation, String error, String bank, String country) {
+    public StatisticsRecord(LocalDateTime time, String clientId, AuthenticationType method, StatisticsOperation operation, String error, String bank, String country, String ocsp) {
         Assert.notNull(time, "Authentication time cannot be null!");
         Assert.notNull(clientId, "Client-ID cannot be null!");
         Assert.notNull(method, "Authentication method cannot be null!");
@@ -45,6 +45,7 @@ public class StatisticsRecord {
         this.error = error;
         this.bank = bank;
         this.country = country;
+        this.ocsp = ocsp;
     }
 
     public String getTime() {
@@ -85,6 +86,10 @@ public class StatisticsRecord {
         sb.append(this.operation.name()).append(';');
         if (this.error != null)
             sb.append(this.error);
+
+        if (this.ocsp != null) {
+            sb.append(';').append(this.getOcsp());
+        }
 
         return sb.toString();
     }
