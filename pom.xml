@@ -6,11 +6,10 @@
     <groupId>ee.ria.tara</groupId>
     <artifactId>tara-server</artifactId>
     <packaging>war</packaging>
-    <version>1.4.4</version>
+    <version>1.4.5</version>
 
     <properties>
-        <cas.version>5.3.7</cas.version>
-        <spring.version>4.3.20.RELEASE</spring.version>
+        <cas.version>5.3.9</cas.version>
         <springboot.version>1.5.18.RELEASE</springboot.version>
         <banklink.version>2.1.15</banklink.version>
         <!-- app.server could be -jetty, -undertow, -tomcat, or blank if you plan to provide appserver -->
@@ -98,6 +97,7 @@
                             <artifactId>cas-server-webapp${app.server}</artifactId>
                             <excludes>
                                 <exclude>WEB-INF/classes/user-details.properties</exclude>
+                                <exclude>WEB-INF/lib/jackson-*</exclude>
                             </excludes>
                         </overlay>
                     </overlays>
@@ -132,13 +132,26 @@
         <finalName>cas</finalName>
     </build>
 
+    <dependencyManagement>
+        <dependencies>
+            <!-- Override a dependency by including it BEFORE the BOM -->
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>2.9.8</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apereo.cas</groupId>
+                <artifactId>cas-server-support-bom</artifactId>
+                <version>${cas.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>3.0.1</version>
-            <scope>provided</scope>
-        </dependency>
         <dependency>
             <groupId>org.apereo.cas</groupId>
             <artifactId>cas-server-webapp${app.server}</artifactId>
@@ -149,78 +162,95 @@
         <dependency>
             <groupId>org.apereo.cas</groupId>
             <artifactId>cas-server-webapp-config</artifactId>
-            <version>${cas.version}</version>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>org.apereo.cas</groupId>
             <artifactId>cas-server-core</artifactId>
-            <version>${cas.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apereo.cas</groupId>
             <artifactId>cas-server-core-web-api</artifactId>
-            <version>${cas.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apereo.cas</groupId>
             <artifactId>cas-server-core-webflow-api</artifactId>
-            <version>${cas.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apereo.cas</groupId>
             <artifactId>cas-server-core-util-api</artifactId>
-            <version>${cas.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apereo.cas</groupId>
             <artifactId>cas-server-core-api-audit</artifactId>
-            <version>${cas.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apereo.cas</groupId>
             <artifactId>cas-server-core-services-api</artifactId>
-            <version>${cas.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apereo.cas</groupId>
             <artifactId>cas-server-core-authentication</artifactId>
-            <version>${cas.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apereo.cas</groupId>
             <artifactId>cas-server-core-authentication-api</artifactId>
-            <version>${cas.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apereo.cas</groupId>
             <artifactId>cas-server-core-api-configuration-model</artifactId>
-            <version>${cas.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apereo.cas</groupId>
             <artifactId>cas-server-core-tickets-api</artifactId>
-            <version>${cas.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apereo.cas</groupId>
             <artifactId>cas-server-core-cookie-api</artifactId>
-            <version>${cas.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjrt</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jasig.cas.client</groupId>
+            <artifactId>cas-client-core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.pac4j</groupId>
+            <artifactId>pac4j-core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.pac4j</groupId>
+            <artifactId>spring-webmvc-pac4j</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.pac4j</groupId>
+            <artifactId>pac4j-cas</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
             <scope>provided</scope>
         </dependency>
 
-        <!-- oidc support -->
+        <!-- cas oidc support -->
         <dependency>
             <groupId>org.apereo.cas</groupId>
             <artifactId>cas-server-support-oidc</artifactId>
@@ -229,12 +259,10 @@
         <dependency>
             <groupId>org.apereo.cas</groupId>
             <artifactId>cas-server-support-oidc-core</artifactId>
-            <version>${cas.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apereo.cas</groupId>
             <artifactId>cas-server-support-oidc-services</artifactId>
-            <version>${cas.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apereo.cas</groupId>
@@ -244,38 +272,29 @@
         <dependency>
             <groupId>org.apereo.cas</groupId>
             <artifactId>cas-server-support-oauth-api</artifactId>
-            <version>${cas.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apereo.cas</groupId>
             <artifactId>cas-server-support-oauth-services</artifactId>
-            <version>${cas.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apereo.cas</groupId>
             <artifactId>cas-server-support-oauth-core</artifactId>
-            <version>${cas.version}</version>
         </dependency>
 
-        <!-- service storage support -->
+        <!-- cas service storage support -->
         <dependency>
             <groupId>org.apereo.cas</groupId>
             <artifactId>cas-server-support-jpa-service-registry</artifactId>
             <version>${cas.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.zaxxer</groupId>
-            <artifactId>HikariCP</artifactId>
-            <version>2.7.1</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.2.2</version>
+            <version>42.2.5</version>
         </dependency>
 
-        <!-- cluster support -->
+        <!-- cas cluster support -->
         <dependency>
             <groupId>org.apereo.cas</groupId>
             <artifactId>cas-server-webapp-session-hazelcast</artifactId>
@@ -287,51 +306,7 @@
             <version>${cas.version}</version>
         </dependency>
 
-
-
-
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-aspects</artifactId>
-            <version>${spring.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jasig.cas.client</groupId>
-            <artifactId>cas-client-core</artifactId>
-            <version>3.5.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.pac4j</groupId>
-            <artifactId>pac4j-core</artifactId>
-            <version>3.3.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.pac4j</groupId>
-            <artifactId>spring-webmvc-pac4j</artifactId>
-            <version>3.0.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.pac4j</groupId>
-            <artifactId>pac4j-cas</artifactId>
-            <version>3.0.1</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.github.ben-manes.caffeine</groupId>
-            <artifactId>caffeine</artifactId>
-            <version>2.6.2</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.cryptacular</groupId>
-            <artifactId>cryptacular</artifactId>
-            <version>1.2.0</version>
-            <scope>provided</scope>
-        </dependency>
+        <!-- banklinks -->
         <dependency>
             <groupId>com.nortal.banklink</groupId>
             <artifactId>banklink-core</artifactId>
@@ -347,6 +322,8 @@
             <artifactId>banklink-link</artifactId>
             <version>${banklink.version}</version>
         </dependency>
+
+        <!-- mobileid -->
         <dependency>
             <groupId>com.codeborne</groupId>
             <artifactId>mobileid</artifactId>
@@ -355,15 +332,15 @@
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk15on</artifactId>
-            <version>1.56</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpkix-jdk15on</artifactId>
-            <version>1.56</version>
             <scope>provided</scope>
         </dependency>
+
+        <!-- smartid -->
         <dependency>
             <groupId>ee.sk.smartid</groupId>
             <artifactId>smart-id-java-client</artifactId>

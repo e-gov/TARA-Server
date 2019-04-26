@@ -7,7 +7,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 
-public class StatisticsRecordMatcher extends ArgumentMatcher<StatisticsRecord> {
+public class StatisticsRecordMatcher implements ArgumentMatcher<StatisticsRecord> {
 
     private final Matcher<LocalDateTime> timeMatcher;
     private final Matcher<String> clientIdMatcher;
@@ -31,7 +31,7 @@ public class StatisticsRecordMatcher extends ArgumentMatcher<StatisticsRecord> {
     }
 
     @Override
-    public boolean matches(Object actual) {
+    public boolean matches(StatisticsRecord actual) {
         if (!StatisticsRecord.class.isInstance(actual))
             return false;
 
@@ -43,5 +43,4 @@ public class StatisticsRecordMatcher extends ArgumentMatcher<StatisticsRecord> {
                 errorDescriptionMatcher.matches(ReflectionTestUtils.getField(statisticsRecord, "error")) &&
                 bankMatcher.matches(ReflectionTestUtils.getField(statisticsRecord, "bank"));
     }
-
 }
