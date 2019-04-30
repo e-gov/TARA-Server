@@ -13,10 +13,12 @@ import ee.ria.sso.test.SimpleTestAppender;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mockito;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
@@ -38,6 +40,7 @@ import java.util.Map;
 )
 public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServiceTest {
 
+    public static final String HTTP_MOCK_OCSP_URL = "http://mock.ocsp.url";
     @Autowired
     private IDCardConfigurationProvider configurationProvider;
 
@@ -62,7 +65,10 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
     @Captor
     ArgumentCaptor<IDCardConfigurationProvider.Ocsp> ocspConfiguration;
 
-
+    @Before
+    public void setup() {
+        MDC.clear();
+    }
 
     @After
     public void cleanUp() {
@@ -76,9 +82,10 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
         expectedEx.expectMessage("Unable to find certificate from session");
 
         try {
+            MDC.put(Constants.MDC_ATTRIBUTE_OCSP_ID, null);
             Event event = this.authenticationService.loginByIDCard(this.getMockRequestContext(null));
         } catch (Exception e) {
-            this.verifyLogContentsOnUnsuccessfulAuthentication("Unable to find certificate from session");
+            this.verifyLogContentsOnUnsuccessfulAuthentication("Unable to find certificate from session", "N/A");
             throw e;
         }
 
@@ -96,7 +103,7 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
         try {
             Event event = this.authenticationService.loginByIDCard(requestContext);
         } catch (Exception e) {
-            this.verifyLogContentsOnUnsuccessfulAuthentication("User certificate is not yet valid");
+            this.verifyLogContentsOnUnsuccessfulAuthentication("User certificate is not yet valid", HTTP_MOCK_OCSP_URL);
             throw e;
         }
 
@@ -107,6 +114,7 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
     public void loginByIDCardShouldFailWhenCertificateIsExpired() throws Exception {
         expectedEx.expect(UserAuthenticationFailedException.class);
         expectedEx.expectMessage("User certificate is expired");
+        MDC.put(Constants.MDC_ATTRIBUTE_OCSP_ID, null);
 
         X509Certificate certificate = mockInvalidCertificate(new CertificateExpiredException());
         RequestContext requestContext = this.getMockRequestContextWith(null, certificate);
@@ -114,7 +122,7 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
         try {
             Event event = this.authenticationService.loginByIDCard(requestContext);
         } catch (Exception e) {
-            this.verifyLogContentsOnUnsuccessfulAuthentication("User certificate is expired");
+            this.verifyLogContentsOnUnsuccessfulAuthentication("User certificate is expired", HTTP_MOCK_OCSP_URL);
             throw e;
         }
 
@@ -134,7 +142,7 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
         try {
             Event event = this.authenticationService.loginByIDCard(requestContext);
         } catch (Exception e) {
-            this.verifyLogContentsOnUnsuccessfulAuthentication("Unexpected exception");
+            this.verifyLogContentsOnUnsuccessfulAuthentication("Unexpected exception", HTTP_MOCK_OCSP_URL);
             throw e;
         }
 
@@ -147,14 +155,15 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
         expectedEx.expectMessage("OCSP service is currently not available, please try again later");
 
         RequestContext requestContext = this.getMockRequestContextWith(null, mockUserCertificate2015);
-        Exception cause = new OCSPServiceNotAvailableException(new SocketTimeoutException("timeout"));
+        Exception cause = new OCSPServiceNotAvailableException("Error", new SocketTimeoutException("timeout"));
+        MDC.put(Constants.MDC_ATTRIBUTE_OCSP_ID, HTTP_MOCK_OCSP_URL);
 
         Mockito.doThrow(cause).when(ocspValidatorMock).checkCert(Mockito.eq(mockUserCertificate2015));
 
         try {
             Event event = this.authenticationService.loginByIDCard(requestContext);
         } catch (Exception e) {
-            this.verifyLogContentsOnUnsuccessfulAuthentication("OCSP service is currently not available, please try again later");
+            this.verifyLogContentsOnUnsuccessfulAuthentication("OCSP service is currently not available, please try again later", HTTP_MOCK_OCSP_URL);
             throw e;
         }
 
@@ -168,13 +177,14 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
 
         RequestContext requestContext = this.getMockRequestContextWith(null, mockUserCertificate2015);
         Exception cause = OCSPValidationException.of(CertificateStatus.REVOKED);
+        MDC.put(Constants.MDC_ATTRIBUTE_OCSP_ID, HTTP_MOCK_OCSP_URL);
 
         Mockito.doThrow(cause).when(ocspValidatorMock).checkCert(Mockito.eq(mockUserCertificate2015));
 
         try {
             Event event = this.authenticationService.loginByIDCard(requestContext);
         } catch (Exception e) {
-            this.verifyLogContentsOnUnsuccessfulAuthentication("Invalid certificate status <REVOKED> received");
+            this.verifyLogContentsOnUnsuccessfulAuthentication("Invalid certificate status <REVOKED> received", HTTP_MOCK_OCSP_URL);
             throw e;
         }
 
@@ -254,21 +264,22 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
 
         SimpleTestAppender.verifyLogEventsExistInOrder(
                 Matchers.containsString(String.format(";openIdDemo;%s;%s;", authenticationType, StatisticsOperation.START_AUTH)),
-                Matchers.containsString(String.format(";openIdDemo;%s;%s;", authenticationType, StatisticsOperation.SUCCESSFUL_AUTH))
+                Matchers.containsString(String.format(";openIdDemo;%s;%s;;%s", authenticationType, StatisticsOperation.SUCCESSFUL_AUTH, HTTP_MOCK_OCSP_URL))
         );
     }
 
-    private void verifyLogContentsOnUnsuccessfulAuthentication(String errorMessage) {
+    private void verifyLogContentsOnUnsuccessfulAuthentication(String errorMessage, String ocspUrl) {
         AuthenticationType authenticationType = AuthenticationType.IDCard;
 
         SimpleTestAppender.verifyLogEventsExistInOrder(
                 Matchers.containsString(String.format(";openIdDemo;%s;%s;", authenticationType, StatisticsOperation.START_AUTH)),
-                Matchers.containsString(String.format(";openIdDemo;%s;%s;%s", authenticationType, StatisticsOperation.ERROR, errorMessage))
+                Matchers.containsString(String.format(";openIdDemo;%s;%s;%s;%s", authenticationType, StatisticsOperation.ERROR, errorMessage, ocspUrl))
         );
     }
 
     private RequestContext getMockRequestContextWith(Map<String, String> requestParameters, X509Certificate certificate) {
         RequestContext requestContext = this.getMockRequestContext(requestParameters);
+        MDC.put(Constants.MDC_ATTRIBUTE_OCSP_ID, HTTP_MOCK_OCSP_URL);
         requestContext.getExternalContext().getSessionMap().put(
                 Constants.CERTIFICATE_SESSION_ATTRIBUTE,
                 certificate
