@@ -4,6 +4,7 @@ import ee.ria.sso.Constants;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -16,12 +17,14 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Base64;
 
+@Slf4j
 public class IncidentLoggingMDCServletFilter implements Filter {
 
     private static final char[] REQUEST_ID_CHARACTER_SET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".toCharArray();
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
+        log.debug("Filter init called for: {}", IncidentLoggingMDCServletFilter.class.getName());
     }
 
     @Override
@@ -40,6 +43,7 @@ public class IncidentLoggingMDCServletFilter implements Filter {
 
     @Override
     public void destroy() {
+        log.debug("Filter destroy called for {}", IncidentLoggingMDCServletFilter.class.getName());
     }
 
     private static void addContextAttribute(final String attributeName, final Object value) {
@@ -49,7 +53,14 @@ public class IncidentLoggingMDCServletFilter implements Filter {
     }
 
     private static String generateUniqueRequestId(HttpServletRequest request) {
-        return RandomStringUtils.random(16, REQUEST_ID_CHARACTER_SET);
+        String requestId = (String)request.getAttribute(Constants.MDC_ATTRIBUTE_REQUEST_ID);
+        if (requestId == null) {
+            requestId = RandomStringUtils.random(16, REQUEST_ID_CHARACTER_SET);
+            request.setAttribute(Constants.MDC_ATTRIBUTE_REQUEST_ID, requestId);
+            return requestId;
+        } else {
+            return requestId; // requestId must not be regenerated in case of internally forwarded requests
+        }
     }
 
     private static String getRequestSessionId(HttpServletRequest request) {
@@ -59,7 +70,7 @@ public class IncidentLoggingMDCServletFilter implements Filter {
 
     private static TaraSessionIdentifier getSessionIdentifier(HttpSession session) {
         Object attribute = session.getAttribute(TaraSessionIdentifier.TARA_SESSION_IDENTIFIER_KEY);
-        if (attribute != null && attribute instanceof TaraSessionIdentifier)
+        if (attribute instanceof TaraSessionIdentifier)
             return (TaraSessionIdentifier) attribute;
 
         String sessionId = getBase64(DigestUtils.sha256(session.getId()));

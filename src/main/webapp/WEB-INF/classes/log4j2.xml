@@ -146,6 +146,14 @@
             <!-- Uncomment when using syslog appender -->
             <!--AppenderRef ref="taraSyslog" level="${sys:tara.log.level}" /-->
         </AsyncLogger>
+        <AsyncLogger name="org.pac4j" level="info" additivity="false" >
+            <AppenderRef ref="casConsole" level="${sys:tara.console.level}" />
+            <AppenderRef ref="errorFile" level="error" />
+            <AppenderRef ref="casFile" level="info" />
+
+            <!-- Uncomment when using syslog appender -->
+            <!--AppenderRef ref="taraSyslog" level="${sys:tara.log.level}" /-->
+        </AsyncLogger>
         <AsyncLogger name="org.apereo.cas" level="warn" additivity="false" >
             <AppenderRef ref="casConsole" level="${sys:tara.console.level}" />
             <AppenderRef ref="errorFile" level="error" />
