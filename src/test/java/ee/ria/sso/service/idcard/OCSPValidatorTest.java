@@ -1,6 +1,7 @@
 package ee.ria.sso.service.idcard;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.common.FileSource;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
@@ -57,6 +58,7 @@ import java.util.function.Supplier;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.binaryEqualTo;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 public class OCSPValidatorTest {
@@ -583,7 +585,8 @@ public class OCSPValidatorTest {
                 Arrays.asList(ocspConfiguration)
         );
 
-        setUpMockOcspResponse(OCSPResp.SUCCESSFUL, org.bouncycastle.cert.ocsp.CertificateStatus.GOOD, ocspConfiguration);
+        byte[] expectedOcspRequest = Base64.getDecoder().decode("MG0wazBpMGcwZTANBglghkgBZQMEAgEFAAQgQTfFmz1j3fzLrJqT3Ikf23e/0r75XTnlb2QmIVzFBZwEIClUf0hIboz4kAIxZJXZqAhySiadWFWwWJts7b8Lra2MAhAVGSYAmGbQQVncumVvnG27");
+        setUpMockOcspResponse(expectedOcspRequest, OCSPResp.SUCCESSFUL, org.bouncycastle.cert.ocsp.CertificateStatus.GOOD, ocspConfiguration);
 
         X509Certificate userCert = loadCertificateFromResource(MOCK_USER_CERT_2015_PATH);
         ocspValidator.checkCert(userCert);
@@ -812,6 +815,10 @@ public class OCSPValidatorTest {
     }
 
     private void setUpMockOcspResponse(int responseStatus, org.bouncycastle.cert.ocsp.CertificateStatus certificateStatus, IDCardConfigurationProvider.Ocsp ocspConfiguration) {
+        setUpMockOcspResponse(null, responseStatus, certificateStatus, ocspConfiguration);
+    }
+
+    private void setUpMockOcspResponse(byte[] expectedOcspRequest, int responseStatus, org.bouncycastle.cert.ocsp.CertificateStatus certificateStatus, IDCardConfigurationProvider.Ocsp ocspConfiguration) {
         setUpMockOcspResponse(MockOcspResponseParams.builder()
                 .ocspServer(mockOcspServer)
                 .responseStatus(responseStatus)
@@ -820,25 +827,33 @@ public class OCSPValidatorTest {
                 .responderCertificate(responderCert)
                 .signatureAlgorithm("SHA256withRSA")
                 .ocspConf(ocspConfiguration)
-                .build());
+                .build(), null);
     }
 
     private static void setUpMockOcspResponse(MockOcspResponseParams responseParams) {
+        setUpMockOcspResponse(responseParams, null);
+    }
+
+    private static void setUpMockOcspResponse(MockOcspResponseParams responseParams, byte[] expectedOcspRequest) {
         ocspResponseTransformer.setResponseStatus(responseParams.getResponseStatus());
         ocspResponseTransformer.setCertificateStatus(responseParams.getCertificateStatus());
         ocspResponseTransformer.setResponderCertificate(responseParams.getResponderCertificate());
 
-        responseParams.getOcspServer().stubFor(WireMock.post("/ocsp")
-                .willReturn(
-                        WireMock.aResponse()
-                        .withStatus(200)
-                                .withTransformerParameter("responderId", responseParams.getResponseId())
-                                .withTransformerParameter("signatureAlgorithm", responseParams.getSignatureAlgorithm() == null ? "SHA256withRSA" : responseParams.getSignatureAlgorithm())
-                                .withTransformerParameter("ocspConf", responseParams.getOcspConf())
-                        .withFixedDelay(responseParams.getDelay())
-                        .withHeader("Content-Type", "application/ocsp-response")
-                )
+        MappingBuilder mappingBuilder = WireMock.post("/ocsp");
+        if (expectedOcspRequest != null) {
+            mappingBuilder.withRequestBody(binaryEqualTo(expectedOcspRequest));
+        }
+
+        mappingBuilder.willReturn(
+                WireMock.aResponse()
+                .withStatus(200)
+                        .withTransformerParameter("responderId", responseParams.getResponseId())
+                        .withTransformerParameter("signatureAlgorithm", responseParams.getSignatureAlgorithm() == null ? "SHA256withRSA" : responseParams.getSignatureAlgorithm())
+                        .withTransformerParameter("ocspConf", responseParams.getOcspConf())
+                .withFixedDelay(responseParams.getDelay())
+                .withHeader("Content-Type", "application/ocsp-response")
         );
+        responseParams.getOcspServer().stubFor(mappingBuilder);
     }
 
     @Builder
