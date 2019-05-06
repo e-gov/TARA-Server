@@ -7,8 +7,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.Conversion;
 import org.apache.commons.lang3.StringUtils;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.DERNull;
 import org.bouncycastle.asn1.DEROctetString;
+import org.bouncycastle.asn1.nist.NISTObjectIdentifiers;
 import org.bouncycastle.asn1.ocsp.OCSPObjectIdentifiers;
+import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.Extensions;
 import org.bouncycastle.asn1.x509.KeyPurposeId;
@@ -36,6 +40,8 @@ import static ee.ria.sso.Constants.MDC_ATTRIBUTE_OCSP_ID;
 @Slf4j
 @RequiredArgsConstructor
 public class OCSPValidator {
+
+    public static final AlgorithmIdentifier HASH_SHA256 = new AlgorithmIdentifier(new ASN1ObjectIdentifier(NISTObjectIdentifiers.id_sha256.getId()), DERNull.INSTANCE);
 
     static {
         Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
@@ -180,7 +186,7 @@ public class OCSPValidator {
             throws OperatorCreationException, CertificateEncodingException, OCSPException {
         BigInteger userCertSerialNumber = userCert.getSerialNumber();
         return new CertificateID(
-                new JcaDigestCalculatorProviderBuilder().build().get(CertificateID.HASH_SHA1),
+                new JcaDigestCalculatorProviderBuilder().build().get(HASH_SHA256),
                 new JcaX509CertificateHolder(issuerCert),
                 userCertSerialNumber
         );
