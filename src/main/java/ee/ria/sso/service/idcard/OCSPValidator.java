@@ -1,6 +1,6 @@
 package ee.ria.sso.service.idcard;
 
-import ee.ria.sso.config.idcard.IDCardConfigurationProvider;
+import ee.ria.sso.config.idcard.IDCardConfigurationProvider.Ocsp;
 import ee.ria.sso.utils.X509Utils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +20,7 @@ import org.bouncycastle.operator.ContentVerifierProvider;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentVerifierProviderBuilder;
 import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
+import org.slf4j.MDC;
 import org.springframework.util.Assert;
 
 import java.io.*;
@@ -29,6 +30,8 @@ import java.security.*;
 import java.security.cert.*;
 import java.time.Instant;
 import java.util.*;
+
+import static ee.ria.sso.Constants.MDC_ATTRIBUTE_OCSP_ID;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -45,18 +48,19 @@ public class OCSPValidator {
         Assert.notNull(userCert, "User certificate cannot be null!");
         log.info("OCSP certificate validation. Serialnumber=<{}>, SubjectDN=<{}>, issuerDN=<{}>",
                 userCert.getSerialNumber(), userCert.getSubjectDN().getName(), userCert.getIssuerDN().getName());
-        List<IDCardConfigurationProvider.Ocsp> ocspConfiguration = ocspConfigurationResolver.resolve(userCert);
+        List<Ocsp> ocspConfiguration = ocspConfigurationResolver.resolve(userCert);
         Assert.isTrue(CollectionUtils.isNotEmpty(ocspConfiguration), "At least one OCSP configuration must be present");
 
         int count = 0;
         int maxTries = ocspConfiguration.size();
         while (true) {
+            Ocsp ocspConf = ocspConfiguration.get(count);
             try {
                 if (count > 0) {
-                    log.info("Retrying OCSP request with {}. Configuration: {}", ocspConfiguration.get(count).getUrl(), ocspConfiguration.get(count));
+                    log.info("Retrying OCSP request with {}. Configuration: {}", ocspConf.getUrl(), ocspConf);
                 }
 
-                checkCert(userCert, ocspConfiguration.get(count));
+                checkCert(userCert, ocspConf);
                 return;
             } catch (OCSPServiceNotAvailableException e) {
                 log.error("OCSP request has failed...");
@@ -67,7 +71,7 @@ public class OCSPValidator {
         }
     }
 
-    protected void checkCert(X509Certificate userCert, IDCardConfigurationProvider.Ocsp ocspConf) {
+    protected void checkCert(X509Certificate userCert, Ocsp ocspConf) {
         X509Certificate issuerCert = findIssuerCertificate(userCert);
         validateCertSignedBy(userCert, issuerCert);
 
@@ -75,7 +79,7 @@ public class OCSPValidator {
             OCSPReq request = buildOCSPReq(userCert, issuerCert, ocspConf);
             OCSPResp response = sendOCSPReq(request, ocspConf);
 
-            BasicOCSPResp ocspResponse = getResponse(response);
+            BasicOCSPResp ocspResponse = getResponse(response, ocspConf);
             validateResponseNonce(request, ocspResponse, ocspConf);
             validateResponseSignature(ocspResponse, issuerCert, ocspConf);
 
@@ -84,20 +88,21 @@ public class OCSPValidator {
             validateCertStatus(singleResponse);
         } catch (OCSPValidationException | OCSPServiceNotAvailableException e) {
             throw e;
-        } catch (SocketTimeoutException | ConnectException | UnknownHostException e) {
-            throw new OCSPServiceNotAvailableException(e);
+        } catch (SocketTimeoutException | SocketException | UnknownHostException e) {
+            throw new OCSPServiceNotAvailableException("OCSP not available: " + ocspConf.getUrl(), e);
         } catch (Exception e) {
             throw new IllegalStateException("OCSP validation failed: " + e.getMessage(), e);
         }
     }
 
-    private BasicOCSPResp getResponse(OCSPResp response)
+    private BasicOCSPResp getResponse(OCSPResp response, Ocsp ocspConf)
             throws IOException, OCSPException {
         log.info("OCSP response received: {}", Base64.getEncoder().encodeToString(response.getEncoded()));
         BasicOCSPResp basicOCSPResponse = (BasicOCSPResp) response.getResponseObject();
         Assert.notNull(basicOCSPResponse, "Invalid OCSP response! OCSP response object bytes could not be read!");
         Assert.notNull(basicOCSPResponse.getCerts(), "Invalid OCSP response! OCSP response is missing mandatory element - the signing certificate");
         Assert.isTrue(basicOCSPResponse.getCerts().length >= 1, "Invalid OCSP response! Expecting at least one OCSP responder certificate");
+        MDC.put(MDC_ATTRIBUTE_OCSP_ID, ocspConf.getUrl());
         return basicOCSPResponse;
     }
 
@@ -113,7 +118,7 @@ public class OCSPValidator {
         }
     }
 
-    private OCSPReq buildOCSPReq(X509Certificate userCert, X509Certificate issuerCert, IDCardConfigurationProvider.Ocsp conf)
+    private OCSPReq buildOCSPReq(X509Certificate userCert, X509Certificate issuerCert, Ocsp conf)
             throws OCSPException, IOException, CertificateEncodingException, OperatorCreationException {
         OCSPReqBuilder builder = new OCSPReqBuilder();
 
@@ -129,7 +134,7 @@ public class OCSPValidator {
         return builder.build();
     }
 
-    private OCSPResp sendOCSPReq(OCSPReq request, IDCardConfigurationProvider.Ocsp conf) throws IOException {
+    private OCSPResp sendOCSPReq(OCSPReq request, Ocsp conf) throws IOException {
         byte[] bytes = request.getEncoded();
 
         HttpURLConnection connection = (HttpURLConnection) new URL(conf.getUrl()).openConnection();
@@ -175,7 +180,7 @@ public class OCSPValidator {
             throws OperatorCreationException, CertificateEncodingException, OCSPException {
         BigInteger userCertSerialNumber = userCert.getSerialNumber();
         return new CertificateID(
-                new JcaDigestCalculatorProviderBuilder().build().get(CertificateID.HASH_SHA1),
+                new JcaDigestCalculatorProviderBuilder().build().get(CertificateID.HASH_SHA1), // NB! SK OCSP supports only SHA-1 for CertificateID
                 new JcaX509CertificateHolder(issuerCert),
                 userCertSerialNumber
         );
@@ -186,7 +191,7 @@ public class OCSPValidator {
         return new DEROctetString(new DEROctetString(uuidBytes));
     }
 
-    private void validateResponseNonce(OCSPReq request, BasicOCSPResp response, IDCardConfigurationProvider.Ocsp ocspConf) {
+    private void validateResponseNonce(OCSPReq request, BasicOCSPResp response, Ocsp ocspConf) {
         if (!ocspConf.isNonceDisabled()) {
             Extension requestExtension = request.getExtension(OCSPObjectIdentifiers.id_pkix_ocsp_nonce);
             DEROctetString nonce = (DEROctetString)requestExtension.getExtnValue();
@@ -211,7 +216,7 @@ public class OCSPValidator {
             throw new IllegalStateException("OCSP response cannot be produced in the future");
     }
 
-    private void validateResponseSignature(BasicOCSPResp response, X509Certificate userCertIssuer, IDCardConfigurationProvider.Ocsp ocspConfiguration)
+    private void validateResponseSignature(BasicOCSPResp response, X509Certificate userCertIssuer, Ocsp ocspConfiguration)
             throws OCSPException, OperatorCreationException, CertificateException, IOException {
 
         X509Certificate signingCert = getResponseSigningCert(response, userCertIssuer, ocspConfiguration);
@@ -221,7 +226,7 @@ public class OCSPValidator {
         verifyResponseSignature(response, signingCert);
     }
 
-    private X509Certificate getResponseSigningCert(BasicOCSPResp response, X509Certificate userCertIssuer, IDCardConfigurationProvider.Ocsp ocspConfiguration)
+    private X509Certificate getResponseSigningCert(BasicOCSPResp response, X509Certificate userCertIssuer, Ocsp ocspConfiguration)
             throws CertificateException, IOException {
         String responderCn = getResponderCN(response);
 

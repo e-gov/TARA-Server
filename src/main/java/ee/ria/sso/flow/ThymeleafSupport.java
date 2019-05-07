@@ -10,11 +10,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.apereo.cas.configuration.CasConfigurationProperties;
 import org.apereo.cas.services.OidcRegisteredService;
-import org.slf4j.MDC;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.webflow.execution.RequestContextHolder;
 
+import javax.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -83,9 +83,9 @@ public class ThymeleafSupport {
         }
     }
 
-    public String getCurrentRequestIdentifier() {
+    public String getCurrentRequestIdentifier(HttpServletRequest request) {
         try {
-            return MDC.get(Constants.MDC_ATTRIBUTE_REQUEST_ID);
+            return (String)request.getAttribute(Constants.MDC_ATTRIBUTE_REQUEST_ID);
         } catch (Exception e) {
             log.error("Failed to retrieve current request identifier!", e);
             return null;

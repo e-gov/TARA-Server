@@ -1,6 +1,5 @@
 package ee.ria.sso.config;
 
-import ee.ria.sso.AbstractTest;
 import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.flow.ThymeleafSupport;
@@ -14,12 +13,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
-import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.webflow.core.collection.SharedAttributeMap;
 import org.springframework.webflow.execution.RequestContextHolder;
@@ -198,11 +194,12 @@ public class ThymeleafSupportTest {
     }
 
     @Test
-    public void getCurrentRequestIdentifierShouldReturnIdFromMDC() {
+    public void getCurrentRequestIdentifierShouldReturnIdFromRequestAttributes() {
         String uniqueRequestId = UUID.randomUUID().toString();
-        MDC.put(Constants.MDC_ATTRIBUTE_REQUEST_ID, uniqueRequestId);
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setAttribute(Constants.MDC_ATTRIBUTE_REQUEST_ID, uniqueRequestId);
         ThymeleafSupport thymeleafSupport = new ThymeleafSupport(null, null, taraProperties, null);
-        Assert.assertEquals(uniqueRequestId, thymeleafSupport.getCurrentRequestIdentifier());
+        Assert.assertEquals(uniqueRequestId, thymeleafSupport.getCurrentRequestIdentifier(request));
     }
 
     private static void setRequestContextWithSessionMap(final Map<String, Object> sessionMap) {
