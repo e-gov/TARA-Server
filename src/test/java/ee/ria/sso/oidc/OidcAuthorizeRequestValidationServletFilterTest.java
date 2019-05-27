@@ -225,7 +225,7 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
     private void assertRedirectWhenParameterValidationFails(String redirectUri, String expectedDelimiter, OidcAuthorizeRequestParameter... parameters) throws IOException, ServletException {
         MockHttpServletRequest servletRequest = new MockHttpServletRequest();
         servletRequest.addParameter("redirect_uri", redirectUri);
-        servletRequest.addParameter("state", "123456789abcdefghjiklmn");
+        servletRequest.addParameter("state", "123456789abcdefghjiklmn&additional=1");
 
         for (OidcAuthorizeRequestParameter parameter : parameters) {
             Mockito.doThrow(new OidcAuthorizeRequestValidator.InvalidRequestException(parameter, "test", "test description")).when(oidcRequestValidator).validateAuthenticationRequestParameters(Mockito.any());
@@ -234,7 +234,7 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
             servletFilter.doFilter(servletRequest, servletResponse, Mockito.mock(FilterChain.class));
 
             Assert.assertEquals(302, servletResponse.getStatus());
-            Assert.assertEquals(redirectUri + expectedDelimiter + "error=test&error_description=test+description&state=123456789abcdefghjiklmn", servletResponse.getRedirectedUrl());
+            Assert.assertEquals(redirectUri + expectedDelimiter + "error=test&error_description=test+description&state=123456789abcdefghjiklmn%26additional%3D1", servletResponse.getRedirectedUrl());
         }
     }
 
