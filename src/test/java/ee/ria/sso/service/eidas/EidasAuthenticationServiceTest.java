@@ -3,12 +3,12 @@ package ee.ria.sso.service.eidas;
 import ee.ria.sso.CommonConstants;
 import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
-import ee.ria.sso.service.ExternalServiceHasFailedException;
 import ee.ria.sso.authentication.LevelOfAssurance;
 import ee.ria.sso.authentication.credential.PreAuthenticationCredential;
 import ee.ria.sso.config.eidas.EidasConfigurationProvider;
 import ee.ria.sso.config.eidas.TestEidasConfiguration;
 import ee.ria.sso.service.AbstractAuthenticationServiceTest;
+import ee.ria.sso.service.ExternalServiceHasFailedException;
 import ee.ria.sso.service.UserAuthenticationFailedException;
 import ee.ria.sso.statistics.StatisticsHandler;
 import ee.ria.sso.statistics.StatisticsOperation;
@@ -63,6 +63,9 @@ public class EidasAuthenticationServiceTest extends AbstractAuthenticationServic
     @Autowired
     private StatisticsHandler statistics;
 
+    @Autowired
+    private EidasConfigurationProvider eidasConfigurationProvider;
+
     @Mock
     private EidasAuthenticator authenticatorMock;
 
@@ -71,7 +74,7 @@ public class EidasAuthenticationServiceTest extends AbstractAuthenticationServic
     @Before
     public void setUp() {
         Mockito.reset(authenticatorMock);
-        authenticationService = new EidasAuthenticationService(statistics, authenticatorMock);
+        authenticationService = new EidasAuthenticationService(statistics, authenticatorMock, eidasConfigurationProvider);
     }
 
     @After
@@ -81,7 +84,7 @@ public class EidasAuthenticationServiceTest extends AbstractAuthenticationServic
 
     @Test
     public void startLoginByEidasWithoutLoaShouldSucceedAndWriteAuthenticatorResponse() throws Exception {
-        String country = "SE";
+        String country = "FI";
         PreAuthenticationCredential credential = new PreAuthenticationCredential();
         credential.setCountry(country);
 
@@ -132,6 +135,25 @@ public class EidasAuthenticationServiceTest extends AbstractAuthenticationServic
         }
 
         Assert.fail("Should not reach this!");
+    }
+
+    @Test
+    public void startLoginByEidasShouldFailWhenCountryCodeFormatValidButNotAllowed() {
+        PreAuthenticationCredential credential = new PreAuthenticationCredential();
+        credential.setCountry("RU");
+
+        MockRequestContext requestContext = this.getMockRequestContext(null, credential);
+
+        expectedEx.expect(UserAuthenticationFailedException.class);
+        expectedEx.expectMessage("User provided not allowed country code: <RU>");
+
+        try {
+            this.authenticationService.startLoginByEidas(requestContext);
+            Assert.fail("Expected to throw exception!");
+        } catch (Exception e) {
+            Assert.assertTrue("Should not log to statistics when input is invalid", SimpleTestAppender.events.isEmpty());
+            throw e;
+        }
     }
 
     @Test

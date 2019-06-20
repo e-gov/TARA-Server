@@ -5,6 +5,7 @@ import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.LevelOfAssurance;
 import ee.ria.sso.authentication.credential.PreAuthenticationCredential;
+import ee.ria.sso.config.eidas.EidasConfigurationProvider;
 import ee.ria.sso.security.CspDirective;
 import ee.ria.sso.security.CspHeaderUtil;
 import ee.ria.sso.service.AbstractService;
@@ -13,6 +14,7 @@ import ee.ria.sso.service.UserAuthenticationFailedException;
 import ee.ria.sso.statistics.StatisticsHandler;
 import ee.ria.sso.statistics.StatisticsOperation;
 import ee.ria.sso.statistics.StatisticsRecord;
+import ee.ria.sso.utils.CountryCodeUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apereo.cas.web.flow.CasWebflowConstants;
@@ -41,16 +43,18 @@ import static ee.ria.sso.Constants.TARA_OIDC_SESSION_LOA;
 public class EidasAuthenticationService extends AbstractService {
 
     public static final Pattern VALID_PERSON_IDENTIFIER_PATTERN = Pattern.compile("^([A-Z]{2,2})\\/([A-Z]{2,2})\\/(.*)$");
-    public static final Pattern VALID_COUNTRY_PATTERN = Pattern.compile("^[A-Z]{2,2}$");
     public static final String SESSION_ATTRIBUTE_COUNTRY = "country";
     public static final String SESSION_ATTRIBUTE_RELAY_STATE = "relayState";
 
     private final EidasAuthenticator eidasAuthenticator;
+    private final EidasConfigurationProvider eidasConfigurationProvider;
 
     public EidasAuthenticationService(StatisticsHandler statistics,
-                                      EidasAuthenticator eidasAuthenticator) {
+                                      EidasAuthenticator eidasAuthenticator,
+                                      EidasConfigurationProvider eidasConfigurationProvider) {
         super(statistics);
         this.eidasAuthenticator = eidasAuthenticator;
+        this.eidasConfigurationProvider = eidasConfigurationProvider;
     }
 
     @Audit(
@@ -180,10 +184,18 @@ public class EidasAuthenticationService extends AbstractService {
     }
 
     private void validateAndStoreCountry(PreAuthenticationCredential credential, RequestContext context) {
-        if (StringUtils.isBlank(credential.getCountry()) || !VALID_COUNTRY_PATTERN.matcher(credential.getCountry()).matches()) {
-            throw new UserAuthenticationFailedException("message.eidas.invalidcountry", String.format("User provided invalid country code: <%s>", credential.getCountry()));
+        String countryCode = credential.getCountry();
+        if (StringUtils.isBlank(countryCode) || !CountryCodeUtil.isValidCountryCode(countryCode)) {
+            throw new UserAuthenticationFailedException("message.eidas.invalidcountry", String.format("User provided invalid country code: <%s>", countryCode));
         }
-        context.getExternalContext().getSessionMap().put(SESSION_ATTRIBUTE_COUNTRY, credential.getCountry().toUpperCase());
+        if (!isAllowedCountryCode(countryCode)) {
+            throw new UserAuthenticationFailedException("message.eidas.notAllowedCountry", String.format("User provided not allowed country code: <%s>", countryCode));
+        }
+        context.getExternalContext().getSessionMap().put(SESSION_ATTRIBUTE_COUNTRY, countryCode.toUpperCase());
+    }
+
+    private boolean isAllowedCountryCode(String countryCode) {
+        return eidasConfigurationProvider.getAvailableCountries().contains(countryCode);
     }
 
     private void logEvent(RequestContext context, StatisticsOperation operation) {

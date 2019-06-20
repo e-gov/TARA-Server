@@ -1,6 +1,7 @@
 package ee.ria.sso.config.eidas;
 
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
+import ee.ria.sso.utils.CountryCodeUtil;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +18,11 @@ import org.springframework.validation.annotation.Validated;
 
 import javax.annotation.PostConstruct;
 import java.security.KeyStore;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Component
@@ -57,12 +62,22 @@ public class EidasConfigurationProvider {
             Assert.notNull(clientCertificateKeystorePass, "No client certificate keystore password provided");
         }
 
-        listOfCountries = parsePropertiesList(availableCountries);
+        listOfCountries = parseAvailableCountries(availableCountries);
     }
 
-    private static List<String> parsePropertiesList(String input) {
-        if (StringUtils.isEmpty(input)) return Collections.emptyList();
-        return Arrays.asList(input.split(","));
+    private static List<String> parseAvailableCountries(String input) {
+        if (StringUtils.isBlank(input)) {
+            return Collections.emptyList();
+        }
+        List<String> countryCodes = Arrays.asList(input.split(","));
+        validateCountryCodes(countryCodes);
+        return countryCodes;
+    }
+
+    private static void validateCountryCodes(List<String> countryCodes) {
+        for (String countryCode : countryCodes) {
+            Assert.isTrue(CountryCodeUtil.isValidCountryCode(countryCode), "Invalid ISO 3166-1 alpha-2 country code '" + countryCode + "'");
+        }
     }
 
     public List<String> getListOfCountries(String locale) {
