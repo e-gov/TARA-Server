@@ -47,7 +47,7 @@ logging.config=file:/etc/cas/config/log4j2.xml
 
 By default, all log files are written to the local filesystem `/var/log/cas`. The location can be overridden either by providing a parameter `-Dtara.log.dir=<logdir>` during TARA startup or overriding the `log4j2.xml` file.
 
-Log files are rolled over hourly or when the size cap for a file is reached or the TARA service has been restarted. Files that are rolled over are compressed with `gz` and transferred to directory that corresponds to a date pattern `yyyy-MM`).
+Log files names correspond to pattern logfile-%d{yyyy-MM-dd}.log and is not modified during log rotation. Example: cas_audit-2025-01-31.log. Logs are rolled over at midnight by creating a new file with the pattern. Old files are kept uncompressed in the same directory for seven days.
 
 List of log files created by TARA on initialization:
 
@@ -57,7 +57,7 @@ List of log files created by TARA on initialization:
 | **[cas_error.log](Configuration.md#cas_error_log)** | Errors with technical and detailed stack traces. |
 | **[cas_audit.log](Configuration.md#cas_audit_log)** | Pre-defined events derived from user actions to be audited for security purposes. |
 | **stats.log** | Simplified CSV formatted authentication statistics. See [statistics specification](https://e-gov.github.io/TARA-Doku/Statistika) for log record specification and further details. |
-| **perfStats.log** | Performance metrics. Periodically prints report that consists of brief memory, thread allocation and ticket stats. |
+| **perfStats.log** | Performance metrics. Periodically prints report that consists of brief memory, thread allocation and ticket stats. Kept for one day by default |
 
 
 <a name="cas_log"></a>
