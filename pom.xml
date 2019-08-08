@@ -98,6 +98,7 @@
                             <excludes>
                                 <exclude>WEB-INF/classes/user-details.properties</exclude>
                                 <exclude>WEB-INF/lib/jackson-*</exclude>
+                                <exclude>WEB-INF/lib/cas-server-support-reports-*</exclude>
                             </excludes>
                         </overlay>
                     </overlays>
