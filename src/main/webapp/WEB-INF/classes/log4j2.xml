@@ -71,57 +71,61 @@
             </SSL>
         </Socket-->
 
-        <RollingFile name="statisticsFileAppender" fileName="${sys:tara.log.dir}/stats.log" append="true"
-                     filePattern="${sys:tara.log.dir}/$${date:yyyy-MM}/stats-%d{yyyy-MM-dd-HH}-%i.log.gz">
+        <RollingFile name="statisticsFileAppender" append="true"
+                     filePattern="${sys:tara.log.dir}/stats-%d{yyyy-MM-dd}.log">
             <PatternLayout pattern="${sys:tara.stats_log.pattern}"/>
-            <Policies>
-                <OnStartupTriggeringPolicy/>								<!-- Log rotation every time CAS is started -->
-                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>	<!-- Log rotation once the date/time pattern no longer applies to the active file. This policy accepts an interval attribute which indicates how frequently the rollover should occur based on the time pattern and a modulate boolean attribute. -->
-                <SizeBasedTriggeringPolicy size="100 MB"/>					<!-- Log rotation once the file has reached the specified size. The size can be specified in bytes, with the suffix KB, MB or GB, for example 20MB -->
-            </Policies>
+            <CronTriggeringPolicy schedule="0 0 * * * ?"/> <!-- Log rotation once the date/time pattern no longer applies to the active file. This policy accepts an interval attribute which indicates how frequently the rollover should occur based on the time pattern and a modulate boolean attribute. -->
+            <DirectWriteRolloverStrategy>
+                <Delete basePath="${sys:tara.log.dir}">
+                    <IfFileName glob="stats-*.log" />
+                    <IfLastModified age="7d" />
+                </Delete>
+            </DirectWriteRolloverStrategy>
         </RollingFile>
-        <RollingFile name="file" fileName="${sys:tara.log.dir}/cas.log" append="true"
-                     filePattern="${sys:tara.log.dir}/$${date:yyyy-MM}/cas-%d{yyyy-MM-dd-HH}-%i.log.gz">
+        <RollingFile name="file" append="true"
+                     filePattern="${sys:tara.log.dir}/cas-%d{yyyy-MM-dd}.log">
             <PatternLayout alwaysWriteExceptions="false" pattern="${sys:tara.log.pattern}" />
-            <Policies>
-                <OnStartupTriggeringPolicy />
-                <SizeBasedTriggeringPolicy size="100 MB"/>
-                <TimeBasedTriggeringPolicy />
-            </Policies>
+            <CronTriggeringPolicy schedule="0 0 * * * ?"/>
+            <DirectWriteRolloverStrategy>
+                <Delete basePath="${sys:tara.log.dir}">
+                    <IfFileName glob="cas-*.log" />
+                    <IfLastModified age="7d" />
+                </Delete>
+            </DirectWriteRolloverStrategy>
         </RollingFile>
-        <RollingFile name="errorFile" fileName="${sys:tara.log.dir}/cas_error.log" append="true"
-                     filePattern="${sys:tara.log.dir}/$${date:yyyy-MM}/cas_error-%d{yyyy-MM-dd-HH}-%i.log.gz">
+        <RollingFile name="errorFile" append="true"
+                     filePattern="${sys:tara.log.dir}/cas_error-%d{yyyy-MM-dd}.log">
             <PatternLayout alwaysWriteExceptions="false" pattern="${sys:tara.error_details_log.pattern}" />
-            <Policies>
-                <OnStartupTriggeringPolicy />
-                <SizeBasedTriggeringPolicy size="100 MB"/>
-                <TimeBasedTriggeringPolicy />
-            </Policies>
+            <CronTriggeringPolicy schedule="0 0 * * * ?"/>
+            <DirectWriteRolloverStrategy>
+                <Delete basePath="${sys:tara.log.dir}">
+                    <IfFileName glob="cas_error-*.log" />
+                    <IfLastModified age="7d" />
+                </Delete>
+            </DirectWriteRolloverStrategy>
         </RollingFile>
-        <RollingFile name="auditlogfile" fileName="${sys:tara.log.dir}/cas_audit.log" append="true"
-                     filePattern="${sys:tara.log.dir}/$${date:yyyy-MM}/cas_audit-%d{yyyy-MM-dd-HH}-%i.log.gz">
+        <RollingFile name="auditlogfile" append="true"
+                     filePattern="${sys:tara.log.dir}/cas_audit-%d{yyyy-MM-dd}.log">
             <PatternLayout pattern="${sys:tara.audit_log.pattern}"/>
-            <Policies>
-                <OnStartupTriggeringPolicy />
-                <SizeBasedTriggeringPolicy size="100 MB"/>
-                <TimeBasedTriggeringPolicy />
-            </Policies>
+            <CronTriggeringPolicy schedule="0 0 * * * ?"/>
+            <DirectWriteRolloverStrategy>
+                <Delete basePath="${sys:tara.log.dir}">
+                    <IfFileName glob="cas_audit-*.log" />
+                    <IfLastModified age="7d" />
+                </Delete>
+            </DirectWriteRolloverStrategy>
         </RollingFile>
-        <!-- Files older than 1 day are deleted. File will be rolled overs when 100MB limit is reached and only 5 last files are kept -->
-        <RollingFile name="perfFileAppender" fileName="${sys:tara.log.dir}/perfStats.log" append="true"
-                     filePattern="${sys:tara.log.dir}/$${date:yyyy-MM}/perfStats-%d{yyyy-MM-dd}-%i.log.gz">
+        <!-- Files older than 1 day are deleted. -->
+        <RollingFile name="perfFileAppender" append="true"
+                     filePattern="${sys:tara.log.dir}/perfStats-%d{yyyy-MM-dd}.log">
             <PatternLayout pattern="%m%n"/>
-            <Policies>
-                <OnStartupTriggeringPolicy />
-                <SizeBasedTriggeringPolicy size="100 MB"/>
-                <TimeBasedTriggeringPolicy />
-            </Policies>
-            <DefaultRolloverStrategy max="5" compressionLevel="9">
-                <Delete basePath="${sys:tara.log.dir}" maxDepth="2">
-                    <IfFileName glob="*/*.log.gz" />
+            <CronTriggeringPolicy schedule="0 0 * * * ?"/>
+            <DirectWriteRolloverStrategy>
+                <Delete basePath="${sys:tara.log.dir}">
+                    <IfFileName glob="perfStats-*.log" />
                     <IfLastModified age="1d" />
                 </Delete>
-            </DefaultRolloverStrategy>
+            </DirectWriteRolloverStrategy>
         </RollingFile>
 
         <CasAppender name="casAudit">
