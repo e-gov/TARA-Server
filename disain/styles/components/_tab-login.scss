@@ -95,7 +95,7 @@
     &:hover {
       text-decoration: none;
       color: #fff;
-      background-color: #0083ba;
+      background-color: #005f87;
       @media (max-width: $breakpoint-mobile) {
         color: #003168;
         background-color: #fff;
@@ -116,6 +116,7 @@
     align-items: center;
     white-space: nowrap;
     font-size: 24px;
+    font-weight: 500;
   }
   &__nav-back-link {
     display: none;
@@ -213,7 +214,6 @@
     justify-content: space-between;
     align-items: center;
     margin-top: 30px;
-    font-size: 24px;
     @media (max-width: $breakpoint-mobile) {
       display: none;
     }

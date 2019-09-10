@@ -16,10 +16,10 @@ a, button {
   transition: color .25s, background-color .25s;
 }
 a {
-  color: #0083ba;
+  color: #005f87;
   text-decoration: underline;
   &:hover {
-    color: #0083ba;
+    color: #005f87;
     text-decoration: none;
   }
 }
@@ -95,7 +95,6 @@ body {
 // Back link
 .link-back {
   margin: 25px 0;
-  font-size: 24px;
   @media (max-width: $breakpoint-mobile) {
     text-align: center;
   }
@@ -106,7 +105,6 @@ body {
   display: none;
   margin-bottom: 25px;
   text-align: center;
-  font-size: 24px;
   @media (max-width: $breakpoint-mobile) {
     display: block;
   }
