@@ -4,13 +4,13 @@
             <p th:text="#{label.header.slogan}">Slogan</p>
             <ul class="c-lang-list" th:if="not ${hideHeaderLanguageSelection}">
                 <li class="c-lang-list__item" th:if="${@thymeleafSupport.isNotLocale('et', #locale)}">
-                    <a class="c-lang-list__link" th:href="${@thymeleafSupport.getLocaleUrl('et')}" th:text="#{label.header.et}">EESTI</a>
+                    <a class="c-lang-list__link" th:href="${@thymeleafSupport.getLocaleUrl('et')}" th:text="#{label.header.et}" th:hreflang="et" th:lang="et">EESTI</a>
                 </li>
                 <li class="c-lang-list__item" th:if="${@thymeleafSupport.isNotLocale('en', #locale)}">
-                    <a class="c-lang-list__link" th:href="${@thymeleafSupport.getLocaleUrl('en')}" th:text="#{label.header.en}">ENGLISH</a>
+                    <a class="c-lang-list__link" th:href="${@thymeleafSupport.getLocaleUrl('en')}" th:text="#{label.header.en}" th:hreflang="en" th:lang="en">ENGLISH</a>
                 </li>
                 <li class="c-lang-list__item" th:if="${@thymeleafSupport.isNotLocale('ru', #locale)}">
-                    <a class="c-lang-list__link" th:href="${@thymeleafSupport.getLocaleUrl('ru')}" th:text="#{label.header.ru}">РУССКИЙ</a>
+                    <a class="c-lang-list__link" th:href="${@thymeleafSupport.getLocaleUrl('ru')}" th:text="#{label.header.ru}" th:hreflang="ru" th:lang="ru">РУССКИЙ</a>
                 </li>
             </ul>
         </div>
