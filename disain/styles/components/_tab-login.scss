@@ -115,7 +115,7 @@
     display: flex;
     align-items: center;
     white-space: nowrap;
-    font-size: 20px;
+    font-size: 24px;
   }
   &__nav-back-link {
     display: none;
@@ -213,6 +213,7 @@
     justify-content: space-between;
     align-items: center;
     margin-top: 30px;
+    font-size: 24px;
     @media (max-width: $breakpoint-mobile) {
       display: none;
     }

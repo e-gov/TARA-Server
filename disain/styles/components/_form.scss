@@ -97,6 +97,7 @@
   box-shadow: 0 5px 8px 1px rgba(57, 68, 77, 0.35);
   border-radius: 10px;
   position: relative;
+  font-size: 24px;
   &:before {
     content: "";
     width: 0;
@@ -155,6 +156,7 @@
 .alert-error {
   background-color: #fdb9b7;
   border: 4px solid #fc7376;
+  font-size: 24px;
   @media (max-width: $breakpoint-mobile) {
     border-width: 2px;
   }
