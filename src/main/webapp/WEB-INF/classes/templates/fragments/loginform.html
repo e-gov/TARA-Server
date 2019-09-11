@@ -28,7 +28,7 @@
                     <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
                     <input type="hidden" name="_eventId" value="idsubmit"/>
                     <div class="alert alert-error alert-popup" role="alert">
-                        <button class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span></button>
+                        <button class="close" aria-label="close alert" data-dismiss="alert"><span aria-hidden="true">&times;</span></button>
                         <p><strong><span th:text="#{message.idc.certificatefailed}" th:remove="tag"></span></strong></p>
                         <p th:text="#{message.idc.doesidcardexist}"></p>
                     </div>
