@@ -39,7 +39,7 @@
    th:lang="${lang}"
    th:data-tab="${tab_id}">
     <span class="c-tab-login__nav-label">
-        <span th:class="'icon icon-' + ${tab_id}"><img th:src="'/assets/' + ${suffix} + '-icon.png'" th:alt="${#messages.msg('label.' + tab_id + '.title')}"></span>
+        <span th:class="'icon icon-' + ${tab_id}"><img th:src="'/assets/' + ${suffix} + '-icon.png'" th:alt=""></span>
         <span th:text="${#messages.msg('label.' + tab_id + '.title')}" />
     </span>
 </a>
