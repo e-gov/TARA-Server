@@ -6,8 +6,6 @@
     <div class="container">
         <div class="alert alert-error">
             <p><strong><span th:text="#{message.error.auth.title}" th:remove="tag"></span></strong></p>
-            <p th:if="${TARA_ERROR_MESSAGE != null}" th:text="${TARA_ERROR_MESSAGE}"></p>
-            <p th:unless="${TARA_ERROR_MESSAGE != null}" th:text="#{message.error.auth.error}"></p>
             <p th:if="${TARA_ERROR_MESSAGE != null}" th:utext="${TARA_ERROR_MESSAGE}"></p>
             <p th:unless="${TARA_ERROR_MESSAGE != null}" th:utext="#{message.error.auth.error}"></p>
             <p th:if="${@thymeleafSupport.getCurrentRequestIdentifier(#request) != null}">

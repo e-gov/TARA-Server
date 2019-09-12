@@ -28,7 +28,7 @@
                     <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
                     <input type="hidden" name="_eventId" value="idsubmit"/>
                     <div class="alert alert-error alert-popup" role="alert">
-                        <button class="close" aria-label="close alert" data-dismiss="alert"><span aria-hidden="true">&times;</span></button>
+                        <button class="close" th:aria-label="#{label.alert.close}" data-dismiss="alert"><span aria-hidden="true">&times;</span></button>
                         <p><strong><span th:text="#{message.idc.certificatefailed}" th:remove="tag"></span></strong></p>
                         <p th:text="#{message.idc.doesidcardexist}"></p>
                     </div>
@@ -84,7 +84,7 @@
                 <form method="post" id="bankForm" class="c-form" layout:fragment="login-form-content">
                     <div class="c-logo-list">
                         <div class="c-logo-list__item" th:each="bank : ${@banklinkConfigurationProvider.getListOfBanks()}">
-                            <a href="#" th:class="'c-logo-list\_\_link c-logo-list\_\_link--' + ${bank.name}" th:id="${bank.name}"></a>
+                            <a href="#" th:class="'c-logo-list\_\_link c-logo-list\_\_link--' + ${bank.name}" th:id="${bank.name}" th:aria-label="${bank.name}"></a>
                         </div>
                     </div>
                     <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
