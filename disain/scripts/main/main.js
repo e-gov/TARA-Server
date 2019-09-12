@@ -34,6 +34,12 @@ jQuery(function ($) {
 		$(this).addClass('is-active');
 		$('.c-tab-login__content[data-tab="' + active + '"]').addClass('is-active');
 
+		// Clear alert and error messages
+		$('.c-tab-login__content[data-tab="' + active + '"] [role="alert"]').removeClass('show');
+		$('.c-tab-login__content[data-tab="' + active + '"] .input-group').removeClass('is-invalid');
+		$('.c-tab-login__content[data-tab="' + active + '"] .selectize-input').removeClass('is-invalid');
+		$('.c-tab-login__content[data-tab="' + active + '"] .invalid-feedback').addClass('is-hidden');
+
 		if (typeof(Storage) !== "undefined") {
             sessionStorage.setItem('active-tab', active);
         }
