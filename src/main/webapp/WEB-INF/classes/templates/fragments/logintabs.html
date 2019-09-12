@@ -51,8 +51,8 @@
                 <svg th:class="'icon icon-' + ${tab_id}"><use th:attr="'xlink:href'='#icon-' + ${tab_id}"></use></svg>
             </div>
             <div class="c-tab-login__content-text">
-                <h2 th:text="${#messages.msg('label.' + tab_id + '.' + (title ?: 'title'))}"></h2>
-                <p th:text="${#messages.msg('label.' + tab_id + '.' + (instruction ?: 'instruction'))}"></p>
+                <h2 th:utext="${#messages.msg('label.' + tab_id + '.' + (title ?: 'title'))}"></h2>
+                <p th:utext="${#messages.msg('label.' + tab_id + '.' + (instruction ?: 'instruction'))}"></p>
                 <form layout:fragment="login-form-content"></form>
             </div>
         </div>
