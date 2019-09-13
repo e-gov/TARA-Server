@@ -27,10 +27,14 @@
                     <button type="button" class="c-btn c-btn--primary" th:text="#{label.common.login}">Login</button>
                     <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
                     <input type="hidden" name="_eventId" value="idsubmit"/>
-                    <div class="alert alert-error alert-popup" role="alert">
+                    <div class="alert alert-error alert-popup" role="alert" aria-atomic="true">
+                        <p>
+                            <strong>
+                                <span id="error-message-title" th:text="#{message.idc.certificatefailed}" />
+                            </strong>
+                        </p>
+                        <span id="error-message" th:text="#{message.idc.doesidcardexist}" />
                         <button class="close" th:aria-label="#{label.alert.close}" data-dismiss="alert"><span aria-hidden="true">&times;</span></button>
-                        <p><strong><span th:text="#{message.idc.certificatefailed}" th:remove="tag"></span></strong></p>
-                        <p th:text="#{message.idc.doesidcardexist}"></p>
                     </div>
                 </form>
             </div>
@@ -49,8 +53,8 @@
                                     </div>
                                     <input type="text" maxlength="11" id="mid-personal-code" class="form-control" th:field="*{principalCode}">
                                 </div>
-                                <div class="invalid-feedback is-hidden" th:text="#{message.common.personalCode-missing}"></div>
-                                <div class="invalid-feedback is-hidden" th:text="#{message.common.personalCode-invalid}"></div>
+                                <div class="invalid-feedback is-hidden" th:text="#{message.common.personalCode-missing}" role="alert"></div>
+                                <div class="invalid-feedback is-hidden" th:text="#{message.common.personalCode-invalid}" role="alert"></div>
                             </td>
                         </tr>
                         <tr>
@@ -64,8 +68,8 @@
                                     </div>
                                     <input type="text" maxlength="15" id="mid-phone-number" class="form-control" th:field="*{mobileNumber}">
                                 </div>
-                                <div class="invalid-feedback is-hidden" th:text="#{message.common.phoneNumber-missing}"></div>
-                                <div class="invalid-feedback is-hidden" th:text="#{message.common.phoneNumber-invalid}"></div>
+                                <div class="invalid-feedback is-hidden" th:text="#{message.common.phoneNumber-missing}" role="alert"></div>
+                                <div class="invalid-feedback is-hidden" th:text="#{message.common.phoneNumber-invalid}" role="alert"></div>
                             </td>
                         </tr>
                         <tr>
@@ -107,8 +111,8 @@
                                     </div>
                                     <input type="text" maxlength="11" id="sid-personal-code" class="form-control" th:field="*{principalCode}">
                                 </div>
-                                <div class="invalid-feedback is-hidden" th:text="#{message.common.personalCode-missing}"></div>
-                                <div class="invalid-feedback is-hidden" th:text="#{message.common.personalCode-invalid}"></div>
+                                <div class="invalid-feedback is-hidden" th:text="#{message.common.personalCode-missing}" role="alert"></div>
+                                <div class="invalid-feedback is-hidden" th:text="#{message.common.personalCode-invalid}" role="alert"></div>
                             </td>
                         </tr>
                         <tr>
@@ -134,7 +138,7 @@
                                         <option th:each="country : ${@eidasConfigurationProvider.getListOfCountries(#locale.language)}"
                                                 th:value="${country}" th:text="${#messages.msg('label.countries.' + country)}"></option>
                                     </select>
-                                    <div class="invalid-feedback is-hidden" th:text="#{message.eu-citizen.selectCountry}"></div>
+                                    <div class="invalid-feedback is-hidden" th:text="#{message.eu-citizen.selectCountry}" role="alert"></div>
                                 </td>
                             </tr>
                             <tr>

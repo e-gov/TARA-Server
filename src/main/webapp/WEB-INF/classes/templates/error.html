@@ -4,7 +4,7 @@
 <body>
 <div layout:fragment="content" th:with="hideHeaderLanguageSelection=true" th:remove="tag">
     <div class="container">
-        <div class="alert alert-error">
+        <div class="alert alert-error" role="alert">
             <p><strong><span th:text="#{message.error.auth.title}" th:remove="tag"></span></strong></p>
             <p th:if="${TARA_ERROR_MESSAGE != null}" th:utext="${TARA_ERROR_MESSAGE}"></p>
             <p th:unless="${TARA_ERROR_MESSAGE != null}" th:utext="#{message.error.auth.error}"></p>

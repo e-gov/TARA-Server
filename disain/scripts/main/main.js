@@ -91,7 +91,13 @@ jQuery(function ($) {
 			
 			var errorIndex = field.val() ? 1 : 0;
 			field.parents('td').children('div.invalid-feedback').each(function(index){
-				(index === errorIndex) ? $(this).removeClass('is-hidden') : $(this).addClass('is-hidden');
+				if (index === errorIndex) {
+				    $(this).removeClass('is-hidden');
+                    // Refresh text for screen reader to read out message
+				    $(this).text($(this).text());
+				} else {
+				    $(this).addClass('is-hidden');
+				}
 			});
 			
 			return false;
@@ -105,7 +111,10 @@ jQuery(function ($) {
 			return true;
 		} else {
 			selection.parent('td').find('.selectize-input').addClass('is-invalid');
-			selection.parent('td').children('div.invalid-feedback').removeClass('is-hidden');
+			var feedbackDiv = selection.parent('td').children('div.invalid-feedback');
+			feedbackDiv.removeClass('is-hidden');
+			// Refresh text for screen reader to read out message
+            feedbackDiv.text(feedbackDiv.text());
 			return false;
 		}
 	}
@@ -113,7 +122,8 @@ jQuery(function ($) {
 	// ID-card form submit
 	$('#idCardForm button.c-btn--primary').on('click', function(event){
 		event.preventDefault();
-		
+
+		$('#idCardForm .alert-popup').removeClass('show');
 		if ($(this).prop('disabled')) return;
 		$(this).prop('disabled', true);
 		var _this = $(this);
@@ -123,6 +133,14 @@ jQuery(function ($) {
 			if (this.readyState !== 4) return;
 			if (this.status !== 200 || this.responseText !== '{"ok":true}') {
 				$('#idCardForm .alert-popup').addClass('show');
+
+				// Clear and re-show error-message content, because screen readers expect dynamic text addition
+				// for alert messages to be read out
+				var errorMessageTitle = $('#idCardForm .alert-popup #error-message-title');
+				var errorMessage = $('#idCardForm .alert-popup #error-message');
+				errorMessageTitle.text(errorMessageTitle.text());
+				errorMessage.text(errorMessage.text());
+
 				_this.prop('disabled', false);
 			} else {
 				$('#idCardForm').submit();
