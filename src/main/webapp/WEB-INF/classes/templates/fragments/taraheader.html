@@ -1,7 +1,6 @@
 <div class="c-header-bar" xmlns:th="http://www.w3.org/1999/xhtml">
     <div class="container">
         <div class="d-flex justify-content-between align-items-center">
-            <p th:text="#{label.header.slogan}">Slogan</p>
             <ul class="c-lang-list" th:if="not ${hideHeaderLanguageSelection}">
                 <li class="c-lang-list__item" th:if="${@thymeleafSupport.isNotLocale('et', #locale)}">
                     <a class="c-lang-list__link" th:href="${@thymeleafSupport.getLocaleUrl('et')}" th:text="#{label.header.et}" th:hreflang="et" th:lang="et">EESTI</a>
@@ -13,16 +12,19 @@
                     <a class="c-lang-list__link" th:href="${@thymeleafSupport.getLocaleUrl('ru')}" th:text="#{label.header.ru}" th:hreflang="ru" th:lang="ru">РУССКИЙ</a>
                 </li>
             </ul>
+            <header role="banner">
+                <h1 th:aria-label="#{label.header.title}" aria-hidden="true"></h1>
+                <p th:text="#{label.header.slogan}">Slogan</p>
+            </header>
         </div>
     </div>
 </div>
-<header class="c-header" xmlns:th="http://www.w3.org/1999/xhtml">
+<div class="c-header" xmlns:th="http://www.w3.org/1999/xhtml">
     <div class="container">
-        <h1 class="c-header__logo">
-            <a class="c-header__logo-link" th:href="${@thymeleafSupport.getBackUrl(session.pac4jRequestedUrl, #locale)}">
-                <img th:src="#{logo.header.tara}" alt="">
-                <span class="sr-only" th:text="#{label.header.title}"></span>
-            </a>
-        </h1>
+        <div class="c-header__logo">
+            <div class="c-header__logo-link">
+                <img th:src="#{logo.header.tara}" aria-hidden="true" alt="">
+            </div>
+        </div>
     </div>
-</header>
+</div>
