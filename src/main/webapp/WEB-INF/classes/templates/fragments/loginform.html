@@ -12,7 +12,7 @@
         <br>
     </th:block>
     <div class="c-tab-login">
-        <nav role="navigation" class="c-tab-login__header">
+        <nav role="navigation" class="c-tab-login__header" th:aria-label="#{label.common.authentication-method}">
             <ul class="c-tab-login__nav">
                 <th:block th:if="${@thymeleafSupport.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).IDCard)}"><li th:replace="~{fragments/logintabs :: nav_default('id-card')}"></li></th:block>
                 <th:block th:if="${@thymeleafSupport.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).MobileID)}"><li th:replace="~{fragments/logintabs :: nav_default('mobile-id')}"></li></th:block>
