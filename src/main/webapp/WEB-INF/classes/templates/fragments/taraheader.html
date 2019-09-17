@@ -3,7 +3,7 @@
         <div class="d-flex justify-content-between align-items-center">
             <header role="banner">
                 <h1 th:aria-label="#{label.header.title}" aria-hidden="true"></h1>
-                <p th:text="#{label.header.slogan}">Slogan</p>
+                <p th:aria-label="#{label.header.slogan}" th:text="#{label.header.slogan}">Slogan</p>
             </header>
             <nav role="navigation" th:aria-label="#{label.common.language-selection}">
                 <ul class="c-lang-list" th:if="not ${hideHeaderLanguageSelection}">
