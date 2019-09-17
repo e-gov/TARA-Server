@@ -14,7 +14,9 @@
    class="c-tab-login__nav-link"
    href="#"
    th:lang="${lang}"
-   th:data-tab="${tab_id}">
+   th:data-tab="${tab_id}"
+   th:id="${tab_id}"
+   aria-selected="false">
     <span class="c-tab-login__nav-label">
         <svg th:class="'icon icon-' + ${tab_id}"><use th:attr="'xlink:href'='#icon-' + ${tab_id}"></use></svg>
         <span th:text="${#messages.msg('label.' + tab_id + '.title')}" th:remove="tag">Tab</span>
@@ -37,7 +39,9 @@
    th:class="'c-tab-login\_\_nav-link c-tab-login\_\_nav-link--' + ${suffix}"
    href="#"
    th:lang="${lang}"
-   th:data-tab="${tab_id}">
+   th:data-tab="${tab_id}"
+   th:id="${tab_id}"
+   aria-selected="false">
     <span class="c-tab-login__nav-label">
         <span th:class="'icon icon-' + ${tab_id}"><img th:src="'/assets/' + ${suffix} + '-icon.png'" alt=""></span>
         <span th:text="${#messages.msg('label.' + tab_id + '.title')}" />

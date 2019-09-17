@@ -12,7 +12,7 @@
         <br>
     </th:block>
     <div class="c-tab-login">
-        <div class="c-tab-login__header">
+        <nav role="navigation" class="c-tab-login__header">
             <ul class="c-tab-login__nav">
                 <th:block th:if="${@thymeleafSupport.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).IDCard)}"><li th:replace="~{fragments/logintabs :: nav_default('id-card')}"></li></th:block>
                 <th:block th:if="${@thymeleafSupport.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).MobileID)}"><li th:replace="~{fragments/logintabs :: nav_default('mobile-id')}"></li></th:block>
@@ -20,14 +20,15 @@
                 <th:block th:if="${@thymeleafSupport.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).SmartID)}"><li th:replace="~{fragments/logintabs :: nav_default('smart-id')}"></li></th:block>
                 <th:block th:if="${@thymeleafSupport.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).eIDAS)}"><li th:replace="~{fragments/logintabs :: nav_alt('eu-citizen', 'eu')}"></li></th:block>
             </ul>
-        </div>
-        <div class="c-tab-login__main">
-            <div th:if="${@thymeleafSupport.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).IDCard)}" layout:include="~{fragments/logintabs :: content('id-card')}" th:remove="tag">
+        </nav>
+        <main role="main" class="c-tab-login__main">
+            <div th:if="${@thymeleafSupport.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).IDCard)}" layout:include="~{fragments/logintabs :: content('id-card')}" th:remove="tag"
+                 aria-hidden="true" aria-labelledby="id-card">
                 <form role="form" method="post" id="idCardForm" class="c-form" layout:fragment="login-form-content">
                     <button role="button" type="button" class="c-btn c-btn--primary" th:text="#{label.common.login}">Login</button>
                     <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
                     <input type="hidden" name="_eventId" value="idsubmit"/>
-                    <div class="alert alert-error alert-popup" role="alert" aria-atomic="true">
+                    <div class="alert alert-error alert-popup">
                         <p>
                             <strong>
                                 <span id="error-message-title" th:text="#{message.idc.certificatefailed}" />
@@ -38,7 +39,8 @@
                     </div>
                 </form>
             </div>
-            <div th:if="${@thymeleafSupport.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).MobileID)}" layout:include="~{fragments/logintabs :: content('mobile-id')}" th:remove="tag">
+            <div th:if="${@thymeleafSupport.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).MobileID)}" layout:include="~{fragments/logintabs :: content('mobile-id')}" th:remove="tag"
+                 aria-hidden="true" aria-labelledby="mobile-id">
                 <form role="form" method="post" id="mobileIdForm" class="c-form" layout:fragment="login-form-content" th:object="${credential}">
                     <table>
                         <tbody>
@@ -84,7 +86,8 @@
                     <input type="hidden" name="_eventId" value="submit"/>
                 </form>
             </div>
-            <div th:if="${@thymeleafSupport.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).BankLink)}" layout:include="~{fragments/logintabs :: content('bank-link')}" th:remove="tag">
+            <div th:if="${@thymeleafSupport.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).BankLink)}" layout:include="~{fragments/logintabs :: content('bank-link')}" th:remove="tag"
+                 aria-hidden="true" aria-labelledby="bank-link">
                 <form role="form" aria-label="Select your bank" method="post" id="bankForm" class="c-form" layout:fragment="login-form-content">
                     <div class="c-logo-list">
                         <div class="c-logo-list__item" th:each="bank : ${@banklinkConfigurationProvider.getListOfBanks()}">
@@ -96,7 +99,8 @@
                     <input type="hidden" name="bank" value=""/>
                 </form>
             </div>
-            <div th:if="${@thymeleafSupport.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).SmartID)}" layout:include="~{fragments/logintabs :: content('smart-id')}" th:remove="tag">
+            <div th:if="${@thymeleafSupport.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).SmartID)}" layout:include="~{fragments/logintabs :: content('smart-id')}" th:remove="tag"
+                 aria-hidden="true" aria-labelledby="smart-id">
                 <form role="form" method="post" id="smartIdForm" class="c-form" layout:fragment="login-form-content" th:object="${credential}">
                     <table>
                         <tbody>
@@ -127,7 +131,8 @@
                     <input type="hidden" name="_eventId" value="smartIdSubmit"/>
                 </form>
             </div>
-            <div th:if="${@thymeleafSupport.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).eIDAS)}" layout:include="~{fragments/logintabs :: content(tab_id = 'eu-citizen', title = 'title-long')}" th:remove="tag">
+            <div th:if="${@thymeleafSupport.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).eIDAS)}" layout:include="~{fragments/logintabs :: content(tab_id = 'eu-citizen', title = 'title-long')}" th:remove="tag"
+                 aria-hidden="true" aria-labelledby="eu-citizen">
                 <form role="form" method="post" id="eidasForm" class="c-form" layout:fragment="login-form-content" th:object="${credential}">
                     <table>
                         <tbody>
@@ -152,7 +157,7 @@
                     <input type="hidden" name="_eventId" value="eidassubmit"/>
                 </form>
             </div>
-        </div>
+        </main>
     </div>
 </div>
 <p class="link-back-mobile" xmlns:th="http://www.w3.org/1999/xhtml">

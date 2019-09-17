@@ -16,11 +16,9 @@ jQuery(function ($) {
         if ($('.c-tab-login__nav-link[data-tab="' + active + '"]').length !== 1)
             throw 3;
 
-        $('.c-tab-login__nav-link[data-tab="' + active + '"]').addClass('is-active');
-        $('.c-tab-login__content[data-tab="' + active + '"]').addClass('is-active');
+        activateTab($('.c-tab-login__nav-link[data-tab="' + active + '"]'), $('.c-tab-login__content[data-tab="' + active + '"]'));
     } catch (e) {
-        $('.c-tab-login__nav-link').first().addClass('is-active');
-        $('.c-tab-login__content').first().addClass('is-active');
+        activateTab($('.c-tab-login__nav-link').first(), $('.c-tab-login__content').first());
     }
 
 	// Tab nav
@@ -30,16 +28,16 @@ jQuery(function ($) {
 		var docwidth = $(document).width();
 		var active = $(this).data('tab');
 
-		$('.c-tab-login__nav-item, .c-tab-login__nav-link, .c-tab-login__content').removeClass('is-active');
-		$(this).addClass('is-active');
-		$('.c-tab-login__content[data-tab="' + active + '"]').addClass('is-active');
-
 		// Clear alert and error messages
 		$('.c-tab-login__content[data-tab="' + active + '"] [role="alert"]').removeClass('show');
 		$('.c-tab-login__content[data-tab="' + active + '"] .input-group').removeClass('is-invalid');
 		$('.c-tab-login__content[data-tab="' + active + '"] .selectize-input').removeClass('is-invalid');
 		$('.c-tab-login__content[data-tab="' + active + '"] .invalid-feedback').addClass('is-hidden');
 
+		$('.c-tab-login__nav-item').removeClass('is-active');
+		deActivateTab($('.c-tab-login__nav-link'), $('.c-tab-login__content'));
+
+        activateTab($(this), $('.c-tab-login__content[data-tab="' + active + '"]'));
 		if (typeof(Storage) !== "undefined") {
             sessionStorage.setItem('active-tab', active);
         }
@@ -50,6 +48,7 @@ jQuery(function ($) {
 			$(this).parent().addClass('is-active');
 		}
 
+        $('.c-tab-login__content[data-tab="' + active + '"]').find("h2").attr("tabindex", -1).focus();
 	});
 
 	// Mobile back link
@@ -236,4 +235,18 @@ jQuery(function ($) {
 		validateSelectizeValue($(this), function(){return true;});
 	});
 
+
+    function activateTab(link, content) {
+		link.attr("aria-selected", true);
+		link.addClass('is-active');
+        content.attr("aria-hidden", false);
+        content.addClass('is-active');
+    }
+
+    function deActivateTab(link, content) {
+        link.attr("aria-selected", false);
+        link.removeClass('is-active');
+        content.attr("aria-hidden", true);
+        content.removeClass('is-active');
+    }
 });
