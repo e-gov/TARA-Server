@@ -1,4 +1,4 @@
-<li class="c-tab-login__nav-item" th:fragment="nav_default(tab_id)" th:classappend="${static} ? is-active : ''" xmlns:th="http://www.w3.org/1999/xhtml">
+<li class="c-tab-login__nav-item" aria-selected="false" th:fragment="nav_default(tab_id)" th:classappend="${static} ? is-active : ''" xmlns:th="http://www.w3.org/1999/xhtml">
     <span th:unless="${static}" class="c-tab-login__nav-back-link"></span>
     <th:block th:switch="${tab_id}">
         <th:block th:case="id-card">    <a th:replace="~{fragments/logintabs :: nav_default_link(${tab_id}, '')}" /> </th:block>
@@ -14,16 +14,14 @@
    class="c-tab-login__nav-link"
    href="#"
    th:lang="${lang}"
-   th:data-tab="${tab_id}"
-   th:id="${tab_id}"
-   aria-selected="false">
+   th:data-tab="${tab_id}">
     <span class="c-tab-login__nav-label">
         <svg th:class="'icon icon-' + ${tab_id}"><use th:attr="'xlink:href'='#icon-' + ${tab_id}"></use></svg>
         <span th:text="${#messages.msg('label.' + tab_id + '.title')}" th:remove="tag">Tab</span>
     </span>
 </a>
 
-<li class="c-tab-login__nav-item" th:fragment="nav_alt(tab_id, suffix)" xmlns:th="http://www.w3.org/1999/xhtml">
+<li class="c-tab-login__nav-item" aria-selected="false" th:fragment="nav_alt(tab_id, suffix)" xmlns:th="http://www.w3.org/1999/xhtml">
     <span class="c-tab-login__nav-back-link"></span>
     <th:block th:switch="${tab_id}">
         <th:block th:case="id-card">    <a th:replace="~{fragments/logintabs :: nav_alt_link(${tab_id}, ${suffix}, '')}" /> </th:block>
@@ -39,9 +37,7 @@
    th:class="'c-tab-login\_\_nav-link c-tab-login\_\_nav-link--' + ${suffix}"
    href="#"
    th:lang="${lang}"
-   th:data-tab="${tab_id}"
-   th:id="${tab_id}"
-   aria-selected="false">
+   th:data-tab="${tab_id}">
     <span class="c-tab-login__nav-label">
         <span th:class="'icon icon-' + ${tab_id}"><img th:src="'/assets/' + ${suffix} + '-icon.png'" alt=""></span>
         <span th:text="${#messages.msg('label.' + tab_id + '.title')}" />

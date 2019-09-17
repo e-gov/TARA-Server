@@ -48,7 +48,7 @@ jQuery(function ($) {
 			$(this).parent().addClass('is-active');
 		}
 
-        $('.c-tab-login__content[data-tab="' + active + '"]').find("h2").attr("tabindex", -1).focus();
+		$('.c-tab-login__content[data-tab="' + active + '"]').find(".c-tab-login__content-wrap").first().attr("tabindex",-1).focus();
 	});
 
 	// Mobile back link
@@ -255,14 +255,14 @@ jQuery(function ($) {
     }
 
     function activateTab(link, content) {
-		link.attr("aria-selected", true);
+		link.parent().attr("aria-selected", true);
 		link.addClass('is-active');
         content.attr("aria-hidden", false);
         content.addClass('is-active');
     }
 
     function deActivateTab(link, content) {
-        link.attr("aria-selected", false);
+        link.parent().attr("aria-selected", false);
         link.removeClass('is-active');
         content.attr("aria-hidden", true);
         content.removeClass('is-active');
