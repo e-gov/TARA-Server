@@ -28,11 +28,11 @@ jQuery(function ($) {
 		var docwidth = $(document).width();
 		var active = $(this).data('tab');
 
-		// Clear alert and error messages
-		$('.c-tab-login__content[data-tab="' + active + '"] [role="alert"]').removeClass('show');
+		// Clear alert and feedback messages
+		hideAlert($('.c-tab-login__content[data-tab="' + active + '"] [role="alert"]'));
+		hideFeedback($('.c-tab-login__content[data-tab="' + active + '"] .invalid-feedback'));
 		$('.c-tab-login__content[data-tab="' + active + '"] .input-group').removeClass('is-invalid');
 		$('.c-tab-login__content[data-tab="' + active + '"] .selectize-input').removeClass('is-invalid');
-		$('.c-tab-login__content[data-tab="' + active + '"] .invalid-feedback').addClass('is-hidden');
 
 		$('.c-tab-login__nav-item').removeClass('is-active');
 		deActivateTab($('.c-tab-login__nav-link'), $('.c-tab-login__content'));
@@ -63,12 +63,11 @@ jQuery(function ($) {
 	// Close alert
 	$(document).on('click', '.alert-popup .close', function(event){
 		event.preventDefault();
-		$(this).closest('.alert').removeClass('show');
+		hideAlert($(this).closest('.alert'));
 	});
 
 	// Country select
 	$('.js-select-country').selectize();
-	
 	
 	function validateEstonianIdCode(value){
 		return value && /^[0-9]{11}$/.test(value);
@@ -82,7 +81,7 @@ jQuery(function ($) {
 		if (testFunc(field.val())) {
 			field.removeClass('is-invalid');
 			field.parent('div.input-group').removeClass('is-invalid');
-			field.parents('td').children('div.invalid-feedback').addClass('is-hidden');
+			hideFeedback(field.parents('td').children('div.invalid-feedback'));
 			return true;
 		} else {
 			field.addClass('is-invalid');
@@ -91,11 +90,11 @@ jQuery(function ($) {
 			var errorIndex = field.val() ? 1 : 0;
 			field.parents('td').children('div.invalid-feedback').each(function(index){
 				if (index === errorIndex) {
-				    $(this).removeClass('is-hidden');
-                    // Refresh text for screen reader to read out message
+				    showFeedback($(this));
+				    // Refresh text for screen reader to read out message
 				    $(this).text($(this).text());
 				} else {
-				    $(this).addClass('is-hidden');
+				    hideFeedback($(this));
 				}
 			});
 			
@@ -106,12 +105,12 @@ jQuery(function ($) {
 	function validateSelectizeValue(selection, testFunc){
 		if (testFunc(selection.val())) {
 			selection.parent('td').find('.selectize-input').removeClass('is-invalid');
-			selection.parent('td').children('div.invalid-feedback').addClass('is-hidden');
+			hideFeedback(selection.parent('td').children('div.invalid-feedback'));
 			return true;
 		} else {
 			selection.parent('td').find('.selectize-input').addClass('is-invalid');
 			var feedbackDiv = selection.parent('td').children('div.invalid-feedback');
-			feedbackDiv.removeClass('is-hidden');
+			showFeedback(feedbackDiv);
 			// Refresh text for screen reader to read out message
             feedbackDiv.text(feedbackDiv.text());
 			return false;
@@ -122,7 +121,7 @@ jQuery(function ($) {
 	$('#idCardForm button.c-btn--primary').on('click', function(event){
 		event.preventDefault();
 
-		$('#idCardForm .alert-popup').removeClass('show');
+        hideAlert($('#idCardForm .alert-popup'));
 		if ($(this).prop('disabled')) return;
 		$(this).prop('disabled', true);
 		var _this = $(this);
@@ -131,7 +130,7 @@ jQuery(function ($) {
 		xhttp.onreadystatechange = function() {
 			if (this.readyState !== 4) return;
 			if (this.status !== 200 || this.responseText !== '{"ok":true}') {
-				$('#idCardForm .alert-popup').addClass('show');
+				showAlert($('#idCardForm .alert-popup'));
 
 				// Clear and re-show error-message content, because screen readers expect dynamic text addition
 				// for alert messages to be read out
@@ -235,6 +234,25 @@ jQuery(function ($) {
 		validateSelectizeValue($(this), function(){return true;});
 	});
 
+	function showAlert(alert) {
+        alert.attr("role", "alert");
+	    alert.addClass('show');
+	}
+
+    function hideAlert(alert) {
+        alert.removeAttr("role");
+        alert.removeClass('show');
+    }
+
+    function showFeedback(feedback) {
+        feedback.attr("role", "alert");
+        feedback.removeClass('is-hidden');
+    }
+
+    function hideFeedback(feedback) {
+        feedback.removeAttr("role");
+        feedback.addClass('is-hidden');
+    }
 
     function activateTab(link, content) {
 		link.attr("aria-selected", true);
