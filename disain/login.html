@@ -27,7 +27,7 @@
                 </div>
             </div>
         </div>
-        <header class="c-header">
+        <header class="c-header" role="banner">
             <div class="container">
                 <h1 class="c-header__logo">
                     <a class="c-header__logo-link" href="#">
@@ -111,10 +111,10 @@
                             <div class="c-tab-login__content-text">
                                 <h2>ID-kaart</h2>
                                 <p>Sisselogimiseks vajate kaardilugejat ja kehtivat ID-kaarti. Sisestage ID-kaart kaardilugejasse ja vajutage "Jätkan".</p>
-                                <form method="post" id="idCardForm" class="c-form">
-                                    <button type="button" class="c-btn c-btn--primary">Jätkan</button>
+                                <form role="form" method="post" id="idCardForm" class="c-form">
+                                    <button role="button" type="button" class="c-btn c-btn--primary">Jätkan</button>
                                     <div class="alert alert-error alert-popup" role="alert">
-                                        <button class="close" data-dismiss="alert"><span aria-hidden="true">×</span></button>
+                                        <button role="button" class="close" data-dismiss="alert"><span aria-hidden="true">×</span></button>
                                         <p><strong>Sertifikaati saatmine ebaõnnestus!</strong></p>
                                         <p>Kas Teie ID-kaart on kaardilugejasse sisestatud?</p>
                                     </div>
@@ -136,7 +136,7 @@
                             <div class="c-tab-login__content-text">
                                 <h2>Mobiil-ID</h2>
                                 <p>Sisselogimiseks vajate kehtivat Mobiil-ID lepingut. Sisenemiseks Mobiil-ID-ga sisestage oma isikukood ja telefoninumber. Seejärel saadetakse Teie mobiiltelefonile kontrollsõnum.</p>
-                                <form method="post" id="mobileIdForm" class="c-form">
+                                <form role="form" method="post" id="mobileIdForm" class="c-form">
                                     <table>
                                         <tbody>
                                         <tr>
@@ -170,7 +170,7 @@
                                         <tr>
                                             <td></td>
                                             <td>
-                                                <button type="button" class="c-btn c-btn--primary">Jätkan</button>
+                                                <button role="button" type="button" class="c-btn c-btn--primary">Jätkan</button>
                                             </td>
                                         </tr>
                                         </tbody>
@@ -195,7 +195,7 @@
                             <div class="c-tab-login__content-text">
                                 <h2>Pangalink</h2>
                                 <p>Sisselogimiseks peate olema panga klient. Sisenemiseks valige pank. Seejärel suunatakse Teid edasi selle panga autentimisteenusesse.</p>
-                                <form method="post" id="bankForm" class="c-form">
+                                <form role="form" method="post" id="bankForm" class="c-form">
                                     <div class="c-logo-list">
                                         <div class="c-logo-list__item">
                                             <a href="#" class="c-logo-list__link c-logo-list__link--seb" id="seb"></a>
@@ -230,7 +230,7 @@
                             <div class="c-tab-login__content-text">
                                 <h2>Smart-ID</h2>
                                 <p>Sisselogimiseks vajate kehtivat Smart-ID lepingut. Sisenemiseks Smart-ID-ga sisestage oma isikukood. Seejärel saadetakse Teie mobiiltelefonile kontrollsõnum.</p>
-                                <form method="post" id="smartIdForm" class="c-form">
+                                <form role="form" method="post" id="smartIdForm" class="c-form">
                                     <table>
                                         <tbody>
                                         <tr>
@@ -250,7 +250,7 @@
                                         <tr>
                                             <td></td>
                                             <td>
-                                                <button type="button" class="c-btn c-btn--primary">Jätkan</button>
+                                                <button role="button" type="button" class="c-btn c-btn--primary">Jätkan</button>
                                             </td>
                                         </tr>
                                         </tbody>
@@ -275,7 +275,7 @@
                             <div class="c-tab-login__content-text">
                                 <h2>Euroopa Liidu kodanikele</h2>
                                 <p>Sisenemiseks valige oma elukohariik. Seejärel suunatakse Teid edasi Teie riigi teenusepakkujale.</p>
-                                <form method="post" id="eidasForm" class="c-form">
+                                <form role="form" method="post" id="eidasForm" class="c-form">
                                     <table>
                                         <tbody>
                                         <tr>
@@ -289,7 +289,7 @@
                                         </tr>
                                         <tr>
                                             <td>
-                                                <button type="button" class="c-btn c-btn--primary">Jätkan</button>
+                                                <button role="button" type="button" class="c-btn c-btn--primary">Jätkan</button>
                                             </td>
                                         </tr>
                                         </tbody>

@@ -23,8 +23,8 @@
         </div>
         <div class="c-tab-login__main">
             <div th:if="${@thymeleafSupport.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).IDCard)}" layout:include="~{fragments/logintabs :: content('id-card')}" th:remove="tag">
-                <form method="post" id="idCardForm" class="c-form" layout:fragment="login-form-content">
-                    <button type="button" class="c-btn c-btn--primary" th:text="#{label.common.login}">Login</button>
+                <form role="form" method="post" id="idCardForm" class="c-form" layout:fragment="login-form-content">
+                    <button role="button" type="button" class="c-btn c-btn--primary" th:text="#{label.common.login}">Login</button>
                     <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
                     <input type="hidden" name="_eventId" value="idsubmit"/>
                     <div class="alert alert-error alert-popup" role="alert" aria-atomic="true">
@@ -34,12 +34,12 @@
                             </strong>
                         </p>
                         <span id="error-message" th:text="#{message.idc.doesidcardexist}" />
-                        <button class="close" th:aria-label="#{label.alert.close}" data-dismiss="alert"><span aria-hidden="true">&times;</span></button>
+                        <button role="button" class="close" th:aria-label="#{label.alert.close}" data-dismiss="alert"><span aria-hidden="true">&times;</span></button>
                     </div>
                 </form>
             </div>
             <div th:if="${@thymeleafSupport.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).MobileID)}" layout:include="~{fragments/logintabs :: content('mobile-id')}" th:remove="tag">
-                <form method="post" id="mobileIdForm" class="c-form" layout:fragment="login-form-content" th:object="${credential}">
+                <form role="form" method="post" id="mobileIdForm" class="c-form" layout:fragment="login-form-content" th:object="${credential}">
                     <table>
                         <tbody>
                         <tr>
@@ -75,7 +75,7 @@
                         <tr>
                             <td></td>
                             <td>
-                                <button type="button" class="c-btn c-btn--primary" th:text="#{label.common.login}">Login</button>
+                                <button role="button" type="button" class="c-btn c-btn--primary" th:text="#{label.common.login}">Login</button>
                             </td>
                         </tr>
                         </tbody>
@@ -85,7 +85,7 @@
                 </form>
             </div>
             <div th:if="${@thymeleafSupport.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).BankLink)}" layout:include="~{fragments/logintabs :: content('bank-link')}" th:remove="tag">
-                <form method="post" id="bankForm" class="c-form" layout:fragment="login-form-content">
+                <form role="form" aria-label="Select your bank" method="post" id="bankForm" class="c-form" layout:fragment="login-form-content">
                     <div class="c-logo-list">
                         <div class="c-logo-list__item" th:each="bank : ${@banklinkConfigurationProvider.getListOfBanks()}">
                             <a href="#" th:class="'c-logo-list\_\_link c-logo-list\_\_link--' + ${bank.name}" th:id="${bank.name}" th:aria-label="${bank.name}"></a>
@@ -97,7 +97,7 @@
                 </form>
             </div>
             <div th:if="${@thymeleafSupport.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).SmartID)}" layout:include="~{fragments/logintabs :: content('smart-id')}" th:remove="tag">
-                <form method="post" id="smartIdForm" class="c-form" layout:fragment="login-form-content" th:object="${credential}">
+                <form role="form" method="post" id="smartIdForm" class="c-form" layout:fragment="login-form-content" th:object="${credential}">
                     <table>
                         <tbody>
                         <tr>
@@ -118,7 +118,7 @@
                         <tr>
                             <td></td>
                             <td>
-                                <button type="button" class="c-btn c-btn--primary" th:text="#{label.common.login}">Login</button>
+                                <button role="button" type="button" class="c-btn c-btn--primary" th:text="#{label.common.login}">Login</button>
                             </td>
                         </tr>
                         </tbody>
@@ -128,7 +128,7 @@
                 </form>
             </div>
             <div th:if="${@thymeleafSupport.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).eIDAS)}" layout:include="~{fragments/logintabs :: content(tab_id = 'eu-citizen', title = 'title-long')}" th:remove="tag">
-                <form method="post" id="eidasForm" class="c-form" layout:fragment="login-form-content" th:object="${credential}">
+                <form role="form" method="post" id="eidasForm" class="c-form" layout:fragment="login-form-content" th:object="${credential}">
                     <table>
                         <tbody>
                             <tr>
@@ -143,7 +143,7 @@
                             </tr>
                             <tr>
                                 <td>
-                                    <button type="button" class="c-btn c-btn--primary" th:text="#{label.common.login}">Login</button>
+                                    <button role="button" type="button" class="c-btn c-btn--primary" th:text="#{label.common.login}">Login</button>
                                 </td>
                             </tr>
                         </tbody>
@@ -158,7 +158,7 @@
 <p class="link-back-mobile" xmlns:th="http://www.w3.org/1999/xhtml">
     <a th:href="${@thymeleafSupport.getHomeUrl()}" th:text="#{label.common.home}">Home</a>
 </p>
-<svg aria-hidden="true" class="c-inline-svg__hidden" version="1.1" xmlns:th="http://www.w3.org/1999/xhtml" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg aria-hidden="true" class="c-inline-svg__hidden" version="1.1" xmlns:th="http://www.w3.org/1999/xhtml" xmlns="http://www.w3.org/2000/svg">
     <defs>
         <symbol id="icon-bank-link" viewBox="0 0 48 32" th:if="${@thymeleafSupport.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).BankLink)}">
             <title>bank-link</title>

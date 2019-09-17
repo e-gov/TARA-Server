@@ -12,7 +12,7 @@
             </div>
             <div class="c-tab-login__main">
                 <div layout:include="~{fragments/logintabs :: content(tab_id = 'smart-id', instruction = 'instruction-check', static = true)}" th:remove="tag">
-                    <form id="authenticationCheckForm" method="post" class="c-form" layout:fragment="login-form-content">
+                    <form role="form" id="authenticationCheckForm" method="post" class="c-form" layout:fragment="login-form-content">
                         <p th:text="#{label.common.controlCode}">Control code:</p>
                         <p class="control-code" th:text="${smartIdVerificationCode}"></p>
                         <a class="c-btn c-btn--cancel c-btn--from-link" th:href="${session.pac4jRequestedUrl}" th:text="#{label.common.cancel}">Cancel</a>
