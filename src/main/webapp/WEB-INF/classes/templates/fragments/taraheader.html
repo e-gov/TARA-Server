@@ -5,7 +5,7 @@
                 <h1 th:aria-label="#{label.header.title}" aria-hidden="true"></h1>
                 <p th:aria-label="#{label.header.slogan}" th:text="#{label.header.slogan}">Slogan</p>
             </header>
-            <nav role="navigation" th:aria-label="#{label.common.language-selection}">
+            <nav role="navigation" th:aria-label="#{label.aria.language-selection.navigation}">
                 <ul class="c-lang-list" th:if="not ${hideHeaderLanguageSelection}">
                     <li class="c-lang-list__item" th:if="${@thymeleafSupport.isNotLocale('et', #locale)}">
                         <a class="c-lang-list__link" th:href="${@thymeleafSupport.getLocaleUrl('et')}" th:text="#{label.header.et}" th:hreflang="et" th:lang="et">EESTI</a>

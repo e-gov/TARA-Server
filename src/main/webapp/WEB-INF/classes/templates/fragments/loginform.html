@@ -12,7 +12,7 @@
         <br>
     </th:block>
     <div class="c-tab-login">
-        <nav role="navigation" class="c-tab-login__header" th:aria-label="#{label.common.authentication-method}">
+        <nav role="navigation" class="c-tab-login__header" th:aria-label="#{label.aria.authentication-method.navigation}">
             <ul class="c-tab-login__nav">
                 <th:block th:if="${@thymeleafSupport.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).IDCard)}"><li th:replace="~{fragments/logintabs :: nav_default('id-card')}"></li></th:block>
                 <th:block th:if="${@thymeleafSupport.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).MobileID)}"><li th:replace="~{fragments/logintabs :: nav_default('mobile-id')}"></li></th:block>
@@ -88,7 +88,7 @@
             </div>
             <div th:if="${@thymeleafSupport.isAuthMethodAllowed(T(ee.ria.sso.authentication.AuthenticationType).BankLink)}" layout:include="~{fragments/logintabs :: content('bank-link')}" th:remove="tag"
                  aria-hidden="true" aria-labelledby="bank-link">
-                <form role="form" aria-label="Select your bank" method="post" id="bankForm" class="c-form" layout:fragment="login-form-content">
+                <form role="form" th:aria-label="#{label.aria.bank-selection.form}" method="post" id="bankForm" class="c-form" layout:fragment="login-form-content">
                     <div class="c-logo-list">
                         <div class="c-logo-list__item" th:each="bank : ${@banklinkConfigurationProvider.getListOfBanks()}">
                             <a href="#" th:class="'c-logo-list\_\_link c-logo-list\_\_link--' + ${bank.name}" th:id="${bank.name}" th:aria-label="${bank.name}"></a>
