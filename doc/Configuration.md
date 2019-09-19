@@ -444,6 +444,9 @@ eidas.service-url=https://<eidas-client-host:port>
 eidas.heartbeat-url=https://<eidas-client-host:port>/heartbeat
 eidas.available-countries=EE,LT,LV,FI,NO,IT,IE
 
+eidas.connection-pool.max-total=100
+eidas.connection-pool.max-per-route=5
+
 eidas.client-certificate-enabled=true
 eidas.client-certificate-keystore=classpath:/eidas-client/clientCertificateKeystore.p12
 eidas.client-certificate-keystore-type=PKCS12
