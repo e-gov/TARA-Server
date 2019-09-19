@@ -68,7 +68,7 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text" th:text="#{label.mobile-id.phoneNumberPrefix}"></span>
                                     </div>
-                                    <input type="text" maxlength="15" id="mid-phone-number" class="form-control" th:field="*{mobileNumber}">
+                                    <input type="tel" maxlength="15" id="mid-phone-number" class="form-control" th:field="*{mobileNumber}">
                                 </div>
                                 <div class="invalid-feedback is-hidden" th:text="#{message.common.phoneNumber-missing}"></div>
                                 <div class="invalid-feedback is-hidden" th:text="#{message.common.phoneNumber-invalid}"></div>
