@@ -58,7 +58,7 @@ public class EidasConfigurationProvider {
 
     private String clientCertificateKeystorePass;
 
-    private ConnectionPool connectionPool;
+    private ConnectionPool connectionPool = new ConnectionPool();
 
     @PostConstruct
     public void init() {
