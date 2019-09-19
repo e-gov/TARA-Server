@@ -35,6 +35,9 @@ import java.util.stream.Collectors;
 @Slf4j
 public class EidasConfigurationProvider {
 
+    private static final int CONNECTION_POOL_DEFAULT_MAX_TOTAL = 20;
+    private static final int CONNECTION_POOL_DEFAULT_MAX_PER_ROUTE = 2;
+
     @Autowired
     private TaraResourceBundleMessageSource messageSource;
 
@@ -54,6 +57,8 @@ public class EidasConfigurationProvider {
     private String clientCertificateKeystoreType = KeyStore.getDefaultType();
 
     private String clientCertificateKeystorePass;
+
+    private ConnectionPool connectionPool;
 
     @PostConstruct
     public void init() {
@@ -138,6 +143,13 @@ public class EidasConfigurationProvider {
         public int hashCode() {
             return Objects.hash(code, name);
         }
+    }
+
+    @Getter
+    @Setter
+    public static class ConnectionPool {
+        private int maxTotal = CONNECTION_POOL_DEFAULT_MAX_TOTAL;
+        private int maxPerRoute = CONNECTION_POOL_DEFAULT_MAX_PER_ROUTE;
     }
 
 }

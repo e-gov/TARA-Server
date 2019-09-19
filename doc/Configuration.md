@@ -425,6 +425,8 @@ Table 7 - Configuring eIDAS authentication
 | `eidas.heartbeat-url` | N | HTTP URL of the eIDAS-client microservice heartbeat endpoint. Affects TARA [heartbeat endpoint](#heartbeat). |
 | `eidas.available-countries` | Y | A comma separated list of ISO 3166-1 alpha-2 country codes that determine which countries are displayed on the login page. |
 | `eidas.client-certificate-enabled` | N | Feature toggle for using client certificate when making requests to authentication endpoints at `eidas.service-url`. Enables this feature if set to `true`, otherwise ignores all other client certificate related configuration. Defaults to `false`, if not specified. |
+| `eidas.connection-pool.max-total` | N | Maximum number of allowed total open connections to `eidas.service-url` endpoint. Defaults to `20`, if not specified. |
+| `eidas.connection-pool.max-per-route` | N | Maximum number of allowed concurrent connections per route to `eidas.service-url` endpoint. Defaults to `2`, if not specified. |
 
 Table 8 - Configuring client certificate for requests to authentication endpoints at `eidas.service-url`
 

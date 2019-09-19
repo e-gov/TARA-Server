@@ -8,7 +8,15 @@ import ee.ria.sso.config.eidas.EidasConfigurationProvider;
 import ee.ria.sso.logging.CorrelationIdUtil;
 import ee.ria.sso.logging.CorrelationIdUtilTest;
 import org.apache.http.HttpStatus;
-import org.junit.*;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.slf4j.MDC;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -46,7 +54,14 @@ public class EidasAuthenticatorTest {
     public void setUp() {
         EidasConfigurationProvider configurationProvider = new EidasConfigurationProvider();
         configurationProvider.setServiceUrl("http://localhost:" + wireMockServer.port());
-        eidasAuthenticator = new EidasAuthenticator(configurationProvider);
+        eidasAuthenticator = new EidasAuthenticator(configurationProvider, HttpClients.custom().setConnectionManager(pooledConnectionManager()).build());
+    }
+
+    private PoolingHttpClientConnectionManager pooledConnectionManager() {
+        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+        connectionManager.setMaxTotal(100);
+        connectionManager.setDefaultMaxPerRoute(5);
+        return connectionManager;
     }
 
     @After
@@ -175,5 +190,4 @@ public class EidasAuthenticatorTest {
             MDC.clear();
         }
     }
-
 }
