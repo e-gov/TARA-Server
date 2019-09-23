@@ -16,11 +16,9 @@ jQuery(function ($) {
         if ($('.c-tab-login__nav-link[data-tab="' + active + '"]').length !== 1)
             throw 3;
 
-        $('.c-tab-login__nav-link[data-tab="' + active + '"]').addClass('is-active');
-        $('.c-tab-login__content[data-tab="' + active + '"]').addClass('is-active');
+        activateTab($('.c-tab-login__nav-link[data-tab="' + active + '"]'), $('.c-tab-login__content[data-tab="' + active + '"]'));
     } catch (e) {
-        $('.c-tab-login__nav-link').first().addClass('is-active');
-        $('.c-tab-login__content').first().addClass('is-active');
+        activateTab($('.c-tab-login__nav-link').first(), $('.c-tab-login__content').first());
     }
 
 	// Tab nav
@@ -30,10 +28,16 @@ jQuery(function ($) {
 		var docwidth = $(document).width();
 		var active = $(this).data('tab');
 
-		$('.c-tab-login__nav-item, .c-tab-login__nav-link, .c-tab-login__content').removeClass('is-active');
-		$(this).addClass('is-active');
-		$('.c-tab-login__content[data-tab="' + active + '"]').addClass('is-active');
+		// Clear alert and feedback messages
+		hideAlert($('.c-tab-login__content[data-tab="' + active + '"] [role="alert"]'));
+		hideFeedback($('.c-tab-login__content[data-tab="' + active + '"] .invalid-feedback'));
+		$('.c-tab-login__content[data-tab="' + active + '"] .input-group').removeClass('is-invalid');
+		$('.c-tab-login__content[data-tab="' + active + '"] .selectize-input').removeClass('is-invalid');
 
+		$('.c-tab-login__nav-item').removeClass('is-active');
+		deActivateTab($('.c-tab-login__nav-link'), $('.c-tab-login__content'));
+
+        activateTab($(this), $('.c-tab-login__content[data-tab="' + active + '"]'));
 		if (typeof(Storage) !== "undefined") {
             sessionStorage.setItem('active-tab', active);
         }
@@ -44,6 +48,7 @@ jQuery(function ($) {
 			$(this).parent().addClass('is-active');
 		}
 
+		$('.c-tab-login__content[data-tab="' + active + '"]').find(".c-tab-login__content-wrap").first().attr("tabindex",-1).focus();
 	});
 
 	// Mobile back link
@@ -58,12 +63,11 @@ jQuery(function ($) {
 	// Close alert
 	$(document).on('click', '.alert-popup .close', function(event){
 		event.preventDefault();
-		$(this).closest('.alert').removeClass('show');
+		hideAlert($(this).closest('.alert'));
 	});
 
 	// Country select
 	$('.js-select-country').selectize();
-	
 	
 	function validateEstonianIdCode(value){
 		return value && /^[0-9]{11}$/.test(value);
@@ -77,7 +81,7 @@ jQuery(function ($) {
 		if (testFunc(field.val())) {
 			field.removeClass('is-invalid');
 			field.parent('div.input-group').removeClass('is-invalid');
-			field.parents('td').children('div.invalid-feedback').addClass('is-hidden');
+			hideFeedback(field.parents('td').children('div.invalid-feedback'));
 			return true;
 		} else {
 			field.addClass('is-invalid');
@@ -85,7 +89,13 @@ jQuery(function ($) {
 			
 			var errorIndex = field.val() ? 1 : 0;
 			field.parents('td').children('div.invalid-feedback').each(function(index){
-				(index === errorIndex) ? $(this).removeClass('is-hidden') : $(this).addClass('is-hidden');
+				if (index === errorIndex) {
+				    showFeedback($(this));
+				    // Refresh text for screen reader to read out message
+				    $(this).text($(this).text());
+				} else {
+				    hideFeedback($(this));
+				}
 			});
 			
 			return false;
@@ -95,11 +105,14 @@ jQuery(function ($) {
 	function validateSelectizeValue(selection, testFunc){
 		if (testFunc(selection.val())) {
 			selection.parent('td').find('.selectize-input').removeClass('is-invalid');
-			selection.parent('td').children('div.invalid-feedback').addClass('is-hidden');
+			hideFeedback(selection.parent('td').children('div.invalid-feedback'));
 			return true;
 		} else {
 			selection.parent('td').find('.selectize-input').addClass('is-invalid');
-			selection.parent('td').children('div.invalid-feedback').removeClass('is-hidden');
+			var feedbackDiv = selection.parent('td').children('div.invalid-feedback');
+			showFeedback(feedbackDiv);
+			// Refresh text for screen reader to read out message
+            feedbackDiv.text(feedbackDiv.text());
 			return false;
 		}
 	}
@@ -107,7 +120,8 @@ jQuery(function ($) {
 	// ID-card form submit
 	$('#idCardForm button.c-btn--primary').on('click', function(event){
 		event.preventDefault();
-		
+
+        hideAlert($('#idCardForm .alert-popup'));
 		if ($(this).prop('disabled')) return;
 		$(this).prop('disabled', true);
 		var _this = $(this);
@@ -116,7 +130,15 @@ jQuery(function ($) {
 		xhttp.onreadystatechange = function() {
 			if (this.readyState !== 4) return;
 			if (this.status !== 200 || this.responseText !== '{"ok":true}') {
-				$('#idCardForm .alert-popup').addClass('show');
+				showAlert($('#idCardForm .alert-popup'));
+
+				// Clear and re-show error-message content, because screen readers expect dynamic text addition
+				// for alert messages to be read out
+				var errorMessageTitle = $('#idCardForm .alert-popup #error-message-title');
+				var errorMessage = $('#idCardForm .alert-popup #error-message');
+				errorMessageTitle.text(errorMessageTitle.text());
+				errorMessage.text(errorMessage.text());
+
 				_this.prop('disabled', false);
 			} else {
 				$('#idCardForm').submit();
@@ -212,4 +234,37 @@ jQuery(function ($) {
 		validateSelectizeValue($(this), function(){return true;});
 	});
 
+	function showAlert(alert) {
+        alert.attr("role", "alert");
+	    alert.addClass('show');
+	}
+
+    function hideAlert(alert) {
+        alert.removeAttr("role");
+        alert.removeClass('show');
+    }
+
+    function showFeedback(feedback) {
+        feedback.attr("role", "alert");
+        feedback.removeClass('is-hidden');
+    }
+
+    function hideFeedback(feedback) {
+        feedback.removeAttr("role");
+        feedback.addClass('is-hidden');
+    }
+
+    function activateTab(link, content) {
+		link.parent().attr("aria-selected", true);
+		link.addClass('is-active');
+        content.attr("aria-hidden", false);
+        content.addClass('is-active');
+    }
+
+    function deActivateTab(link, content) {
+        link.parent().attr("aria-selected", false);
+        link.removeClass('is-active');
+        content.attr("aria-hidden", true);
+        content.removeClass('is-active');
+    }
 });

@@ -2,6 +2,11 @@ package ee.ria.sso.config.eidas;
 
 import ee.ria.sso.service.eidas.EidasAuthenticator;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.ssl.SSLContexts;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -9,9 +14,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 
+import javax.net.ssl.SSLContext;
 import java.io.InputStream;
-import java.security.GeneralSecurityException;
+import java.security.KeyManagementException;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
 
 @Configuration
 @ConditionalOnProperty("eidas.enabled")
@@ -25,11 +34,35 @@ public class EidasConfiguration {
     private ResourceLoader resourceLoader;
 
     @Bean
-    EidasAuthenticator eidasAuthenticator() throws GeneralSecurityException {
+    EidasAuthenticator eidasAuthenticator() {
+        return new EidasAuthenticator(eidasConfigurationProvider, buildHttpClient());
+    }
+
+    private CloseableHttpClient buildHttpClient() {
+        HttpClientBuilder httpClientBuilder = HttpClients.custom()
+                .setConnectionManager(pooledConnectionManager());
+
         if (eidasConfigurationProvider.isClientCertificateEnabled()) {
-            return new EidasAuthenticator(eidasConfigurationProvider, loadEidasAuthenticatorKeystore());
-        } else {
-            return new EidasAuthenticator(eidasConfigurationProvider);
+            httpClientBuilder.setSSLContext(buildSSLContext());
+        }
+
+        return httpClientBuilder.build();
+    }
+
+    private PoolingHttpClientConnectionManager pooledConnectionManager() {
+        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+        connectionManager.setMaxTotal(eidasConfigurationProvider.getConnectionPool().getMaxTotal());
+        connectionManager.setDefaultMaxPerRoute(eidasConfigurationProvider.getConnectionPool().getMaxPerRoute());
+        return connectionManager;
+    }
+
+    private SSLContext buildSSLContext() {
+        try {
+            return SSLContexts.custom()
+                  .loadKeyMaterial(loadEidasAuthenticatorKeystore(), eidasConfigurationProvider.getClientCertificateKeystorePass().toCharArray())
+                  .build();
+        } catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException | UnrecoverableKeyException e) {
+            throw new IllegalStateException("Failed to construct SSLContext", e);
         }
     }
 
@@ -49,5 +82,4 @@ public class EidasConfiguration {
             ), e);
         }
     }
-
 }

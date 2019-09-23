@@ -12,11 +12,11 @@
             </div>
             <div class="c-tab-login__main">
                 <div layout:include="~{fragments/logintabs :: content(tab_id = 'bank-link', instruction = 'instruction-redirect', static = true)}" th:remove="tag">
-                    <form id="authenticationRedirectForm" method="post" class="c-form" th:action="${url}" th:inline="text" layout:fragment="login-form-content">
+                    <form role="form" id="authenticationRedirectForm" method="post" class="c-form" th:action="${url}" th:inline="text" layout:fragment="login-form-content">
                         <div>[(${packet.html()})]</div>
                         <noscript>
                             <p th:text="#{message.bank-link.nojavascript}"></p>
-                            <button type="submit" class="c-btn c-btn--primary" th:text="#{label.bank-link.nojavascript-redirect}">Redirect</button>
+                            <button role="button" type="submit" class="c-btn c-btn--primary" th:text="#{label.bank-link.nojavascript-redirect}">Redirect</button>
                         </noscript>
                     </form>
                 </div>

@@ -13,18 +13,14 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.ssl.SSLContexts;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.PreDestroy;
-import javax.net.ssl.SSLContext;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.security.*;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -37,18 +33,8 @@ public class EidasAuthenticator {
 
     private final String eidasClientUrl;
 
-    public EidasAuthenticator(EidasConfigurationProvider configurationProvider) {
-        httpClient = HttpClients.createDefault();
-        eidasClientUrl = configurationProvider.getServiceUrl();
-    }
-
-    public EidasAuthenticator(EidasConfigurationProvider configurationProvider, KeyStore eidasAuthenticatorKeystore)
-            throws UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-        final SSLContext sslContext = SSLContexts.custom()
-                .loadKeyMaterial(eidasAuthenticatorKeystore, configurationProvider.getClientCertificateKeystorePass().toCharArray())
-                .build();
-
-        httpClient = HttpClients.custom().setSSLContext(sslContext).build();
+    public EidasAuthenticator(EidasConfigurationProvider configurationProvider, CloseableHttpClient httpClient) {
+        this.httpClient = httpClient;
         eidasClientUrl = configurationProvider.getServiceUrl();
     }
 

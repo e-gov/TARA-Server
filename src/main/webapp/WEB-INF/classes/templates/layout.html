@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.w3.org/1999/xhtml" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<html xmlns:th="http://www.w3.org/1999/xhtml" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" th:lang="${#locale}">
 <head>
 </head>
 <body>
@@ -8,7 +8,7 @@
             <div th:replace="fragments/taraheader">Header</div>
             <div class="container" layout:fragment="content"></div>
         </div>
-        <div th:replace="~{fragments/tarafooter}">Footer</div>
+        <footer th:replace="~{fragments/tarafooter}">Footer</footer>
     </div>
 </body>
 </html>

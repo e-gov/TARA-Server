@@ -4,7 +4,7 @@
 <body>
 <div layout:fragment="content" th:with="hideHeaderLanguageSelection=true" th:remove="tag">
     <div class="container">
-        <div class="alert alert-error">
+        <div class="alert alert-error" role="alert">
             <p><strong><span th:text="#{message.error.general}" th:remove="tag"></span></strong></p>
         </div>
         <p th:if="${@thymeleafSupport.getBackUrl(session.pac4jRequestedUrl, #locale) != '#'}" class="link-back">

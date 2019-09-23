@@ -1,34 +1,61 @@
-<li class="c-tab-login__nav-item" th:fragment="nav_default(tab_id)" th:classappend="${static} ? is-active : ''" xmlns:th="http://www.w3.org/1999/xhtml">
+<li class="c-tab-login__nav-item" aria-selected="false" th:fragment="nav_default(tab_id)" th:classappend="${static} ? is-active : ''" xmlns:th="http://www.w3.org/1999/xhtml">
     <span th:unless="${static}" class="c-tab-login__nav-back-link"></span>
-    <a class="c-tab-login__nav-link" href="#" th:data-tab="${tab_id}">
-        <span class="c-tab-login__nav-label">
-            <svg th:class="'icon icon-' + ${tab_id}"><use th:attr="'xlink:href'='#icon-' + ${tab_id}"></use></svg>
-            <span th:text="${#messages.msg('label.' + tab_id + '.title')}" th:remove="tag">Tab</span>
-        </span>
-    </a>
+    <th:block th:switch="${tab_id}">
+        <th:block th:case="id-card">    <a th:replace="~{fragments/logintabs :: nav_default_link(${tab_id}, '')}" /> </th:block>
+        <th:block th:case="mobile-id">  <a th:replace="~{fragments/logintabs :: nav_default_link(${tab_id}, __${#locale}__ == 'ru' ? 'et' : '')}" /> </th:block>
+        <th:block th:case="bank-link">  <a th:replace="~{fragments/logintabs :: nav_default_link(${tab_id}, '')}" /> </th:block>
+        <th:block th:case="smart-id">   <a th:replace="~{fragments/logintabs :: nav_default_link(${tab_id}, 'en')}" /> </th:block>
+        <th:block th:case="eu-citizen"> <a th:replace="~{fragments/logintabs :: nav_default_link(${tab_id}, 'en')}" /> </th:block>
+    </th:block>
 </li>
 
-<li class="c-tab-login__nav-item" th:fragment="nav_alt(tab_id, suffix)" xmlns:th="http://www.w3.org/1999/xhtml">
+<a th:fragment="nav_default_link(tab_id, lang)"
+   xmlns:th="http://www.w3.org/1999/xhtml"
+   class="c-tab-login__nav-link"
+   href="#"
+   th:lang="${lang}"
+   th:data-tab="${tab_id}">
+    <span class="c-tab-login__nav-label">
+        <svg th:class="'icon icon-' + ${tab_id}"><use th:attr="'xlink:href'='#icon-' + ${tab_id}"></use></svg>
+        <span th:text="${#messages.msg('label.' + tab_id + '.title')}" th:remove="tag">Tab</span>
+    </span>
+</a>
+
+<li class="c-tab-login__nav-item" aria-selected="false" th:fragment="nav_alt(tab_id, suffix)" xmlns:th="http://www.w3.org/1999/xhtml">
     <span class="c-tab-login__nav-back-link"></span>
-    <a th:class="'c-tab-login\_\_nav-link c-tab-login\_\_nav-link--' + ${suffix}" href="#" th:data-tab="${tab_id}">
-        <span class="c-tab-login__nav-label">
-            <span th:class="'icon icon-' + ${tab_id}"><img th:src="'/assets/' + ${suffix} + '-icon.png'" th:alt="${#messages.msg('label.' + tab_id + '.title')}"></span>
-            <span th:text="${#messages.msg('label.' + tab_id + '.title')}" th:remove="tag">Tab</span>
-        </span>
-    </a>
+    <th:block th:switch="${tab_id}">
+        <th:block th:case="id-card">    <a th:replace="~{fragments/logintabs :: nav_alt_link(${tab_id}, ${suffix}, '')}" /> </th:block>
+        <th:block th:case="mobile-id">  <a th:replace="~{fragments/logintabs :: nav_alt_link(${tab_id}, ${suffix}, __${#locale}__ == 'ru' ? 'et' : '')}" /> </th:block>
+        <th:block th:case="bank-link">  <a th:replace="~{fragments/logintabs :: nav_alt_link(${tab_id}, ${suffix}, '')}" /> </th:block>
+        <th:block th:case="smart-id">   <a th:replace="~{fragments/logintabs :: nav_alt_link(${tab_id}, ${suffix}, 'en')}" /> </th:block>
+        <th:block th:case="eu-citizen"> <a th:replace="~{fragments/logintabs :: nav_alt_link(${tab_id}, ${suffix}, 'en')}" /> </th:block>
+    </th:block>
 </li>
 
+<a th:fragment="nav_alt_link(tab_id, suffix, lang)"
+   xmlns:th="http://www.w3.org/1999/xhtml"
+   th:class="'c-tab-login\_\_nav-link c-tab-login\_\_nav-link--' + ${suffix}"
+   href="#"
+   th:lang="${lang}"
+   th:data-tab="${tab_id}">
+    <span class="c-tab-login__nav-label">
+        <span th:class="'icon icon-' + ${tab_id}"><img th:src="'/assets/' + ${suffix} + '-icon.png'" alt=""></span>
+        <span th:text="${#messages.msg('label.' + tab_id + '.title')}" />
+    </span>
+</a>
 
 <div layout:fragment="content(tab_id)" xmlns:th="http://www.w3.org/1999/xhtml" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
     <div class="c-tab-login__content" th:classappend="${static} ? is-active : ''" th:data-tab="${tab_id}">
         <div class="c-tab-login__content-wrap">
             <div class="c-tab-login__content-icon">
-                <svg th:class="'icon icon-' + ${tab_id}"><use th:attr="'xlink:href'='#icon-' + ${tab_id}"></use></svg>
+                <svg role="img" aria-label="" th:class="'icon icon-' + ${tab_id}"><use th:attr="'xlink:href'='#icon-' + ${tab_id}"></use></svg>
             </div>
             <div class="c-tab-login__content-text">
-                <h2 th:text="${#messages.msg('label.' + tab_id + '.' + (title ?: 'title'))}"></h2>
-                <p th:text="${#messages.msg('label.' + tab_id + '.' + (instruction ?: 'instruction'))}"></p>
-                <form layout:fragment="login-form-content"></form>
+                <div role="heading" aria-level="2" >
+                    <h2 th:utext="${#messages.msg('label.' + tab_id + '.' + (title ?: 'title'))}"></h2>
+                </div>
+                <p th:utext="${#messages.msg('label.' + tab_id + '.' + (instruction ?: 'instruction'))}"></p>
+                <form role="form" layout:fragment="login-form-content"></form>
             </div>
         </div>
         <div class="c-tab-login__footer">
