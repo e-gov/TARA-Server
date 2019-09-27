@@ -12,6 +12,7 @@
         <cas.version>5.3.9</cas.version>
         <springboot.version>1.5.18.RELEASE</springboot.version>
         <banklink.version>2.1.15</banklink.version>
+        <jersey.version>2.28</jersey.version>
         <!-- app.server could be -jetty, -undertow, -tomcat, or blank if you plan to provide appserver -->
         <app.server>-tomcat</app.server>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -148,6 +149,14 @@
                 <version>${cas.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+
+            <!-- Force-override given dependency version used by mid-rest-java-client -->
+            <!-- At the moment version 2.27 is for some reason taken from spring, even tho jersey is only used by mid-rest-java-client and it has defined use of ${jersey.version}  -->
+            <dependency>
+                <groupId>org.glassfish.jersey.inject</groupId>
+                <artifactId>jersey-hk2</artifactId>
+                <version>${jersey.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -332,17 +341,11 @@
         </dependency>
 
         <!-- Mobile-ID REST client -->
+        <!-- NB! When updating must also update explicitly defined 'org.glassfish.jersey.inject.jersey-hk2' version -->
         <dependency>
             <groupId>ee.sk.mid</groupId>
             <artifactId>mid-rest-java-client</artifactId>
             <version>1.1</version>
-        </dependency>
-
-        <!-- Force-override dependencies versions from mid-rest-java-client -->
-        <dependency>
-            <groupId>org.glassfish.jersey.inject</groupId>
-            <artifactId>jersey-hk2</artifactId>
-            <version>2.28</version>
         </dependency>
 
         <dependency>
