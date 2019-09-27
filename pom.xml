@@ -324,12 +324,27 @@
             <version>${banklink.version}</version>
         </dependency>
 
-        <!-- mobileid -->
+        <!-- Mobile-ID SOAP client -->
         <dependency>
             <groupId>com.codeborne</groupId>
             <artifactId>mobileid</artifactId>
             <version>1.4</version>
         </dependency>
+
+        <!-- Mobile-ID REST client -->
+        <dependency>
+            <groupId>ee.sk.mid</groupId>
+            <artifactId>mid-rest-java-client</artifactId>
+            <version>1.1</version>
+        </dependency>
+
+        <!-- Force-override dependencies versions from mid-rest-java-client -->
+        <dependency>
+            <groupId>org.glassfish.jersey.inject</groupId>
+            <artifactId>jersey-hk2</artifactId>
+            <version>2.28</version>
+        </dependency>
+
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk15on</artifactId>
