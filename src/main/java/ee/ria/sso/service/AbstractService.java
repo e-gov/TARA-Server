@@ -72,7 +72,7 @@ public class AbstractService {
         );
     }
 
-    protected void logEvent(RequestContext context, Exception e, AuthenticationType authenticationType) {
+    protected void logEvent(RequestContext context, Throwable e, AuthenticationType authenticationType) {
         logEvent(StatisticsRecord.builder()
                 .time(LocalDateTime.now())
                 .clientId(getServiceClientId(context))
