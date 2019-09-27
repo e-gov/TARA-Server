@@ -70,6 +70,15 @@ public class SmartIDConfigurationProviderTest {
     }
 
     @Test
+    public void sessionStatusSocketOpenRoundedUpTo1000() {
+        SmartIDConfigurationProvider confProvider = new SmartIDConfigurationProvider();
+        confProvider.setSessionStatusSocketOpenDuration(400);
+        confProvider.init();
+
+        assertEquals(Integer.valueOf(1000), confProvider.getSessionStatusSocketOpenDuration());
+    }
+
+    @Test
     public void whenSmartIdEnabledThenItsRequiredBeansInitiated() {
         assertTrue(configurationProvider.isEnabled());
         assertBeanInitiated(SmartIDConfiguration.class);
