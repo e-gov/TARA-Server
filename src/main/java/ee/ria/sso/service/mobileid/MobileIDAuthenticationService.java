@@ -58,7 +58,7 @@ public class MobileIDAuthenticationService extends AbstractService {
             this.validateCredential(credential.getPrincipalCode(), mobileNumber);
 
             MobileIDSession session = authenticationClient.initAuthentication(credential.getPrincipalCode(), confProvider.getCountryCode(), mobileNumber);
-            log.info("Successful authentication initiation response received");
+            log.info("Successful authentication initiation response received <sessionId:{}>", session.getSessionId());
             context.getFlowScope().put(Constants.MOBILE_ID_VERIFICATION_CODE, session.getVerificationCode());
             context.getFlowScope().put(Constants.MOBILE_ID_AUTHENTICATION_SESSION, session);
             context.getFlowScope().put(Constants.AUTH_COUNT, 0);
@@ -80,18 +80,18 @@ public class MobileIDAuthenticationService extends AbstractService {
             MobileIDSession session = context.getFlowScope().get(Constants.MOBILE_ID_AUTHENTICATION_SESSION, MobileIDSession.class);
             int checkCount = context.getFlowScope().get(Constants.AUTH_COUNT, Integer.class);
 
-            log.info("Mobile-ID authentication status checking (attempt {}) for session id {}", checkCount, session.getSessionId());
+            log.info("Mobile-ID authentication session status checking attempt <count:{}>, <sessionId:{}>", checkCount, session.getSessionId());
 
             MobileIDSessionStatus sessionStatus = authenticationClient.pollAuthenticationSessionStatus(session);
             if (sessionStatus.isAuthenticationComplete()) {
-                log.info("Mobile-ID authentication complete");
+                log.info("Mobile-ID authentication complete <sessionId:{}>", session.getSessionId());
                 AuthenticationIdentity authIdentity = authenticationClient.getAuthenticationIdentity(session, sessionStatus);
                 context.getFlowExecutionContext().getActiveSession().getScope()
                        .put(CasWebflowConstants.VAR_ID_CREDENTIAL, constructTaraCredential(authIdentity));
                 logEvent(context, AuthenticationType.MobileID, SUCCESSFUL_AUTH);
                 return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
             } else {
-                log.info("Mobile-ID authentication not complete yet");
+                log.info("Mobile-ID authentication not complete yet <sessionId:{}>", session.getSessionId());
                 context.getFlowScope().put(Constants.AUTH_COUNT, ++checkCount);
                 return new Event(this, Constants.EVENT_OUTSTANDING);
             }

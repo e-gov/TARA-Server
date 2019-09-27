@@ -89,7 +89,6 @@ public class SmartIDAuthenticationServiceTest {
     @Before
     public void init() {
         authenticationService = new SmartIDAuthenticationService(
-                messageSource,
                 statisticsHandler,
                 smartIdClient,
                 confProvider,
