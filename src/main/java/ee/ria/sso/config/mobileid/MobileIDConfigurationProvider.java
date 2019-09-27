@@ -4,6 +4,8 @@ import ee.sk.mid.MidDisplayTextFormat;
 import ee.sk.mid.MidHashType;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -22,6 +24,8 @@ import javax.validation.constraints.NotNull;
 @Validated
 @Getter
 @Setter
+@Slf4j
+@ToString
 public class MobileIDConfigurationProvider {
 
     private static final String DEFAULT_COUNTRY_CODE = "EE";
@@ -104,5 +108,7 @@ public class MobileIDConfigurationProvider {
         }
 
         sessionStatusSocketOpenDuration = sessionStatusSocketOpenDuration / 1000;
+
+        log.info("Using Mobile-ID configuration: {}" + this);
     }
 }
