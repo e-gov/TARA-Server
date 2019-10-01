@@ -9,8 +9,8 @@ import lombok.experimental.UtilityClass;
 public final class Constants {
 
     public static final String CERTIFICATE_SESSION_ATTRIBUTE = "Client-Certificate";
-    public static final String MOBILE_CHALLENGE = "mobileChallenge";
-    public static final String MOBILE_SESSION = "mobileSession";
+    public static final String MOBILE_ID_VERIFICATION_CODE = "mobileIdVerificationCode";
+    public static final String MOBILE_ID_AUTHENTICATION_SESSION = "mobileIdAuthenticationSession";
     public static final String AUTH_COUNT = "authCount";
     public static final String ERROR_MESSAGE = "TARA_ERROR_MESSAGE";
     public static final String EVENT_OUTSTANDING = "outstanding";

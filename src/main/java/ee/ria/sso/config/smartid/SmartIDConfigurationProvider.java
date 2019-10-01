@@ -3,6 +3,8 @@ package ee.ria.sso.config.smartid;
 import ee.sk.smartid.HashType;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -22,6 +24,8 @@ import java.util.List;
 @Validated
 @Getter
 @Setter
+@Slf4j
+@ToString
 public class SmartIDConfigurationProvider {
 
     private static final HashType DEFAULT_AUTHENTICATION_HASH_TYPE = HashType.SHA512;
@@ -71,10 +75,12 @@ public class SmartIDConfigurationProvider {
             throw new IllegalArgumentException(
                     "Network connection timeout(<" + connectionTimeout + ">) should not be shorter than session status check socket open duration(<" + sessionStatusSocketOpenDuration + ">)");
         }
-
+      
         // Smaller than default values are rounded to default, because it is the minimum allowed by Smart-ID service.
         if (sessionStatusSocketOpenDuration < DEFAULT_SESSION_STATUS_SOCKET_OPEN_DURATION) {
             sessionStatusSocketOpenDuration = DEFAULT_SESSION_STATUS_SOCKET_OPEN_DURATION;
         }
+      
+        log.info("Using Smart-ID configuration: {}" + this);
     }
 }

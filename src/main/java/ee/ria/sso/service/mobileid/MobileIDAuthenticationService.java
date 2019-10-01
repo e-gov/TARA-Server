@@ -1,16 +1,16 @@
 package ee.ria.sso.service.mobileid;
 
 import com.codeborne.security.AuthenticationException;
-import com.codeborne.security.mobileid.MobileIDSession;
 import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.credential.PreAuthenticationCredential;
 import ee.ria.sso.authentication.credential.TaraCredential;
 import ee.ria.sso.config.mobileid.MobileIDConfigurationProvider;
 import ee.ria.sso.service.AbstractService;
-import ee.ria.sso.service.ExternalServiceHasFailedException;
 import ee.ria.sso.service.UserAuthenticationFailedException;
+import ee.ria.sso.service.mobileid.rest.MobileIDErrorMessage;
 import ee.ria.sso.statistics.StatisticsHandler;
+import ee.sk.mid.MidInputUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apereo.cas.web.flow.CasWebflowConstants;
@@ -21,10 +21,6 @@ import org.springframework.util.Assert;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
 
-import java.io.IOException;
-import java.util.Arrays;
-
-import static com.codeborne.security.AuthenticationException.Code.*;
 import static ee.ria.sso.statistics.StatisticsOperation.START_AUTH;
 import static ee.ria.sso.statistics.StatisticsOperation.SUCCESSFUL_AUTH;
 
@@ -33,23 +29,15 @@ import static ee.ria.sso.statistics.StatisticsOperation.SUCCESSFUL_AUTH;
 @Slf4j
 public class MobileIDAuthenticationService extends AbstractService {
 
-    private final MobileIDConfigurationProvider configurationProvider;
-    private final MobileIDAuthenticatorWrapper mobileIDAuthenticator;
+    private final MobileIDConfigurationProvider confProvider;
+    private final MobileIDAuthenticationClient authenticationClient;
 
     public MobileIDAuthenticationService(StatisticsHandler statistics,
-                                         MobileIDConfigurationProvider configurationProvider,
-                                         MobileIDAuthenticatorWrapper mobileIDAuthenticator) {
+                                         MobileIDConfigurationProvider confProvider,
+                                         MobileIDAuthenticationClient authenticationClient) {
         super(statistics);
-        this.configurationProvider = configurationProvider;
-        this.mobileIDAuthenticator = mobileIDAuthenticator;
-        this.initMobileIDAuthenticator();
-    }
-
-    private void initMobileIDAuthenticator()  {
-        this.mobileIDAuthenticator.setDigidocServiceURL(configurationProvider.getServiceUrl());
-        this.mobileIDAuthenticator.setLanguage(configurationProvider.getLanguage());
-        this.mobileIDAuthenticator.setLoginMessage(configurationProvider.getMessageToDisplay());
-        this.mobileIDAuthenticator.setServiceName(configurationProvider.getServiceName());
+        this.confProvider = confProvider;
+        this.authenticationClient = authenticationClient;
     }
 
     @Audit(
@@ -60,28 +48,24 @@ public class MobileIDAuthenticationService extends AbstractService {
     public Event startLoginByMobileID(RequestContext context) {
         final PreAuthenticationCredential credential = context.getFlowExecutionContext().getActiveSession().getScope().get("credential", PreAuthenticationCredential.class);
         Assert.notNull(credential, "PreAuthenticationCredential is missing!");
+
+
+        String mobileNumber = StringUtils.isBlank(credential.getMobileNumber()) ? credential.getMobileNumber() : confProvider.getAreaCode() + credential.getMobileNumber();
+        log.info("Starting Mobile-ID authentication: <mobileNumber:{}>, <identityCode:{}>", mobileNumber, credential.getPrincipalCode());
         try {
             logEvent(context, AuthenticationType.MobileID, START_AUTH);
-            if (log.isDebugEnabled()) {
-                log.debug("Starting mobile ID login: <number:{}>, <ssn:{}>", credential.getMobileNumber(), credential.getPrincipalCode());
-            }
 
-            this.validateCredential(credential);
-            MobileIDSession mobileIDSession = this.mobileIDAuthenticator.startLogin(credential.getPrincipalCode(),
-                    this.configurationProvider.getCountryCode(), credential.getMobileNumber());
-            if (log.isDebugEnabled()) {
-                log.debug("Login response received ...");
-            }
-            context.getFlowScope().put(Constants.MOBILE_CHALLENGE, mobileIDSession.challenge);
-            context.getFlowScope().put(Constants.MOBILE_SESSION, mobileIDSession);
+            this.validateCredential(credential.getPrincipalCode(), mobileNumber);
+
+            MobileIDSession session = authenticationClient.initAuthentication(credential.getPrincipalCode(), confProvider.getCountryCode(), mobileNumber);
+            log.info("Successful authentication initiation response received <sessionId:{}>", session.getSessionId());
+            context.getFlowScope().put(Constants.MOBILE_ID_VERIFICATION_CODE, session.getVerificationCode());
+            context.getFlowScope().put(Constants.MOBILE_ID_AUTHENTICATION_SESSION, session);
             context.getFlowScope().put(Constants.AUTH_COUNT, 0);
 
             return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
-
-        } catch (AuthenticationException e) {
-            return handleMobileAuthenticateException(context, e);
         } catch (Exception e) {
-            logEvent(context, e, AuthenticationType.MobileID);
+            logEvent(context, e);
             throw e;
         }
     }
@@ -93,61 +77,52 @@ public class MobileIDAuthenticationService extends AbstractService {
     )
     public Event checkLoginForMobileID(RequestContext context) {
         try {
-            MobileIDSession session = context.getFlowScope().get(Constants.MOBILE_SESSION, MobileIDSession.class);
+            MobileIDSession session = context.getFlowScope().get(Constants.MOBILE_ID_AUTHENTICATION_SESSION, MobileIDSession.class);
             int checkCount = context.getFlowScope().get(Constants.AUTH_COUNT, Integer.class);
 
-            log.debug("Checking (attempt {}) mobile ID login state with session code {}", checkCount, session.sessCode);
+            log.info("Mobile-ID authentication session status checking attempt <count:{}>, <sessionId:{}>", checkCount, session.getSessionId());
 
-            if (this.mobileIDAuthenticator.isLoginComplete(session)) {
-                TaraCredential credential = new TaraCredential(AuthenticationType.MobileID, "EE" + session.personalCode, session.firstName, session.lastName);
-                context.getFlowExecutionContext().getActiveSession().getScope().put(CasWebflowConstants.VAR_ID_CREDENTIAL, credential);
+            MobileIDSessionStatus sessionStatus = authenticationClient.pollAuthenticationSessionStatus(session);
+            if (sessionStatus.isAuthenticationComplete()) {
+                log.info("Mobile-ID authentication complete <sessionId:{}>", session.getSessionId());
+                AuthenticationIdentity authIdentity = authenticationClient.getAuthenticationIdentity(session, sessionStatus);
+                context.getFlowExecutionContext().getActiveSession().getScope()
+                       .put(CasWebflowConstants.VAR_ID_CREDENTIAL, constructTaraCredential(authIdentity));
                 logEvent(context, AuthenticationType.MobileID, SUCCESSFUL_AUTH);
-
                 return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
             } else {
+                log.info("Mobile-ID authentication not complete yet <sessionId:{}>", session.getSessionId());
                 context.getFlowScope().put(Constants.AUTH_COUNT, ++checkCount);
                 return new Event(this, Constants.EVENT_OUTSTANDING);
             }
-
-        } catch (AuthenticationException e) {
-            return handleGetMobileAuthenticateStatusException(context, e);
         } catch (Exception e) {
-            logEvent(context, e, AuthenticationType.MobileID);
+            logEvent(context, e);
             throw e;
         }
     }
 
-    private Event handleGetMobileAuthenticateStatusException(RequestContext context, AuthenticationException e) {
-        logEvent(context, e, AuthenticationType.MobileID);
-        if (Arrays.asList(EXPIRED_TRANSACTION, USER_CANCEL, MID_NOT_READY, PHONE_ABSENT, SENDING_ERROR, SIM_ERROR, NOT_VALID).contains(e.getCode())) {
-            String messageKey = String.format("message.mid.%s", e.getCode().name().toLowerCase().replace("_", ""));
-            throw new UserAuthenticationFailedException(messageKey, String.format("User authentication failed! DDS GetMobileAuthenticateStatus returned an error (code: %s)", e.getCode()));
-        } else if (INTERNAL_ERROR == e.getCode() || e.getCode() == SERVICE_ERROR && e.getCause() instanceof IOException) {
-            throw new ExternalServiceHasFailedException("message.mid.error", String.format("Technical problems with DDS! DDS GetMobileAuthenticateStatus returned an error (code: %s)", e.getCode()));
-        } else {
-            throw new IllegalStateException(String.format("Unexpected error returned by DDS GetMobileAuthenticateStatus (code: %s)", e.getCode()), e);
+    private TaraCredential constructTaraCredential(AuthenticationIdentity authIdentity) {
+        return new TaraCredential(AuthenticationType.MobileID,
+                confProvider.getCountryCode() + authIdentity.getIdentityCode(),
+                authIdentity.getGivenName(),
+                authIdentity.getSurname());
+    }
+
+    private void validateCredential(String principalCode, String mobileNumber) {
+        if (!MidInputUtil.isNationalIdentityNumberValid(principalCode)) {
+            throw new UserAuthenticationFailedException(MobileIDErrorMessage.INVALID_IDENTITY_CODE, String.format("User provided invalid identityCode: <%s>", principalCode));
+        }
+        if (!MidInputUtil.isPhoneNumberValid(mobileNumber)) {
+            throw new UserAuthenticationFailedException(MobileIDErrorMessage.INVALID_MOBILE_NUMBER, String.format("User provided invalid mobileNumber: <%s>", mobileNumber));
         }
     }
 
-    private Event handleMobileAuthenticateException(RequestContext context, AuthenticationException e) {
-        logEvent(context, e, AuthenticationType.MobileID);
-        if (Arrays.asList(USER_PHONE_ERROR, NO_AGREEMENT, CERTIFICATE_REVOKED, NOT_ACTIVATED, NOT_VALID).contains(e.getCode())) {
-            String messageKey = String.format("message.mid.%s", e.getCode().name().toLowerCase().replace("_", ""));
-            throw new UserAuthenticationFailedException(messageKey, String.format("User authentication failed! DDS MobileAuthenticate returned an error (code: %s)", e.getCode()));
-        } else if (Arrays.asList(AUTHENTICATION_ERROR, USER_CERTIFICATE_MISSING, UNABLE_TO_TEST_USER_CERTIFICATE).contains(e.getCode())
-                || (e.getCode() == SERVICE_ERROR && e.getCause() instanceof IOException)) {
-            throw new ExternalServiceHasFailedException("message.mid.error", String.format("Technical problems with DDS! DDS MobileAuthenticate returned an error (code: %s)", e.getCode()));
+    private void logEvent(RequestContext context, Exception e) {
+        Throwable cause = e.getCause();
+        if (cause instanceof AuthenticationException) {
+            logEvent(context, cause, AuthenticationType.MobileID);
         } else {
-            throw new IllegalStateException(String.format("Unexpected error returned by DDS MobileAuthenticate (code: %s)!", e.getCode()), e);
-        }
-    }
-
-    private void validateCredential(PreAuthenticationCredential credential) {
-        if (!StringUtils.isNumeric(credential.getPrincipalCode())) {
-            throw new UserAuthenticationFailedException("message.mid.invalidcode", String.format("User provided invalid idCode: <%s>", credential.getPrincipalCode()));
-        }
-        if (StringUtils.isBlank(credential.getMobileNumber()) || !credential.getMobileNumber().matches("^\\d+$")) {
-            throw new UserAuthenticationFailedException("message.mid.invalidnumber", String.format("User provided invalid mobileNumber: <%s>", credential.getMobileNumber()));
+            logEvent(context, e, AuthenticationType.MobileID);
         }
     }
 }

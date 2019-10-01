@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.w3.org/1999/xhtml" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout" th:with="hideHeaderLanguageSelection=true">
 <head th:replace="~{fragments/head}"></head>
-<body class="is-mobile-subview">
+<body class="is-mobile-subview" th:attr="data-check-form-refresh-rate=${@environment.getProperty('mobile-id.timeout-between-session-status-queries')}">
 <div layout:fragment="content" th:with="hideHeaderLanguageSelection=true" th:remove="tag">
     <div class="container">
         <div class="c-tab-login">
@@ -14,7 +14,7 @@
                 <div layout:include="~{fragments/logintabs :: content(tab_id = 'mobile-id', instruction = 'instruction-check', static = true)}" th:remove="tag">
                     <form role="form" id="authenticationCheckForm" method="post" class="c-form" layout:fragment="login-form-content">
                         <p th:text="#{label.common.controlCode}">Control code:</p>
-                        <p class="control-code" th:text="${mobileChallenge}"></p>
+                        <p class="control-code" th:text="${mobileIdVerificationCode}"></p>
                         <a class="c-btn c-btn--cancel c-btn--from-link" th:href="${session.pac4jRequestedUrl}" th:text="#{label.common.cancel}">Cancel</a>
                         <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
                         <input type="hidden" id="_eventId" name="_eventId" value="check"/>
