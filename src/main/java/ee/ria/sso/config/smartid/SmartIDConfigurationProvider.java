@@ -31,7 +31,7 @@ public class SmartIDConfigurationProvider {
     private static final HashType DEFAULT_AUTHENTICATION_HASH_TYPE = HashType.SHA512;
     private static final int DEFAULT_CONNECTION_TIMEOUT = 5000;
     private static final int DEFAULT_READ_TIMEOUT = 30000;
-    private static final int DEFAULT_SESSION_STATUS_SOCKET_OPEN_DURATION = 3000;
+    private static final int DEFAULT_SESSION_STATUS_SOCKET_OPEN_DURATION = 1000;
     private static final int DEFAULT_TIMEOUT_BETWEEN_SESSION_STATUS_QUERIES = 3000;
 
     private boolean enabled;
@@ -75,7 +75,12 @@ public class SmartIDConfigurationProvider {
             throw new IllegalArgumentException(
                     "Network connection timeout(<" + connectionTimeout + ">) should not be shorter than session status check socket open duration(<" + sessionStatusSocketOpenDuration + ">)");
         }
-
+      
+        // Smaller than default values are rounded to default, because it is the minimum allowed by Smart-ID service.
+        if (sessionStatusSocketOpenDuration < DEFAULT_SESSION_STATUS_SOCKET_OPEN_DURATION) {
+            sessionStatusSocketOpenDuration = DEFAULT_SESSION_STATUS_SOCKET_OPEN_DURATION;
+        }
+      
         log.info("Using Smart-ID configuration: {}" + this);
     }
 }

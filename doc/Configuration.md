@@ -573,7 +573,7 @@ Table 15 - Other Smart-ID configuration properties (if Smart-ID is enabled)
 | `smart-id.relying-party-uuid` | Y | UUID value of the relying party according to the contract between Smart-ID service provider and the relying party. |
 | `smart-id.authentication-hash-type` | N | Type of the authentication hash that is used to generate the control code of an authentication request. Supported values are: <ul><li>`SHA256`</li><li>`SHA384`</li><li>`SHA512`</li></ul> Defaults to `SHA512`, if not specified. |
 | `smart-id.authentication-consent-dialog-display-text` | Y | Description of the authentication request. Displayed on the consent dialog shown on the end user's device. |
-| `smart-id.session-status-socket-open-duration` | N | Maximum duration in milliseconds a session status query is kept alive. Defaults to `3000`, if not specified. |
+| `smart-id.session-status-socket-open-duration` | N | Maximum duration in milliseconds a session status query is kept alive. Defaults to `1000`, if not specified. Smaller than `1000` numbers are rounded to `1000`, because it is the minimum that is used by Smart-ID service. |
 | `smart-id.timeout-between-session-status-queries` | N | Timeout in milliseconds between consecutive session status queries. Defaults to `3000`, if not specified. |
 | `smart-id.read-timeout` | N | Maximum total time in milliseconds to be spent on status queries during a session. Defaults to `30000`, if not specified. <br>This value should not be smaller than `smart-id.session-status-socket-open-duration`! |
 | `smart-id.connection-timeout` | N | Maximum time spent in milliseconds on waiting for connection with Smart-ID service provider. Defaults to `5000`, if not specified. |
