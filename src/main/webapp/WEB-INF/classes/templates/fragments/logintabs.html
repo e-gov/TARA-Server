@@ -47,7 +47,7 @@
 <div layout:fragment="content(tab_id)" xmlns:th="http://www.w3.org/1999/xhtml" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
     <div class="c-tab-login__content" th:classappend="${static} ? is-active : ''" th:data-tab="${tab_id}">
         <div class="c-tab-login__content-wrap">
-            <div class="c-tab-login__content-icon">
+            <div class="c-tab-login__content-icon" aria-hidden="true">
                 <svg role="img" aria-label="" th:class="'icon icon-' + ${tab_id}"><use th:attr="'xlink:href'='#icon-' + ${tab_id}"></use></svg>
             </div>
             <div class="c-tab-login__content-text">
