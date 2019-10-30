@@ -1,5 +1,4 @@
 <li class="c-tab-login__nav-item" aria-selected="false" th:fragment="nav_default(tab_id)" th:classappend="${static} ? is-active : ''" xmlns:th="http://www.w3.org/1999/xhtml">
-    <span th:unless="${static}" class="c-tab-login__nav-back-link"></span>
     <th:block th:switch="${tab_id}">
         <th:block th:case="id-card">    <a th:replace="~{fragments/logintabs :: nav_default_link(${tab_id}, '')}" /> </th:block>
         <th:block th:case="mobile-id">  <a th:replace="~{fragments/logintabs :: nav_default_link(${tab_id}, __${#locale}__ == 'ru' ? 'et' : '')}" /> </th:block>

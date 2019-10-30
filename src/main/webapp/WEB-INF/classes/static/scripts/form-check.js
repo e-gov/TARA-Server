@@ -1,1 +1,1 @@
-!function(){var t=5e3;try{var e=document.body.getAttribute("data-check-form-refresh-rate"),r=new Number(e);100<=r&&(t=r)}catch(t){}setTimeout(function(){document.forms.authenticationCheckForm.submit()},t)}();
+!function(){$(".c-tab-login__content-text").attr("role","alert"),$(".c-tab-login__content-text").attr("aria-live","assertive");var t=5e3;try{var e=document.body.getAttribute("data-check-form-refresh-rate"),r=new Number(e);100<=r&&(t=r)}catch(t){}setTimeout(function(){document.forms.authenticationCheckForm.submit()},t)}();

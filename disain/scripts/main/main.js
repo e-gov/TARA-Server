@@ -236,11 +236,13 @@ jQuery(function ($) {
 
 	function showAlert(alert) {
         alert.attr("role", "alert");
+	    alert.removeAttr("aria-hidden");
 	    alert.addClass('show');
 	}
 
     function hideAlert(alert) {
         alert.removeAttr("role");
+	    alert.attr("aria-hidden", "true");
         alert.removeClass('show');
     }
 
