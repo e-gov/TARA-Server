@@ -3,7 +3,12 @@ package ee.ria.sso.oidc;
 import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.LevelOfAssurance;
-import org.junit.*;
+import ee.ria.sso.config.eidas.EidasConfigurationProvider;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -21,10 +26,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.mockito.Mockito.when;
+
 @RunWith(SpringJUnit4ClassRunner.class)
 public class OidcAuthorizeRequestValidationServletFilterTest {
 
     public static final String MOCK_REDIRECT_URI = "https://example.com:1234/oauth/response";
+    private static final List<String> ALLOWED_EIDAS_COUNTRY_ATTRIBUTES =
+            Arrays.asList(scopeValuedAttribute(TaraScopeValuedAttributeName.EIDAS_COUNTRY, "gb"), scopeValuedAttribute(TaraScopeValuedAttributeName.EIDAS_COUNTRY, "ru"));
 
     @Rule
     public ExpectedException expectedEx = ExpectedException.none();
@@ -32,11 +41,16 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
     @Mock
     private OidcAuthorizeRequestValidator oidcRequestValidator;
 
+    @Mock
+    private EidasConfigurationProvider eidasConfigurationProvider;
+
     private OidcAuthorizeRequestValidationServletFilter servletFilter;
 
     @Before
-    public void setUp() throws Exception {
-        servletFilter = new OidcAuthorizeRequestValidationServletFilter(oidcRequestValidator);
+    public void setUp() {
+        when(eidasConfigurationProvider.getAllowedEidasCountryScopeAttributes()).thenReturn(ALLOWED_EIDAS_COUNTRY_ATTRIBUTES);
+
+        servletFilter = new OidcAuthorizeRequestValidationServletFilter(oidcRequestValidator, eidasConfigurationProvider);
         servletFilter.init(Mockito.mock(FilterConfig.class));
     }
 
@@ -211,6 +225,134 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
         );
     }
 
+    @Test
+    public void assertScopeValuedAttributeEidasCountryParsedFromScope() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        String eidasCountry = "gb";
+        String eidasCountryScopeAttribute = scopeValuedAttribute(TaraScopeValuedAttributeName.EIDAS_COUNTRY, eidasCountry);
+        String scopeValue = String.join(" ", TaraScope.OPENID.getFormalName(), TaraScope.EIDASONLY.getFormalName(), eidasCountryScopeAttribute);
+        request.addParameter(OidcAuthorizeRequestParameter.SCOPE.getParameterKey(), scopeValue);
+
+        servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
+
+        Assert.assertEquals("Assert authentication method read from request",
+                Arrays.asList(AuthenticationType.eIDAS),
+                request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_AUTH_METHODS));
+
+        TaraScopeValuedAttribute scopeAttribute = (TaraScopeValuedAttribute) request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_SCOPE_EIDAS_COUNTRY);
+        assertScopeAttribute(scopeAttribute, TaraScopeValuedAttributeName.EIDAS_COUNTRY, eidasCountry);
+    }
+
+    @Test
+    public void assertWhenMultipleEidasCountryPresentInScope_thenFirstIsTaken() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        String eidasCountry = "gb";
+        String eidasCountry2 = "ru";
+        String eidasCountryScopeAttribute = scopeValuedAttribute(TaraScopeValuedAttributeName.EIDAS_COUNTRY, eidasCountry);
+        String eidasCountryScopeAttribute2 = scopeValuedAttribute(TaraScopeValuedAttributeName.EIDAS_COUNTRY, eidasCountry2);
+        String scopeValue = String.join(" ", TaraScope.OPENID.getFormalName(), TaraScope.EIDASONLY.getFormalName(),
+                eidasCountryScopeAttribute, eidasCountryScopeAttribute2);
+        request.addParameter(OidcAuthorizeRequestParameter.SCOPE.getParameterKey(), scopeValue);
+
+        servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
+
+        Assert.assertEquals("Assert authentication method read from request",
+                Arrays.asList(AuthenticationType.eIDAS),
+                request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_AUTH_METHODS));
+
+        TaraScopeValuedAttribute scopeAttribute = (TaraScopeValuedAttribute) request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_SCOPE_EIDAS_COUNTRY);
+        assertScopeAttribute(scopeAttribute, TaraScopeValuedAttributeName.EIDAS_COUNTRY, eidasCountry);
+    }
+
+    @Test
+    public void assertScopeAndItsValuedAttributesOrderParsedFromScopeIsNotImportant() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        String eidasCountry = "gb";
+        String eidasCountryScopeAttribute = scopeValuedAttribute(TaraScopeValuedAttributeName.EIDAS_COUNTRY, eidasCountry);
+        String scopeValue = String.join(" ", eidasCountryScopeAttribute, TaraScope.OPENID.getFormalName(), TaraScope.EIDASONLY.getFormalName());
+        request.addParameter(OidcAuthorizeRequestParameter.SCOPE.getParameterKey(), scopeValue);
+
+        servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
+
+        Assert.assertEquals("Assert authentication method read from request",
+                Arrays.asList(AuthenticationType.eIDAS),
+                request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_AUTH_METHODS));
+
+        TaraScopeValuedAttribute scopeAttribute = (TaraScopeValuedAttribute) request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_SCOPE_EIDAS_COUNTRY);
+        assertScopeAttribute(scopeAttribute, TaraScopeValuedAttributeName.EIDAS_COUNTRY, eidasCountry);
+    }
+
+    @Test
+    public void assertOnlyEidasCountryAttributeParsedFromScope() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        String eidasCountry = "gb";
+        String eidasCountryScopeAttribute = scopeValuedAttribute(TaraScopeValuedAttributeName.EIDAS_COUNTRY, eidasCountry);
+        String scopeValue = String.join(" ", eidasCountryScopeAttribute);
+        request.addParameter(OidcAuthorizeRequestParameter.SCOPE.getParameterKey(), scopeValue);
+
+        servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
+
+        Assert.assertEquals("Assert authentication method not read from request and default value initialized",
+                Arrays.asList(AuthenticationType.values()),
+                request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_AUTH_METHODS));
+
+        TaraScopeValuedAttribute scopeAttribute = (TaraScopeValuedAttribute) request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_SCOPE_EIDAS_COUNTRY);
+        assertScopeAttribute(scopeAttribute, TaraScopeValuedAttributeName.EIDAS_COUNTRY, eidasCountry);
+    }
+
+    @Test
+    public void assertInvalidScopeValuedAttributeIsIgnored() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        String eidasCountry = "gb";
+        String eidasCountryScopeAttribute = scopeValuedAttribute(TaraScopeValuedAttributeName.EIDAS_COUNTRY, eidasCountry);
+        String invalidScopeAttribute = "invalid:scope:attribute:2";
+        String scopeValue = String.join(" ", eidasCountryScopeAttribute, invalidScopeAttribute);
+        request.addParameter(OidcAuthorizeRequestParameter.SCOPE.getParameterKey(), scopeValue);
+
+        servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
+
+        TaraScopeValuedAttribute scopeAttribute = (TaraScopeValuedAttribute) request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_SCOPE_EIDAS_COUNTRY);
+        assertScopeAttribute(scopeAttribute, TaraScopeValuedAttributeName.EIDAS_COUNTRY, eidasCountry);
+    }
+
+    @Test
+    public void assertEidasCountryScopeAttributeWithoutValueIsIgnored() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        String eidasCountryScopeAttribute = scopeValuedAttribute(TaraScopeValuedAttributeName.EIDAS_COUNTRY, "");
+        String scopeValue = String.join(" ", eidasCountryScopeAttribute);
+        request.addParameter(OidcAuthorizeRequestParameter.SCOPE.getParameterKey(), scopeValue);
+
+        servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
+
+        Assert.assertNull(request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_SCOPE_EIDAS_COUNTRY));
+    }
+
+    @Test
+    public void assertEidasCountryScopeAttributeWithUppercaseValueIsIgnored() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        String eidasCountryScopeAttribute = scopeValuedAttribute(TaraScopeValuedAttributeName.EIDAS_COUNTRY, "GB");
+        String scopeValue = String.join(" ", eidasCountryScopeAttribute);
+        request.addParameter(OidcAuthorizeRequestParameter.SCOPE.getParameterKey(), scopeValue);
+
+        servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
+
+        Assert.assertNull(request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_SCOPE_EIDAS_COUNTRY));
+    }
+
+    @Test
+    public void assertEidasCountryThatIsNotAllowedIsIgnored() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        String eidasCountry = "fi";
+        Assert.assertFalse(ALLOWED_EIDAS_COUNTRY_ATTRIBUTES.contains(eidasCountry));
+        String eidasCountryScopeAttribute = scopeValuedAttribute(TaraScopeValuedAttributeName.EIDAS_COUNTRY, eidasCountry);
+        String scopeValue = String.join(" ", eidasCountryScopeAttribute);
+        request.addParameter(OidcAuthorizeRequestParameter.SCOPE.getParameterKey(), scopeValue);
+
+        servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
+
+        Assert.assertNull(request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_SCOPE_EIDAS_COUNTRY));
+    }
+
     private void assertExceptionThrownWhenParameterValidationFails(OidcAuthorizeRequestParameter... parameters) throws IOException, ServletException {
         for (OidcAuthorizeRequestParameter parameter : parameters) {
             Mockito.doThrow(new OidcAuthorizeRequestValidator.InvalidRequestException(parameter, "test", "test description")).when(oidcRequestValidator).validateAuthenticationRequestParameters(Mockito.any());
@@ -265,6 +407,15 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
                 Arrays.asList(authMethodInSession),
                 request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_AUTH_METHODS)
         );
+    }
+
+    private static String scopeValuedAttribute(TaraScopeValuedAttributeName scopeAttributeName, String attributeValue) {
+        return scopeAttributeName.getFormalName() + ":" + attributeValue;
+    }
+
+    private static void assertScopeAttribute(TaraScopeValuedAttribute scopeAttribute, TaraScopeValuedAttributeName scopeAttributeName, String scopeAttributeValue) {
+        Assert.assertSame(scopeAttributeName, scopeAttribute.getName());
+        Assert.assertEquals(scopeAttributeValue, scopeAttribute.getValue());
     }
 
     @After

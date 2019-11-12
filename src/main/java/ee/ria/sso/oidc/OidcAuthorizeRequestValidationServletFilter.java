@@ -3,11 +3,17 @@ package ee.ria.sso.oidc;
 import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.LevelOfAssurance;
+import ee.ria.sso.config.eidas.EidasConfigurationProvider;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.servlet.*;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -18,6 +24,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -27,9 +34,10 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public class OidcAuthorizeRequestValidationServletFilter implements Filter {
 
     private final OidcAuthorizeRequestValidator oidcAuthorizeRequestValidator;
+    private final EidasConfigurationProvider eidasConfigurationProvider;
 
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
+    public void init(FilterConfig filterConfig) {
         log.debug("Initialize filter: {}", OidcAuthorizeRequestValidationServletFilter.class.getName());
     }
 
@@ -79,8 +87,10 @@ public class OidcAuthorizeRequestValidationServletFilter implements Filter {
     private void saveOidcRequestParametersToSession(final HttpServletRequest request) {
         final HttpSession session = request.getSession(true);
 
-        final List<TaraScope> scopes = getTaraOidcScopesFromRequest(request);
+        String[] scopeElements = getScopeElements(request);
+        List<TaraScope> scopes = parseScopes(scopeElements);
         session.setAttribute(Constants.TARA_OIDC_SESSION_SCOPES, scopes);
+        session.setAttribute(Constants.TARA_OIDC_SESSION_SCOPE_EIDAS_COUNTRY, parseScopeEidasCountry(scopeElements).orElse(null));
 
         session.setAttribute(Constants.TARA_OIDC_SESSION_CLIENT_ID,
                 request.getParameter(OidcAuthorizeRequestParameter.CLIENT_ID.getParameterKey())
@@ -97,23 +107,49 @@ public class OidcAuthorizeRequestValidationServletFilter implements Filter {
                 LevelOfAssurance.findByAcrName(acrValues));
     }
 
-    private List<TaraScope> getTaraOidcScopesFromRequest(final HttpServletRequest request) {
-        final String scope = request.getParameter(OidcAuthorizeRequestParameter.SCOPE.getParameterKey());
-        if (StringUtils.isBlank(scope)) return Collections.emptyList();
+    private String[] getScopeElements(HttpServletRequest request) {
+        String scopeParameter = request.getParameter(OidcAuthorizeRequestParameter.SCOPE.getParameterKey());
+        if (StringUtils.isBlank(scopeParameter)) {
+            return new String[0];
+        }
+        return scopeParameter.split(" ");
+    }
 
-
-
-        return Arrays.stream(scope.split(" "))
-                .map(s -> {
-                        try {
-                            return TaraScope.getScope(s);
-                        } catch (IllegalArgumentException e) {
-                            log.warn("Invalid scope value ignored!");
-                            return null;
-                        }
-                    })
+    private List<TaraScope> parseScopes(String[] scopeElements) {
+        return Arrays.stream(scopeElements)
+                .map(scopeElement -> {
+                    try {
+                        return TaraScope.getScope(scopeElement);
+                    } catch (IllegalArgumentException e) {
+                        log.warn("Invalid scope value '{}', entry ignored!", scopeElement);
+                        return null;
+                    }
+                })
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+    }
+
+    private Optional<TaraScopeValuedAttribute> parseScopeEidasCountry(String[] scopeElements) {
+        return Arrays.stream(scopeElements)
+                .filter(eidasConfigurationProvider.getAllowedEidasCountryScopeAttributes()::contains)
+                .map(this::constructValuedScopeAttribute)
+                .filter(Objects::nonNull)
+                .findFirst();
+    }
+
+    private TaraScopeValuedAttribute constructValuedScopeAttribute(String scopeElement) {
+        int lastIndexOf = scopeElement.lastIndexOf(":");
+        String scopeAttributeFormalName = scopeElement.substring(0, lastIndexOf);
+        String scopeAttributeValue = scopeElement.substring(lastIndexOf + 1);
+
+        TaraScopeValuedAttribute scopeAttribute = null;
+        if (StringUtils.isNotBlank(scopeAttributeValue)) {
+            scopeAttribute = TaraScopeValuedAttribute.builder()
+                    .name(TaraScopeValuedAttributeName.getByFormalName(scopeAttributeFormalName))
+                    .value(scopeAttributeValue)
+                    .build();
+        }
+        return scopeAttribute;
     }
 
     private List<AuthenticationType> getListOfAllowedAuthenticationMethods(final List<TaraScope> scopes) {
