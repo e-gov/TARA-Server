@@ -33,7 +33,7 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
 
     public static final String MOCK_REDIRECT_URI = "https://example.com:1234/oauth/response";
     private static final List<String> ALLOWED_EIDAS_COUNTRY_ATTRIBUTES =
-            Arrays.asList(scopeValuedAttribute(TaraScopeValuedAttributeName.EIDAS_COUNTRY, "en"), scopeValuedAttribute(TaraScopeValuedAttributeName.EIDAS_COUNTRY, "ru"));
+            Arrays.asList(scopeValuedAttribute(TaraScopeValuedAttributeName.EIDAS_COUNTRY, "gb"), scopeValuedAttribute(TaraScopeValuedAttributeName.EIDAS_COUNTRY, "ru"));
 
     @Rule
     public ExpectedException expectedEx = ExpectedException.none();
@@ -228,7 +228,7 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
     @Test
     public void assertScopeValuedAttributeEidasCountryParsedFromScope() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        String eidasCountry = "en";
+        String eidasCountry = "gb";
         String eidasCountryScopeAttribute = scopeValuedAttribute(TaraScopeValuedAttributeName.EIDAS_COUNTRY, eidasCountry);
         String scopeValue = String.join(" ", TaraScope.OPENID.getFormalName(), TaraScope.EIDASONLY.getFormalName(), eidasCountryScopeAttribute);
         request.addParameter(OidcAuthorizeRequestParameter.SCOPE.getParameterKey(), scopeValue);
@@ -246,7 +246,7 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
     @Test
     public void assertWhenMultipleEidasCountryPresentInScope_thenFirstIsTaken() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        String eidasCountry = "en";
+        String eidasCountry = "gb";
         String eidasCountry2 = "ru";
         String eidasCountryScopeAttribute = scopeValuedAttribute(TaraScopeValuedAttributeName.EIDAS_COUNTRY, eidasCountry);
         String eidasCountryScopeAttribute2 = scopeValuedAttribute(TaraScopeValuedAttributeName.EIDAS_COUNTRY, eidasCountry2);
@@ -267,7 +267,7 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
     @Test
     public void assertScopeAndItsValuedAttributesOrderParsedFromScopeIsNotImportant() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        String eidasCountry = "en";
+        String eidasCountry = "gb";
         String eidasCountryScopeAttribute = scopeValuedAttribute(TaraScopeValuedAttributeName.EIDAS_COUNTRY, eidasCountry);
         String scopeValue = String.join(" ", eidasCountryScopeAttribute, TaraScope.OPENID.getFormalName(), TaraScope.EIDASONLY.getFormalName());
         request.addParameter(OidcAuthorizeRequestParameter.SCOPE.getParameterKey(), scopeValue);
@@ -285,7 +285,7 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
     @Test
     public void assertOnlyEidasCountryAttributeParsedFromScope() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        String eidasCountry = "en";
+        String eidasCountry = "gb";
         String eidasCountryScopeAttribute = scopeValuedAttribute(TaraScopeValuedAttributeName.EIDAS_COUNTRY, eidasCountry);
         String scopeValue = String.join(" ", eidasCountryScopeAttribute);
         request.addParameter(OidcAuthorizeRequestParameter.SCOPE.getParameterKey(), scopeValue);
@@ -303,7 +303,7 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
     @Test
     public void assertInvalidScopeValuedAttributeIsIgnored() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        String eidasCountry = "en";
+        String eidasCountry = "gb";
         String eidasCountryScopeAttribute = scopeValuedAttribute(TaraScopeValuedAttributeName.EIDAS_COUNTRY, eidasCountry);
         String invalidScopeAttribute = "invalid:scope:attribute:2";
         String scopeValue = String.join(" ", eidasCountryScopeAttribute, invalidScopeAttribute);
@@ -330,7 +330,7 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
     @Test
     public void assertEidasCountryScopeAttributeWithUppercaseValueIsIgnored() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        String eidasCountryScopeAttribute = scopeValuedAttribute(TaraScopeValuedAttributeName.EIDAS_COUNTRY, "EN");
+        String eidasCountryScopeAttribute = scopeValuedAttribute(TaraScopeValuedAttributeName.EIDAS_COUNTRY, "GB");
         String scopeValue = String.join(" ", eidasCountryScopeAttribute);
         request.addParameter(OidcAuthorizeRequestParameter.SCOPE.getParameterKey(), scopeValue);
 

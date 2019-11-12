@@ -33,7 +33,7 @@ public class InitializeLoginActionTest {
 
         TaraScopeValuedAttribute eidasCountryAttribute = TaraScopeValuedAttribute.builder()
                 .name(TaraScopeValuedAttributeName.EIDAS_COUNTRY)
-                .value("en")
+                .value("gb")
                 .build();
         mockHttpSession.setAttribute(Constants.TARA_OIDC_SESSION_SCOPE_EIDAS_COUNTRY, eidasCountryAttribute);
 
@@ -65,7 +65,7 @@ public class InitializeLoginActionTest {
 
         TaraScopeValuedAttribute eidasCountryAttribute = TaraScopeValuedAttribute.builder()
                 .name(TaraScopeValuedAttributeName.EIDAS_COUNTRY)
-                .value("en")
+                .value("gb")
                 .build();
         mockHttpSession.setAttribute(Constants.TARA_OIDC_SESSION_SCOPE_EIDAS_COUNTRY, eidasCountryAttribute);
 
