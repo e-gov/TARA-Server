@@ -73,6 +73,13 @@ public class InitializeLoginActionTest {
         assertEquals("loginForm", event.getId());
     }
 
+    @Test
+    public void scopeElementMissing_thenShowLoginForm() {
+        MockHttpSession mockHttpSession = new MockHttpSession();
+        Event event = action.doExecute(mockRequestContext(mockHttpSession));
+        assertEquals("loginForm", event.getId());
+    }
+
     private RequestContext mockRequestContext(MockHttpSession mockHttpSession) {
         MockRequestContext requestContext = new MockRequestContext();
         MockExternalContext mockExternalContext = new MockExternalContext();

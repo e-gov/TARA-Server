@@ -27,7 +27,11 @@ public class InitializeLoginAction extends AbstractAction {
     
     private boolean isEidasOnlyAuthenticationForSpecificCountry(HttpServletRequest request, RequestContext context) {
         HttpSession session = request.getSession(false);
-        boolean isEidasOnly = ((List<TaraScope>) session.getAttribute(Constants.TARA_OIDC_SESSION_SCOPES)).contains(TaraScope.EIDASONLY);
+        Object scopeAttributes = session.getAttribute(Constants.TARA_OIDC_SESSION_SCOPES);
+        if (scopeAttributes == null) {
+            return false;
+        }
+        boolean isEidasOnly = ((List<TaraScope>) scopeAttributes).contains(TaraScope.EIDASONLY);
         return isEidasOnly && isEidasCountryAttributePresent(session, context);
     }
 
