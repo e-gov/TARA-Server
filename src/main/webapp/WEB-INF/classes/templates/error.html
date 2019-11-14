@@ -13,9 +13,16 @@
                 <span th:text="${@thymeleafSupport.getCurrentRequestIdentifier(#request)}" th:remove="tag"></span>
             </p>
         </div>
-        <p th:if="${@thymeleafSupport.getBackUrl(session.pac4jRequestedUrl, #locale) != '#'}" class="link-back">
-            <a th:href="${@thymeleafSupport.getBackUrl(session.pac4jRequestedUrl, #locale)}" th:text="#{label.common.back}">Back</a>
-        </p>
+        <div th:if="${@thymeleafSupport.isEidasOnlyDirect(session)}">
+            <p th:if="${@thymeleafSupport.getHomeUrl(session.taraOidcSessionRedirectUri) != '#'}" class="link-back">
+                <a th:href="${@thymeleafSupport.getHomeUrl(session.taraOidcSessionRedirectUri)}" th:text="#{label.common.home}">Home</a>
+            </p>
+        </div>
+        <div th:unless="${@thymeleafSupport.isEidasOnlyDirect(session)}">
+            <p th:if="${@thymeleafSupport.getBackUrl(session.pac4jRequestedUrl, #locale) != '#'}" class="link-back">
+                <a th:href="${@thymeleafSupport.getBackUrl(session.pac4jRequestedUrl, #locale)}" th:text="#{label.common.back}">Back</a>
+            </p>
+        </div>
     </div>
 </div>
 </body>

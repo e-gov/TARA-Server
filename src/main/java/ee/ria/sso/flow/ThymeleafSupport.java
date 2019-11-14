@@ -3,6 +3,7 @@ package ee.ria.sso.flow;
 import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.config.TaraProperties;
+import ee.ria.sso.oidc.TaraScope;
 import ee.ria.sso.service.manager.ManagerService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +20,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 @Slf4j
 @AllArgsConstructor
@@ -57,6 +59,25 @@ public class ThymeleafSupport {
         return builder.scheme(serverUri.getScheme()).host(serverUri.getHost()).build(true).toUriString();
     }
 
+    public boolean isEidasOnlyDirect(Map<String, Object> sessionAttributes) {
+        return isOpenIDAndEidasOnlyScopePresent(sessionAttributes) && isEidasCountryScopePresent(sessionAttributes);
+    }
+
+    private boolean isOpenIDAndEidasOnlyScopePresent(Map<String, Object> sessionAttributes) {
+        Object sessionScopes = sessionAttributes.get(Constants.TARA_OIDC_SESSION_SCOPES);
+        if (sessionScopes != null) {
+            List<TaraScope> scopes = (List<TaraScope>) sessionScopes;
+            return scopes.contains(TaraScope.OPENID) && scopes.contains(TaraScope.EIDASONLY);
+        }
+
+        return false;
+    }
+
+    private boolean isEidasCountryScopePresent(Map<String, Object> session) {
+        Object eidasCountry = session.get(Constants.TARA_OIDC_SESSION_SCOPE_EIDAS_COUNTRY);
+        return eidasCountry != null;
+    }
+
     public String getBackUrl(String url, Locale locale) throws URISyntaxException {
         if (StringUtils.isNotBlank(url)) {
             return new URIBuilder(url).setParameter(defaultLocaleChangeParam, locale.getLanguage()).build().toString();
@@ -65,11 +86,17 @@ public class ThymeleafSupport {
     }
 
     public String getHomeUrl() {
-        final Object redirectUri = RequestContextHolder.getRequestContext().getExternalContext()
-                .getSessionMap().get(Constants.TARA_OIDC_SESSION_REDIRECT_URI);
+        final Object redirectUri = RequestContextHolder.getRequestContext()
+                .getExternalContext()
+                .getSessionMap()
+                .get(Constants.TARA_OIDC_SESSION_REDIRECT_URI);
 
-        if (redirectUri instanceof String) {
-            return this.managerService.getServiceByID((String) redirectUri)
+        return getHomeUrl(redirectUri == null ? null : (String) redirectUri);
+    }
+
+    public String getHomeUrl(String redirectUri) {
+        if (StringUtils.isNotBlank(redirectUri)) {
+            return this.managerService.getServiceByID(redirectUri)
                     .orElse(new OidcRegisteredService() {
                         @Override
                         public String getInformationUrl() {
