@@ -31,8 +31,9 @@
 	</action-state>
 
 	<action-state id="initializeLoginForm">
-		<evaluate expression="initializeLoginAction" />
-		<transition on="success" to="viewLoginForm"/>
+		<evaluate expression="InitializeLoginAction" />
+        <transition on="directEidasLogin" to="EIDASLoginStart"/>
+		<transition on="loginForm" to="viewLoginForm"/>
 	</action-state>
 
 	<view-state id="viewLoginForm" view="casLoginView" model="credential">

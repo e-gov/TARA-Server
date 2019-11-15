@@ -15,7 +15,6 @@ public abstract class AbstractDisabledConfigurationTest {
             applicationContext.getBean(clazz);
             Assert.fail("Bean <" + clazz + "> should not be initiated!");
         } catch (NoSuchBeanDefinitionException e) {
-            e.printStackTrace();
         }
     }
 
@@ -24,8 +23,14 @@ public abstract class AbstractDisabledConfigurationTest {
             applicationContext.getBean(name);
             Assert.fail("Bean <" + name + "> should not be initiated!");
         } catch (NoSuchBeanDefinitionException e) {
-            e.printStackTrace();
         }
     }
 
+    protected void assertBeanInitiated(Class clazz) {
+        try {
+            applicationContext.getBean(clazz);
+        } catch (NoSuchBeanDefinitionException e) {
+            Assert.fail("Bean <" + clazz + "> is not initiated!");
+        }
+    }
 }

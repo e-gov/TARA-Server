@@ -9,8 +9,8 @@ import lombok.experimental.UtilityClass;
 public final class Constants {
 
     public static final String CERTIFICATE_SESSION_ATTRIBUTE = "Client-Certificate";
-    public static final String MOBILE_CHALLENGE = "mobileChallenge";
-    public static final String MOBILE_SESSION = "mobileSession";
+    public static final String MOBILE_ID_VERIFICATION_CODE = "mobileIdVerificationCode";
+    public static final String MOBILE_ID_AUTHENTICATION_SESSION = "mobileIdAuthenticationSession";
     public static final String AUTH_COUNT = "authCount";
     public static final String ERROR_MESSAGE = "TARA_ERROR_MESSAGE";
     public static final String EVENT_OUTSTANDING = "outstanding";
@@ -29,6 +29,7 @@ public final class Constants {
     public static final String MDC_ATTRIBUTE_OCSP_ID = "ocspUrl";
 
     public static final String TARA_OIDC_SESSION_SCOPES = "taraOidcSessionScopes";
+    public static final String TARA_OIDC_SESSION_SCOPE_EIDAS_COUNTRY = "taraOidcSessionScopeEidasCountry";
     public static final String TARA_OIDC_SESSION_CLIENT_ID = "taraOidcSessionClientId";
     public static final String TARA_OIDC_SESSION_REDIRECT_URI = "taraOidcSessionRedirectUri";
     public static final String TARA_OIDC_SESSION_AUTH_METHODS = "taraOidcSessionAllowedAuthMethods";

@@ -1,5 +1,6 @@
 package ee.ria.sso.config.smartid;
 
+import ee.ria.sso.config.AbstractDisabledConfigurationTest;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.flow.action.SmartIDCheckAuthenticationAction;
 import ee.ria.sso.flow.action.SmartIDStartAuthenticationAction;
@@ -14,30 +15,26 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
-import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.Arrays;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @TestPropertySource(locations= "classpath:application-test.properties")
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(
         classes = TestSmartIDConfiguration.class,
         initializers = ConfigFileApplicationContextInitializer.class)
-public class SmartIDConfigurationProviderTest {
+public class SmartIDConfigurationProviderTest extends AbstractDisabledConfigurationTest {
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
-
-    @Autowired
-    private ApplicationContext applicationContext;
 
     @Autowired
     private SmartIDConfigurationProvider configurationProvider;
@@ -70,6 +67,15 @@ public class SmartIDConfigurationProviderTest {
     }
 
     @Test
+    public void sessionStatusSocketOpenRoundedUpTo1000() {
+        SmartIDConfigurationProvider confProvider = new SmartIDConfigurationProvider();
+        confProvider.setSessionStatusSocketOpenDuration(400);
+        confProvider.init();
+
+        assertEquals(Integer.valueOf(1000), confProvider.getSessionStatusSocketOpenDuration());
+    }
+
+    @Test
     public void whenSmartIdEnabledThenItsRequiredBeansInitiated() {
         assertTrue(configurationProvider.isEnabled());
         assertBeanInitiated(SmartIDConfiguration.class);
@@ -83,13 +89,5 @@ public class SmartIDConfigurationProviderTest {
         assertBeanInitiated(SmartIDStartAuthenticationAction.class);
         assertBeanInitiated(StatisticsHandler.class);
         assertBeanInitiated(TaraResourceBundleMessageSource.class);
-    }
-
-    private void assertBeanInitiated(Class clazz) {
-        try {
-            applicationContext.getBean(clazz);
-        } catch (NoSuchBeanDefinitionException e) {
-            fail("Bean <" + clazz + "> is not initiated!");
-        }
     }
 }

@@ -1,6 +1,7 @@
 package ee.ria.sso.config.eidas;
 
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
+import ee.ria.sso.oidc.TaraScopeValuedAttributeName;
 import ee.ria.sso.utils.CountryCodeUtil;
 import lombok.Getter;
 import lombok.Setter;
@@ -50,6 +51,8 @@ public class EidasConfigurationProvider {
 
     private List<String> listOfCountries;
 
+    private List<String> allowedEidasCountryScopeAttributes;
+
     private boolean clientCertificateEnabled;
 
     private String clientCertificateKeystore;
@@ -68,6 +71,7 @@ public class EidasConfigurationProvider {
         }
 
         listOfCountries = parseAvailableCountries(availableCountries);
+        allowedEidasCountryScopeAttributes = constructEidasCountryScopeAttributes(listOfCountries);
     }
 
     private static List<String> parseAvailableCountries(String input) {
@@ -77,6 +81,12 @@ public class EidasConfigurationProvider {
         List<String> countryCodes = Arrays.asList(input.split(","));
         validateCountryCodes(countryCodes);
         return countryCodes;
+    }
+
+    private List<String> constructEidasCountryScopeAttributes(List<String> allowedCountryCodes) {
+        return allowedCountryCodes.stream()
+                .map(countryCode -> TaraScopeValuedAttributeName.EIDAS_COUNTRY.getFormalName() + ":" + countryCode.toLowerCase())
+                .collect(Collectors.toList());
     }
 
     private static void validateCountryCodes(List<String> countryCodes) {

@@ -386,49 +386,90 @@ Table 4 - Enabling mobile-ID authentication feature in TARA
 | :---------------- | :---------- | :----------------|
 | `mobile-id.enabled` | N | Feature toggle for authentication with mobile-ID in TARA. Enables this feature to be loaded if set to `true`, otherwise ignores all other mobile-ID related configuration. Defaults to `false`, if not specified. |
 
-Table 5 - Configuring Mobile-ID authentication
+Table 5 - Configuring Mobile-ID authentication 
+
+| Property        | Mandatory | Description |
+| :---------------- | :---------- | :----------------|
+| `mobile-id.use-dds-service` | N | Feature toggle for which mobile-ID service to use in TARA. If set to `true` then SOAP protocol based DDS mobile-ID service is used, otherwise REST protocol based mobile-ID service is used. Defaults to `true`, if not specified. |
+
+Table 6 - Configuring Mobile-ID authentication (DDS)
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
 | `mobile-id.country-code` | N | Country of origin. ISO 3166-type 2-character country codes are used. Defaults to `EE`, if not specified.<br>For more information, see `CountryCode` query parameter in [DigiDocService Specification](http://sk-eid.github.io/dds-documentation/api/api_docs/#mobileauthenticate). |
 | `mobile-id.language` | N | Language for user dialog in mobile phone. 3-letters capitalized acronyms are used. Possible values: <ul><li>`EST`</li><li>`ENG`</li><li>`RUS`</li><li>`LIT`</li></ul> Defaults to `EST`, if not specified.<br>For more information, see `Language` query parameter in [DigiDocService Specification](http://sk-eid.github.io/dds-documentation/api/api_docs/#mobileauthenticate). |
-| `mobile-id.service-name` | N | Name of the service – previously agreed with Application Provider and DigiDocService operator. Maximum length – 20 chars. Defaults to `Testimine`, if not specified.<br>For more information, see `ServiceName` query parameter in [DigiDocService Specification](http://sk-eid.github.io/dds-documentation/api/api_docs/#mobileauthenticate). |
-| `mobile-id.message-to-display` | N | Text displayed in addition to ServiceName and before asking authentication PIN. Maximum length is 40 bytes. In case of Latin letters, this means also a 40 character long text, but Cyrillic characters may be encoded by two bytes and you will not be able to send more than 20 symbols. Defaults to `''`, if not specified.<br>For more information, see `MessageToDisplay` query parameter in [DigiDocService Specification](http://sk-eid.github.io/dds-documentation/api/api_docs/#mobileauthenticate). |
-| `mobile-id.service-url` | N | HTTP URL of the DigiDocService operator. Defaults to `https://tsp.demo.sk.ee`, if not specified. |
+| `mobile-id.service-name` | Y | Name of the service – previously agreed with Application Provider and DigiDocService operator. Maximum length – 20 chars.<br>For more information, see `ServiceName` query parameter in [DigiDocService Specification](http://sk-eid.github.io/dds-documentation/api/api_docs/#mobileauthenticate). |
+| `mobile-id.message-to-display` | Y | Text displayed in addition to ServiceName and before asking authentication PIN. Maximum length is 40 bytes. In case of Latin letters, this means also a 40 character long text, but Cyrillic characters may be encoded by two bytes and you will not be able to send more than 20 symbols. <br>For more information, see `MessageToDisplay` query parameter in [DigiDocService Specification](http://sk-eid.github.io/dds-documentation/api/api_docs/#mobileauthenticate). |
+| `mobile-id.host-url` | Y | HTTP URL of the DigiDocService operator. |
 
 Example:
 
 ````
 mobile-id.enabled=true
+mobile-id.use-dds-service=true
 mobile-id.country-code=EE
 mobile-id.language=EST
 mobile-id.service-name=Testimine
 mobile-id.message-to-display=Näita siin
-mobile-id.service-url=https://tsp.demo.sk.ee
+mobile-id.host-url=https://tsp.demo.sk.ee
+````
+
+Table 7 - Configuring Mobile-ID authentication (MID-REST)
+
+| Property        | Mandatory | Description |
+| :---------------- | :---------- | :----------------|
+| `mobile-id.language` | N | Language for user dialog in mobile phone. 3-letters capitalized acronyms are used. Possible values: <ul><li>`EST`</li><li>`ENG`</li><li>`RUS`</li><li>`LIT`</li></ul> Defaults to `EST`, if not specified.<br>For more information, see `language` query parameter in [MidRest Specification](https://github.com/SK-EID/MID#32-initiating-signing-and-authentication). |
+| `mobile-id.message-to-display` | Y | Text displayed in addition to ServiceName and before asking authentication PIN. Maximum length is 40 bytes. In case of Latin letters, this means also a 40 character long text, but Cyrillic characters may be encoded by two bytes and you will not be able to send more than 20 symbols.<br>For more information, see `displayText` query parameter in [MidRest Specification](https://github.com/SK-EID/MID#32-initiating-signing-and-authentication). |
+| `mobile-id.message-to-display-encoding` | N | Specifies which characters and how many can be used in `message-to-display`. Possible values are `GSM7` and `UCS2`, Defaults to `GSM7`. For more information, see `displayTextFormat` query parameter in [MidRest Specification](https://github.com/SK-EID/MID#32-initiating-signing-and-authentication). |
+| `mobile-id.host-url` | Y | HTTP URL of the MID-REST service operator. |
+| `mobile-id.relying-party-name` | Y | Name of the relying party according to the contract between mobile-ID service provider and the relying party. Displayed together with displayText and Verification Code on cellphone screen before End User can insert PIN. |
+| `mobile-id.relying-party-uuid` | Y | UUID value of the relying party according to the contract between mobile-ID service provider and the relying party. |
+| `mobile-id.authentication-hash-type` | N | Type of the randomly generated hash from which verification code is calculated. Possible values are `SHA256`, `SHA384` and `SHA512`. Defaults to `SHA256`. |
+| `mobile-id.session-status-socket-open-duration` | N | Maximum time in milliseconds the server is allowed to wait before returning a response. Defaults to (and rounded up, if below) `1000`, if not specified. For more information, see parameter `timeoutMs` in [MidRestLongPolling Specification](https://github.com/SK-EID/MID#334-long-polling) |
+| `mobile-id.timeout-between-session-status-queries` | N | Timeout in milliseconds between consecutive session status queries. Defaults to `5000`, if not specified. |
+| `mobile-id.read-timeout` | N | Maximum total time in milliseconds to be spent on status queries during a session. Defaults to `30000`, if not specified. <br>This value should not be smaller than sum of `mobile-id.session-status-socket-open-duration` and 1500ms (approximate additional time to transfer the request and response over the network)! |
+| `mobile-id.connection-timeout` | N | Maximum time spent in milliseconds on waiting for connection with mobile-ID service provider. Defaults to `5000`, if not specified. |
+
+Example:
+
+````
+mobile-id.enabled=true
+mobile-id.use-dds-service=false
+mobile-id.language=EST
+mobile-id.message-to-display=Näita siin
+mobile-id.message-to-display-encoding=GSM7
+mobile-id.host-url=https://tsp.demo.sk.ee/mid-api
+mobile-id.relying-party-name=DEMO
+mobile-id.relying-party-uuid=00000000-0000-0000-0000-000000000000
+mobile-id.authentication-hash-type=SHA256
+mobile-id.session-status-socket-open-duration=1000
+mobile-id.timeout-between-session-status-queries=3000
+mobile-id.read-timeout=30000
+mobile-id.connection-timeout=5000
 ````
 
 
 <a name="eidas"></a>
 ### eIDAS authentication
 
-Table 6 - Enabling eIDAS authentication feature in TARA
+Table 8 - Enabling eIDAS authentication feature in TARA
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
 | `eidas.enabled` | N | Feature toggle for authentication with eIDAS in TARA. Enables this feature to be loaded if set to `true`, otherwise ignores all other eIDAS related configuration. Defaults to `false`, if not specified. |
 
-Table 7 - Configuring eIDAS authentication
+Table 9 - Configuring eIDAS authentication
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
 | `eidas.service-url` | Y | HTTP base URL of the eIDAS-client microservice. |
 | `eidas.heartbeat-url` | N | HTTP URL of the eIDAS-client microservice heartbeat endpoint. Affects TARA [heartbeat endpoint](#heartbeat). |
-| `eidas.available-countries` | Y | A comma separated list of ISO 3166-1 alpha-2 country codes that determine which countries are displayed on the login page. |
+| `eidas.available-countries` | Y | A comma separated list of ISO 3166-1 alpha-2 country codes that determine which countries are displayed on the login page. Also for each country code a 'eidas:country:x' (where x is the country code in lowercase) entry is added to the 'scopes_supported' field, which is communicated through TARA-Server metadata.  |
 | `eidas.client-certificate-enabled` | N | Feature toggle for using client certificate when making requests to authentication endpoints at `eidas.service-url`. Enables this feature if set to `true`, otherwise ignores all other client certificate related configuration. Defaults to `false`, if not specified. |
 | `eidas.connection-pool.max-total` | N | Maximum number of allowed total open connections to `eidas.service-url` endpoint. Defaults to `20`, if not specified. |
 | `eidas.connection-pool.max-per-route` | N | Maximum number of allowed concurrent connections per route to `eidas.service-url` endpoint. Defaults to `2`, if not specified. |
 
-Table 8 - Configuring client certificate for requests to authentication endpoints at `eidas.service-url`
+Table 10 - Configuring client certificate for requests to authentication endpoints at `eidas.service-url`
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
@@ -457,14 +498,14 @@ eidas.client-certificate-keystore-pass=changeit
 <a name="banklink"></a>
 ### Estonian banklinks
 
-Table 9 - Enabling banklink feature in TARA
+Table 11 - Enabling banklink feature in TARA
 
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
 | `banklinks.enabled` | N | Feature toggle for banklink functionality in TARA. Enables banklinks feature to be loaded when set to `true`, otherwise ignores all other banklink related configuration. Defaults to `false`, if not specified. |
 
-Table 10 - Generic banklink properties
+Table 12 - Generic banklink properties
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
@@ -474,7 +515,7 @@ Table 10 - Generic banklink properties
 | `banklinks.keystore-pass` | Y | Keystore password. |
 | `banklinks.return-url` | Y | HTTP URL for accepting the bank authentication response. Must reference the publicly available TARA `/login` url. |
 
-Table 11 - Bank specific properties
+Table 13 - Bank specific properties
 
 
 | Property        | Mandatory | Description |
@@ -517,13 +558,13 @@ banklinks.bank.lhv.url=https://www.testlhv.ee/banklinkurl
 <a name="smart-id"></a>
 ### Estonian Smart-ID
 
-Table 12 - Enabling Smart-ID authentication feature in TARA
+Table 14 - Enabling Smart-ID authentication feature in TARA
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
 | `smart-id.enabled` | N | Feature toggle for authentication with Smart-ID in TARA. Enables this feature to be loaded if set to `true`, otherwise ignores all other Smart-ID related configuration. Defaults to `false`, if not specified. |
 
-Table 13 - Other Smart-ID configuration properties (if Smart-ID is enabled)
+Table 15 - Other Smart-ID configuration properties (if Smart-ID is enabled)
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
@@ -532,7 +573,7 @@ Table 13 - Other Smart-ID configuration properties (if Smart-ID is enabled)
 | `smart-id.relying-party-uuid` | Y | UUID value of the relying party according to the contract between Smart-ID service provider and the relying party. |
 | `smart-id.authentication-hash-type` | N | Type of the authentication hash that is used to generate the control code of an authentication request. Supported values are: <ul><li>`SHA256`</li><li>`SHA384`</li><li>`SHA512`</li></ul> Defaults to `SHA512`, if not specified. |
 | `smart-id.authentication-consent-dialog-display-text` | Y | Description of the authentication request. Displayed on the consent dialog shown on the end user's device. |
-| `smart-id.session-status-socket-open-duration` | N | Maximum duration in milliseconds a session status query is kept alive. Defaults to `3000`, if not specified. |
+| `smart-id.session-status-socket-open-duration` | N | Maximum duration in milliseconds a session status query is kept alive. Defaults to `1000`, if not specified. Smaller than `1000` numbers are rounded to `1000`, because it is the minimum that is used by Smart-ID service. |
 | `smart-id.timeout-between-session-status-queries` | N | Timeout in milliseconds between consecutive session status queries. Defaults to `3000`, if not specified. |
 | `smart-id.read-timeout` | N | Maximum total time in milliseconds to be spent on status queries during a session. Defaults to `30000`, if not specified. <br>This value should not be smaller than `smart-id.session-status-socket-open-duration`! |
 | `smart-id.connection-timeout` | N | Maximum time spent in milliseconds on waiting for connection with Smart-ID service provider. Defaults to `5000`, if not specified. |
@@ -564,14 +605,14 @@ More information about Estonian Smart-ID can be obtained from [here](https://git
 
 TARA heartbeat endpoint is a Spring Boot Actuator endpoint and thus is configured as described [here](https://docs.spring.io/spring-boot/docs/1.5.3.RELEASE/reference/html/production-ready-endpoints.html), while also taking into consideration CAS specific configuration properties as described [here](https://apereo.github.io/cas/5.3.x/installation/Configuration-Properties.html#spring-boot-endpoints).
 
-Table 14 - Configuring heartbeat endpoint in TARA
+Table 16 - Configuring heartbeat endpoint in TARA
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
 | `endpoints.heartbeat.*` | N | Spring Boot specific actuator configuration. |
 | `endpoints.heartbeat.timeout` | N | Maximum time to wait on status requests made to systems that TARA is depending on, in seconds. Defaults to 3 seconds. |
 
-Table 15 - Heartbeat endpoints on systems TARA is depending on
+Table 17 - Heartbeat endpoints on systems TARA is depending on
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
@@ -594,7 +635,7 @@ eidas.heartbeat-url=https://<eidas-client-host:port>/heartbeat
 <a name="security_csp"></a>
 ### Content Security Policy
 
-Table 16 - Enabling TARA-specific `Content-Security-Policy` headers in responses from TARA server
+Table 18 - Enabling TARA-specific `Content-Security-Policy` headers in responses from TARA server
 
 | Property        | Mandatory | Description |
 | :-------------- | :-------- | :-----------|
@@ -644,7 +685,7 @@ security.csp.block-all-mixed-content=
 
 The TARA-Stat service (see https://e-gov.github.io/TARA-Stat/Dokumentatsioon for details) can be used as one of the receivers of TARA statistics.
 
-Table 17 - Enabling TARA-Stat statistics logging
+Table 19 - Enabling TARA-Stat statistics logging
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
@@ -681,7 +722,7 @@ Example log4j2 configuration for sending statistics over TCP in syslog format:
 <a name="test_environment_warning"></a>
 ### Test environment warning message
 
-Table 18 - Configuring TARA login page to show a warning message about it being run against test services
+Table 20 - Configuring TARA login page to show a warning message about it being run against test services
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
@@ -697,7 +738,7 @@ env.test.message=Tegemist on testkeskkonnaga ja autentimiseks vajalik info on <a
 <a name="audit_logging"></a>
 ### Audit logging
 
-Table 19 - Relevant CAS parameters for TARA audit log
+Table 21 - Relevant CAS parameters for TARA audit log
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
@@ -717,7 +758,7 @@ NB! Note that audit logging can be further customized by CAS configuration param
 
 
 
-Table 20 - Relevant parameters for enabling/disabling additional OpenID Connect endpoints in CAS
+Table 22 - Relevant parameters for enabling/disabling additional OpenID Connect endpoints in CAS
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
@@ -738,7 +779,7 @@ oidc.introspection-endpoint.enabled=true
 <a name="oidc_client_secret"></a>
 ### Client secret handling
 
-Table 21 - Parameters regarding the handling of client secrets
+Table 23 - Parameters regarding the handling of client secrets
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
@@ -754,7 +795,7 @@ tara.digestAlgorithm=SHA-256
 ### Forcing re-authentication
 Force re-authentication
 
-Table 22 - Parameters for users to reauthenticate 
+Table 24 - Parameters for users to reauthenticate 
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|

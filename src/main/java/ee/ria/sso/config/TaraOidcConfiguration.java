@@ -1,7 +1,14 @@
 package ee.ria.sso.config;
 
+import ee.ria.sso.config.eidas.EidasConfigurationProvider;
 import ee.ria.sso.i18n.TaraLocaleChangeInterceptor;
-import ee.ria.sso.oidc.*;
+import ee.ria.sso.oidc.OidcAuthorizeRequestValidationServletFilter;
+import ee.ria.sso.oidc.OidcAuthorizeRequestValidator;
+import ee.ria.sso.oidc.TaraDefaultOAuthCodeFactory;
+import ee.ria.sso.oidc.TaraOidcAccessTokenEndpointController;
+import ee.ria.sso.oidc.TaraOidcAuthorizeEndpointController;
+import ee.ria.sso.oidc.TaraOidcIdTokenGeneratorService;
+import ee.ria.sso.oidc.TaraOidcServerDiscoverySettings;
 import org.apache.http.HttpStatus;
 import org.apereo.cas.audit.AuditableExecution;
 import org.apereo.cas.authentication.principal.PrincipalFactory;
@@ -32,7 +39,6 @@ import org.apereo.cas.support.oauth.web.response.accesstoken.OAuth20TokenGenerat
 import org.apereo.cas.support.oauth.web.response.accesstoken.ext.BaseAccessTokenGrantRequestExtractor;
 import org.apereo.cas.support.oauth.web.response.callback.OAuth20AuthorizationResponseBuilder;
 import org.apereo.cas.support.oauth.web.views.ConsentApprovalViewResolver;
-import org.apereo.cas.support.oauth.web.views.OAuth20UserProfileViewRenderer;
 import org.apereo.cas.ticket.ExpirationPolicy;
 import org.apereo.cas.ticket.UniqueTicketIdGenerator;
 import org.apereo.cas.ticket.accesstoken.AccessTokenFactory;
@@ -56,7 +62,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -149,6 +161,9 @@ public class TaraOidcConfiguration {
     @Qualifier("consentApprovalViewResolver")
     private ConsentApprovalViewResolver consentApprovalViewResolver;
 
+    @Autowired
+    private EidasConfigurationProvider eidasConfigurationProvider;
+
     @Bean
     public OidcAuthorizeEndpointController oidcAuthorizeController() {
         return new TaraOidcAuthorizeEndpointController(
@@ -201,7 +216,7 @@ public class TaraOidcConfiguration {
                 final TaraOidcServerDiscoverySettings discoveryProperties =
                         new TaraOidcServerDiscoverySettings(taraProperties, casProperties, oidc.getIssuer());
                 discoveryProperties.setClaimsSupported(oidc.getClaims());
-                discoveryProperties.setScopesSupported(oidc.getScopes());
+                discoveryProperties.setScopesSupported(determineSupportedScopes(oidc.getScopes()));
                 discoveryProperties.setResponseTypesSupported(
                         Collections.singletonList(OAuth20ResponseTypes.CODE.getType()));
                 discoveryProperties.setSubjectTypesSupported(oidc.getSubjectTypes());
@@ -235,7 +250,7 @@ public class TaraOidcConfiguration {
     public FilterRegistrationBean oidcAuthorizeCheckingServletFilter(OidcAuthorizeRequestValidator oidcAuthorizeRequestValidator) {
         final Map<String, String> initParams = new HashMap<>();
         final FilterRegistrationBean bean = new FilterRegistrationBean();
-        bean.setFilter(new OidcAuthorizeRequestValidationServletFilter(oidcAuthorizeRequestValidator));
+        bean.setFilter(new OidcAuthorizeRequestValidationServletFilter(oidcAuthorizeRequestValidator, eidasConfigurationProvider));
         bean.setUrlPatterns(Collections.singleton("/oidc/authorize"));
         bean.setInitParameters(initParams);
         bean.setName("oidcAuthorizeCheckingServletFilter");
@@ -260,5 +275,11 @@ public class TaraOidcConfiguration {
             return new OAuthCodeExpirationPolicy(oauth.getCode().getNumberOfUses(),
                     oauth.getCode().getTimeToKillInSeconds());
         }
+    }
+
+    private List<String> determineSupportedScopes(List<String> oidcScopes) {
+        return Stream.of(oidcScopes, eidasConfigurationProvider.getAllowedEidasCountryScopeAttributes())
+                .flatMap(Collection::stream)
+                .collect(Collectors.collectingAndThen(Collectors.toList(), Collections::unmodifiableList));
     }
 }

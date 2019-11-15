@@ -89,7 +89,6 @@ public class SmartIDAuthenticationServiceTest {
     @Before
     public void init() {
         authenticationService = new SmartIDAuthenticationService(
-                messageSource,
                 statisticsHandler,
                 smartIdClient,
                 confProvider,
@@ -182,7 +181,6 @@ public class SmartIDAuthenticationServiceTest {
             assertVerificationCodeFromSameHashAsInAuthenticationRequest(requestContext);
             assertAuthSessionInFlowContext(requestContext, sessionId, 0);
             assertAuthStartStatisticsCollected();
-            assertAuthenticationRequestCreation(credential);
 
             assertEquals(HashType.SHA256, authenticationRequestCaptor.getValue().getAuthenticationHash().getHashType());
         } finally {

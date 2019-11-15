@@ -1,14 +1,13 @@
 package ee.ria.sso.service.smartid;
 
 import ee.ria.sso.Constants;
-import ee.ria.sso.service.ExternalServiceHasFailedException;
-import ee.ria.sso.service.UserAuthenticationFailedException;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.credential.PreAuthenticationCredential;
 import ee.ria.sso.authentication.credential.TaraCredential;
-import ee.ria.sso.service.AbstractService;
-import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.config.smartid.SmartIDConfigurationProvider;
+import ee.ria.sso.service.AbstractService;
+import ee.ria.sso.service.ExternalServiceHasFailedException;
+import ee.ria.sso.service.UserAuthenticationFailedException;
 import ee.ria.sso.service.smartid.SmartIDClient.AuthenticationRequest;
 import ee.ria.sso.statistics.StatisticsHandler;
 import ee.sk.smartid.AuthenticationHash;
@@ -50,8 +49,7 @@ public class SmartIDAuthenticationService extends AbstractService {
     private final SmartIDAuthenticationValidatorWrapper authResponseValidator;
 
     @Autowired
-    public SmartIDAuthenticationService(TaraResourceBundleMessageSource messageSource,
-                                        StatisticsHandler statisticsHandler,
+    public SmartIDAuthenticationService(StatisticsHandler statisticsHandler,
                                         SmartIDClient smartIdClient,
                                         SmartIDConfigurationProvider confProvider,
                                         SmartIDAuthenticationValidatorWrapper authResponseValidator) {
@@ -81,7 +79,7 @@ public class SmartIDAuthenticationService extends AbstractService {
             AuthenticationRequest authRequest = formSubjectAuthenticationRequest(personIdentifier, personCountry);
             AuthenticationSessionResponse authResponse = smartIdClient.authenticateSubject(authRequest);
 
-            LOGGER.info("Authentication response received");
+            LOGGER.info("Authentication response received <sessionId:{}>", authResponse.getSessionId());
             writeAuthSessionToFlowContext(context, authRequest, authResponse.getSessionId());
             return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
         } catch (UserAuthenticationFailedException e) {
@@ -111,12 +109,12 @@ public class SmartIDAuthenticationService extends AbstractService {
         AuthenticationSession authSession =
                 context.getFlowScope().get(Constants.SMART_ID_AUTHENTICATION_SESSION, AuthenticationSession.class);
 
-        LOGGER.info("Authentication session status checking attempt <count:{}>, <sessionId:{}>",
+        LOGGER.info("Smart-ID authentication session status checking attempt <count:{}>, <sessionId:{}>",
                 authSession.getStatusCheckCount(), authSession.getSessionId());
         try {
             SessionStatus sessionStatus = smartIdClient.getSessionStatus(authSession.getSessionId());
             if (StringUtils.equals(sessionStatus.getState(), SessionState.COMPLETE.name())) {
-                LOGGER.info("Authentication session complete");
+                LOGGER.info("Smart-ID authentication session complete <sessionId:{}>", authSession.getSessionId());
                 SmartIdAuthenticationResult validationResult = authResponseValidator
                         .validateAuthenticationResponse(sessionStatus, authSession.getAuthenticationHash(), authSession.getCertificateLevel());
 
@@ -124,7 +122,7 @@ public class SmartIDAuthenticationService extends AbstractService {
                 writePersonDetailsToFlowContext(context, validationResult.getAuthenticationIdentity());
                 return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
             } else {
-                LOGGER.info("Authentication session not complete yet");
+                LOGGER.info("Smart-ID authentication session not complete yet <sessionId:{}>", authSession.getSessionId());
                 authSession.increaseStatusCheckCount();
                 return new Event(this, Constants.EVENT_OUTSTANDING);
             }

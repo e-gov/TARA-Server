@@ -28,7 +28,7 @@
                     <button role="button" type="button" class="c-btn c-btn--primary" th:text="#{label.common.login}">Login</button>
                     <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
                     <input type="hidden" name="_eventId" value="idsubmit"/>
-                    <div class="alert alert-error alert-popup">
+                    <div class="alert alert-error alert-popup" aria-hidden="true">
                         <p>
                             <strong>
                                 <span id="error-message-title" th:text="#{message.idc.certificatefailed}" />
