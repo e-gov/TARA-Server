@@ -34,6 +34,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public class OidcAuthorizeRequestValidationServletFilter implements Filter {
 
     private final OidcAuthorizeRequestValidator oidcAuthorizeRequestValidator;
+
+
     private final EidasConfigurationProvider eidasConfigurationProvider;
 
     @Override
@@ -90,7 +92,10 @@ public class OidcAuthorizeRequestValidationServletFilter implements Filter {
         String[] scopeElements = getScopeElements(request);
         List<TaraScope> scopes = parseScopes(scopeElements);
         session.setAttribute(Constants.TARA_OIDC_SESSION_SCOPES, scopes);
-        session.setAttribute(Constants.TARA_OIDC_SESSION_SCOPE_EIDAS_COUNTRY, parseScopeEidasCountry(scopeElements).orElse(null));
+
+        if (eidasConfigurationProvider != null) {
+            session.setAttribute(Constants.TARA_OIDC_SESSION_SCOPE_EIDAS_COUNTRY, parseScopeEidasCountry(scopeElements).orElse(null));
+        }
 
         session.setAttribute(Constants.TARA_OIDC_SESSION_CLIENT_ID,
                 request.getParameter(OidcAuthorizeRequestParameter.CLIENT_ID.getParameterKey())
