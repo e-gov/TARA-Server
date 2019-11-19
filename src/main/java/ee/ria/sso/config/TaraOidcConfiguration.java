@@ -161,7 +161,7 @@ public class TaraOidcConfiguration {
     @Qualifier("consentApprovalViewResolver")
     private ConsentApprovalViewResolver consentApprovalViewResolver;
 
-    @Autowired
+    @Autowired(required=false)
     private EidasConfigurationProvider eidasConfigurationProvider;
 
     @Bean
@@ -278,8 +278,12 @@ public class TaraOidcConfiguration {
     }
 
     private List<String> determineSupportedScopes(List<String> oidcScopes) {
-        return Stream.of(oidcScopes, eidasConfigurationProvider.getAllowedEidasCountryScopeAttributes())
+        return Stream.of(oidcScopes, getAllowedEidasCountryScopeAttributes())
                 .flatMap(Collection::stream)
                 .collect(Collectors.collectingAndThen(Collectors.toList(), Collections::unmodifiableList));
+    }
+
+    private List<String> getAllowedEidasCountryScopeAttributes() {
+        return eidasConfigurationProvider == null ? Collections.emptyList() : eidasConfigurationProvider.getAllowedEidasCountryScopeAttributes();
     }
 }
