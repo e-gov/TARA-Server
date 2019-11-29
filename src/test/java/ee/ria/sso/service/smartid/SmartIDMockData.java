@@ -87,11 +87,11 @@ public class SmartIDMockData {
         SessionCertificate sessionCertificate = new SessionCertificate();
         sessionCertificate.setCertificateLevel(CertificateLevel.QUALIFIED.name());
         sessionCertificate.setValue(SMART_ID_TEST_CERTIFICATE);
-        sessionStatus.setCertificate(sessionCertificate);
+        sessionStatus.setCert(sessionCertificate);
 
         SessionSignature sessionSignature = new SessionSignature();
         sessionSignature.setAlgorithm("sha512WithRSAEncryption");
-        sessionSignature.setValueInBase64(AUTH_HASH_SIGNATURE_IN_BASE64);
+        sessionSignature.setValue(AUTH_HASH_SIGNATURE_IN_BASE64);
         sessionStatus.setSignature(sessionSignature);
         return sessionStatus;
     }

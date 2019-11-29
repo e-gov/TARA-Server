@@ -104,7 +104,7 @@ public class SmartIDAuthenticationValidatorWrapperTest {
     @Test
     public void getAuthenticationSessionStatus_sessionComplete_endResultOk_certMissing() {
         SessionStatus sessionStatus = mockCompleteSessionStatus(SessionEndResult.OK);
-        sessionStatus.getCertificate().setValue(null);
+        sessionStatus.getCert().setValue(null);
         expectException(
                 () -> validatorWrapper.validateAuthenticationResponse(sessionStatus, AuthenticationHash.generateRandomHash(), CERTIFICATE_LEVEL),
                 TechnicalErrorException.class,
@@ -116,7 +116,7 @@ public class SmartIDAuthenticationValidatorWrapperTest {
     @Test
     public void getAuthenticationSessionStatus_sessionComplete_endResultOk_invalidSignature() {
         SessionStatus sessionStatus = mockCompleteSessionStatus(SessionEndResult.OK);
-        sessionStatus.getSignature().setValueInBase64(SmartIDMockData.INVALID_SIGNATURE_IN_BASE64);
+        sessionStatus.getSignature().setValue(SmartIDMockData.INVALID_SIGNATURE_IN_BASE64);
         expectException(
                 () -> validatorWrapper.validateAuthenticationResponse(sessionStatus, AuthenticationHash.generateRandomHash(), CERTIFICATE_LEVEL),
                 SessionValidationException.class,
@@ -128,7 +128,7 @@ public class SmartIDAuthenticationValidatorWrapperTest {
     @Test
     public void getAuthenticationSessionStatus_sessionComplete_endResultOk_certLevelMismatch() {
         SessionStatus sessionStatus = mockCompleteSessionStatus(SessionEndResult.OK);
-        sessionStatus.getCertificate().setCertificateLevel(CertificateLevel.ADVANCED.name());
+        sessionStatus.getCert().setCertificateLevel(CertificateLevel.ADVANCED.name());
         expectException(
                 () -> validatorWrapper.validateAuthenticationResponse(sessionStatus, SmartIDMockData.mockAuthenticationHash(), CERTIFICATE_LEVEL),
                 SessionValidationException.class,
@@ -155,7 +155,7 @@ public class SmartIDAuthenticationValidatorWrapperTest {
     @Test
     public void getAuthenticationSessionStatus_sessionComplete_endResultOk_multipleFailures() {
         SessionStatus sessionStatus = mockCompleteSessionStatus(SessionEndResult.OK);
-        sessionStatus.getCertificate().setValue(SmartIDMockData.EXPIRED_AUTH_CERTIFICATE);
+        sessionStatus.getCert().setValue(SmartIDMockData.EXPIRED_AUTH_CERTIFICATE);
         expectException(
                 () -> validatorWrapper.validateAuthenticationResponse(sessionStatus, SmartIDMockData.mockAuthenticationHash(), CERTIFICATE_LEVEL),
                 SessionValidationException.class,

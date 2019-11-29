@@ -55,13 +55,13 @@ public class SmartIDAuthenticationValidatorWrapper {
     private SmartIdAuthenticationResponse formAuthenticationResponse(SessionStatus sessionStatus, AuthenticationHash authHash, CertificateLevel certificateLevel) {
         SessionResult sessionResult = sessionStatus.getResult();
         SessionSignature sessionSignature = sessionStatus.getSignature();
-        SessionCertificate certificate = sessionStatus.getCertificate();
+        SessionCertificate certificate = sessionStatus.getCert();
 
         SmartIdAuthenticationResponse authenticationResponse = new SmartIdAuthenticationResponse();
         authenticationResponse.setEndResult(sessionResult.getEndResult());
         authenticationResponse.setSignedHashInBase64(authHash.getHashInBase64());
         authenticationResponse.setHashType(authHash.getHashType());
-        authenticationResponse.setSignatureValueInBase64(sessionSignature.getValueInBase64());
+        authenticationResponse.setSignatureValueInBase64(sessionSignature.getValue());
         authenticationResponse.setAlgorithmName(sessionSignature.getAlgorithm());
         authenticationResponse.setRequestedCertificateLevel(certificateLevel.name());
         if (certificate.getValue() != null) {

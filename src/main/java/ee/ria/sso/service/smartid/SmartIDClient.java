@@ -3,14 +3,15 @@ package ee.ria.sso.service.smartid;
 import ee.ria.sso.config.smartid.SmartIDConfigurationProvider;
 import ee.sk.smartid.AuthenticationHash;
 import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.dao.*;
+import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
+import ee.sk.smartid.rest.dao.AuthenticationSessionResponse;
+import ee.sk.smartid.rest.dao.NationalIdentity;
+import ee.sk.smartid.rest.dao.SessionStatus;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
-
-import java.util.concurrent.TimeUnit;
 
 @ConditionalOnProperty("smart-id.enabled")
 @Component
@@ -27,8 +28,7 @@ class SmartIDClient {
     }
 
     public SessionStatus getSessionStatus(String sessionId) {
-        SessionStatusRequest request = formSessionStatusRequest(sessionId);
-        return smartIdConnector.getSessionStatus(request);
+        return smartIdConnector.getSessionStatus(sessionId);
     }
 
     private AuthenticationSessionRequest formAuthenticationSessionRequest(AuthenticationRequest authRequest) {
@@ -40,12 +40,6 @@ class SmartIDClient {
         AuthenticationHash authHash = authRequest.getAuthenticationHash();
         request.setHashType(authHash.getHashType().getHashTypeName());
         request.setHash(authHash.getHashInBase64());
-        return request;
-    }
-
-    private SessionStatusRequest formSessionStatusRequest(String sessionId) {
-        SessionStatusRequest request = new SessionStatusRequest(sessionId);
-        request.setResponseSocketOpenTime(TimeUnit.MILLISECONDS, confProvider.getSessionStatusSocketOpenDuration());
         return request;
     }
 
