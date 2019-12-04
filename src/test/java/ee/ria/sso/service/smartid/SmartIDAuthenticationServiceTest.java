@@ -496,7 +496,7 @@ public class SmartIDAuthenticationServiceTest {
 
     private void mockSubjectAuthenticationCall(String sessionId) {
         AuthenticationSessionResponse mockResponse = new AuthenticationSessionResponse();
-        mockResponse.setSessionId(sessionId);
+        mockResponse.setSessionID(sessionId);
         when(smartIdClient.authenticateSubject(authenticationRequestCaptor.capture()))
                 .thenReturn(mockResponse);
     }

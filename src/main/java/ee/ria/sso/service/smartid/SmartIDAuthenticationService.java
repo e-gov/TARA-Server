@@ -79,8 +79,8 @@ public class SmartIDAuthenticationService extends AbstractService {
             AuthenticationRequest authRequest = formSubjectAuthenticationRequest(personIdentifier, personCountry);
             AuthenticationSessionResponse authResponse = smartIdClient.authenticateSubject(authRequest);
 
-            LOGGER.info("Authentication response received <sessionId:{}>", authResponse.getSessionId());
-            writeAuthSessionToFlowContext(context, authRequest, authResponse.getSessionId());
+            LOGGER.info("Authentication response received <sessionId:{}>", authResponse.getSessionID());
+            writeAuthSessionToFlowContext(context, authRequest, authResponse.getSessionID());
             return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
         } catch (UserAuthenticationFailedException e) {
             logEvent(context, e, AuthenticationType.SmartID);
