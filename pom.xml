@@ -18,10 +18,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <cas.config>/etc/cas/config</cas.config>
         <isExecutable>false</isExecutable>
-        <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
-        <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
-        <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
-        <sonar.language>java</sonar.language>
     </properties>
 
     <build>
