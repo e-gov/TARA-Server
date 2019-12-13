@@ -13,7 +13,7 @@
     "pump": "^1.0.2"
   },
   "dependencies": {
-    "npm": "^5.10.0"
+    "npm": "^6.13.4"
   },
   "scripts": {
     "build:images": "gulp build:images",
