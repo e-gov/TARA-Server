@@ -178,7 +178,6 @@
             <AppenderRef ref="casConsole" level="${sys:tara.console.level}" />
             <AppenderRef ref="casAudit"/>
             <AppenderRef ref="errorFile" level="error" />
-            <AppenderRef ref="casFile" level="${sys:tara.log.level}" />
 
             <!-- Uncomment when using syslog appender -->
             <!--AppenderRef ref="taraAuditSyslog" level="${sys:tara.log.level}" /-->
