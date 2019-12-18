@@ -11,6 +11,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
 import org.springframework.test.context.ContextConfiguration;
@@ -55,7 +56,7 @@ public class SmartIDClientTest {
     @Test
     public void authenticateSubject() {
         AuthenticationSessionResponse mockAuthResponse = new AuthenticationSessionResponse();
-        mockAuthResponse.setSessionId(UUID.randomUUID().toString());
+        mockAuthResponse.setSessionID(UUID.randomUUID().toString());
         when(smartIdConnector.authenticate(any(NationalIdentity.class), any())).thenReturn(mockAuthResponse);
 
         AuthenticationHash authHash = AuthenticationHash.generateRandomHash();
@@ -80,7 +81,7 @@ public class SmartIDClientTest {
         SessionStatus sessionStatus = smartIDClient.getSessionStatus(sessionId);
 
         assertEquals(mockSessionStatusResponse, sessionStatus);
-        verifySessionStatusRequest(sessionId);
+        verify(smartIdConnector).getSessionStatus(Mockito.eq(sessionId));
     }
 
     private void verifyAuthenticationRequest(AuthenticationHash authHash) {
@@ -93,13 +94,5 @@ public class SmartIDClientTest {
         assertEquals(authHash.getHashInBase64(), authRequest.getHash());
         assertEquals(CertificateLevel.QUALIFIED.name(), authRequest.getCertificateLevel());
         assertNull(authRequest.getNonce());
-    }
-
-    private void verifySessionStatusRequest(String sessionId) {
-        verify(smartIdConnector).getSessionStatus(sessionStatusRequestArgumentCaptor.capture());
-        SessionStatusRequest sessionStatusRequest = sessionStatusRequestArgumentCaptor.getValue();
-        assertEquals(sessionId, sessionStatusRequest.getSessionId());
-        assertEquals(TimeUnit.MILLISECONDS, sessionStatusRequest.getResponseSocketOpenTimeUnit());
-        assertEquals(confProvider.getSessionStatusSocketOpenDuration().longValue(), sessionStatusRequest.getResponseSocketOpenTimeValue());
     }
 }

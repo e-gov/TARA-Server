@@ -18,6 +18,7 @@ import java.io.InputStream;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.concurrent.TimeUnit;
 
 @ConditionalOnProperty("smart-id.enabled")
 @Configuration
@@ -40,7 +41,9 @@ public class SmartIDConfiguration {
 
     @Bean
     public SmartIdConnector smartIdConnector() {
-        return new SmartIdRestConnector(confProvider.getHostUrl(), clientConfig());
+        SmartIdRestConnector connector = new SmartIdRestConnector(confProvider.getHostUrl(), clientConfig());
+        connector.setSessionStatusResponseSocketOpenTime(TimeUnit.MILLISECONDS, confProvider.getSessionStatusSocketOpenDuration());
+        return connector;
     }
 
     @Bean
