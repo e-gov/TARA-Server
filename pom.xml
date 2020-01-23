@@ -6,10 +6,10 @@
     <groupId>ee.ria.tara</groupId>
     <artifactId>tara-server</artifactId>
     <packaging>war</packaging>
-    <version>1.4.14</version>
+    <version>1.4.15</version>
 
     <properties>
-        <cas.version>5.3.14</cas.version>
+        <cas.version>5.3.15</cas.version>
         <banklink.version>2.1.15</banklink.version>
         <!-- app.server could be -jetty, -undertow, -tomcat, or blank if you plan to provide appserver -->
         <app.server>-tomcat</app.server>
