@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.StringUtils;
 import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -42,7 +41,6 @@ public class MobileIDConfigurationProvider {
     private static final int CONNECTION_DURATION_MARGIN = 1500;
 
     private boolean enabled;
-    private boolean useDdsService = true;
 
     @NotBlank
     private String hostUrl;
@@ -56,8 +54,6 @@ public class MobileIDConfigurationProvider {
     @NotBlank
     private String areaCode = DEFAULT_AREA_CODE;
 
-    private String serviceName;
-
     @NotBlank
     private String messageToDisplay;
 
@@ -67,7 +63,10 @@ public class MobileIDConfigurationProvider {
     @NotNull
     private MidHashType authenticationHashType = DEFAULT_AUTHENTICATION_HASH_TYPE;
 
+    @NotNull
     private String relyingPartyUuid;
+
+    @NotNull
     private String relyingPartyName;
 
     @NotNull
@@ -90,21 +89,8 @@ public class MobileIDConfigurationProvider {
                             " duration(<" + sessionStatusSocketOpenDuration + ">) and connection duration margin (<" + CONNECTION_DURATION_MARGIN + ">)");
         }
 
-        if (!useDdsService) {
-            if (StringUtils.isBlank(relyingPartyUuid)) {
-                throw new IllegalArgumentException("'mobile-id.relying-party-uuid' cannot be blank when using MID-REST protocol ('mobile-id.use-dds-service=false')");
-            }
-            if (StringUtils.isBlank(relyingPartyName)) {
-                throw new IllegalArgumentException("'mobile-id.relying-party-name' cannot be blank when using MID-REST protocol ('mobile-id.use-dds-service=false')");
-            }
-        }
-
         if (sessionStatusSocketOpenDuration < DEFAULT_SESSION_STATUS_SOCKET_OPEN_DURATION) {
             sessionStatusSocketOpenDuration = DEFAULT_SESSION_STATUS_SOCKET_OPEN_DURATION;
-        }
-
-        if (useDdsService && StringUtils.isBlank(serviceName)) {
-            throw new IllegalArgumentException("'mobile-id.service-name' cannot be blank, if DDS is used as Mobile-ID service ('mobile-id.use-dds-service=true' or not present)");
         }
 
         sessionStatusSocketOpenDuration = sessionStatusSocketOpenDuration / 1000;

@@ -331,13 +331,6 @@
             <version>${banklink.version}</version>
         </dependency>
 
-        <!-- Mobile-ID SOAP client -->
-        <dependency>
-            <groupId>com.codeborne</groupId>
-            <artifactId>mobileid</artifactId>
-            <version>1.4</version>
-        </dependency>
-
         <!-- Mobile-ID REST client -->
         <!-- NB! When updating must also update explicitly defined 'org.glassfish.jersey.inject.jersey-hk2' version -->
         <dependency>

@@ -6,7 +6,6 @@ import ee.ria.sso.flow.action.MobileIDCheckAuthenticationAction;
 import ee.ria.sso.flow.action.MobileIDStartAuthenticationAction;
 import ee.ria.sso.service.mobileid.MobileIDAuthenticationService;
 import ee.ria.sso.service.mobileid.rest.MobileIDRESTAuthClient;
-import ee.ria.sso.service.mobileid.soap.MobileIDSOAPAuthClient;
 import ee.ria.sso.statistics.StatisticsHandler;
 import ee.sk.mid.MidDisplayTextFormat;
 import ee.sk.mid.MidHashType;
@@ -21,13 +20,12 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 @TestPropertySource(
         locations= "classpath:application-test.properties",
-        properties = { "mobile-id.enabled=true", "mobile-id.use-dds-service=false" })
+        properties = { "mobile-id.enabled=true"})
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(
         classes = TestMobileIDConfiguration.class,
@@ -47,7 +45,6 @@ public class MobileIDRESTProtocolConfigurationTest extends AbstractDisabledConfi
         assertEquals("EE", configurationProvider.getCountryCode());
         assertEquals("EST", configurationProvider.getLanguage());
         assertEquals("+372", configurationProvider.getAreaCode());
-        assertEquals("Test value - service name", configurationProvider.getServiceName());
         assertEquals("Test value - message to display", configurationProvider.getMessageToDisplay());
         assertSame(MidDisplayTextFormat.UCS2, configurationProvider.getMessageToDisplayEncoding());
         assertSame(MidHashType.SHA256, configurationProvider.getAuthenticationHashType());
@@ -57,7 +54,6 @@ public class MobileIDRESTProtocolConfigurationTest extends AbstractDisabledConfi
         assertEquals(Integer.valueOf(2345), configurationProvider.getTimeoutBetweenSessionStatusQueries());
         assertEquals(Integer.valueOf(2501), configurationProvider.getReadTimeout());
         assertEquals(Integer.valueOf(2501), configurationProvider.getConnectionTimeout());
-        assertFalse(configurationProvider.isUseDdsService());
     }
 
     @Test
@@ -72,30 +68,6 @@ public class MobileIDRESTProtocolConfigurationTest extends AbstractDisabledConfi
     }
 
     @Test
-    public void relyingPartyUUIDMandatoryIfUsingRESTProtocol() {
-        expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage("'mobile-id.relying-party-uuid' cannot be blank when using MID-REST protocol ('mobile-id.use-dds-service=false')");
-
-        MobileIDConfigurationProvider confProvider = new MobileIDConfigurationProvider();
-        confProvider.setUseDdsService(false);
-        confProvider.setRelyingPartyUuid(null);
-        confProvider.setRelyingPartyName("Not blank");
-        confProvider.init();
-    }
-
-    @Test
-    public void relyingPartyNameMandatoryIfUsingRESTProtocol() {
-        expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage("'mobile-id.relying-party-name' cannot be blank when using MID-REST protocol ('mobile-id.use-dds-service=false')");
-
-        MobileIDConfigurationProvider confProvider = new MobileIDConfigurationProvider();
-        confProvider.setUseDdsService(false);
-        confProvider.setRelyingPartyUuid("Not blank");
-        confProvider.setRelyingPartyName(null);
-        confProvider.init();
-    }
-
-    @Test
     public void whenMobileIdEnabledThenItsRequiredBeansInitiated() {
         assertTrue(configurationProvider.isEnabled());
         assertBeanInitiated(MobileIDConfiguration.class);
@@ -105,9 +77,6 @@ public class MobileIDRESTProtocolConfigurationTest extends AbstractDisabledConfi
         assertBeanInitiated(MobileIDStartAuthenticationAction.class);
         assertBeanInitiated(StatisticsHandler.class);
         assertBeanInitiated(TaraResourceBundleMessageSource.class);
-
-        assertFalse(configurationProvider.isUseDdsService());
         assertBeanInitiated(MobileIDRESTAuthClient.class);
-        assertBeanNotInitiated(MobileIDSOAPAuthClient.class);
     }
 }

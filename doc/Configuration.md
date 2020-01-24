@@ -2,52 +2,75 @@ _CAS tarkvaras tehtud kohanduste ja täienduste kirjeldus._
 
 # Integrator's guide
 
-- [Logging](#logging)
-  * [Log files](#log_files)
-  * [Remote syslog server](#tara_syslog)
-  * [TARA audit trail events](#audit_events)  
-  * [Tara-Stat](#tara_stat_log)  
-- [Configuration parameters](#configuration_parameters)
-  * [ID-Card authentication](#id_card)
-  * [Mobile-ID authentication](#mobile_id)
-  * [eIDAS authentication](#eidas)
-  * [Banklink authentication](#banklink)
-  * [Smart-ID authentication](#smart-id)
-  * [Heartbeat endpoint](#heartbeat)
-  * [Content Security Policy](#security_csp)
-  * [Tara-Stat service](#tara_stat)
-  * [Test environment warning message](#test_environment_warning)
-  * [Audit logging](#audit_logging)
-  * [Enabling additional OpenID Connect endpoints](#oidc_optional_endpoints)
-  * [Client secret handling](#oidc_client_secret)
-  * [Always force re-authentication](#oidc_force_reauthentication)    
-- [TARA truststore](#tara_truststore)
-  * [DigiDocService CA certs](#dds_ca_certs)
-  * [Smart-ID CA certs](#smart-id_ca_certs)
+- [1. Logging](#logging)
+  * [1.1 Log configuration](#log_conf)
+  * [1.2 Log files](#log_files)
+  * [1.3 Remote syslog server](#tara_syslog)
+  * [1.4 TARA audit trail events](#audit_events)  
+  * [1.5 Tara-Stat](#tara_stat_log)  
+- [2. TARA specific configuration parameters](#configuration_parameters)
+  * [2.1 ID-Card authentication](#id_card)
+  * [2.2 Mobile-ID authentication](#mobile_id)
+  * [2.3 eIDAS authentication](#eidas)
+  * [2.4 Banklink authentication](#banklink)
+  * [2.5 Smart-ID authentication](#smart-id)
+  * [2.6 Heartbeat endpoint](#heartbeat)
+  * [2.7 Content Security Policy](#security_csp)
+  * [2.8 Tara-Stat service](#tara_stat)
+  * [2.9 Test environment warning message](#test_environment_warning)
+  * [2.10 Audit logging](#audit_logging)
+  * [2.11 Enabling additional OpenID Connect endpoints](#oidc_optional_endpoints)
+  * [2.12 Client secret handling](#oidc_client_secret)
+  * [2.13 Always force re-authentication](#oidc_force_reauthentication)    
+- [3. TARA truststore](#tara_truststore)
+  * [3.1 DigiDocService CA certs](#dds_ca_certs)
+  * [3.2 Smart-ID CA certs](#smart-id_ca_certs)
 
 <a name="logging"></a>
-## Logging
+## 1. Logging
 
-### The configuration file
+<a name="log_conf"></a>
+### 1.1 Configuration
 
 Logging in TARA is handled by [Log4j2 framework](https://logging.apache.org/log4j/2.x/index.html) which can be configured by using an [xml configuration file](https://logging.apache.org/log4j/2.x/manual/configuration.html) (`log4j2.xml`).
 
-TARA provides a [default configuration](../src/main/webapp/WEB-INF/classes/log4j2.xml), that contains configuration samples for using local log files and remote syslog server (needs further configuration).
+By default TARA uses an [example configuration](../src/main/webapp/WEB-INF/classes/log4j2.xml) embedded in the service application, that contains configuration samples for using local log files and remote syslog server (needs further configuration).
 
+Logging behavior can be customized in the following ways:
 
-You can override the default log configuration in the `application.properties` by using the property `logging.config` (see CAS documentation for further logging implementation [details](https://apereo.github.io/cas/5.3.x/installation/Logging.html).)
+1. By providing your own configuration file and overriding the default file. Using the property `logging.config` in the `application.properties` (see CAS documentation for further logging implementation [details](https://apereo.github.io/cas/5.3.x/installation/Logging.html).)
+    
+    Example:
+    ````
+    logging.config=file:/etc/cas/config/log4j2.xml
+    ````
+
+    Note that CAS monitors the `log4j2.xml` file changes and reloads the configuration automatically accordingly.
+
+2. By overriding the parameter values in the default `log4j2.xml` configuration file with system properties (see table 1.1.1)
+
+Table 1.1.1 - configurable parameters in log configuration 
+
+| **Property**       | **Description** | **Default** |
+| :---------------- | :---------- | :-----------|
+| **tara.log.dir** | Output directory for the log files | `/var/log/cas` |
+| **tara.log.level** | Controls the detail level of the main event stream (`cas.log`).  | `info` |
+| **tara.console.level** | Console log verbosity level | `off` |
+
+Parameters in table 1.1.1 can be overridden when needed by providing the parameter as a system property on service startup.
 
 Example:
 ````
-logging.config=file:/etc/cas/config/log4j2.xml
+export JAVA_OPTS="-Dtara.log.level=debug -Dtara.console.level=off"
 ````
 
+
 <a name="log_files"></a>
-### Log files
+### 1.2 Log files
 
-By default, all log files are written to the local filesystem `/var/log/cas`. The location can be overridden either by providing a parameter `-Dtara.log.dir=<logdir>` during TARA startup or overriding the `log4j2.xml` file.
+By default, all log files are written to the local filesystem `/var/log/cas` and a log rotation is performed daily. The location of the files can be overridden either by providing a parameter `-Dtara.log.dir=<logdir>` during TARA startup or overriding the `log4j2.xml` file.
 
-Log files names correspond to pattern logfile-%d{yyyy-MM-dd}.log and is not modified during log rotation. Example: cas_audit-2025-01-31.log. Logs are rolled over at midnight by creating a new file with the pattern. Old files are kept uncompressed in the same directory for seven days.
+Log files names correspond to pattern logfile-%d{yyyy-MM-dd}.log and the names are not modified during log rotation. Example: cas_audit-2025-01-31.log. Logs are rolled over at midnight by creating a new file with the pattern. Old files are kept uncompressed in the same directory for seven days.
 
 List of log files created by TARA on initialization:
 
@@ -153,7 +176,7 @@ Example - full audit trail of successful ID-Card authentication:
 ````
 
 <a name="tara_syslog"></a>
-### Logging to remote syslog server
+### 1.3 Logging to remote syslog server
 
 The default logging configuration contains example appenders for forwarding log events to a remote syslog server that accepts log messages over TLS-TCP using [RFC-5424 format](https://tools.ietf.org/html/rfc5424.html#section-6.2.1).
 
@@ -163,7 +186,7 @@ Note that the syslog loggers are not enabled by default. Remote syslog configura
 
 
 <a name="audit_events"></a>
-### TARA Audit trail events
+### 1.4 TARA Audit trail events
 
 The following is a complete list of TARA specific audit events:
 
@@ -195,42 +218,8 @@ The following is a complete list of TARA specific audit events:
 NB! See additional list of CAS related events [here](https://apereo.github.io/cas/5.3.x/installation/Audits.html#audit-events)
 
 
-**Log verbosity level**
-
-Log verbosity is controlled by the following properties in the default `log4j2.xml` file:
-
-| **Property**       | **Description** | **Default** |
-| :---------------- | :---------- | :-----------|
-| **tara.log.level** | Controls the detail level of the main event stream (`cas.log`).  | `info` |
-| **tara.console.level** | Console log verbosity level | `off` |
-
-These parameters can be overridden when needed:
-
-* By providing the `log4j2.xml` file with new defaults. Note that CAS monitors the `log4j2.xml` file changes and reloads the configuration automatically accordingly.
-
-
-Example:
-````
-<?xml version="1.0" encoding="UTF-8" ?>
-<Configuration monitorInterval="5" packages="org.apereo.cas.logging">
-    <Properties>
-        ...
-        <Property name="tara.log.level">debug</Property>
-        <Property name="tara.console.level">off</Property>
-    </Properties>
-    ...
-````
-
-
-* By providing the parameter as a system property on service startup.
-
-Example:
-````
-export JAVA_OPTS="-Dtara.log.level=debug -Dtara.console.level=off"
-````
-
 <a name="tara_stat_log"></a>
-### Logging to Tara-Stat
+### 1.5 Logging to Tara-Stat
 
 TARA can also send statistics as JSON formatted event stream to the [Tara-Stat service](https://e-gov.github.io/TARA-Stat/Dokumentatsioon).
 
@@ -238,28 +227,28 @@ Note that the Tara-Stat logger is not enabled by default. Tara-Stat needs to be 
 
 
 <a name="configuration_parameters"></a>
-## Configuration parameters
+## 2. TARA specific configuration parameters
 --------------------
 
 The configuration of the TARA service is managed through a central configuration properties file - `application.properties`. In addition to Apereo CAS configuration properties described [here](https://apereo.github.io/cas/5.3.x/installation/Configuration-Properties.html) the `application.properties` can also include properties for TARA specific features. The following document describes the custom configuration properties available in TARA service.
 
 
 <a name="id_card"></a>
-### ID-card authentication
+### 2.1 ID-card authentication
 
-Table 1 - Enabling ID-card authentication feature in TARA
+Table 2.1.1 - Enabling ID-card authentication feature in TARA
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
 | `id-card.enabled` | N | Feature toggle for authentication with ID-card in TARA. Enables this feature to be loaded if set to `true`, otherwise ignores all other ID-card related configuration. Defaults to `false`, if not specified. |
 
-Table 2 - Enabling ID-card certificate validation
+Table 2.1.2 - Enabling ID-card certificate validation
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
 | `id-card.ocsp-enabled` | N | Enables ID-card certificate validation if set to `true`, otherwise ignores all other ocsp related configuration. Defaults to `true`, if not specified. |
 
-Table 3 - Configuring ID-card truststore 
+Table 2.1.3 - Configuring ID-card truststore 
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
@@ -267,7 +256,7 @@ Table 3 - Configuring ID-card truststore
 | `id-card.truststore-type` | N | Truststore type. Defaults to `PKCS12` |
 | `id-card.truststore-pass` | Y | Truststore password |
 
-Table 4 - Explicit configuration of the OCSP service(s) 
+Table 2.1.4 - Explicit configuration of the OCSP service(s) 
 
 TARA allows multiple sets of OCSP configurations to be defined by using the `id-card.ocsp[{index}]` notation. 
 
@@ -327,7 +316,7 @@ id-card.ocsp[0].responder-certificate-cn=SK OCSP RESPONDER 2011
 ````
 
 
-Table 5 - Configuring fallback OCSP service(s)
+Table 2.1.5 - Configuring fallback OCSP service(s)
 
 When the primary OCSP service is not available (ie returns other than HTTP 200 status code, an invalid response Content-Type or the connection times out) a fallback OCSP connection(s) can be configured to query for the certificate status.
 
@@ -378,43 +367,15 @@ id-card.fallback-ocsp[0].responder-certificate-cn=SK OCSP RESPONDER 2011
 ````
 
 <a name="mobile_id"></a>
-### Mobile-ID authentication
+### 2.2 Mobile-ID authentication
 
-Table 4 - Enabling mobile-ID authentication feature in TARA
+Table 2.2.1 - Enabling mobile-ID authentication feature in TARA
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
 | `mobile-id.enabled` | N | Feature toggle for authentication with mobile-ID in TARA. Enables this feature to be loaded if set to `true`, otherwise ignores all other mobile-ID related configuration. Defaults to `false`, if not specified. |
 
-Table 5 - Configuring Mobile-ID authentication 
-
-| Property        | Mandatory | Description |
-| :---------------- | :---------- | :----------------|
-| `mobile-id.use-dds-service` | N | Feature toggle for which mobile-ID service to use in TARA. If set to `true` then SOAP protocol based DDS mobile-ID service is used, otherwise REST protocol based mobile-ID service is used. Defaults to `true`, if not specified. |
-
-Table 6 - Configuring Mobile-ID authentication (DDS)
-
-| Property        | Mandatory | Description |
-| :---------------- | :---------- | :----------------|
-| `mobile-id.country-code` | N | Country of origin. ISO 3166-type 2-character country codes are used. Defaults to `EE`, if not specified.<br>For more information, see `CountryCode` query parameter in [DigiDocService Specification](http://sk-eid.github.io/dds-documentation/api/api_docs/#mobileauthenticate). |
-| `mobile-id.language` | N | Language for user dialog in mobile phone. 3-letters capitalized acronyms are used. Possible values: <ul><li>`EST`</li><li>`ENG`</li><li>`RUS`</li><li>`LIT`</li></ul> Defaults to `EST`, if not specified.<br>For more information, see `Language` query parameter in [DigiDocService Specification](http://sk-eid.github.io/dds-documentation/api/api_docs/#mobileauthenticate). |
-| `mobile-id.service-name` | Y | Name of the service – previously agreed with Application Provider and DigiDocService operator. Maximum length – 20 chars.<br>For more information, see `ServiceName` query parameter in [DigiDocService Specification](http://sk-eid.github.io/dds-documentation/api/api_docs/#mobileauthenticate). |
-| `mobile-id.message-to-display` | Y | Text displayed in addition to ServiceName and before asking authentication PIN. Maximum length is 40 bytes. In case of Latin letters, this means also a 40 character long text, but Cyrillic characters may be encoded by two bytes and you will not be able to send more than 20 symbols. <br>For more information, see `MessageToDisplay` query parameter in [DigiDocService Specification](http://sk-eid.github.io/dds-documentation/api/api_docs/#mobileauthenticate). |
-| `mobile-id.host-url` | Y | HTTP URL of the DigiDocService operator. |
-
-Example:
-
-````
-mobile-id.enabled=true
-mobile-id.use-dds-service=true
-mobile-id.country-code=EE
-mobile-id.language=EST
-mobile-id.service-name=Testimine
-mobile-id.message-to-display=Näita siin
-mobile-id.host-url=https://tsp.demo.sk.ee
-````
-
-Table 7 - Configuring Mobile-ID authentication (MID-REST)
+Table 2.2.2 - Configuring Mobile-ID authentication ([MID-REST](https://github.com/SK-EID/MID))
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
@@ -450,15 +411,15 @@ mobile-id.connection-timeout=5000
 
 
 <a name="eidas"></a>
-### eIDAS authentication
+### 2.3 eIDAS authentication
 
-Table 8 - Enabling eIDAS authentication feature in TARA
+Table 2.3.1 - Enabling eIDAS authentication feature in TARA
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
 | `eidas.enabled` | N | Feature toggle for authentication with eIDAS in TARA. Enables this feature to be loaded if set to `true`, otherwise ignores all other eIDAS related configuration. Defaults to `false`, if not specified. |
 
-Table 9 - Configuring eIDAS authentication
+Table 2.3.2 - Configuring eIDAS authentication
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
@@ -469,7 +430,7 @@ Table 9 - Configuring eIDAS authentication
 | `eidas.connection-pool.max-total` | N | Maximum number of allowed total open connections to `eidas.service-url` endpoint. Defaults to `20`, if not specified. |
 | `eidas.connection-pool.max-per-route` | N | Maximum number of allowed concurrent connections per route to `eidas.service-url` endpoint. Defaults to `2`, if not specified. |
 
-Table 10 - Configuring client certificate for requests to authentication endpoints at `eidas.service-url`
+Table 2.3.3 - Configuring client certificate for requests to authentication endpoints at `eidas.service-url`
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
@@ -496,16 +457,16 @@ eidas.client-certificate-keystore-pass=changeit
 
 
 <a name="banklink"></a>
-### Estonian banklinks
+### 2.4 Estonian banklinks
 
-Table 11 - Enabling banklink feature in TARA
+Table 2.4.1 - Enabling banklink feature in TARA
 
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
 | `banklinks.enabled` | N | Feature toggle for banklink functionality in TARA. Enables banklinks feature to be loaded when set to `true`, otherwise ignores all other banklink related configuration. Defaults to `false`, if not specified. |
 
-Table 12 - Generic banklink properties
+Table 2.4.2 - Generic banklink properties
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
@@ -515,7 +476,7 @@ Table 12 - Generic banklink properties
 | `banklinks.keystore-pass` | Y | Keystore password. |
 | `banklinks.return-url` | Y | HTTP URL for accepting the bank authentication response. Must reference the publicly available TARA `/login` url. |
 
-Table 13 - Bank specific properties
+Table 2.4.3 - Bank specific properties
 
 
 | Property        | Mandatory | Description |
@@ -556,15 +517,15 @@ banklinks.bank.lhv.url=https://www.testlhv.ee/banklinkurl
 
 
 <a name="smart-id"></a>
-### Estonian Smart-ID
+### 2.5 Estonian Smart-ID
 
-Table 14 - Enabling Smart-ID authentication feature in TARA
+Table 2.5.1 - Enabling Smart-ID authentication feature in TARA
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
 | `smart-id.enabled` | N | Feature toggle for authentication with Smart-ID in TARA. Enables this feature to be loaded if set to `true`, otherwise ignores all other Smart-ID related configuration. Defaults to `false`, if not specified. |
 
-Table 15 - Other Smart-ID configuration properties (if Smart-ID is enabled)
+Table 2.5.2 - Other Smart-ID configuration properties (if Smart-ID is enabled)
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
@@ -601,18 +562,18 @@ More information about Estonian Smart-ID can be obtained from [here](https://git
 
 
 <a name="heartbeat"></a>
-### Heartbeat endpoint
+### 2.6 Heartbeat endpoint
 
 TARA heartbeat endpoint is a Spring Boot Actuator endpoint and thus is configured as described [here](https://docs.spring.io/spring-boot/docs/1.5.3.RELEASE/reference/html/production-ready-endpoints.html), while also taking into consideration CAS specific configuration properties as described [here](https://apereo.github.io/cas/5.3.x/installation/Configuration-Properties.html#spring-boot-endpoints).
 
-Table 16 - Configuring heartbeat endpoint in TARA
+Table 2.6.1 - Configuring heartbeat endpoint in TARA
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
 | `endpoints.heartbeat.*` | N | Spring Boot specific actuator configuration. |
 | `endpoints.heartbeat.timeout` | N | Maximum time to wait on status requests made to systems that TARA is depending on, in seconds. Defaults to 3 seconds. |
 
-Table 17 - Heartbeat endpoints on systems TARA is depending on
+Table 2.6.2 - Heartbeat endpoints on systems TARA is depending on
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
@@ -633,9 +594,9 @@ eidas.heartbeat-url=https://<eidas-client-host:port>/heartbeat
 
 
 <a name="security_csp"></a>
-### Content Security Policy
+### 2.7 Content Security Policy
 
-Table 18 - Enabling TARA-specific `Content-Security-Policy` headers in responses from TARA server
+Table 2.7.1 - Enabling TARA-specific `Content-Security-Policy` headers in responses from TARA server
 
 | Property        | Mandatory | Description |
 | :-------------- | :-------- | :-----------|
@@ -681,11 +642,11 @@ security.csp.block-all-mixed-content=
 
 
 <a name="tara_stat"></a>
-### TARA-Stat interfacing
+### 2.8 TARA-Stat interfacing
 
 The TARA-Stat service (see https://e-gov.github.io/TARA-Stat/Dokumentatsioon for details) can be used as one of the receivers of TARA statistics.
 
-Table 19 - Enabling TARA-Stat statistics logging
+Table 2.8.1 - Enabling TARA-Stat statistics logging
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
@@ -720,9 +681,9 @@ Example log4j2 configuration for sending statistics over TCP in syslog format:
 
 
 <a name="test_environment_warning"></a>
-### Test environment warning message
+### 2.9 Test environment warning message
 
-Table 20 - Configuring TARA login page to show a warning message about it being run against test services
+Table 2.9.1 - Configuring TARA login page to show a warning message about it being run against test services
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
@@ -736,9 +697,9 @@ env.test.message=Tegemist on testkeskkonnaga ja autentimiseks vajalik info on <a
 
 
 <a name="audit_logging"></a>
-### Audit logging
+### 2.10 Audit logging
 
-Table 21 - Relevant CAS parameters for TARA audit log
+Table 2.10.1 - Relevant CAS parameters for TARA audit log
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
@@ -754,11 +715,9 @@ NB! Note that audit logging can be further customized by CAS configuration param
 
 
 <a name="oidc_optional_endpoints"></a>
-### OpenID Connect optional endpoints
+### 2.11 OpenID Connect optional endpoints
 
-
-
-Table 22 - Relevant parameters for enabling/disabling additional OpenID Connect endpoints in CAS
+Table 2.11.1 - Relevant parameters for enabling/disabling additional OpenID Connect endpoints in CAS
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
@@ -777,9 +736,9 @@ oidc.introspection-endpoint.enabled=true
 ````
 
 <a name="oidc_client_secret"></a>
-### Client secret handling
+### 2.12 Client secret handling
 
-Table 23 - Parameters regarding the handling of client secrets
+Table 2.12.1 - Parameters regarding the handling of client secrets
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
@@ -792,10 +751,10 @@ tara.digestAlgorithm=SHA-256
 ````
   
 <a name="oidc_force_reauthentication"></a>
-### Forcing re-authentication
+### 2.13 Forcing re-authentication
 Force re-authentication
 
-Table 24 - Parameters for users to reauthenticate 
+Table 2.13.1 - Parameters for users to reauthenticate 
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
@@ -809,7 +768,7 @@ oidc.authorize.force-auth-renewal.enabled=false
 
 
 <a name="tara_truststore"></a>
-## TARA truststore
+## 3. TARA truststore
 ------------------
 
 In order to make TARA more secure, a dedicated truststore should be used instead of the default Java VM truststore. This can be achieved with Java command-line options (either directly or via environment variable `JAVA_OPTS`).
@@ -823,25 +782,25 @@ Example:
 The previous example assumes a truststore file `tara.truststore`, located at `/truststore_location/`, having `changeit` as its password and being in the JKS format.
 
 
-### DigiDocService trusted certificates
+### 3.1 MID REST trusted certificates
 
-In order to be able to use Mobile-ID authentication in TARA, a relevant DigiDocService certificate must be added to TARA truststore.
+In order to be able to use Mobile-ID authentication in TARA, a relevant MID-REST endpoint TLS certificates must be added to TARA truststore.
 
 #### Live environment
 
-TARA is configured against the live environment of DigiDocService if `mobile-id.service-url` in `application.properties` is set to `https://digidocservice.sk.ee` (see [Mobile-ID authentication](#mobile_id)).
-The SSL certificate of the live environment of DigiDocService is available at the Estonian Certification Centre [certificate repository](https://www.sk.ee/en/repository/certs/) under the name of `digidocservice.sk.ee`.
+TARA is configured against the live environment of MID-REST if `mobile-id.service-url` in `application.properties` is set (see [Mobile-ID authentication](#mobile_id)).
+The TLS certificate of the live environment of DigiDocService is available at the Estonian Certification Centre [certificate repository](https://www.sk.ee/en/repository/certs/) under the name of `mid.sk.ee`.
 
-An example of adding DigiDocService SSL certificate to TARA truststore:
+An example of adding DigiDocService TLS certificate to TARA truststore:
 ````
-keytool -importcert -keystore tara.truststore -storepass changeit -file digidocservice.sk.ee_2016.pem.crt -alias digidocserviceskee -noprompt
+keytool -importcert -keystore tara.truststore -storepass changeit -file mid_sk_ee.PEM.cer -alias midrest -noprompt
 ````
 
 #### Demo environment
 
 TARA is configured against the demo environment of DigiDocService if `mobile-id.service-url` in `application.properties` is set to `https://tsp.demo.sk.ee` (see [Mobile-ID authentication](#mobile_id)).
 
-An example of obtaining DigiDocService SSL certificate with an `openssl` command:
+An example of obtaining DigiDocService TLS certificate with an `openssl` command:
 ````
 openssl s_client -connect tsp.demo.sk.ee:443 -showcerts
 ````
@@ -849,16 +808,16 @@ The relevant certificate is displayed at depth 0 of the certificate chain in the
 After copying the certificate into a file, it can be imported into TARA truststore the same way as shown for the live certificate.
 
 
-### Smart-ID
+### 3.2 Smart-ID
 
-In order to be able to use Smart-ID authentication in TARA, a relevant Smart-ID service certificate must be added to TARA truststore.
+In order to be able to use Smart-ID authentication in TARA, a relevant Smart-ID service endpoint certificate must be added to TARA truststore.
 
 #### Live environment
 
 TARA is configured against the live environment of Smart-ID service if `smart-id.host-url` in `application.properties` is set to `https://rp-api.smart-id.com/v1/` (see [Estonian Smart-ID](#smart-id)).
-The SSL certificate of the live environment of Smart-ID service is available at the Estonian Certification Centre [certificate repository](https://www.sk.ee/en/repository/certs/) under the name of `rp-api.smart-id.com`.
+The TLS certificate of the live environment of Smart-ID service is available at the Estonian Certification Centre [certificate repository](https://www.sk.ee/en/repository/certs/) under the name of `rp-api.smart-id.com`.
 
-An example of adding Smart-ID service SSL certificate to TARA truststore:
+An example of adding Smart-ID service TLS certificate to TARA truststore:
 ````
 keytool -importcert -keystore tara.truststore -storepass changeit -file rp-api.smart-id.com.pem.cer -alias rpapismartidcom -noprompt
 ````
@@ -867,7 +826,7 @@ keytool -importcert -keystore tara.truststore -storepass changeit -file rp-api.s
 
 TARA is configured against the demo environment of Smart-ID service if `smart-id.host-url` in `application.properties` is set to `https://sid.demo.sk.ee/smart-id-rp/v1/` (see [Estonian Smart-ID](#smart-id)).
 
-An example of obtaining Smart-ID service SSL certificate with an `openssl` command:
+An example of obtaining Smart-ID service TLS certificate with an `openssl` command:
 ````
 openssl s_client -connect sid.demo.sk.ee:443 -showcerts
 ````

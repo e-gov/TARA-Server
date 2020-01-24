@@ -1,6 +1,5 @@
 package ee.ria.sso.service.mobileid;
 
-import com.codeborne.security.AuthenticationException;
 import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.credential.PreAuthenticationCredential;
@@ -118,11 +117,6 @@ public class MobileIDAuthenticationService extends AbstractService {
     }
 
     private void logEvent(RequestContext context, Exception e) {
-        Throwable cause = e.getCause();
-        if (cause instanceof AuthenticationException) {
-            logEvent(context, cause, AuthenticationType.MobileID);
-        } else {
-            logEvent(context, e, AuthenticationType.MobileID);
-        }
+        logEvent(context, e, AuthenticationType.MobileID);
     }
 }

@@ -5,7 +5,6 @@ import ee.ria.sso.flow.action.MobileIDCheckAuthenticationAction;
 import ee.ria.sso.flow.action.MobileIDStartAuthenticationAction;
 import ee.ria.sso.service.mobileid.MobileIDAuthenticationService;
 import ee.ria.sso.service.mobileid.rest.MobileIDRESTAuthClient;
-import ee.ria.sso.service.mobileid.soap.MobileIDAuthenticatorWrapper;
 import org.glassfish.jersey.client.ClientConfig;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,7 +27,6 @@ public class MobileIDDisabledConfigurationTest extends AbstractDisabledConfigura
         assertBeanNotInitiated(MobileIDConfiguration.class);
         assertBeanNotInitiated(MobileIDConfigurationProvider.class);
         assertBeanNotInitiated(MobileIDAuthenticationService.class);
-        assertBeanNotInitiated(MobileIDAuthenticatorWrapper.class);
         assertBeanNotInitiated(MobileIDCheckAuthenticationAction.class);
         assertBeanNotInitiated(MobileIDStartAuthenticationAction.class);
         assertBeanNotInitiated(ClientConfig.class);

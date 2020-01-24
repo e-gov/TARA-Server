@@ -78,7 +78,7 @@ public class AbstractService {
                 .clientId(getServiceClientId(context))
                 .method(authenticationType)
                 .operation(StatisticsOperation.ERROR)
-                .error(e.getMessage())
+                .error(e != null ? e.getMessage() : null)
                 .build()
         );
     }

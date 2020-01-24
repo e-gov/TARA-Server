@@ -25,7 +25,7 @@ public abstract class AbstractAuthenticationServiceTest {
     @Autowired
     protected Environment environment;
 
-    protected MockRequestContext getMockRequestContext(Map<String, String> requestParameters) {
+    protected MockRequestContext getMockRequestContext() {
         MockRequestContext context = new MockRequestContext();
 
         MockExternalContext mockExternalContext = new MockExternalContext();
@@ -35,6 +35,11 @@ public abstract class AbstractAuthenticationServiceTest {
         mockExternalContext.setNativeRequest(mockHttpServletRequest);
         mockExternalContext.getSessionMap().put(Constants.TARA_OIDC_SESSION_CLIENT_ID, "openIdDemo");
         context.setExternalContext(mockExternalContext);
+        return context;
+    }
+
+    protected MockRequestContext getMockRequestContext(Map<String, String> requestParameters) {
+        MockRequestContext context = getMockRequestContext();
 
         if (requestParameters != null) {
             MockParameterMap map = (MockParameterMap) context.getExternalContext().getRequestParameterMap();

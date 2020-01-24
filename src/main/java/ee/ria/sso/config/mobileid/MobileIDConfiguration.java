@@ -3,8 +3,6 @@ package ee.ria.sso.config.mobileid;
 import ee.ria.sso.service.mobileid.MobileIDAuthenticationClient;
 import ee.ria.sso.service.mobileid.MobileIDAuthenticationService;
 import ee.ria.sso.service.mobileid.rest.MobileIDRESTAuthClient;
-import ee.ria.sso.service.mobileid.soap.MobileIDAuthenticatorWrapper;
-import ee.ria.sso.service.mobileid.soap.MobileIDSOAPAuthClient;
 import ee.ria.sso.statistics.StatisticsHandler;
 import ee.sk.mid.MidClient;
 import ee.sk.mid.rest.MidLoggingFilter;
@@ -29,27 +27,14 @@ public class MobileIDConfiguration {
 
     @Bean
     public MobileIDAuthenticationClient constructAuthenticationClient() {
-        if (configurationProvider.isUseDdsService()) {
-            log.info("Initializing SOAP protocol based authentication client for DDS Mobile-ID service");
-            return new MobileIDSOAPAuthClient(mobileIDAuthenticatorWrapper());
-        } else {
-            log.info("Initializing REST protocol based authentication client for Mobile-ID REST service");
-            return new MobileIDRESTAuthClient(configurationProvider, midClient());
-        }
+        log.info("Initializing REST protocol based authentication client for Mobile-ID REST service");
+        return new MobileIDRESTAuthClient(configurationProvider, midClient());
     }
 
     @Bean
     public MobileIDAuthenticationService mobileIDAuthenticationService() {
         return new MobileIDAuthenticationService(
                 statisticsHandler, configurationProvider, constructAuthenticationClient());
-    }
-
-    private MobileIDAuthenticatorWrapper mobileIDAuthenticatorWrapper() {
-        MobileIDAuthenticatorWrapper authenticator = new MobileIDAuthenticatorWrapper();
-        authenticator.setDigidocServiceURL(configurationProvider.getHostUrl());
-        authenticator.setLoginMessage(configurationProvider.getMessageToDisplay());
-        authenticator.setServiceName(configurationProvider.getServiceName());
-        return authenticator;
     }
 
     private MidClient midClient() {
