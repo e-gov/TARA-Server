@@ -70,6 +70,26 @@ public class MobileIDAuthenticationService extends AbstractService {
     }
 
     @Audit(
+            action = "MID_AUTHENTICATION_STATUS_POLL_CANCEL",
+            actionResolverName = "AUTHENTICATION_RESOLVER",
+            resourceResolverName = "TARA_AUTHENTICATION_RESOURCE_RESOLVER"
+    )
+    public Event cancelAuthenticationSessionStatusChecking(RequestContext context) {
+
+        try {
+            MobileIDSession authSession = context.getFlowScope().get(Constants.MOBILE_ID_AUTHENTICATION_SESSION, MobileIDSession.class);
+            int checkCount = context.getFlowScope().get(Constants.AUTH_COUNT, Integer.class);
+            log.info("Mobile-ID authentication session status checking canceled by the user <count:{}>, <sessionId:{}>",
+                    checkCount, authSession.getSessionId());
+            logEvent(context, new IllegalStateException("Canceled by the user in TARA"), AuthenticationType.MobileID);
+            return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
+        } catch (Exception e) {
+            logEvent(context, e, AuthenticationType.MobileID);
+            throw e;
+        }
+    }
+
+    @Audit(
             action = "MID_AUTHENTICATION_STATUS_POLL",
             actionResolverName = "AUTHENTICATION_RESOLVER",
             resourceResolverName = "TARA_AUTHENTICATION_RESOURCE_RESOLVER"

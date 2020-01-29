@@ -3,6 +3,7 @@ package ee.ria.sso.config.mobileid;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.flow.ThymeleafSupport;
 import ee.ria.sso.flow.action.MobileIDCheckAuthenticationAction;
+import ee.ria.sso.flow.action.MobileIDCheckCancelAction;
 import ee.ria.sso.flow.action.MobileIDStartAuthenticationAction;
 import ee.ria.sso.statistics.StatisticsHandler;
 import org.mockito.Mockito;
@@ -21,6 +22,7 @@ import org.springframework.context.annotation.Import;
 @Import(value = {
         MobileIDCheckAuthenticationAction.class,
         MobileIDStartAuthenticationAction.class,
+        MobileIDCheckCancelAction.class,
         TaraResourceBundleMessageSource.class,
         StatisticsHandler.class
 })

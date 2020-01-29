@@ -3,6 +3,7 @@ package ee.ria.sso.config.mobileid;
 import ee.ria.sso.config.AbstractDisabledConfigurationTest;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.flow.action.MobileIDCheckAuthenticationAction;
+import ee.ria.sso.flow.action.MobileIDCheckCancelAction;
 import ee.ria.sso.flow.action.MobileIDStartAuthenticationAction;
 import ee.ria.sso.service.mobileid.MobileIDAuthenticationService;
 import ee.ria.sso.service.mobileid.rest.MobileIDRESTAuthClient;
@@ -75,6 +76,7 @@ public class MobileIDRESTProtocolConfigurationTest extends AbstractDisabledConfi
         assertBeanInitiated(MobileIDAuthenticationService.class);
         assertBeanInitiated(MobileIDCheckAuthenticationAction.class);
         assertBeanInitiated(MobileIDStartAuthenticationAction.class);
+        assertBeanInitiated(MobileIDCheckCancelAction.class);
         assertBeanInitiated(StatisticsHandler.class);
         assertBeanInitiated(TaraResourceBundleMessageSource.class);
         assertBeanInitiated(MobileIDRESTAuthClient.class);

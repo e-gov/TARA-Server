@@ -101,6 +101,26 @@ public class SmartIDAuthenticationService extends AbstractService {
     }
 
     @Audit(
+            action = "SMARTID_AUTHENTICATION_STATUS_POLL_CANCEL",
+            actionResolverName = "AUTHENTICATION_RESOLVER",
+            resourceResolverName = "TARA_AUTHENTICATION_RESOURCE_RESOLVER"
+    )
+    public Event cancelCheckSmartIdAuthenticationSessionStatus(RequestContext context) {
+
+        try {
+            AuthenticationSession authSession =
+                    context.getFlowScope().get(Constants.SMART_ID_AUTHENTICATION_SESSION, AuthenticationSession.class);
+            LOGGER.info("Smart-ID authentication session status checking canceled by the user <count:{}>, <sessionId:{}>",
+                    authSession.getStatusCheckCount(), authSession.getSessionId());
+            logEvent(context, new IllegalStateException("Canceled by the user in TARA"), AuthenticationType.SmartID);
+            return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
+        } catch (Exception e) {
+            logEvent(context, e, AuthenticationType.SmartID);
+            throw e;
+        }
+    }
+
+    @Audit(
             action = "SMARTID_AUTHENTICATION_STATUS_POLL",
             actionResolverName = "AUTHENTICATION_RESOLVER",
             resourceResolverName = "TARA_AUTHENTICATION_RESOURCE_RESOLVER"

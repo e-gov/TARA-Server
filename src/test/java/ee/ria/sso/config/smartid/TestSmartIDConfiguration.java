@@ -3,6 +3,7 @@ package ee.ria.sso.config.smartid;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.flow.ThymeleafSupport;
 import ee.ria.sso.flow.action.SmartIDCheckAuthenticationAction;
+import ee.ria.sso.flow.action.SmartIDCheckCancelAction;
 import ee.ria.sso.flow.action.SmartIDStartAuthenticationAction;
 import ee.ria.sso.statistics.StatisticsHandler;
 import org.mockito.Mockito;
@@ -19,8 +20,9 @@ import org.springframework.context.annotation.Import;
 })
 @Configuration
 @Import(value = {
-        SmartIDCheckAuthenticationAction.class,
         SmartIDStartAuthenticationAction.class,
+        SmartIDCheckAuthenticationAction.class,
+        SmartIDCheckCancelAction.class,
         TaraResourceBundleMessageSource.class,
         StatisticsHandler.class,
 

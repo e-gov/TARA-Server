@@ -200,6 +200,14 @@ The following is a complete list of TARA specific audit events:
 | `MID_AUTHENTICATION_INIT_FAILED` | Estonian Mobile-ID init request failed. |
 | `MID_AUTHENTICATION_STATUS_POLL_SUCCESS` | Estonian Mobile-ID status check request was successful. |
 | `MID_AUTHENTICATION_STATUS_POLL_FAILED` | Estonian Mobile-ID status check request failed. |
+| `MID_AUTHENTICATION_STATUS_POLL_CANCEL_SUCCESS` | Estonian Mobile-ID status check was cancelled by the user.  |
+| `MID_AUTHENTICATION_STATUS_POLL_CANCEL_FAILED` | Estonian Mobile-ID status check cancellation by the user has failed. |
+| `SMARTID_AUTHENTICATION_INIT_SUCCESS` | Smart-ID authentication init request was successful |
+| `SMARTID_AUTHENTICATION_INIT_FAILED` | Smart-ID authentication init request has failed |
+| `SMARTID_AUTHENTICATION_STATUS_POLL_SUCCESS` | Smart-ID authentication status polling request was successful. |
+| `SMARTID_AUTHENTICATION_STATUS_POLL_FAILED` | Smart-ID authentication status polling request has failed. |
+| `SMARTID_AUTHENTICATION_STATUS_POLL_CANCEL_SUCCESS` | Smart-ID authentication status polling was successfully canceled by the user. |
+| `SMARTID_AUTHENTICATION_STATUS_POLL_CANCEL_FAILED` | Smart-ID authentication status polling cancellation by the user has failed.  | 
 | `EIDAS_AUTHENTICATION_INIT_SUCCESS` | eIDAS authentication was successfully initiated. |
 | `EIDAS_AUTHENTICATION_INIT_FAILED` | eIDAS authentication failed to init. |
 | `EIDAS_AUTHENTICATION_CALLBACK_SUCCESS` | eIDAS authentication successful. |
