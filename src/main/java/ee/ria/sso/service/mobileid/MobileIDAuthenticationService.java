@@ -16,12 +16,12 @@ import org.apereo.cas.web.flow.CasWebflowConstants;
 import org.apereo.inspektr.audit.annotation.Audit;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
-import org.springframework.util.Assert;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
 
 import static ee.ria.sso.statistics.StatisticsOperation.START_AUTH;
 import static ee.ria.sso.statistics.StatisticsOperation.SUCCESSFUL_AUTH;
+import static org.springframework.util.Assert.notNull;
 
 @ConditionalOnProperty("mobile-id.enabled")
 @Service
@@ -46,8 +46,7 @@ public class MobileIDAuthenticationService extends AbstractService {
     )
     public Event startLoginByMobileID(RequestContext context) {
         final PreAuthenticationCredential credential = context.getFlowExecutionContext().getActiveSession().getScope().get("credential", PreAuthenticationCredential.class);
-        Assert.notNull(credential, "PreAuthenticationCredential is missing!");
-
+        notNull(credential, "PreAuthenticationCredential is missing!");
 
         String mobileNumber = StringUtils.isBlank(credential.getMobileNumber()) ? credential.getMobileNumber() : confProvider.getAreaCode() + credential.getMobileNumber();
         log.info("Starting Mobile-ID authentication: <mobileNumber:{}>, <identityCode:{}>", mobileNumber, credential.getPrincipalCode());
@@ -76,12 +75,19 @@ public class MobileIDAuthenticationService extends AbstractService {
     )
     public Event cancelAuthenticationSessionStatusChecking(RequestContext context) {
 
+        notNull(context, "Request context cannot be null");
+
         try {
+            Integer checkCount = context.getFlowScope().get(Constants.AUTH_COUNT, Integer.class);
+            notNull(checkCount, "Polling count in request context is missing");
+
             MobileIDSession authSession = context.getFlowScope().get(Constants.MOBILE_ID_AUTHENTICATION_SESSION, MobileIDSession.class);
-            int checkCount = context.getFlowScope().get(Constants.AUTH_COUNT, Integer.class);
+            notNull(authSession, "Mobile-ID session in request context is missing");
+
             log.info("Mobile-ID authentication session status checking canceled by the user <count:{}>, <sessionId:{}>",
                     checkCount, authSession.getSessionId());
             logEvent(context, new IllegalStateException("Canceled by the user in TARA"), AuthenticationType.MobileID);
+
             return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
         } catch (Exception e) {
             logEvent(context, e, AuthenticationType.MobileID);

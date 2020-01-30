@@ -34,6 +34,7 @@ import javax.ws.rs.ClientErrorException;
 
 import static ee.ria.sso.statistics.StatisticsOperation.START_AUTH;
 import static ee.ria.sso.statistics.StatisticsOperation.SUCCESSFUL_AUTH;
+import static org.springframework.util.Assert.notNull;
 
 @ConditionalOnProperty("smart-id.enabled")
 @Service
@@ -107,9 +108,13 @@ public class SmartIDAuthenticationService extends AbstractService {
     )
     public Event cancelCheckSmartIdAuthenticationSessionStatus(RequestContext context) {
 
+        notNull(context, "RequestContext is missing");
+
         try {
             AuthenticationSession authSession =
                     context.getFlowScope().get(Constants.SMART_ID_AUTHENTICATION_SESSION, AuthenticationSession.class);
+            notNull(authSession, "Smart-ID session was not found in flow scope");
+
             LOGGER.info("Smart-ID authentication session status checking canceled by the user <count:{}>, <sessionId:{}>",
                     authSession.getStatusCheckCount(), authSession.getSessionId());
             logEvent(context, new IllegalStateException("Canceled by the user in TARA"), AuthenticationType.SmartID);

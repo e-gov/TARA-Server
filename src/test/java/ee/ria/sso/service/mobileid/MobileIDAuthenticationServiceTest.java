@@ -12,20 +12,16 @@ import ee.ria.sso.service.UserAuthenticationFailedException;
 import ee.ria.sso.service.mobileid.rest.MobileIDErrorMessage;
 import ee.ria.sso.service.mobileid.rest.MobileIDRESTSession;
 import ee.ria.sso.service.mobileid.rest.MobileIDRESTSessionStatus;
-import ee.ria.sso.statistics.StatisticsHandler;
 import ee.ria.sso.statistics.StatisticsOperation;
-import ee.ria.sso.test.SimpleTestAppender;
-import ee.sk.mid.MidClient;
+import ee.ria.sso.statistics.StatisticsRecord;
 import ee.sk.mid.exception.MidInternalErrorException;
 import ee.sk.mid.rest.dao.MidSessionStatus;
 import org.apereo.cas.web.flow.CasWebflowConstants;
-import org.hamcrest.Matchers;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -34,6 +30,7 @@ import org.springframework.webflow.execution.RequestContext;
 
 import static ee.ria.sso.Constants.MOBILE_ID_AUTHENTICATION_SESSION;
 import static ee.ria.sso.Constants.MOBILE_ID_VERIFICATION_CODE;
+import static java.time.LocalDateTime.now;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.*;
@@ -41,8 +38,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @TestPropertySource(
-        locations= "classpath:application-test.properties",
-        properties = { "mobile-id.use-dds-service=true" })
+        locations= "classpath:application-test.properties"
+)
 @ContextConfiguration(
         classes = TestMobileIDConfiguration.class,
         initializers = ConfigFileApplicationContextInitializer.class
@@ -62,23 +59,16 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
     @Mock
     private MobileIDConfigurationProvider configurationProvider;
 
-    @Autowired
-    private StatisticsHandler statisticsHandler;
-
-    private MobileIDAuthenticationService authenticationService;
-
     @Mock
     private MobileIDAuthenticationClient authenticationClient;
 
-    @Mock
-    private MidClient client;
+    private MobileIDAuthenticationService authenticationService;
 
     @Before
     public void setUp() {
         authenticationService = new MobileIDAuthenticationService(statisticsHandler, configurationProvider, authenticationClient);
         when(configurationProvider.getCountryCode()).thenReturn(MOCK_COUNTRY_CODE);
         when(configurationProvider.getAreaCode()).thenReturn(MOCK_AREA_CODE);
-        SimpleTestAppender.events.clear();
     }
 
     @Test
@@ -132,7 +122,7 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
         assertEquals(0, getAttrFromFlowScope(mockRequestContext, Constants.AUTH_COUNT));
         assertEquals(CasWebflowConstants.TRANSITION_ID_SUCCESS, event.getId());
 
-        this.verifyLogContents(StatisticsOperation.START_AUTH);
+        assertStatisticsEventCollected(StatisticsOperation.START_AUTH, AuthenticationType.MobileID);
     }
 
     @Test
@@ -154,7 +144,8 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
             assertThat(e, instanceOf(ExternalServiceHasFailedException.class));
             assertThat(e.getMessage(), containsString("error details"));
             assertEquals(MobileIDErrorMessage.TECHNICAL, ((ExternalServiceHasFailedException)e).getErrorMessageKey());
-            this.verifyLogContentsOnFailure(StatisticsOperation.START_AUTH, "error details");
+            assertStatisticsEventCollected(StatisticsOperation.START_AUTH, AuthenticationType.MobileID);
+            assertErrorStatisticsCollected("error details", AuthenticationType.MobileID);
         }
     }
 
@@ -183,7 +174,7 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
 
         assertEquals("Invalid WebFlow event", Constants.EVENT_OUTSTANDING, event.getId());
         assertEquals("Invalid poll count in flow scope", new Integer(1), mockRequestContext.getFlowScope().getInteger(Constants.AUTH_COUNT));
-        SimpleTestAppender.verifyNoLogEventsExist(Matchers.any(String.class));
+        assertAuthStatisticsNotCollected();
     }
 
     @Test
@@ -217,7 +208,7 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
         assertEquals("Invalid TaraCredential.lastName", MOCK_LAST_NAME, credential.getLastName());
         assertEquals("Invalid TaraCredential.id",MOCK_COUNTRY_CODE + MOCK_PERSONAL_CODE, credential.getId());
         assertEquals("Invalid TaraCredential.type", AuthenticationType.MobileID, credential.getType());
-        this.verifyLogContents(StatisticsOperation.SUCCESSFUL_AUTH);
+        assertStatisticsEventCollected(StatisticsOperation.SUCCESSFUL_AUTH, AuthenticationType.MobileID);
     }
 
     @Test
@@ -242,7 +233,42 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
             assertThat(e, instanceOf(UserAuthenticationFailedException.class));
             assertThat(e.getMessage(), containsString("error details"));
             assertEquals(MobileIDErrorMessage.USER_CANCELLED, (((UserAuthenticationFailedException)e).getErrorMessageKey()));
-            this.verifyLogContentsOnFailure("error details");
+            assertErrorStatisticsCollected("error details", AuthenticationType.MobileID);
+        }
+    }
+
+    @Test
+    public void cancelAuthenticationSessionStatusCheckingSucceeds() {
+        RequestContext mockRequestContext = getMockRequestContext();
+        final MobileIDSession mockMobileIDSession = createMockMobileIDSession();
+        fillRequestContextFlowScope(mockRequestContext, mockMobileIDSession, 0);
+
+        Event event = authenticationService.cancelAuthenticationSessionStatusChecking(mockRequestContext);
+        assertErrorStatisticsCollected("Canceled by the user in TARA", AuthenticationType.MobileID);
+        assertEquals(CasWebflowConstants.TRANSITION_ID_SUCCESS, event.getId());
+    }
+
+    @Test
+    public void cancelAuthenticationSessionStatusCheckingFailsNoPollingCount() {
+        try {
+            authenticationService.cancelAuthenticationSessionStatusChecking(getMockRequestContext());
+            fail("Should not reach this");
+        } catch (Exception e) {
+            assertEquals("Polling count in request context is missing", e.getMessage());
+            assertErrorStatisticsCollected("Polling count in request context is missing", AuthenticationType.MobileID);
+        }
+    }
+
+    @Test
+    public void cancelAuthenticationSessionStatusCheckingFailsNoSession() {
+        try {
+            RequestContext mockRequestContext = getMockRequestContext();
+            mockRequestContext.getFlowScope().put(Constants.AUTH_COUNT, 1);
+            authenticationService.cancelAuthenticationSessionStatusChecking(mockRequestContext);
+            fail("Should not reach this");
+        } catch (Exception e) {
+            assertEquals("Mobile-ID session in request context is missing", e.getMessage());
+            assertErrorStatisticsCollected("Mobile-ID session in request context is missing", AuthenticationType.MobileID);
         }
     }
 
@@ -274,36 +300,14 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
         requestContext.getFlowScope().put(Constants.AUTH_COUNT, authCount);
     }
 
-    private void validateUserCredential(TaraCredential credential) {
-        Assert.assertNotNull(credential);
-
-        assertEquals(AuthenticationType.MobileID, credential.getType());
-        assertEquals("EE" + MOCK_PERSONAL_CODE, credential.getId());
-        assertEquals(MOCK_FIRST_NAME, credential.getFirstName());
-        assertEquals(MOCK_LAST_NAME, credential.getLastName());
+    private StatisticsRecord mockStatisticsRecord(StatisticsOperation operation, AuthenticationType authenticationType, String errorMessage) {
+        return StatisticsRecord.builder().time(now()).clientId("openIdDemo").method(authenticationType).operation(operation)
+                .error(errorMessage)
+                .build();
     }
 
-    private void verifyLogContents(StatisticsOperation statisticsOperation) {
-        AuthenticationType authenticationType = AuthenticationType.MobileID;
-
-        SimpleTestAppender.verifyLogEventsExistInOrder(
-                Matchers.containsString(String.format(";openIdDemo;%s;%s;", authenticationType, statisticsOperation))
-        );
-    }
-
-    private void verifyLogContentsOnFailure(StatisticsOperation precedingOperation, String errorMessage) {
-        AuthenticationType authenticationType = AuthenticationType.MobileID;
-
-        SimpleTestAppender.verifyLogEventsExistInOrder(
-                Matchers.containsString(String.format(";openIdDemo;%s;%s;", authenticationType, precedingOperation)),
-                Matchers.containsString(String.format(";openIdDemo;%s;%s;%s", authenticationType, StatisticsOperation.ERROR, errorMessage))
-        );
-    }
-
-    private void verifyLogContentsOnFailure(String errorMessage) {
-        SimpleTestAppender.verifyLogEventsExistInOrder(
-                Matchers.containsString(String.format(";openIdDemo;%s;%s;%s", AuthenticationType.MobileID, StatisticsOperation.ERROR, errorMessage))
-        );
+    private StatisticsRecord mockStatisticsRecord(StatisticsOperation precedingOperation, AuthenticationType authenticationType) {
+        return StatisticsRecord.builder().time(now()).clientId("openIdDemo").method(authenticationType).operation(precedingOperation).build();
     }
 
     private Object getAttrFromFlowScope(RequestContext mockRequestContext, String mobileIdVerificationCode) {
