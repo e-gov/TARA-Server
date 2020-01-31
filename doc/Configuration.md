@@ -23,7 +23,7 @@ _CAS tarkvaras tehtud kohanduste ja täienduste kirjeldus._
   * [2.12 Client secret handling](#oidc_client_secret)
   * [2.13 Always force re-authentication](#oidc_force_reauthentication)    
 - [3. TARA truststore](#tara_truststore)
-  * [3.1 DigiDocService CA certs](#dds_ca_certs)
+  * [3.1 Mobile-ID CA certs](#dds_ca_certs)
   * [3.2 Smart-ID CA certs](#smart-id_ca_certs)
 
 <a name="logging"></a>
@@ -403,7 +403,6 @@ Example:
 
 ````
 mobile-id.enabled=true
-mobile-id.use-dds-service=false
 mobile-id.language=EST
 mobile-id.message-to-display=Näita siin
 mobile-id.message-to-display-encoding=GSM7
