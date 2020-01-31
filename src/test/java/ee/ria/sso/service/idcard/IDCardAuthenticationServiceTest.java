@@ -65,15 +65,11 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
     @Captor
     ArgumentCaptor<IDCardConfigurationProvider.Ocsp> ocspConfiguration;
 
-    @Before
-    public void setup() {
-        MDC.clear();
-    }
-
-    @After
+    @Before @After
     public void cleanUp() {
-        Mockito.reset(ocspValidatorMock);
+        MDC.clear();
         SimpleTestAppender.events.clear();
+        Mockito.reset(ocspValidatorMock);
     }
 
     @Test
