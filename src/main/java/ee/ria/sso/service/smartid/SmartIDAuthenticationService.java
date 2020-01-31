@@ -34,6 +34,7 @@ import javax.ws.rs.ClientErrorException;
 
 import static ee.ria.sso.statistics.StatisticsOperation.START_AUTH;
 import static ee.ria.sso.statistics.StatisticsOperation.SUCCESSFUL_AUTH;
+import static org.springframework.util.Assert.notNull;
 
 @ConditionalOnProperty("smart-id.enabled")
 @Service
@@ -94,6 +95,30 @@ public class SmartIDAuthenticationService extends AbstractService {
         } catch (ClientErrorException e) {
             logEvent(context, e, AuthenticationType.SmartID);
             throw handleSmartIDClientException(e);
+        } catch (Exception e) {
+            logEvent(context, e, AuthenticationType.SmartID);
+            throw e;
+        }
+    }
+
+    @Audit(
+            action = "SMARTID_AUTHENTICATION_STATUS_POLL_CANCEL",
+            actionResolverName = "AUTHENTICATION_RESOLVER",
+            resourceResolverName = "TARA_AUTHENTICATION_RESOURCE_RESOLVER"
+    )
+    public Event cancelCheckSmartIdAuthenticationSessionStatus(RequestContext context) {
+
+        notNull(context, "RequestContext is missing");
+
+        try {
+            AuthenticationSession authSession =
+                    context.getFlowScope().get(Constants.SMART_ID_AUTHENTICATION_SESSION, AuthenticationSession.class);
+            notNull(authSession, "Smart-ID session was not found in flow scope");
+
+            LOGGER.info("Smart-ID authentication session status checking canceled by the user <count:{}>, <sessionId:{}>",
+                    authSession.getStatusCheckCount(), authSession.getSessionId());
+            logEvent(context, new IllegalStateException("Canceled by the user in TARA"), AuthenticationType.SmartID);
+            return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
         } catch (Exception e) {
             logEvent(context, e, AuthenticationType.SmartID);
             throw e;

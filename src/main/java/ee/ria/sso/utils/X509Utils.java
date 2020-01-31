@@ -2,27 +2,21 @@ package ee.ria.sso.utils;
 
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.axis.encoding.Base64;
+import org.apache.commons.codec.binary.Base64;
 import org.bouncycastle.asn1.*;
 import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.asn1.x500.style.IETFUtils;
-import org.bouncycastle.asn1.x509.*;
 import org.bouncycastle.asn1.x509.Extension;
+import org.bouncycastle.asn1.x509.*;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
 
-import javax.security.auth.x500.X500Principal;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.cert.*;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
-
-/**
- * Created by serkp on 7.10.2017.
- */
 
 @Slf4j
 public class X509Utils {
@@ -33,7 +27,7 @@ public class X509Utils {
     public static X509Certificate toX509Certificate(String encodedCertificate) {
         try {
             return (X509Certificate) CertificateFactory.getInstance("X.509")
-                .generateCertificate(new ByteArrayInputStream(Base64.decode(encodedCertificate
+                .generateCertificate(new ByteArrayInputStream(Base64.decodeBase64(encodedCertificate
                     .replaceAll(BEGIN_CERT, "").replaceAll(END_CERT, ""))));
         } catch (CertificateException e) {
             throw new IllegalStateException("Failed to decode certificate", e);

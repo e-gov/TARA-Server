@@ -58,12 +58,19 @@
 
 	<view-state id="viewMobileIDLoginCode" view="casMIDLoginCode" model="credential">
 		<transition on="check" to="checkMIDStatus"/>
+		<transition on="cancel" to="cancelMIDStatusCheck"/>
 	</view-state>
 
 	<action-state id="checkMIDStatus">
 		<evaluate expression="mobileIDCheckAuthenticationAction"/>
 		<transition on="success" to="realSubmit"/>
 		<transition on="outstanding" to="viewMobileIDLoginCode"/>
+		<transition on="error" to="initializeLoginForm"/>
+	</action-state>
+
+	<action-state id="cancelMIDStatusCheck">
+		<evaluate expression="mobileIDCheckCancelAction"/>
+		<transition on="success" to="initializeLoginForm"/>
 		<transition on="error" to="initializeLoginForm"/>
 	</action-state>
 
@@ -75,12 +82,19 @@
 
 	<view-state id="viewSmartIDVerificationCode" view="casSmartIdVerificationCode" model="credential">
 		<transition on="check" to="checkSmartIDLoginStatus"/>
+		<transition on="cancel" to="cancelSmartIDLoginStatusCheck"/>
 	</view-state>
 
 	<action-state id="checkSmartIDLoginStatus">
 		<evaluate expression="smartIDCheckAuthenticationAction"/>
 		<transition on="success" to="realSubmit"/>
 		<transition on="outstanding" to="viewSmartIDVerificationCode"/>
+		<transition on="error" to="initializeLoginForm"/>
+	</action-state>
+
+	<action-state id="cancelSmartIDLoginStatusCheck">
+		<evaluate expression="smartIDCheckCancelAction"/>
+		<transition on="success" to="initializeLoginForm"/>
 		<transition on="error" to="initializeLoginForm"/>
 	</action-state>
 

@@ -4,6 +4,7 @@ import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.service.banklink.BankEnum;
 import ee.ria.sso.test.SimpleTestAppender;
 import org.hamcrest.Matchers;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -32,8 +33,8 @@ public class TaraStatHandlerTest {
     @Autowired
     private TaraStatHandler taraStatHandler;
 
-    @Before
-    public void setUpTest() {
+    @Before @After
+    public void cleanUp() {
         SimpleTestAppender.events.clear();
     }
 

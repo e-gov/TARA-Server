@@ -74,6 +74,7 @@ public class EidasAuthenticationServiceTest extends AbstractAuthenticationServic
     @Before
     public void setUp() {
         Mockito.reset(authenticatorMock);
+        SimpleTestAppender.events.clear();
         authenticationService = new EidasAuthenticationService(statistics, authenticatorMock, eidasConfigurationProvider);
     }
 

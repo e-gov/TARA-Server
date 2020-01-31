@@ -1,11 +1,7 @@
 package ee.ria.sso.service.idcard;
 
-import ee.ria.sso.service.idcard.IDCardController;
 import ee.ria.sso.test.SimpleTestAppender;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpSession;
@@ -56,7 +52,7 @@ public class IDCardControllerTest {
     @Rule
     public ExpectedException expectedEx = ExpectedException.none();
 
-    @Before
+    @Before @After
     public void cleanUp() {
         SimpleTestAppender.events.clear();
     }

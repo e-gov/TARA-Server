@@ -11,6 +11,7 @@ import ee.sk.mid.MidCertificateParser;
 import ee.sk.mid.MidClient;
 import ee.sk.mid.MidLanguage;
 import ee.sk.mid.exception.MidInternalErrorException;
+import ee.sk.mid.exception.MidMissingOrInvalidParameterException;
 import ee.sk.mid.exception.MidSessionNotFoundException;
 import ee.sk.mid.exception.MidUnauthorizedException;
 import ee.sk.mid.rest.MidConnector;
@@ -18,7 +19,7 @@ import ee.sk.mid.rest.dao.MidSessionStatus;
 import ee.sk.mid.rest.dao.request.MidAuthenticationRequest;
 import ee.sk.mid.rest.dao.request.MidSessionStatusRequest;
 import ee.sk.mid.rest.dao.response.MidAuthenticationResponse;
-import org.apache.axis.encoding.Base64;
+import org.apache.commons.codec.binary.Base64;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -27,6 +28,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
 import org.springframework.test.context.ContextConfiguration;
@@ -34,13 +36,10 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -63,7 +62,7 @@ public class MobileIDRESTAuthClientTest {
     private MidClient midClient;
 
     @Mock
-    private MidConnector micConnector;
+    private MidConnector midConnector;
 
     @Autowired
     private MobileIDConfigurationProvider confProvider;
@@ -78,14 +77,14 @@ public class MobileIDRESTAuthClientTest {
 
     @Before
     public void init() {
-        when(midClient.getMobileIdConnector()).thenReturn(micConnector);
+        when(midClient.getMobileIdConnector()).thenReturn(midConnector);
         authClient = new MobileIDRESTAuthClient(confProvider, midClient);
     }
 
     @Test
     public void initAuthentication_successful() {
         MidAuthenticationResponse mockAuthResponse = new MidAuthenticationResponse(UUID.randomUUID().toString());
-        when(micConnector.authenticate(authRequestCaptor.capture())).thenReturn(mockAuthResponse);
+        when(midConnector.authenticate(authRequestCaptor.capture())).thenReturn(mockAuthResponse);
 
         MobileIDRESTSession session = authClient.initAuthentication(PERSONAL_CODE, COUNTRY_CODE, PHONE_NUMBER);
         assertEquals(mockAuthResponse.getSessionID(), session.getSessionId());
@@ -93,7 +92,7 @@ public class MobileIDRESTAuthClientTest {
         assertNotNull(authenticationHash);
         assertEquals(session.getVerificationCode(), authenticationHash.calculateVerificationCode());
 
-        verify(micConnector).authenticate(authRequestCaptor.capture());
+        verify(midConnector).authenticate(authRequestCaptor.capture());
         MidAuthenticationRequest authRequest = authRequestCaptor.getValue();
         assertEquals(PHONE_NUMBER, authRequest.getPhoneNumber());
         assertEquals(PERSONAL_CODE, authRequest.getNationalIdentityNumber());
@@ -105,18 +104,53 @@ public class MobileIDRESTAuthClientTest {
     }
 
     @Test
+    public void initiAuthentication_failsWithMidInternalErrorException() {
+        expectedException.expect(ExternalServiceHasFailedException.class);
+        expectedException.expectMessage("MID service returned internal error that cannot be handled locally");
+
+        when(midConnector.authenticate(any())).thenThrow(MidInternalErrorException.class);
+
+        authClient.initAuthentication(PERSONAL_CODE, COUNTRY_CODE, PHONE_NUMBER);
+    }
+
+    @Test
+    public void initiAuthentication_failsWithIntegrationRelatedException() throws Exception {
+        for (Exception e : Arrays.asList(new MidMissingOrInvalidParameterException("details"), new MidUnauthorizedException("details"))) {
+            Mockito.reset(midConnector);
+            when(midConnector.authenticate(any())).thenThrow(e);
+            try {
+                authClient.initAuthentication(PERSONAL_CODE, COUNTRY_CODE, PHONE_NUMBER);
+                fail("Should not reach this");
+            } catch (Exception ex) {
+                assertEquals(IllegalStateException.class, ex.getClass());
+                assertEquals("Integrator-side error with MID integration or configuration", ex.getMessage());
+            }
+        }
+    }
+
+    @Test
+    public void initiAuthentication_failsWithUnknwonException() {
+        expectedException.expect(IllegalStateException.class);
+        expectedException.expectMessage("Unexpected error occurred during authentication initiation");
+
+        when(midConnector.authenticate(any())).thenThrow(NullPointerException.class);
+
+        authClient.initAuthentication(PERSONAL_CODE, COUNTRY_CODE, PHONE_NUMBER);
+    }
+
+    @Test
     public void pollAuthenticationSessionStatus_resultOK_authenticationComplete() {
         MidSessionStatus midSessionStatus = new MidSessionStatus();
         midSessionStatus.setState("COMPLETE");
         midSessionStatus.setResult("OK");
-        when(micConnector.getAuthenticationSessionStatus(sessionStatusRequestCaptor.capture())).thenReturn(midSessionStatus);
+        when(midConnector.getAuthenticationSessionStatus(sessionStatusRequestCaptor.capture())).thenReturn(midSessionStatus);
 
         MobileIDRESTSession session = MobileIDRESTSession.builder().sessionId(UUID.randomUUID().toString()).build();
         MobileIDRESTSessionStatus sessionStatus = authClient.pollAuthenticationSessionStatus(session);
 
         assertEquals(midSessionStatus, sessionStatus.getWrappedSessionStatus());
         assertTrue(sessionStatus.isAuthenticationComplete());
-        verify(micConnector).getAuthenticationSessionStatus(sessionStatusRequestCaptor.capture());
+        verify(midConnector).getAuthenticationSessionStatus(sessionStatusRequestCaptor.capture());
         MidSessionStatusRequest sessionStatusRequest = sessionStatusRequestCaptor.getValue();
         assertEquals(session.getSessionId(), sessionStatusRequest.getSessionID());
         assertEquals(Integer.valueOf(confProvider.getSessionStatusSocketOpenDuration() * 1000), Integer.valueOf(sessionStatusRequest.getTimeoutMs()));
@@ -127,14 +161,14 @@ public class MobileIDRESTAuthClientTest {
         MidSessionStatus midSessionStatus = new MidSessionStatus();
         midSessionStatus.setState("COMPLETE");
         midSessionStatus.setResult(null);
-        when(micConnector.getAuthenticationSessionStatus(sessionStatusRequestCaptor.capture())).thenReturn(midSessionStatus);
+        when(midConnector.getAuthenticationSessionStatus(sessionStatusRequestCaptor.capture())).thenReturn(midSessionStatus);
 
         MobileIDRESTSession session = MobileIDRESTSession.builder().sessionId(UUID.randomUUID().toString()).build();
         MobileIDRESTSessionStatus sessionStatus = authClient.pollAuthenticationSessionStatus(session);
 
         assertEquals(midSessionStatus, sessionStatus.getWrappedSessionStatus());
         assertFalse(sessionStatus.isAuthenticationComplete());
-        verify(micConnector).getAuthenticationSessionStatus(sessionStatusRequestCaptor.capture());
+        verify(midConnector).getAuthenticationSessionStatus(sessionStatusRequestCaptor.capture());
         MidSessionStatusRequest sessionStatusRequest = sessionStatusRequestCaptor.getValue();
         assertEquals(session.getSessionId(), sessionStatusRequest.getSessionID());
         assertEquals(Integer.valueOf(confProvider.getSessionStatusSocketOpenDuration() * 1000), Integer.valueOf(sessionStatusRequest.getTimeoutMs()));
@@ -145,7 +179,7 @@ public class MobileIDRESTAuthClientTest {
         MidSessionStatus midSessionStatus = new MidSessionStatus();
         midSessionStatus.setState("COMPLETE");
         midSessionStatus.setResult("NOT_MID_CLIENT");
-        when(micConnector.getAuthenticationSessionStatus(sessionStatusRequestCaptor.capture())).thenReturn(midSessionStatus);
+        when(midConnector.getAuthenticationSessionStatus(sessionStatusRequestCaptor.capture())).thenReturn(midSessionStatus);
 
         MobileIDRESTSession session = MobileIDRESTSession.builder().sessionId(UUID.randomUUID().toString()).build();
 
@@ -153,7 +187,7 @@ public class MobileIDRESTAuthClientTest {
             authClient.pollAuthenticationSessionStatus(session);
         } catch (UserAuthenticationFailedException e) {
             assertEquals("User is not a MID client or user's certificates are revoked.", e.getMessage());
-            verify(micConnector).getAuthenticationSessionStatus(sessionStatusRequestCaptor.capture());
+            verify(midConnector).getAuthenticationSessionStatus(sessionStatusRequestCaptor.capture());
             MidSessionStatusRequest sessionStatusRequest = sessionStatusRequestCaptor.getValue();
             assertEquals(session.getSessionId(), sessionStatusRequest.getSessionID());
             assertEquals(Integer.valueOf(confProvider.getSessionStatusSocketOpenDuration() * 1000), Integer.valueOf(sessionStatusRequest.getTimeoutMs()));
@@ -165,7 +199,7 @@ public class MobileIDRESTAuthClientTest {
         expectedException.expect(ExternalServiceHasFailedException.class);
         expectedException.expectMessage("MID service returned internal error that cannot be handled locally");
 
-        when(micConnector.getAuthenticationSessionStatus(sessionStatusRequestCaptor.capture())).thenThrow(MidInternalErrorException.class);
+        when(midConnector.getAuthenticationSessionStatus(sessionStatusRequestCaptor.capture())).thenThrow(MidInternalErrorException.class);
 
         MobileIDRESTSession session = MobileIDRESTSession.builder().sessionId(UUID.randomUUID().toString()).build();
         authClient.pollAuthenticationSessionStatus(session);
@@ -176,7 +210,7 @@ public class MobileIDRESTAuthClientTest {
         expectedException.expect(IllegalStateException.class);
         expectedException.expectMessage("Integrator-side error with MID integration or configuration");
 
-        when(micConnector.getAuthenticationSessionStatus(sessionStatusRequestCaptor.capture())).thenThrow(MidUnauthorizedException.class);
+        when(midConnector.getAuthenticationSessionStatus(sessionStatusRequestCaptor.capture())).thenThrow(MidUnauthorizedException.class);
 
         MobileIDRESTSession session = MobileIDRESTSession.builder().sessionId(UUID.randomUUID().toString()).build();
         authClient.pollAuthenticationSessionStatus(session);
@@ -187,7 +221,7 @@ public class MobileIDRESTAuthClientTest {
         expectedException.expect(IllegalStateException.class);
         expectedException.expectMessage("Integrator-side error with MID integration or configuration");
 
-        when(micConnector.getAuthenticationSessionStatus(sessionStatusRequestCaptor.capture())).thenThrow(MidSessionNotFoundException.class);
+        when(midConnector.getAuthenticationSessionStatus(sessionStatusRequestCaptor.capture())).thenThrow(MidSessionNotFoundException.class);
 
         MobileIDRESTSession session = MobileIDRESTSession.builder().sessionId(UUID.randomUUID().toString()).build();
         authClient.pollAuthenticationSessionStatus(session);
@@ -198,7 +232,7 @@ public class MobileIDRESTAuthClientTest {
         expectedException.expect(IllegalStateException.class);
         expectedException.expectMessage("Unexpected error occurred during authentication session status polling");
 
-        when(micConnector.getAuthenticationSessionStatus(sessionStatusRequestCaptor.capture())).thenThrow(NullPointerException.class);
+        when(midConnector.getAuthenticationSessionStatus(sessionStatusRequestCaptor.capture())).thenThrow(NullPointerException.class);
 
         MobileIDRESTSession session = MobileIDRESTSession.builder().sessionId(UUID.randomUUID().toString()).build();
         authClient.pollAuthenticationSessionStatus(session);
@@ -256,7 +290,7 @@ public class MobileIDRESTAuthClientTest {
                 .wrappedSessionStatus(midSessionStatus)
                 .build();
         MidAuthentication mockAuthentication = MidAuthentication.newBuilder()
-                .withSignatureValueInBase64(Base64.encode("invalid signature".getBytes(StandardCharsets.UTF_8)))
+                .withSignatureValueInBase64(Base64.encodeBase64String("invalid signature".getBytes(StandardCharsets.UTF_8)))
                 .withAlgorithmName("SHA256WithECEncryption")
                 .withCertificate(MidCertificateParser.parseX509Certificate(midSessionStatus.getCert()))
                 .withHashType(confProvider.getAuthenticationHashType())

@@ -15,7 +15,7 @@
                     <form role="form" id="authenticationCheckForm" method="post" class="c-form" layout:fragment="login-form-content">
                         <p th:text="#{label.common.controlCode}">Control code:</p>
                         <p class="control-code" th:text="${smartIdVerificationCode}"></p>
-                        <a class="c-btn c-btn--cancel c-btn--from-link" th:href="${session.pac4jRequestedUrl}" th:text="#{label.common.cancel}">Cancel</a>
+                        <a class="c-btn c-btn--cancel c-btn--from-link" href="#" th:text="#{label.common.cancel}">Cancel</a>
                         <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
                         <input type="hidden" id="_eventId" name="_eventId" value="check"/>
                     </form>
@@ -35,6 +35,7 @@
         </defs>
     </svg>
     <script src="/scripts/form-check.js" defer></script>
+    <script src="/scripts/main.js" defer></script>
 </div>
 </body>
 </html>

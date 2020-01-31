@@ -215,6 +215,17 @@ jQuery(function ($) {
 		validateFormFieldValue($(this), function(){return true;});
 	});
 
+	// Smart-ID status polling form - submit cancel
+    $('#authenticationCheckForm a.c-btn--from-link').on('click', function(event){
+        event.preventDefault();
+
+        if ($(this).prop('disabled')) return;
+        $(this).prop('disabled', true);
+
+        $('#_eventId').val('cancel');
+        $('#authenticationCheckForm').submit();
+    });
+
 	// EU citizen form submit
 	$('#eidasForm button.c-btn--primary').on('click', function(event){
 		event.preventDefault();

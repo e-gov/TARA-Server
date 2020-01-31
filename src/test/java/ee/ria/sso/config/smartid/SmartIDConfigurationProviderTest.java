@@ -3,6 +3,7 @@ package ee.ria.sso.config.smartid;
 import ee.ria.sso.config.AbstractDisabledConfigurationTest;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.flow.action.SmartIDCheckAuthenticationAction;
+import ee.ria.sso.flow.action.SmartIDCheckCancelAction;
 import ee.ria.sso.flow.action.SmartIDStartAuthenticationAction;
 import ee.ria.sso.service.smartid.SmartIDAuthenticationService;
 import ee.ria.sso.service.smartid.SmartIDAuthenticationValidatorWrapper;
@@ -89,5 +90,6 @@ public class SmartIDConfigurationProviderTest extends AbstractDisabledConfigurat
         assertBeanInitiated(SmartIDStartAuthenticationAction.class);
         assertBeanInitiated(StatisticsHandler.class);
         assertBeanInitiated(TaraResourceBundleMessageSource.class);
+        assertBeanInitiated(SmartIDCheckCancelAction.class);
     }
 }
