@@ -105,7 +105,7 @@ public class ThymeleafSupport {
                     })
                     .getInformationUrl();
         } else {
-            log.error("Could not find home url from session");
+            log.debug("Could not find home url from session");
             return "#";
         }
     }

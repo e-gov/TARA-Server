@@ -21,7 +21,8 @@ _CAS tarkvaras tehtud kohanduste ja täienduste kirjeldus._
   * [2.10 Audit logging](#audit_logging)
   * [2.11 Enabling additional OpenID Connect endpoints](#oidc_optional_endpoints)
   * [2.12 Client secret handling](#oidc_client_secret)
-  * [2.13 Always force re-authentication](#oidc_force_reauthentication)    
+  * [2.13 Always force re-authentication](#oidc_force_reauthentication)
+  * [2.14 Default authentication methods on login page](#default_auth_methods)
 - [3. TARA truststore](#tara_truststore)
   * [3.1 Mobile-ID CA certs](#dds_ca_certs)
   * [3.2 Smart-ID CA certs](#smart-id_ca_certs)
@@ -771,6 +772,22 @@ Example:
 
 ````
 oidc.authorize.force-auth-renewal.enabled=false
+````
+
+<a name="default_auth_methods"></a>
+### 2.14 Default list of authentication methods
+Change the list of authentication methods displayed to the user on the Login page by default.
+
+Table 2.14.1 - Parameters used to spec 
+
+| Property        | Mandatory | Description |
+| :---------------- | :---------- | :----------------|
+| `tara.default-authentication-methods` | N | A comma separated list of authentication methods that will be displayed to the user by default (if the OpenID Connect client does not specify authentication method by scope explicitly). Allowed values: `idcard`, `mobileid`, `banklink`, `eidas`, `smartid` . Defaults to `idcard, mid`, if not specified.  |
+
+Example:
+
+````
+tara.default-authentication-methods=idcard, mobileid, eidas, banklink, smartid
 ````    
 
 
