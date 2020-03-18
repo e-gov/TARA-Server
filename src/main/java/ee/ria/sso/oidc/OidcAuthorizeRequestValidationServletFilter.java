@@ -3,6 +3,7 @@ package ee.ria.sso.oidc;
 import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.LevelOfAssurance;
+import ee.ria.sso.config.TaraProperties;
 import ee.ria.sso.config.eidas.EidasConfigurationProvider;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +38,8 @@ public class OidcAuthorizeRequestValidationServletFilter implements Filter {
 
 
     private final EidasConfigurationProvider eidasConfigurationProvider;
+
+    private final TaraProperties taraProperties;
 
     @Override
     public void init(FilterConfig filterConfig) {
@@ -103,8 +106,11 @@ public class OidcAuthorizeRequestValidationServletFilter implements Filter {
         session.setAttribute(Constants.TARA_OIDC_SESSION_REDIRECT_URI,
                 request.getParameter(OidcAuthorizeRequestParameter.REDIRECT_URI.getParameterKey())
         );
+
+        List<AuthenticationType> authenticationMethodsList = getListOfAllowedAuthenticationMethods(scopes);
+        log.debug("List of authentication methods to display on login page: {}", authenticationMethodsList);
         session.setAttribute(Constants.TARA_OIDC_SESSION_AUTH_METHODS,
-                getListOfAllowedAuthenticationMethods(scopes)
+                authenticationMethodsList
         );
 
         final String acrValues = request.getParameter(OidcAuthorizeRequestParameter.ACR_VALUES.getParameterKey());
@@ -165,7 +171,7 @@ public class OidcAuthorizeRequestValidationServletFilter implements Filter {
                     .filter(e -> scopes.contains(e.getScope()) )
                     .collect(Collectors.toList());
         } else {
-            return Arrays.asList(AuthenticationType.values());
+            return taraProperties.getDefaultAuthenticationMethods();
         }
     }
 

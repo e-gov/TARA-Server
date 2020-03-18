@@ -1,10 +1,18 @@
 package ee.ria.sso.config;
 
-import lombok.*;
+import ee.ria.sso.authentication.AuthenticationType;
+import lombok.AccessLevel;
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.env.Environment;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @Data
 @ConfigurationProperties("tara")
@@ -17,6 +25,10 @@ public class TaraProperties {
 
     @Value("${env.test.message:#{null}}")
     private String testEnvironmentWarningMessage;
+
+    private List<AuthenticationType> defaultAuthenticationMethods = Arrays.asList(
+            AuthenticationType.IDCard,
+            AuthenticationType.MobileID);
 
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
