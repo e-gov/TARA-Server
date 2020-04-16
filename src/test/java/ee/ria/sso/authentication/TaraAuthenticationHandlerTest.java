@@ -2,6 +2,7 @@ package ee.ria.sso.authentication;
 
 import ee.ria.sso.authentication.credential.TaraCredential;
 import ee.ria.sso.authentication.principal.TaraPrincipal;
+import ee.ria.sso.config.TaraProperties;
 import ee.ria.sso.service.eidas.EidasCredential;
 import ee.ria.sso.service.idcard.IdCardCredential;
 import org.apereo.cas.authentication.AuthenticationHandlerExecutionResult;
@@ -13,12 +14,15 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.security.GeneralSecurityException;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
+@RunWith(MockitoJUnitRunner.class)
 public class TaraAuthenticationHandlerTest {
 
     private static final String MOCK_PRINCIPAL_CODE = "EE47101010033";
@@ -26,15 +30,19 @@ public class TaraAuthenticationHandlerTest {
     private static final String MOCK_LAST_NAME = "MÄNNIK";
     private static final String MOCK_DATE_OF_BIRTH = "1971-01-01";
     private static final String MOCK_EMAIL = "mariliis-mannik@eesti.ee";
+    private static final String MOCK_ACR = "high";
 
     private TaraAuthenticationHandler authenticationHandler;
 
     @Rule
     public ExpectedException expectedEx = ExpectedException.none();
 
+    @Mock
+    TaraProperties taraProperties;
+
     @Before
     public void setUp() {
-        authenticationHandler = new TaraAuthenticationHandler(null, null, null);
+        authenticationHandler = new TaraAuthenticationHandler(null, null, null, taraProperties);
     }
 
 
@@ -77,10 +85,11 @@ public class TaraAuthenticationHandlerTest {
 
     @Test
     public void doAuthenticationShouldReturnValidResultForValidIdCardCredential() throws GeneralSecurityException, PreventedException {
+        setAuthenticationMethodLoa(Collections.singletonMap(AuthenticationType.IDCard, LevelOfAssurance.HIGH));
         IdCardCredential credential = new IdCardCredential(MOCK_PRINCIPAL_CODE, MOCK_FIRST_NAME, MOCK_LAST_NAME, MOCK_EMAIL);
         AuthenticationHandlerExecutionResult authenticationHandlerExecutionResult = authenticationHandler.doAuthentication(credential);
 
-        Map<String, Object> expectedAttributes = buildCommonExpectedAttributesMap(AuthenticationType.IDCard);
+        Map<String, Object> expectedAttributes = buildCommonExpectedAttributesMap(AuthenticationType.IDCard, MOCK_ACR);
         expectedAttributes.put(TaraPrincipal.Attribute.EMAIL.name(), MOCK_EMAIL);
         expectedAttributes.put(TaraPrincipal.Attribute.EMAIL_VERIFIED.name(), false);
         verifyAuthenticationHandlerExecutionResult(authenticationHandlerExecutionResult, expectedAttributes);
@@ -89,9 +98,11 @@ public class TaraAuthenticationHandlerTest {
     @Test
     public void doAuthenticationShouldReturnValidResultForValidMobileIdCredential() throws GeneralSecurityException, PreventedException {
         TaraCredential credential = new TaraCredential(AuthenticationType.MobileID, MOCK_PRINCIPAL_CODE, MOCK_FIRST_NAME, MOCK_LAST_NAME);
+        setAuthenticationMethodLoa(Collections.singletonMap(AuthenticationType.MobileID, LevelOfAssurance.HIGH));
+
         AuthenticationHandlerExecutionResult authenticationHandlerExecutionResult = authenticationHandler.doAuthentication(credential);
 
-        Map<String, Object> expectedAttributes = buildCommonExpectedAttributesMap(AuthenticationType.MobileID);
+        Map<String, Object> expectedAttributes = buildCommonExpectedAttributesMap(AuthenticationType.MobileID, MOCK_ACR);
         verifyAuthenticationHandlerExecutionResult(authenticationHandlerExecutionResult, expectedAttributes);
     }
 
@@ -104,7 +115,7 @@ public class TaraAuthenticationHandlerTest {
 
         AuthenticationHandlerExecutionResult authenticationHandlerExecutionResult = authenticationHandler.doAuthentication(credential);
 
-        Map<String, Object> expectedAttributes = buildCommonExpectedAttributesMap(AuthenticationType.eIDAS);
+        Map<String, Object> expectedAttributes = buildCommonExpectedAttributesMap(AuthenticationType.eIDAS, MOCK_ACR);
         expectedAttributes.put(TaraPrincipal.Attribute.DATE_OF_BIRTH.name(), MOCK_DATE_OF_BIRTH);
         verifyAuthenticationHandlerExecutionResult(authenticationHandlerExecutionResult, expectedAttributes);
     }
@@ -115,7 +126,7 @@ public class TaraAuthenticationHandlerTest {
 
         AuthenticationHandlerExecutionResult authenticationHandlerExecutionResult = authenticationHandler.doAuthentication(credential);
 
-        Map<String, Object> expectedAttributes = buildCommonExpectedAttributesMap(AuthenticationType.eIDAS);
+        Map<String, Object> expectedAttributes = buildCommonExpectedAttributesMap(AuthenticationType.eIDAS, MOCK_ACR);
         expectedAttributes.put(TaraPrincipal.Attribute.DATE_OF_BIRTH.name(), MOCK_DATE_OF_BIRTH);
         expectedAttributes.put(TaraPrincipal.Attribute.ACR.name(), LevelOfAssurance.SUBSTANTIAL.getAcrName());
         verifyAuthenticationHandlerExecutionResult(authenticationHandlerExecutionResult, expectedAttributes);
@@ -123,19 +134,28 @@ public class TaraAuthenticationHandlerTest {
 
     @Test
     public void doAuthenticationShouldReturnValidResultForValidBanklinkCredential() throws GeneralSecurityException, PreventedException {
+        setAuthenticationMethodLoa(Collections.singletonMap(AuthenticationType.BankLink, LevelOfAssurance.LOW));
         TaraCredential credential = new TaraCredential(AuthenticationType.BankLink, MOCK_PRINCIPAL_CODE, MOCK_FIRST_NAME, MOCK_LAST_NAME);
         AuthenticationHandlerExecutionResult authenticationHandlerExecutionResult = authenticationHandler.doAuthentication(credential);
 
-        Map<String, Object> expectedAttributes = buildCommonExpectedAttributesMap(AuthenticationType.BankLink);
+        Map<String, Object> expectedAttributes = buildCommonExpectedAttributesMap(AuthenticationType.BankLink, LevelOfAssurance.LOW.getAcrName());
         verifyAuthenticationHandlerExecutionResult(authenticationHandlerExecutionResult, expectedAttributes);
     }
 
     @Test
     public void doAuthenticationShouldReturnValidResultForValidSmartIdCredential() throws GeneralSecurityException, PreventedException {
         TaraCredential credential = new TaraCredential(AuthenticationType.SmartID, MOCK_PRINCIPAL_CODE, MOCK_FIRST_NAME, MOCK_LAST_NAME);
-        AuthenticationHandlerExecutionResult authenticationHandlerExecutionResult = authenticationHandler.doAuthentication(credential);
 
-        Map<String, Object> expectedAttributes = buildCommonExpectedAttributesMap(AuthenticationType.SmartID);
+        // with loa
+        setAuthenticationMethodLoa(Collections.singletonMap(AuthenticationType.SmartID, LevelOfAssurance.SUBSTANTIAL));
+        AuthenticationHandlerExecutionResult authenticationHandlerExecutionResult = authenticationHandler.doAuthentication(credential);
+        Map<String, Object> expectedAttributes = buildCommonExpectedAttributesMap(AuthenticationType.SmartID, LevelOfAssurance.SUBSTANTIAL.getAcrName());
+        verifyAuthenticationHandlerExecutionResult(authenticationHandlerExecutionResult, expectedAttributes);
+
+        // without loa
+        setAuthenticationMethodLoa(new HashMap<>());
+        authenticationHandlerExecutionResult = authenticationHandler.doAuthentication(credential);
+        expectedAttributes = buildCommonExpectedAttributesMap(AuthenticationType.SmartID, null);
         verifyAuthenticationHandlerExecutionResult(authenticationHandlerExecutionResult, expectedAttributes);
     }
 
@@ -149,13 +169,15 @@ public class TaraAuthenticationHandlerTest {
         Assert.assertEquals(expectedAttributes, principal.getAttributes());
     }
 
-    private Map<String, Object> buildCommonExpectedAttributesMap(AuthenticationType type) {
+    private Map<String, Object> buildCommonExpectedAttributesMap(AuthenticationType type, String expectedAcr) {
         Map<String, Object> expectedAttributes = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         expectedAttributes.put(TaraPrincipal.Attribute.AMR.name(), Arrays.asList(Arrays.asList(type.getAmrName())));
         expectedAttributes.put(TaraPrincipal.Attribute.SUB.name(), MOCK_PRINCIPAL_CODE);
         expectedAttributes.put(TaraPrincipal.Attribute.GIVEN_NAME.name(), MOCK_FIRST_NAME);
         expectedAttributes.put(TaraPrincipal.Attribute.FAMILY_NAME.name(), MOCK_LAST_NAME);
         expectedAttributes.put(TaraPrincipal.Attribute.DATE_OF_BIRTH.name(), MOCK_DATE_OF_BIRTH);
+        if (expectedAcr != null)
+            expectedAttributes.put(TaraPrincipal.Attribute.ACR.name(), expectedAcr);
         return expectedAttributes;
     }
 
@@ -166,5 +188,9 @@ public class TaraAuthenticationHandlerTest {
                 return "id";
             }
         };
+    }
+
+    private void setAuthenticationMethodLoa(Map<AuthenticationType, LevelOfAssurance> authMethodsToLoaMap) {
+        Mockito.when(taraProperties.getAuthenticationMethodsLoaMap()).thenReturn(authMethodsToLoaMap);
     }
 }

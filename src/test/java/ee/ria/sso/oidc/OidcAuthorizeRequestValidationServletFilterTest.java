@@ -1,15 +1,12 @@
 package ee.ria.sso.oidc;
 
+import com.google.common.collect.ImmutableMap;
 import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.LevelOfAssurance;
 import ee.ria.sso.config.TaraProperties;
 import ee.ria.sso.config.eidas.EidasConfigurationProvider;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -27,7 +24,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.mockito.Mockito.mock;
+import static ee.ria.sso.authentication.AuthenticationType.*;
+import static ee.ria.sso.authentication.LevelOfAssurance.*;
 import static org.mockito.Mockito.when;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -36,6 +34,13 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
     public static final String MOCK_REDIRECT_URI = "https://example.com:1234/oauth/response";
     private static final List<String> ALLOWED_EIDAS_COUNTRY_ATTRIBUTES =
             Arrays.asList(scopeValuedAttribute(TaraScopeValuedAttributeName.EIDAS_COUNTRY, "gb"), scopeValuedAttribute(TaraScopeValuedAttributeName.EIDAS_COUNTRY, "ru"));
+    public static final ImmutableMap<AuthenticationType, LevelOfAssurance> DEFAULT_MAP_OF_EIDAS_ASSURANCE_LEVELS = ImmutableMap.of(
+            IDCard, HIGH,
+            MobileID, HIGH,
+            BankLink, LOW,
+            SmartID, SUBSTANTIAL
+    );
+    public static final AuthenticationType[] DEFAULT_LIST_OF_ENABLED_AUTH_METHODS = {IDCard, MobileID, BankLink, SmartID, eIDAS};
 
     @Rule
     public ExpectedException expectedEx = ExpectedException.none();
@@ -53,7 +58,10 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
 
     @Before
     public void setUp() {
-        when(eidasConfigurationProvider.getAllowedEidasCountryScopeAttributes()).thenReturn(ALLOWED_EIDAS_COUNTRY_ATTRIBUTES);
+        setAllowedEidasCountries(ALLOWED_EIDAS_COUNTRY_ATTRIBUTES);
+        setAuthMethodEidasAssuranceLevels(DEFAULT_MAP_OF_EIDAS_ASSURANCE_LEVELS);
+        setEnabledAuthMethods(DEFAULT_LIST_OF_ENABLED_AUTH_METHODS);
+        setDefaultAuthMethodsList(DEFAULT_LIST_OF_ENABLED_AUTH_METHODS);
 
         servletFilter = new OidcAuthorizeRequestValidationServletFilter(oidcRequestValidator, eidasConfigurationProvider, taraProperties);
         servletFilter.init(Mockito.mock(FilterConfig.class));
@@ -118,10 +126,10 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
     public void assertLoaInSessionWhenValidationSucceedsAndAcrValuesProvided() throws IOException, ServletException {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addParameter(OidcAuthorizeRequestParameter.ACR_VALUES.getParameterKey(),
-                LevelOfAssurance.SUBSTANTIAL.getAcrName());
+                SUBSTANTIAL.getAcrName());
 
         servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
-        Assert.assertEquals(LevelOfAssurance.SUBSTANTIAL,
+        Assert.assertEquals(SUBSTANTIAL,
                 request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_LOA));
     }
 
@@ -156,9 +164,100 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
     }
 
     @Test
+    public void assertRedirectWithErrorWhenAllAuthMethodsAreFilteredByLoa() throws Exception {
+        setAuthMethodEidasAssuranceLevels(ImmutableMap.of(
+                BankLink, LOW,
+                SmartID, SUBSTANTIAL
+        ));
+
+        MockHttpServletRequest servletRequest = new MockHttpServletRequest();
+        servletRequest.addParameter("scope", String.join(" ", TaraScope.OPENID.getFormalName(), TaraScope.SMARTID.getFormalName()), TaraScope.BANKLINK.getFormalName());
+        servletRequest.addParameter("acr_values", HIGH.getAcrName());
+        servletRequest.addParameter("redirect_uri", "https://example.redirect.uri:7866");
+        MockHttpServletResponse servletResponse = new MockHttpServletResponse();
+
+        servletFilter.doFilter(servletRequest, servletResponse, Mockito.mock(FilterChain.class));
+
+        Assert.assertEquals(302, servletResponse.getStatus());
+        Assert.assertEquals("https://example.redirect.uri:7866?error=invalid_request&error_description=No+authentication+methods+match+the+requested+level+of+assurance.+Please+check+your+authorization+request", servletResponse.getRedirectedUrl());
+
+    }
+
+    @Test
+    public void assertDomesticAuthMethodsInSessionAreFilteredByLoa() throws Exception {
+
+        // more than one > filter out the authmethods with insufficient loa level
+        setAuthMethodEidasAssuranceLevels(ImmutableMap.of(IDCard, HIGH,
+                SmartID, SUBSTANTIAL));
+        assertAuthMethodInSession("Assert auth method IS NOT returned when the expected loa is higher than auth method loa",
+                String.join(" ", TaraScope.OPENID.getFormalName(), TaraScope.SMARTID.getFormalName(), TaraScope.IDCARD.getFormalName()),
+                HIGH.getAcrName(),
+                IDCard
+        );
+
+        setAuthMethodEidasAssuranceLevels(ImmutableMap.of(SmartID, HIGH));
+        assertAuthMethodInSession("Assert auth method returned when the expected loa and auth method loa match",
+                String.join(" ", TaraScope.OPENID.getFormalName(), TaraScope.SMARTID.getFormalName()),
+                HIGH.getAcrName(),
+                SmartID
+        );
+
+        setAuthMethodEidasAssuranceLevels(ImmutableMap.of(SmartID, HIGH));
+        assertAuthMethodInSession("Assert auth method returned when the expected loa is lower than auth method loa",
+                String.join(" ", TaraScope.OPENID.getFormalName(), TaraScope.SMARTID.getFormalName()),
+                SUBSTANTIAL.getAcrName(),
+                SmartID
+        );
+
+        setAuthMethodEidasAssuranceLevels(ImmutableMap.of(SmartID, HIGH));
+        setDefaultAuthMethodsList(new AuthenticationType[]{IDCard, MobileID, SmartID});
+        assertAuthMethodInSession("Assert auth method returned when the authentication method present in the default authentication methods list",
+                String.join(" ", TaraScope.OPENID.getFormalName()),
+                SUBSTANTIAL.getAcrName(),
+                SmartID
+        );
+    }
+
+    @Test
+    public void assertEidasAuthMethodIsNotFilteredRegardlessOfAcrValue() throws Exception {
+
+        // eidas method explicitly requested
+        setAuthMethodEidasAssuranceLevels(ImmutableMap.of(
+                IDCard, HIGH,
+                SmartID, SUBSTANTIAL,
+                BankLink, LOW
+        ));
+        setDefaultAuthMethodsList(new AuthenticationType[]{IDCard, SmartID, BankLink});
+        for (LevelOfAssurance loa : LevelOfAssurance.values()) {
+
+            assertAuthMethodInSession ("Assert eidas authentication method is returned with 'eidasonly' scope, regardless of acr_value - " + loa,
+                    String.join(" ", TaraScope.OPENID.getFormalName(), TaraScope.EIDASONLY.getFormalName()),
+                    loa.getAcrName(),
+                    eIDAS
+            );
+
+            assertAuthMethodInSession ("Assert eidas authentication method is returned with 'eidas' scope, regardless of acr_value - " + loa,
+                    String.join(" ", TaraScope.OPENID.getFormalName(), TaraScope.EIDAS.getFormalName()),
+                    loa.getAcrName(),
+                    eIDAS
+            );
+        }
+
+        // eidas method from default authmethods list
+        setDefaultAuthMethodsList(new AuthenticationType[]{eIDAS});
+        for (LevelOfAssurance loa : LevelOfAssurance.values()) {
+            assertAuthMethodInSession("Assert eidas authentication method is returned regardless of acr_value",
+                    String.join(" ", TaraScope.OPENID.getFormalName()),
+                    loa.getAcrName(),
+                    eIDAS
+            );
+        }
+    }
+
+    @Test
     public void assertSelectionOfAuthMethodsInSession() throws Exception {
-            AuthenticationType authenticationType1 = AuthenticationType.IDCard;
-            AuthenticationType authenticationType2 = AuthenticationType.eIDAS;
+            AuthenticationType authenticationType1 = IDCard;
+            AuthenticationType authenticationType2 = eIDAS;
             String scope1 = authenticationType1.getScope().getFormalName();
             String scope2 = authenticationType2.getScope().getFormalName();
 
@@ -183,39 +282,30 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
 
     @Test
     public void assertConfiguredListOfAuthMethodsInSessionWhenNoScopesProvided() throws Exception {
-        AuthenticationType authenticationType1 = AuthenticationType.IDCard;
-        AuthenticationType authenticationType2 = AuthenticationType.eIDAS;
 
-        when(taraProperties.getDefaultAuthenticationMethods()).thenReturn(Arrays.asList(authenticationType1));
-        assertAuthMethodInSession("Assert default auth methods allowed when not scopes specified",
+        // #1 auth-method scopes explicitly not requested, acr not requested, all-methods enabled (returns single default method)
+        setDefaultAuthMethodsList(IDCard);
+        assertAuthMethodInSession("Assert auth-methods list allowed when no scopes specified, no acr_values provided, with a single default value",
                 "",
-                authenticationType1
+                IDCard
         );
 
-        when(taraProperties.getDefaultAuthenticationMethods()).thenReturn(Arrays.asList(authenticationType1, authenticationType2));
-        assertAuthMethodInSession("Assert default auth methods allowed when not scopes specified",
+
+        // #2 auth-method scopes explicitly not requested, acr not requested, all-methods enabled (returns sublist of default methods)
+        setDefaultAuthMethodsList(IDCard, eIDAS);
+        assertAuthMethodInSession("Assert auth-methods list allowed when no scopes specified, no acr_values provided, with a list of default values",
                 String.join(" ", TaraScope.OPENID.getFormalName()),
-                authenticationType1
-                , authenticationType2
+                IDCard, eIDAS
         );
     }
 
     @Test
-    public void assertConfiguredListOfAuthMethodsInSessionWhenOnlyOpenIdScopeProvided() throws Exception {
-        AuthenticationType authenticationType1 = AuthenticationType.IDCard;
-        AuthenticationType authenticationType2 = AuthenticationType.eIDAS;
+    public void assertConfiguredListOfAuthMethodsInSessionWhenOnlyNonAuthMethodScopesProvided() throws Exception {
 
-        when(taraProperties.getDefaultAuthenticationMethods()).thenReturn(Arrays.asList(authenticationType1));
+        setDefaultAuthMethodsList(IDCard, eIDAS);
         assertAuthMethodInSession("Assert default auth methods allowed when not scopes specified",
-                String.join(" ", TaraScope.OPENID.getFormalName()),
-                authenticationType1
-        );
-
-        when(taraProperties.getDefaultAuthenticationMethods()).thenReturn(Arrays.asList(authenticationType1, authenticationType2));
-        assertAuthMethodInSession("Assert default auth methods allowed when not scopes specified",
-                String.join(" ", TaraScope.OPENID.getFormalName()),
-                authenticationType1
-                , authenticationType2
+                String.join(" ", "scope1", "scope2", "scope3"),
+                IDCard, eIDAS
         );
     }
 
@@ -223,17 +313,17 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
     public void assertOnlyEidasAuthMethodInSessionWhenValidationSucceedsAndEidasonlyScopeProvided() throws Exception {
         assertAuthMethodInSession("Assert single occurrence of valid scope",
                 String.join(" ", TaraScope.OPENID.getFormalName(), TaraScope.EIDASONLY.getFormalName()),
-                AuthenticationType.eIDAS
+                eIDAS
         );
 
         assertAuthMethodInSession("Assert eidasonly overrides all other auth selection scopes",
                 String.join(" ", TaraScope.OPENID.getFormalName(), TaraScope.EIDASONLY.getFormalName(), TaraScope.EIDAS.getFormalName()),
-                AuthenticationType.eIDAS
+                eIDAS
         );
 
         assertAuthMethodInSession("Assert eidasonly overrides eidas",
                 String.join(" ", TaraScope.OPENID.getFormalName(), TaraScope.EIDASONLY.getFormalName(), TaraScope.IDCARD.getFormalName()),
-                AuthenticationType.eIDAS
+                eIDAS
         );
     }
 
@@ -248,7 +338,7 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
         servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
 
         Assert.assertEquals("Assert authentication method read from request",
-                Arrays.asList(AuthenticationType.eIDAS),
+                Arrays.asList(eIDAS),
                 request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_AUTH_METHODS));
 
         TaraScopeValuedAttribute scopeAttribute = (TaraScopeValuedAttribute) request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_SCOPE_EIDAS_COUNTRY);
@@ -269,7 +359,7 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
         servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
 
         Assert.assertEquals("Assert authentication method read from request",
-                Arrays.asList(AuthenticationType.eIDAS),
+                Arrays.asList(eIDAS),
                 request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_AUTH_METHODS));
 
         TaraScopeValuedAttribute scopeAttribute = (TaraScopeValuedAttribute) request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_SCOPE_EIDAS_COUNTRY);
@@ -287,7 +377,7 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
         servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
 
         Assert.assertEquals("Assert authentication method read from request",
-                Arrays.asList(AuthenticationType.eIDAS),
+                Arrays.asList(eIDAS),
                 request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_AUTH_METHODS));
 
         TaraScopeValuedAttribute scopeAttribute = (TaraScopeValuedAttribute) request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_SCOPE_EIDAS_COUNTRY);
@@ -400,13 +490,21 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
         return parameters.toArray(new OidcAuthorizeRequestParameter[parameters.size()]);
     }
 
-    private void assertAuthMethodInSession(String message, String scopeValue, AuthenticationType... authMethodInSession) throws IOException, ServletException {
+    private void assertAuthMethodInSession(String message, String scopeValue, AuthenticationType... allowedAuthMethods) throws IOException, ServletException {
+        assertAuthMethodInSession(message, scopeValue, null, allowedAuthMethods);
+    }
+
+    private void assertAuthMethodInSession(String message, String scopeValue, String acrValues, AuthenticationType... allowedAuthMethods) throws IOException, ServletException {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addParameter(OidcAuthorizeRequestParameter.SCOPE.getParameterKey(), scopeValue);
+        request.addParameter(OidcAuthorizeRequestParameter.REDIRECT_URI.getParameterKey(), "https://mock.redirect.uri");
+        if (acrValues != null) {
+            request.addParameter(OidcAuthorizeRequestParameter.ACR_VALUES.getParameterKey(), acrValues);
+        }
 
         servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
         Assert.assertEquals(message,
-                Arrays.asList(authMethodInSession),
+                Arrays.asList(allowedAuthMethods),
                 request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_AUTH_METHODS)
         );
     }
@@ -418,6 +516,35 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
     private static void assertScopeAttribute(TaraScopeValuedAttribute scopeAttribute, TaraScopeValuedAttributeName scopeAttributeName, String scopeAttributeValue) {
         Assert.assertSame(scopeAttributeName, scopeAttribute.getName());
         Assert.assertEquals(scopeAttributeValue, scopeAttribute.getValue());
+    }
+
+
+    private void setAuthMethodEidasAssuranceLevels(ImmutableMap<AuthenticationType, LevelOfAssurance> authMethodsAndLevelOfAssurances) {
+        when(taraProperties.getAuthenticationMethodsLoaMap()).thenReturn(authMethodsAndLevelOfAssurances);
+    }
+
+    private void setDefaultAuthMethodsList(AuthenticationType... authMethods) {
+        when(taraProperties.getDefaultAuthenticationMethods()).thenReturn(Arrays.asList(authMethods));
+    }
+
+    private void setEnabledAuthMethods(AuthenticationType... authMethods) {
+        for (AuthenticationType authMethod : authMethods) {
+            when(taraProperties.isPropertyEnabled(Mockito.eq(authMethod.getPropertyName()+ ".enabled"))).thenReturn(true);
+        }
+    }
+
+    private void setAllowedEidasCountries(List<String> allowedEidasCountryAttributes) {
+        when(eidasConfigurationProvider.getAllowedEidasCountryScopeAttributes()).thenReturn(allowedEidasCountryAttributes);
+    }
+
+    private AuthenticationType[] getConfiguredAuthMethodsWithLoa(LevelOfAssurance loa) {
+        List<AuthenticationType> list = taraProperties.getAuthenticationMethodsLoaMap().entrySet().stream()
+                .filter(x -> x.getValue().ordinal() >= loa.ordinal())
+                .map( p -> p.getKey())
+                .collect(Collectors.toList());
+
+        list.add(eIDAS);
+        return list.toArray(new AuthenticationType[list.size()]);
     }
 
     @After

@@ -20,10 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.context.annotation.*;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
@@ -128,9 +125,12 @@ public class TaraConfiguration extends WebMvcConfigurerAdapter {
         @Qualifier("taraPrincipalFactory")
         private PrincipalFactory taraPrincipalFactory;
 
+        @Autowired
+        private TaraProperties taraProperties;
+
         @Bean
         public AuthenticationHandler taraAuthenticationHandler() {
-            return new TaraAuthenticationHandler(this.servicesManager, taraPrincipalFactory, 1);
+            return new TaraAuthenticationHandler(this.servicesManager, taraPrincipalFactory, 1, taraProperties);
         }
 
         @Override

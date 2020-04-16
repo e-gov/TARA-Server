@@ -2,8 +2,11 @@ package ee.ria.sso.config;
 
 import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
+import ee.ria.sso.authentication.LevelOfAssurance;
 import ee.ria.sso.flow.ThymeleafSupport;
 import ee.ria.sso.service.manager.ManagerService;
+import org.apache.commons.collections.keyvalue.DefaultMapEntry;
+import org.apache.commons.collections4.MapUtils;
 import org.apereo.cas.configuration.CasConfigurationProperties;
 import org.apereo.cas.configuration.model.core.CasServerProperties;
 import org.apereo.cas.services.OidcRegisteredService;
@@ -46,10 +49,14 @@ public class ThymeleafSupportTest {
     }
 
     @Test
-    public void isAuthMethodAllowedShouldReturnTrueWhenMethodsEnabledAndAllowedInSession() {
+    public void isAuthMethodAllowedShouldReturnFalseWhenPassedParameterIsNull() {
+        Assert.assertFalse(this.thymeleafSupport.isAuthMethodAllowed(null));
+    }
+
+    @Test
+    public void isAuthMethodAllowedShouldReturnTrueWhenMethodsInSession() {
         Arrays.stream(AuthenticationType.values())
                 .forEach(method -> {
-                    Mockito.when(taraProperties.isPropertyEnabled(Mockito.eq(method.getPropertyName()+ ".enabled"))).thenReturn(true);
                     setRequestContextWithSessionMap(Collections.singletonMap(
                             Constants.TARA_OIDC_SESSION_AUTH_METHODS, Collections.singletonList(method)
                     ));
@@ -58,40 +65,16 @@ public class ThymeleafSupportTest {
     }
 
     @Test
-    public void isAuthMethodAllowedShouldReturnFalseWhenMethodsEnabledButNotAllowedInSession() {
-        setRequestContextWithSessionMap(Collections.singletonMap(
-                Constants.TARA_OIDC_SESSION_AUTH_METHODS, Collections.emptyList()
-        ));
-        Arrays.stream(AuthenticationType.values())
-                .forEach(method -> Assert.assertFalse(this.thymeleafSupport.isAuthMethodAllowed(method)));
-    }
-
-    @Test
     public void isAuthMethodAllowedWhenNoAttrSetInSession() {
         Arrays.stream(AuthenticationType.values())
                 .forEach(method -> {
-                    Mockito.when(taraProperties.isPropertyEnabled(Mockito.eq(method.getPropertyName()+ ".enabled"))).thenReturn(true);
                     setRequestContextWithSessionMap(new HashMap<>());
                     Assert.assertTrue("Method " + method + " should be allowed", this.thymeleafSupport.isAuthMethodAllowed(method));
                 });
     }
 
     @Test
-    public void isAuthMethodAllowedShouldReturnFalseWhenMethodsDisabledButAllowedInSession() {
-        final ThymeleafSupport thymeleafSupport = new ThymeleafSupport(null,
-                casProperties, taraProperties, null);
-        Arrays.stream(AuthenticationType.values())
-                .forEach(method -> {
-                    Mockito.when(taraProperties.isPropertyEnabled(Mockito.eq(method.getPropertyName()+ ".enabled"))).thenReturn(false);
-                    setRequestContextWithSessionMap(Collections.singletonMap(
-                            Constants.TARA_OIDC_SESSION_AUTH_METHODS, Collections.singletonList(method)
-                    ));
-                    Assert.assertFalse("Method " + method + " should not be allowed", thymeleafSupport.isAuthMethodAllowed(method));
-                });
-    }
-
-    @Test
-    public void isAuthMethodAllowedShouldReturnFalseWhenMethodsDisabledAndNotAllowedInSession() {
+    public void isAuthMethodAllowedShouldReturnFalseWhenAllowedInSessionList() {
         final ThymeleafSupport thymeleafSupport = new ThymeleafSupport(null,
                 casProperties, taraProperties, null);
         setRequestContextWithSessionMap(Collections.singletonMap(

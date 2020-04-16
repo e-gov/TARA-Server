@@ -13,6 +13,7 @@ import org.apereo.cas.configuration.CasConfigurationProperties;
 import org.apereo.cas.services.OidcRegisteredService;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.webflow.core.collection.SharedAttributeMap;
 import org.springframework.webflow.execution.RequestContextHolder;
 
 import javax.servlet.http.HttpServletRequest;
@@ -32,18 +33,17 @@ public class ThymeleafSupport {
     private final String defaultLocaleChangeParam;
 
     public boolean isAuthMethodAllowed(final AuthenticationType method) {
-        if (method != null && taraProperties.isPropertyEnabled(method.getPropertyName() + ".enabled")) {
-            final Object attribute = RequestContextHolder.getRequestContext().getExternalContext()
-                    .getSessionMap().get(Constants.TARA_OIDC_SESSION_AUTH_METHODS);
+        if (method == null)
+            return false;
 
-            if (attribute == null) {
-                return true; // TODO: only needed for cas management
-            } else if (attribute instanceof List) {
-                return ((List) attribute).contains(method);
-            }
+        SharedAttributeMap<Object> sessionMap = RequestContextHolder.getRequestContext().getExternalContext().getSessionMap();
+        final List<AuthenticationType> clientSpecificAuthMethodList = sessionMap.get(Constants.TARA_OIDC_SESSION_AUTH_METHODS, List.class);
+
+        if (clientSpecificAuthMethodList != null) {
+            return clientSpecificAuthMethodList.contains(method);
+        } else {
+            return true; // client specific auth method list is not supported (ie cas-management)
         }
-
-        return false;
     }
 
     public boolean isNotLocale(String code, Locale locale) {

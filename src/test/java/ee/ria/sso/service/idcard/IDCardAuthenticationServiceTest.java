@@ -227,21 +227,6 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
     }
 
     @Test
-    public void loginByIDCard2011SucceedsWithAiaOcsp() {
-        RequestContext requestContext = this.getMockRequestContextWith(null, mockUserCertificate2011);
-
-        Event event = this.authenticationService.loginByIDCard(requestContext);
-        Assert.assertEquals("success", event.getId());
-
-        IdCardCredential credential = (IdCardCredential) requestContext.getFlowExecutionContext().getActiveSession().getScope().get("credential");
-        this.validateUserCredentialWithoutEmail(credential, "48812040138", "KRÕÕT", "VÄRNICK");
-
-        this.verifyLogContentsOnSuccessfulAuthentication();
-
-        Mockito.verify(ocspValidatorMock).checkCert(Mockito.eq(mockUserCertificate2011));
-    }
-
-    @Test
     public void loginByIDCard2018SucceedsEmailScopeProvided() {
         RequestContext requestContext = this.getMockRequestContextWith(null, mockUserCertificate2018);
         requestContext.getExternalContext().getSessionMap().put(Constants.TARA_OIDC_SESSION_SCOPES, Collections.singletonList(TaraScope.EMAIL));
