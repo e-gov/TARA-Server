@@ -9,7 +9,6 @@ import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.Nullable;
 import org.springframework.util.Assert;
 
 import javax.servlet.*;
@@ -24,8 +23,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static ee.ria.sso.authentication.AuthenticationType.eIDAS;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.springframework.util.CollectionUtils.isEmpty;
 
 @Slf4j
@@ -63,28 +62,6 @@ public class OidcAuthorizeRequestValidationServletFilter implements Filter {
         }
     }
 
-    private boolean isInvalidClient(OidcAuthorizeRequestValidator.InvalidRequestException e) {
-        return e.getInvalidParameter() == OidcAuthorizeRequestParameter.REDIRECT_URI || e.getInvalidParameter() == OidcAuthorizeRequestParameter.CLIENT_ID;
-    }
-
-    @SneakyThrows
-    private String getRedirectUrlToRelyingParty(HttpServletRequest request, OidcAuthorizeRequestValidator.InvalidRequestException e) {
-        String redirectUri = request.getParameter(OidcAuthorizeRequestParameter.REDIRECT_URI.getParameterKey());
-        Assert.notNull(redirectUri, "redirect_uri is required");
-
-        StringBuilder sb = new StringBuilder();
-        sb.append(redirectUri);
-        sb.append(redirectUri.contains("?") ? "&" : "?");
-        sb.append(String.format("error=%s", URLEncoder.encode(e.getErrorCode(), UTF_8.name())));
-        sb.append(String.format("&error_description=%s", URLEncoder.encode(e.getErrorDescription(), UTF_8.name())));
-        String state = request.getParameter(OidcAuthorizeRequestParameter.STATE.getParameterKey());
-        if (StringUtils.isNotBlank(state)) {
-            sb.append(String.format("&state=%s", URLEncoder.encode(state, UTF_8.name())));
-        }
-
-        return sb.toString();
-    }
-
     private void saveOidcRequestParametersToSession(final HttpServletRequest request) {
         final HttpSession session = request.getSession(true);
 
@@ -112,9 +89,35 @@ public class OidcAuthorizeRequestValidationServletFilter implements Filter {
         );
     }
 
+    private boolean isInvalidClient(OidcAuthorizeRequestValidator.InvalidRequestException e) {
+        return e.getInvalidParameter() == OidcAuthorizeRequestParameter.REDIRECT_URI || e.getInvalidParameter() == OidcAuthorizeRequestParameter.CLIENT_ID;
+    }
+
+    @SneakyThrows
+    private String getRedirectUrlToRelyingParty(HttpServletRequest request, OidcAuthorizeRequestValidator.InvalidRequestException e) {
+        String redirectUri = request.getParameter(OidcAuthorizeRequestParameter.REDIRECT_URI.getParameterKey());
+        Assert.notNull(redirectUri, "redirect_uri is required");
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(redirectUri);
+        sb.append(redirectUri.contains("?") ? "&" : "?");
+        sb.append(String.format("error=%s", URLEncoder.encode(e.getErrorCode(), UTF_8.name())));
+        sb.append(String.format("&error_description=%s", URLEncoder.encode(e.getErrorDescription(), UTF_8.name())));
+        String state = request.getParameter(OidcAuthorizeRequestParameter.STATE.getParameterKey());
+        if (StringUtils.isNotBlank(state)) {
+            sb.append(String.format("&state=%s", URLEncoder.encode(state, UTF_8.name())));
+        }
+
+        return sb.toString();
+    }
+
     private List<AuthenticationType> getAllowedAuthenticationTypes(List<TaraScope> taraScopes, LevelOfAssurance requestedLoa) {
-        List<AuthenticationType> requestedAuthMethods = getAuthenticationMethodList(taraScopes);
-        List<AuthenticationType> allowedAuthenticationMethodsList = getFilteredListOfAllowedAuthenticationMethods(requestedAuthMethods, requestedLoa);
+        List<AuthenticationType> requestedAuthMethods = getRequestedAuthenticationMethodList(taraScopes);
+        List<AuthenticationType> allowedAuthenticationMethodsList = requestedAuthMethods.stream()
+                .filter(this::isAuthenticationMethodEnabled)
+                .filter(autMethod -> isAuthenticationMethodAllowedByRequestedLoa(requestedLoa, autMethod))
+                .collect(Collectors.toList());
+
         if (isEmpty(allowedAuthenticationMethodsList))
             throw new OidcAuthorizeRequestValidator.InvalidRequestException(OidcAuthorizeRequestParameter.ACR_VALUES, "invalid_request",
                     "No authentication methods match the requested level of assurance. Please check your authorization request");
@@ -129,7 +132,6 @@ public class OidcAuthorizeRequestValidationServletFilter implements Filter {
         return scopes;
     }
 
-    @Nullable
     private LevelOfAssurance getLevelOfAssurance(HttpServletRequest request) {
         final String acrValues = request.getParameter(OidcAuthorizeRequestParameter.ACR_VALUES.getParameterKey());
         if (acrValues != null) {
@@ -139,9 +141,9 @@ public class OidcAuthorizeRequestValidationServletFilter implements Filter {
         }
     }
 
-    private List<AuthenticationType> getAuthenticationMethodList(List<TaraScope> scopes) {
+    private List<AuthenticationType> getRequestedAuthenticationMethodList(List<TaraScope> scopes) {
         if (scopes.contains(TaraScope.EIDASONLY))
-            return Arrays.asList(AuthenticationType.eIDAS); // eidasonly must override all other auth methods
+            return Arrays.asList(eIDAS); // eidasonly must override all other auth methods
 
         List<AuthenticationType> clientRequestedAuthMethods = Arrays.stream(AuthenticationType.values())
                 .filter(e -> scopes.contains(e.getScope())).collect(Collectors.toList());
@@ -198,37 +200,28 @@ public class OidcAuthorizeRequestValidationServletFilter implements Filter {
         return scopeAttribute;
     }
 
-    private List<AuthenticationType> getFilteredListOfAllowedAuthenticationMethods(final List<AuthenticationType> requestedAuthMethods, LevelOfAssurance requestedLoa) {
-        Assert.notNull(requestedAuthMethods, "Requested auth methods cannot be null!");
+    private boolean isAuthenticationMethodAllowedByRequestedLoa(LevelOfAssurance requestedLoa, AuthenticationType autMethod) {
+        // Allow eIDAS authentication method since LoA is determined by the IDP of the respective country
+        if (autMethod == eIDAS)
+            return true;
 
-        // print warning if the loa of the requested loa of some authmethods is lower than the requested loa
-        List<AuthenticationType> conflicts = requestedAuthMethods.stream()
-                .filter(authMethod -> (
-                                requestedLoa != null && taraProperties.getAuthenticationMethodsLoaMap().containsKey(authMethod) &&
-                        taraProperties.getAuthenticationMethodsLoaMap().get(authMethod).ordinal() < requestedLoa.ordinal()))
-                .collect(Collectors.toList());
+        // Allow if LoA was not requested in the first place or no level of assurance has been configured
+        if (requestedLoa == null || taraProperties.getAuthenticationMethodsLoaMap() == null)
+            return true;
 
-        if (isNotEmpty(conflicts)) {
-            log.warn("Authentication methods were ignored because their level of assurance is lower than requested. Authentication methods: {}, requested auth methods: {}, requested level of assurance: {}", conflicts.toString(), requestedAuthMethods, requestedLoa );
-        }
-
-        return requestedAuthMethods.stream()
-                .filter(this::isAuthenticationMethodEnabled)
-                .filter(e -> isAllowedByLoa(requestedLoa, e))
-                .collect(Collectors.toList());
+        return isAllowedByRequestedLoa(requestedLoa, autMethod);
     }
 
-    private boolean isAllowedByLoa(LevelOfAssurance requestedLoa, AuthenticationType authenticationMethod) {
-        // Ignore if LoA was not requested in the first place
-        if (requestedLoa == null)
-            return true;
-
-        // Ignore eIDAS authentication method since LoA is determined by the IDP of the respective country
-        if (authenticationMethod == AuthenticationType.eIDAS)
-            return true;
-
-        return taraProperties.getAuthenticationMethodsLoaMap().containsKey(authenticationMethod)
+    private boolean isAllowedByRequestedLoa(LevelOfAssurance requestedLoa, AuthenticationType authenticationMethod) {
+        boolean isAllowed = taraProperties.getAuthenticationMethodsLoaMap() != null
+                && taraProperties.getAuthenticationMethodsLoaMap().containsKey(authenticationMethod)
                 && taraProperties.getAuthenticationMethodsLoaMap().get(authenticationMethod).ordinal() >= requestedLoa.ordinal();
+
+        if (!isAllowed) {
+            log.warn("Ignoring authentication method since it's level of assurance is lower than requested. Authentication method: {}, requested level of assurance: {}", authenticationMethod, requestedLoa );
+        }
+
+        return isAllowed;
     }
 
     private boolean isAuthenticationMethodEnabled(AuthenticationType method) {
