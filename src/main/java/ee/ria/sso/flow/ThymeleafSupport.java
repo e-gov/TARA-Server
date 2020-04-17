@@ -51,12 +51,17 @@ public class ThymeleafSupport {
     }
 
     public String getLocaleUrl(String locale) throws URISyntaxException {
-        UriComponentsBuilder builder = ServletUriComponentsBuilder.fromCurrentRequest().replaceQueryParam(defaultLocaleChangeParam, locale);
-        URI serverUri = new URI(this.casProperties.getServer().getName());
-        if ("https".equalsIgnoreCase(serverUri.getScheme())) {
-            builder.port((serverUri.getPort() == -1) ? 443 : serverUri.getPort());
+        try {
+            UriComponentsBuilder builder = ServletUriComponentsBuilder.fromCurrentRequest().replaceQueryParam(defaultLocaleChangeParam, locale);
+            URI serverUri = new URI(this.casProperties.getServer().getName());
+            if ("https".equalsIgnoreCase(serverUri.getScheme())) {
+                builder.port((serverUri.getPort() == -1) ? 443 : serverUri.getPort());
+            }
+            return builder.scheme(serverUri.getScheme()).host(serverUri.getHost()).build(true).toUriString();
+        } catch (Exception e) {
+            log.warn("Failed to create the locale change URL: " + e.getMessage(), e);
+            return "#";
         }
-        return builder.scheme(serverUri.getScheme()).host(serverUri.getHost()).build(true).toUriString();
     }
 
     public boolean isEidasOnlyDirect(Map<String, Object> sessionAttributes) {

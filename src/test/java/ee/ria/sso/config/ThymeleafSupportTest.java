@@ -132,6 +132,31 @@ public class ThymeleafSupportTest {
     }
 
     @Test
+    public void getLocaleUrlExistingRequestContainsInvalidCharactersAut292() throws Exception {
+
+        mockSpringServletRequestAttributes();
+        final MockRequestContext requestContext = new MockRequestContext();
+        final MockExternalContext externalContext = new MockExternalContext();
+        final SharedAttributeMap<Object> map = externalContext.getSessionMap();
+
+        MockHttpServletRequest nativeRequest = new MockHttpServletRequest();
+        nativeRequest.setQueryString("service=https%3A%2F%2Ftara.ria.ee%2Foauth2.0%2Fhttps://url.com/api/?get=start");
+        externalContext.setNativeRequest(nativeRequest);
+        requestContext.setExternalContext(externalContext);
+
+        RequestContextHolder.setRequestContext(requestContext);
+        org.springframework.web.context.request.RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(nativeRequest));
+
+
+        CasServerProperties casServerProperties =  new CasServerProperties();
+        casServerProperties.setName("https://example.tara.url");
+        Mockito.when(casProperties.getServer()).thenReturn(casServerProperties);
+
+        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(null, casProperties, null, "somelocaleparam");
+        Assert.assertEquals("#", thymeleafSupport.getLocaleUrl("et"));
+    }
+
+    @Test
     public void getBackUrlShouldReturnPac4jRequestedUrlWithSpecifiedLocale() throws Exception {
         setRequestContextWithSessionMap(new HashMap<>());
         ThymeleafSupport thymeleafSupport = new ThymeleafSupport(null, casProperties, null, "somelocaleparam");
