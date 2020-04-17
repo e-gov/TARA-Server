@@ -165,6 +165,7 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
 
     @Test
     public void assertRedirectWithErrorWhenAllAuthMethodsAreFilteredByLoa() throws Exception {
+        setDefaultAuthMethodsList(new AuthenticationType[]{IDCard, SmartID});
         setAuthMethodEidasAssuranceLevels(ImmutableMap.of(
                 BankLink, LOW,
                 SmartID, SUBSTANTIAL
@@ -189,6 +190,7 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
         // more than one > filter out the authmethods with insufficient loa level
         setAuthMethodEidasAssuranceLevels(ImmutableMap.of(IDCard, HIGH,
                 SmartID, SUBSTANTIAL));
+        setDefaultAuthMethodsList(new AuthenticationType[]{IDCard, SmartID});
         assertAuthMethodInSession("Assert auth method IS NOT returned when the expected loa is higher than auth method loa",
                 String.join(" ", TaraScope.OPENID.getFormalName(), TaraScope.SMARTID.getFormalName(), TaraScope.IDCARD.getFormalName()),
                 HIGH.getAcrName(),
@@ -211,6 +213,14 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
 
         setAuthMethodEidasAssuranceLevels(ImmutableMap.of(SmartID, HIGH));
         setDefaultAuthMethodsList(new AuthenticationType[]{IDCard, MobileID, SmartID});
+        assertAuthMethodInSession("Assert matching auth methods returned (methods with LoA assigned together with auth methods without LoA)",
+                String.join(" ", TaraScope.OPENID.getFormalName()),
+                SUBSTANTIAL.getAcrName(),
+                IDCard, MobileID, SmartID
+        );
+
+        setAuthMethodEidasAssuranceLevels(ImmutableMap.of(SmartID, HIGH));
+        setDefaultAuthMethodsList(new AuthenticationType[]{SmartID});
         assertAuthMethodInSession("Assert auth method returned when the authentication method present in the default authentication methods list",
                 String.join(" ", TaraScope.OPENID.getFormalName()),
                 SUBSTANTIAL.getAcrName(),

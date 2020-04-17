@@ -213,11 +213,14 @@ public class OidcAuthorizeRequestValidationServletFilter implements Filter {
     }
 
     private boolean isAllowedByRequestedLoa(LevelOfAssurance requestedLoa, AuthenticationType authenticationMethod) {
-        boolean isAllowed = taraProperties.getAuthenticationMethodsLoaMap() != null
-                && taraProperties.getAuthenticationMethodsLoaMap().containsKey(authenticationMethod)
-                && taraProperties.getAuthenticationMethodsLoaMap().get(authenticationMethod).ordinal() >= requestedLoa.ordinal();
+        // Allow if LoA was not configured
+        if (taraProperties.getAuthenticationMethodsLoaMap() != null
+                && !taraProperties.getAuthenticationMethodsLoaMap().containsKey(authenticationMethod))
+            return true;
 
-        if (!isAllowed) {
+        boolean isAllowed = taraProperties.getAuthenticationMethodsLoaMap().get(authenticationMethod).ordinal() >= requestedLoa.ordinal();
+
+        if (isAllowed) {
             log.warn("Ignoring authentication method since it's level of assurance is lower than requested. Authentication method: {}, requested level of assurance: {}", authenticationMethod, requestedLoa );
         }
 
