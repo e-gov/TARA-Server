@@ -791,6 +791,7 @@ Example:
 tara.default-authentication-methods=idcard, mobileid, eidas, banklink, smartid
 ````    
 
+<a name="eidas_auth_methods_loa"></a>
 ### 2.15 Assigning eIDAS level of assurance to domestic authentication methods
 
 Explicitly specifying the level of assurance for domestic authentication methods allows TARA clients to filter the domestic authentication methods displayed to the user by acr_values parameter. In addition, assigning a level of assurance for domestic authenticatiom method also adds the `acr` claim to the id-token issued by TARA.  
