@@ -153,7 +153,7 @@ public class TaraAuthenticationHandlerTest {
         verifyAuthenticationHandlerExecutionResult(authenticationHandlerExecutionResult, expectedAttributes);
 
         // without loa
-        setAuthenticationMethodLoa(new HashMap<>());
+        setAuthenticationMethodLoa(null);
         authenticationHandlerExecutionResult = authenticationHandler.doAuthentication(credential);
         expectedAttributes = buildCommonExpectedAttributesMap(AuthenticationType.SmartID, null);
         verifyAuthenticationHandlerExecutionResult(authenticationHandlerExecutionResult, expectedAttributes);

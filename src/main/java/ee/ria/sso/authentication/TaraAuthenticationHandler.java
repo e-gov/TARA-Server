@@ -59,7 +59,8 @@ public class TaraAuthenticationHandler extends AbstractPreAndPostProcessingAuthe
     }
 
     private boolean isLoaDefinedByConf(AuthenticationType type) {
-        return taraProperties != null && taraProperties.getAuthenticationMethodsLoaMap().containsKey(type);
+        return taraProperties != null && taraProperties.getAuthenticationMethodsLoaMap() != null
+                && taraProperties.getAuthenticationMethodsLoaMap().containsKey(type);
     }
 
     private Map<String, Object> getMandatoryPrincipalParameters(TaraCredential taraCredential) {
