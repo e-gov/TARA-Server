@@ -2,8 +2,11 @@ package ee.ria.sso.config;
 
 import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
+import ee.ria.sso.authentication.LevelOfAssurance;
 import ee.ria.sso.flow.ThymeleafSupport;
 import ee.ria.sso.service.manager.ManagerService;
+import org.apache.commons.collections.keyvalue.DefaultMapEntry;
+import org.apache.commons.collections4.MapUtils;
 import org.apereo.cas.configuration.CasConfigurationProperties;
 import org.apereo.cas.configuration.model.core.CasServerProperties;
 import org.apereo.cas.services.OidcRegisteredService;
@@ -46,10 +49,14 @@ public class ThymeleafSupportTest {
     }
 
     @Test
-    public void isAuthMethodAllowedShouldReturnTrueWhenMethodsEnabledAndAllowedInSession() {
+    public void isAuthMethodAllowedShouldReturnFalseWhenPassedParameterIsNull() {
+        Assert.assertFalse(this.thymeleafSupport.isAuthMethodAllowed(null));
+    }
+
+    @Test
+    public void isAuthMethodAllowedShouldReturnTrueWhenMethodsInSession() {
         Arrays.stream(AuthenticationType.values())
                 .forEach(method -> {
-                    Mockito.when(taraProperties.isPropertyEnabled(Mockito.eq(method.getPropertyName()+ ".enabled"))).thenReturn(true);
                     setRequestContextWithSessionMap(Collections.singletonMap(
                             Constants.TARA_OIDC_SESSION_AUTH_METHODS, Collections.singletonList(method)
                     ));
@@ -58,40 +65,16 @@ public class ThymeleafSupportTest {
     }
 
     @Test
-    public void isAuthMethodAllowedShouldReturnFalseWhenMethodsEnabledButNotAllowedInSession() {
-        setRequestContextWithSessionMap(Collections.singletonMap(
-                Constants.TARA_OIDC_SESSION_AUTH_METHODS, Collections.emptyList()
-        ));
-        Arrays.stream(AuthenticationType.values())
-                .forEach(method -> Assert.assertFalse(this.thymeleafSupport.isAuthMethodAllowed(method)));
-    }
-
-    @Test
     public void isAuthMethodAllowedWhenNoAttrSetInSession() {
         Arrays.stream(AuthenticationType.values())
                 .forEach(method -> {
-                    Mockito.when(taraProperties.isPropertyEnabled(Mockito.eq(method.getPropertyName()+ ".enabled"))).thenReturn(true);
                     setRequestContextWithSessionMap(new HashMap<>());
                     Assert.assertTrue("Method " + method + " should be allowed", this.thymeleafSupport.isAuthMethodAllowed(method));
                 });
     }
 
     @Test
-    public void isAuthMethodAllowedShouldReturnFalseWhenMethodsDisabledButAllowedInSession() {
-        final ThymeleafSupport thymeleafSupport = new ThymeleafSupport(null,
-                casProperties, taraProperties, null);
-        Arrays.stream(AuthenticationType.values())
-                .forEach(method -> {
-                    Mockito.when(taraProperties.isPropertyEnabled(Mockito.eq(method.getPropertyName()+ ".enabled"))).thenReturn(false);
-                    setRequestContextWithSessionMap(Collections.singletonMap(
-                            Constants.TARA_OIDC_SESSION_AUTH_METHODS, Collections.singletonList(method)
-                    ));
-                    Assert.assertFalse("Method " + method + " should not be allowed", thymeleafSupport.isAuthMethodAllowed(method));
-                });
-    }
-
-    @Test
-    public void isAuthMethodAllowedShouldReturnFalseWhenMethodsDisabledAndNotAllowedInSession() {
+    public void isAuthMethodAllowedShouldReturnFalseWhenAllowedInSessionList() {
         final ThymeleafSupport thymeleafSupport = new ThymeleafSupport(null,
                 casProperties, taraProperties, null);
         setRequestContextWithSessionMap(Collections.singletonMap(
@@ -146,6 +129,31 @@ public class ThymeleafSupportTest {
 
         ThymeleafSupport thymeleafSupport = new ThymeleafSupport(null, casProperties, null, "somelocaleparam");
         Assert.assertEquals("https://example.tara.url:443?somelocaleparam=et", thymeleafSupport.getLocaleUrl("et"));
+    }
+
+    @Test
+    public void getLocaleUrlExistingRequestContainsInvalidCharactersAut292() throws Exception {
+
+        mockSpringServletRequestAttributes();
+        final MockRequestContext requestContext = new MockRequestContext();
+        final MockExternalContext externalContext = new MockExternalContext();
+        final SharedAttributeMap<Object> map = externalContext.getSessionMap();
+
+        MockHttpServletRequest nativeRequest = new MockHttpServletRequest();
+        nativeRequest.setQueryString("service=https%3A%2F%2Ftara.ria.ee%2Foauth2.0%2Fhttps://url.com/api/?get=start");
+        externalContext.setNativeRequest(nativeRequest);
+        requestContext.setExternalContext(externalContext);
+
+        RequestContextHolder.setRequestContext(requestContext);
+        org.springframework.web.context.request.RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(nativeRequest));
+
+
+        CasServerProperties casServerProperties =  new CasServerProperties();
+        casServerProperties.setName("https://example.tara.url");
+        Mockito.when(casProperties.getServer()).thenReturn(casServerProperties);
+
+        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(null, casProperties, null, "somelocaleparam");
+        Assert.assertEquals("#", thymeleafSupport.getLocaleUrl("et"));
     }
 
     @Test

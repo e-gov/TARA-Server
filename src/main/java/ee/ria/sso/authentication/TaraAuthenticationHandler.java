@@ -1,9 +1,11 @@
 package ee.ria.sso.authentication;
 
 import ee.ria.sso.authentication.credential.TaraCredential;
+import ee.ria.sso.config.TaraProperties;
 import ee.ria.sso.service.eidas.EidasCredential;
 import ee.ria.sso.service.idcard.IdCardCredential;
 import ee.ria.sso.utils.EstonianIdCodeUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.apereo.cas.authentication.AuthenticationHandlerExecutionResult;
 import org.apereo.cas.authentication.Credential;
 import org.apereo.cas.authentication.PreventedException;
@@ -19,8 +21,11 @@ import static ee.ria.sso.authentication.principal.TaraPrincipal.Attribute.*;
 
 public class TaraAuthenticationHandler extends AbstractPreAndPostProcessingAuthenticationHandler {
 
-    public TaraAuthenticationHandler(ServicesManager servicesManager, PrincipalFactory principalFactory, Integer order) {
+    private TaraProperties taraProperties;
+
+    public TaraAuthenticationHandler(ServicesManager servicesManager, PrincipalFactory principalFactory, Integer order, TaraProperties taraProperties) {
         super("", servicesManager, principalFactory, order);
+        this.taraProperties = taraProperties;
     }
 
     @Override
@@ -35,6 +40,10 @@ public class TaraAuthenticationHandler extends AbstractPreAndPostProcessingAuthe
             TaraCredential taraCredential = (TaraCredential) credential;
             final Map<String, Object> principalAttributes = getMandatoryPrincipalParameters(taraCredential);
 
+            if (isLoaDefinedByConf(taraCredential.getType())) {
+                principalAttributes.put(ACR.name(), taraProperties.getAuthenticationMethodsLoaMap().get(taraCredential.getType()).getAcrName());
+            }
+
             if (credential instanceof IdCardCredential && ((IdCardCredential)taraCredential).getEmail() != null) {
                 principalAttributes.put(EMAIL.name(), ((IdCardCredential)taraCredential).getEmail());
                 principalAttributes.put(EMAIL_VERIFIED.name(), ((IdCardCredential)taraCredential).getEmailVerified());
@@ -47,6 +56,11 @@ public class TaraAuthenticationHandler extends AbstractPreAndPostProcessingAuthe
                 .createPrincipal(taraCredential.getId(), principalAttributes), new ArrayList<>());
         }
         return null;
+    }
+
+    private boolean isLoaDefinedByConf(AuthenticationType type) {
+        return taraProperties != null && taraProperties.getAuthenticationMethodsLoaMap() != null
+                && taraProperties.getAuthenticationMethodsLoaMap().containsKey(type);
     }
 
     private Map<String, Object> getMandatoryPrincipalParameters(TaraCredential taraCredential) {

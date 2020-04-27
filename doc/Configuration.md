@@ -23,6 +23,7 @@ _CAS tarkvaras tehtud kohanduste ja täienduste kirjeldus._
   * [2.12 Client secret handling](#oidc_client_secret)
   * [2.13 Always force re-authentication](#oidc_force_reauthentication)
   * [2.14 Default authentication methods on login page](#default_auth_methods)
+  * [2.15 Assigning eIDAS level of assurance to domestic authentication methods](#eidas_auth_methods_loa)
 - [3. TARA truststore](#tara_truststore)
   * [3.1 Mobile-ID CA certs](#dds_ca_certs)
   * [3.2 Smart-ID CA certs](#smart-id_ca_certs)
@@ -778,7 +779,7 @@ oidc.authorize.force-auth-renewal.enabled=false
 ### 2.14 Default list of authentication methods
 Change the list of authentication methods displayed to the user on the Login page by default.
 
-Table 2.14.1 - Parameters used to spec 
+Table 2.14.1 - Parameters used to specify the list of default authentication methods 
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
@@ -790,6 +791,25 @@ Example:
 tara.default-authentication-methods=idcard, mobileid, eidas, banklink, smartid
 ````    
 
+<a name="eidas_auth_methods_loa"></a>
+### 2.15 Assigning eIDAS level of assurance to domestic authentication methods
+
+Explicitly specifying the level of assurance for domestic authentication methods allows TARA clients to filter the domestic authentication methods displayed to the user by acr_values parameter. In addition, assigning a level of assurance for domestic authenticatiom method also adds the `acr` claim to the id-token issued by TARA.  
+
+Table 2.15.1 - Parameters to specify the level of assurance for domestic authentication methods. 
+
+| Property        | Mandatory | Description |
+| :---------------- | :---------- | :----------------|
+| `tara.authentication-methods-loa-map.<auth method>` | N | <p>The `<auth method>` in the configuration parameter template can have values: `idcard`, `mobileid`, `banklink`, `smartid`.</p> <p>Valid values for a parameter are: `low`, `substantial`, `high` </p>. |
+
+Example:
+
+````
+tara.authentication-methods-loa-map.idcard=high
+tara.authentication-methods-loa-map.mobileid=high
+tara.authentication-methods-loa-map.banklink=low
+tara.authentication-methods-loa-map.smartid=substantial
+````
 
 <a name="tara_truststore"></a>
 ## 3. TARA truststore
