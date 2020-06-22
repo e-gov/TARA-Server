@@ -108,6 +108,27 @@ public class ThymeleafSupportTest {
     }
 
     @Test
+    public void getHomeUrlShouldReturnValidCancelUrlWhenValidRedirectUriPresentInSessionAndInformationUriNotPresent() {
+        OidcRegisteredService oidcRegisteredService = Mockito.mock(OidcRegisteredService.class);
+        Mockito.when(oidcRegisteredService.getInformationUrl()).thenReturn(null);
+
+        ManagerService managerService = Mockito.mock(ManagerService.class);
+        Mockito.when(managerService.getServiceByID("https://client/url"))
+                .thenReturn(Optional.of(oidcRegisteredService));
+
+        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(managerService, null, null, null);
+
+        Map<String, Object> sessionMap = new HashMap<>();
+
+        sessionMap.put(Constants.TARA_OIDC_SESSION_REDIRECT_URI, "https://client/url");
+        sessionMap.put(Constants.TARA_OIDC_SESSION_STATE, "randomSessionState");
+
+        setRequestContextWithSessionMap(sessionMap);
+
+        Assert.assertEquals("https://client/url?error=user_cancel&error_description=User+canceled+the+login+process&state=randomSessionState", thymeleafSupport.getHomeUrl());
+    }
+
+    @Test
     public void getHomeUrlShouldReturnEmptyUrlWhenInvalidRedirectUriPresentInSession() {
         ManagerService managerService = Mockito.mock(ManagerService.class);
         Mockito.when(managerService.getServiceByID("https://client/url"))

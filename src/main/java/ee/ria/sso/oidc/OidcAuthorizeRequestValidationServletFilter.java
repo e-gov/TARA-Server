@@ -78,6 +78,9 @@ public class OidcAuthorizeRequestValidationServletFilter implements Filter {
         session.setAttribute(Constants.TARA_OIDC_SESSION_REDIRECT_URI,
                 request.getParameter(OidcAuthorizeRequestParameter.REDIRECT_URI.getParameterKey())
         );
+        session.setAttribute(Constants.TARA_OIDC_SESSION_STATE,
+                request.getParameter(OidcAuthorizeRequestParameter.STATE.getParameterKey()));
+
         LevelOfAssurance requestedLoa = getLevelOfAssurance(request);
         if (requestedLoa != null) {
             session.setAttribute(Constants.TARA_OIDC_SESSION_LOA, requestedLoa);
