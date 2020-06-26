@@ -5,6 +5,7 @@ import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.config.TaraProperties;
 import ee.ria.sso.oidc.TaraScope;
 import ee.ria.sso.service.manager.ManagerService;
+import ee.ria.sso.utils.RedirectUrlUtil;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -95,23 +96,28 @@ public class ThymeleafSupport {
     }
 
     public String getHomeUrl() {
-        final Object redirectUri = RequestContextHolder.getRequestContext()
+        final String redirectUri = RequestContextHolder.getRequestContext()
                 .getExternalContext()
                 .getSessionMap()
-                .get(Constants.TARA_OIDC_SESSION_REDIRECT_URI);
+                .getString(Constants.TARA_OIDC_SESSION_REDIRECT_URI);
 
-        String informationUrl = getHomeUrl((String) redirectUri);
+        final String clientId = RequestContextHolder.getRequestContext()
+                .getExternalContext()
+                .getSessionMap()
+                .getString(Constants.TARA_OIDC_SESSION_CLIENT_ID);
+
+        String informationUrl = getHomeUrl(clientId);
 
         if (StringUtils.isNotBlank(informationUrl)) {
             return informationUrl;
         }
 
-        return getUserCancelUrl((String) redirectUri);
+        return getUserCancelUrl(redirectUri);
     }
 
-    public String getHomeUrl(String redirectUri) {
-        if (StringUtils.isNotBlank(redirectUri)) {
-            return this.managerService.getServiceByID(redirectUri)
+    public String getHomeUrl(String clientId) {
+        if (StringUtils.isNotBlank(clientId)) {
+            return this.managerService.getServiceByName(clientId)
                     .orElse(new OidcRegisteredService() {
                         @Override
                         public String getInformationUrl() {
@@ -126,26 +132,17 @@ public class ThymeleafSupport {
     }
 
     public String getUserCancelUrl(String redirectUri) {
-
-        final Object sessionState = RequestContextHolder.getRequestContext()
+        final String sessionState = RequestContextHolder.getRequestContext()
                 .getExternalContext()
                 .getSessionMap()
-                .get(Constants.TARA_OIDC_SESSION_STATE);
+                .getString(Constants.TARA_OIDC_SESSION_STATE);
 
-        return getUserCancelUrl(redirectUri, sessionState == null ? null : (String) sessionState);
+        return getUserCancelUrl(redirectUri, sessionState);
     }
 
     @SneakyThrows
     public String getUserCancelUrl(String redirectUri, String sessionState) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(redirectUri);
-        sb.append(redirectUri.contains("?") ? "&" : "?");
-        sb.append(String.format("error=%s", URLEncoder.encode("user_cancel", UTF_8.name())));
-        sb.append(String.format("&error_description=%s", URLEncoder.encode("User canceled the login process", UTF_8.name())));
-        if (StringUtils.isNotBlank(sessionState)) {
-            sb.append(String.format("&state=%s", URLEncoder.encode(sessionState, UTF_8.name())));
-        }
-        return sb.toString();
+        return RedirectUrlUtil.createRedirectUrl(redirectUri, "user_cancel", "User canceled the login process", sessionState);
     }
 
     public String getCurrentRequestIdentifier(HttpServletRequest request) {
