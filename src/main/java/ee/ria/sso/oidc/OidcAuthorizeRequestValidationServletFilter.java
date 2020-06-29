@@ -5,6 +5,7 @@ import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.LevelOfAssurance;
 import ee.ria.sso.config.TaraProperties;
 import ee.ria.sso.config.eidas.EidasConfigurationProvider;
+import ee.ria.sso.utils.RedirectUrlUtil;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -78,6 +79,9 @@ public class OidcAuthorizeRequestValidationServletFilter implements Filter {
         session.setAttribute(Constants.TARA_OIDC_SESSION_REDIRECT_URI,
                 request.getParameter(OidcAuthorizeRequestParameter.REDIRECT_URI.getParameterKey())
         );
+        session.setAttribute(Constants.TARA_OIDC_SESSION_STATE,
+                request.getParameter(OidcAuthorizeRequestParameter.STATE.getParameterKey()));
+
         LevelOfAssurance requestedLoa = getLevelOfAssurance(request);
         if (requestedLoa != null) {
             session.setAttribute(Constants.TARA_OIDC_SESSION_LOA, requestedLoa);
@@ -98,17 +102,9 @@ public class OidcAuthorizeRequestValidationServletFilter implements Filter {
         String redirectUri = request.getParameter(OidcAuthorizeRequestParameter.REDIRECT_URI.getParameterKey());
         Assert.notNull(redirectUri, "redirect_uri is required");
 
-        StringBuilder sb = new StringBuilder();
-        sb.append(redirectUri);
-        sb.append(redirectUri.contains("?") ? "&" : "?");
-        sb.append(String.format("error=%s", URLEncoder.encode(e.getErrorCode(), UTF_8.name())));
-        sb.append(String.format("&error_description=%s", URLEncoder.encode(e.getErrorDescription(), UTF_8.name())));
         String state = request.getParameter(OidcAuthorizeRequestParameter.STATE.getParameterKey());
-        if (StringUtils.isNotBlank(state)) {
-            sb.append(String.format("&state=%s", URLEncoder.encode(state, UTF_8.name())));
-        }
 
-        return sb.toString();
+        return RedirectUrlUtil.createRedirectUrl(redirectUri, e.getErrorCode(), e.getErrorDescription(), state);
     }
 
     private List<AuthenticationType> getAllowedAuthenticationTypes(List<TaraScope> taraScopes, LevelOfAssurance requestedLoa) {

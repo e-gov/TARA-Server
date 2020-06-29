@@ -1,8 +1,8 @@
 package ee.ria.sso.service.manager;
 
-import java.util.Optional;
-
 import org.apereo.cas.services.OidcRegisteredService;
+
+import java.util.Optional;
 
 /**
  * Created by Janar Rahumeel (CGI Estonia)
@@ -10,6 +10,6 @@ import org.apereo.cas.services.OidcRegisteredService;
 
 public interface ManagerService {
 
-    Optional<OidcRegisteredService> getServiceByID(String serviceID);
+   Optional<OidcRegisteredService> getServiceByName(String serviceName);
 
 }
