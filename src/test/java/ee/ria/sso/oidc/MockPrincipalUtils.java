@@ -23,6 +23,7 @@ import static ee.ria.sso.authentication.principal.TaraPrincipal.Attribute.DATE_O
 public class MockPrincipalUtils {
 
     public static final String MOCK_EMAIL = "givenname.familyname@eesti.ee";
+    public static final String MOCK_PHONE_NUBMER = "+3725123123";
     public static final String MOCK_DATE_OF_BIRTH = "1971-01-01";
     public static final String MOCK_FAMILY_NAME = "Family-Name-ŠÕäÖü";
     public static final String MOCK_GIVEN_NAME = "Given-Name-ŠÕäÖü";
@@ -37,6 +38,8 @@ public class MockPrincipalUtils {
         map.put(SUB.name(), Arrays.asList(MOCK_SUBJECT_CODE_EE));
         map.put(GIVEN_NAME.name(), Arrays.asList(MOCK_GIVEN_NAME));
         map.put(FAMILY_NAME.name(), Arrays.asList(MOCK_FAMILY_NAME));
+        map.put(PHONE_NUMBER.name(), Arrays.asList(MOCK_PHONE_NUBMER));
+        map.put(PHONE_NUMBER_VERIFIED.name(), Arrays.asList(false));
         map.put(DATE_OF_BIRTH.name(), Arrays.asList(MOCK_DATE_OF_BIRTH));
         map.put(AMR.name(), Arrays.asList(Arrays.asList(AuthenticationType.MobileID.getAmrName())));
         return map;

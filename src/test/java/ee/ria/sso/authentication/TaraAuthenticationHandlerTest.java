@@ -5,6 +5,7 @@ import ee.ria.sso.authentication.principal.TaraPrincipal;
 import ee.ria.sso.config.TaraProperties;
 import ee.ria.sso.service.eidas.EidasCredential;
 import ee.ria.sso.service.idcard.IdCardCredential;
+import ee.ria.sso.service.mobileid.MobileIDCredential;
 import org.apereo.cas.authentication.AuthenticationHandlerExecutionResult;
 import org.apereo.cas.authentication.Credential;
 import org.apereo.cas.authentication.PreventedException;
@@ -30,6 +31,7 @@ public class TaraAuthenticationHandlerTest {
     private static final String MOCK_LAST_NAME = "MÄNNIK";
     private static final String MOCK_DATE_OF_BIRTH = "1971-01-01";
     private static final String MOCK_EMAIL = "mariliis-mannik@eesti.ee";
+    private static final String MOCK_PHONE_NUMBER = "+3725123123";
     private static final String MOCK_ACR = "high";
 
     private TaraAuthenticationHandler authenticationHandler;
@@ -97,12 +99,25 @@ public class TaraAuthenticationHandlerTest {
 
     @Test
     public void doAuthenticationShouldReturnValidResultForValidMobileIdCredential() throws GeneralSecurityException, PreventedException {
-        TaraCredential credential = new TaraCredential(AuthenticationType.MobileID, MOCK_PRINCIPAL_CODE, MOCK_FIRST_NAME, MOCK_LAST_NAME);
+        MobileIDCredential credential = new MobileIDCredential(MOCK_PRINCIPAL_CODE, MOCK_FIRST_NAME, MOCK_LAST_NAME);
         setAuthenticationMethodLoa(Collections.singletonMap(AuthenticationType.MobileID, LevelOfAssurance.HIGH));
 
         AuthenticationHandlerExecutionResult authenticationHandlerExecutionResult = authenticationHandler.doAuthentication(credential);
 
         Map<String, Object> expectedAttributes = buildCommonExpectedAttributesMap(AuthenticationType.MobileID, MOCK_ACR);
+        verifyAuthenticationHandlerExecutionResult(authenticationHandlerExecutionResult, expectedAttributes);
+    }
+
+    @Test
+    public void doAuthenticationShouldReturnValidResultForValidMobileIdCredentialWithPhoneNumber() throws GeneralSecurityException, PreventedException {
+        MobileIDCredential credential = new MobileIDCredential(MOCK_PRINCIPAL_CODE, MOCK_FIRST_NAME, MOCK_LAST_NAME, MOCK_PHONE_NUMBER);
+        setAuthenticationMethodLoa(Collections.singletonMap(AuthenticationType.MobileID, LevelOfAssurance.HIGH));
+
+        AuthenticationHandlerExecutionResult authenticationHandlerExecutionResult = authenticationHandler.doAuthentication(credential);
+
+        Map<String, Object> expectedAttributes = buildCommonExpectedAttributesMap(AuthenticationType.MobileID, MOCK_ACR);
+        expectedAttributes.put(TaraPrincipal.Attribute.PHONE_NUMBER.name(), MOCK_PHONE_NUMBER);
+        expectedAttributes.put(TaraPrincipal.Attribute.PHONE_NUMBER_VERIFIED.name(), false);
         verifyAuthenticationHandlerExecutionResult(authenticationHandlerExecutionResult, expectedAttributes);
     }
 
