@@ -4,6 +4,7 @@ import ee.ria.sso.authentication.credential.TaraCredential;
 import ee.ria.sso.config.TaraProperties;
 import ee.ria.sso.service.eidas.EidasCredential;
 import ee.ria.sso.service.idcard.IdCardCredential;
+import ee.ria.sso.service.mobileid.MobileIDCredential;
 import ee.ria.sso.utils.EstonianIdCodeUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apereo.cas.authentication.AuthenticationHandlerExecutionResult;
@@ -50,6 +51,9 @@ public class TaraAuthenticationHandler extends AbstractPreAndPostProcessingAuthe
             } else if (credential instanceof EidasCredential) {
                 principalAttributes.put(DATE_OF_BIRTH.name(), ((EidasCredential)taraCredential).getDateOfBirth());
                 principalAttributes.put(ACR.name(),((EidasCredential)taraCredential).getLevelOfAssurance().getAcrName());
+            } else if (credential instanceof MobileIDCredential && ((MobileIDCredential)taraCredential).getPhoneNumber() != null) {
+                principalAttributes.put(PHONE_NUMBER.name(), ((MobileIDCredential)taraCredential).getPhoneNumber());
+                principalAttributes.put(PHONE_NUMBER_VERIFIED.name(), ((MobileIDCredential)taraCredential).getPhoneNumberVerified());
             }
 
             return this.createHandlerResult(credential, this.principalFactory
