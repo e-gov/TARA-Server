@@ -116,8 +116,8 @@ public class TaraAuthenticationHandlerTest {
         AuthenticationHandlerExecutionResult authenticationHandlerExecutionResult = authenticationHandler.doAuthentication(credential);
 
         Map<String, Object> expectedAttributes = buildCommonExpectedAttributesMap(AuthenticationType.MobileID, MOCK_ACR);
-        expectedAttributes.put(TaraPrincipal.Attribute.PHONE.name(), MOCK_PHONE_NUMBER);
-        expectedAttributes.put(TaraPrincipal.Attribute.PHONE_VERIFIED.name(), true);
+        expectedAttributes.put(TaraPrincipal.Attribute.PHONE_NUMBER.name(), MOCK_PHONE_NUMBER);
+        expectedAttributes.put(TaraPrincipal.Attribute.PHONE_NUMBER_VERIFIED.name(), true);
         verifyAuthenticationHandlerExecutionResult(authenticationHandlerExecutionResult, expectedAttributes);
     }
 

@@ -44,8 +44,8 @@ public class TaraOidcIdTokenGeneratorService extends OidcIdTokenGeneratorService
     public static final String CLAIM_PROFILE_ATTRIBUTES = "profile_attributes";
     public static final String CLAIM_EMAIL = "email";
     public static final String CLAIM_EMAIL_VERIFIED = "email_verified";
-    public static final String CLAIM_PHONE_NUMBER = "phone";
-    public static final String CLAIM_PHONE_NUMBER_VERIFIED = "phone_verified";
+    public static final String CLAIM_PHONE_NUMBER = "phone_number";
+    public static final String CLAIM_PHONE_NUMBER_VERIFIED = "phone_number_verified";
 
     public static final List<TaraPrincipal.Attribute> validProfileAttributesToClaimsList = Collections.unmodifiableList(Arrays.asList(
         FAMILY_NAME, GIVEN_NAME, DATE_OF_BIRTH
@@ -131,9 +131,9 @@ public class TaraOidcIdTokenGeneratorService extends OidcIdTokenGeneratorService
             claims.setClaim(CLAIM_EMAIL_VERIFIED, getAttributeValue(EMAIL_VERIFIED, taraPrincipal, Boolean.class));
         }
 
-        if (taraPrincipal.getAttributes().containsKey(PHONE.name()) && taraPrincipal.getAttributes().containsKey(PHONE_VERIFIED.name())) {
-            claims.setStringClaim(CLAIM_PHONE_NUMBER, getAttributeValue(PHONE, taraPrincipal));
-            claims.setClaim(CLAIM_PHONE_NUMBER_VERIFIED, getAttributeValue(PHONE_VERIFIED, taraPrincipal, Boolean.class));
+        if (taraPrincipal.getAttributes().containsKey(PHONE_NUMBER.name()) && taraPrincipal.getAttributes().containsKey(PHONE_NUMBER_VERIFIED.name())) {
+            claims.setStringClaim(CLAIM_PHONE_NUMBER, getAttributeValue(PHONE_NUMBER, taraPrincipal));
+            claims.setClaim(CLAIM_PHONE_NUMBER_VERIFIED, getAttributeValue(PHONE_NUMBER_VERIFIED, taraPrincipal, Boolean.class));
         }
 
         claims.setClaim(CLAIM_PROFILE_ATTRIBUTES, getProfileAttributesMap(taraPrincipal));

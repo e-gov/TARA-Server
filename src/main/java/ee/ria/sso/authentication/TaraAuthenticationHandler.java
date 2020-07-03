@@ -52,8 +52,8 @@ public class TaraAuthenticationHandler extends AbstractPreAndPostProcessingAuthe
                 principalAttributes.put(DATE_OF_BIRTH.name(), ((EidasCredential)taraCredential).getDateOfBirth());
                 principalAttributes.put(ACR.name(),((EidasCredential)taraCredential).getLevelOfAssurance().getAcrName());
             } else if (credential instanceof MobileIDCredential && ((MobileIDCredential)taraCredential).getPhoneNumber() != null) {
-                principalAttributes.put(PHONE.name(), ((MobileIDCredential)taraCredential).getPhoneNumber());
-                principalAttributes.put(PHONE_VERIFIED.name(), ((MobileIDCredential)taraCredential).getPhoneNumberVerified());
+                principalAttributes.put(PHONE_NUMBER.name(), ((MobileIDCredential)taraCredential).getPhoneNumber());
+                principalAttributes.put(PHONE_NUMBER_VERIFIED.name(), ((MobileIDCredential)taraCredential).getPhoneNumberVerified());
             }
 
             return this.createHandlerResult(credential, this.principalFactory
