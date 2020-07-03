@@ -162,7 +162,7 @@ public class MobileIDAuthenticationService extends AbstractService {
 
     private boolean isPhoneNumberRequested(RequestContext context) {
         List<TaraScope> scopes = context.getExternalContext().getSessionMap().get(Constants.TARA_OIDC_SESSION_SCOPES, List.class, null);
-        return scopes != null && scopes.contains(TaraScope.PHONENUMBER);
+        return scopes != null && scopes.contains(TaraScope.PHONE);
     }
 
     private void logEvent(RequestContext context, Exception e) {

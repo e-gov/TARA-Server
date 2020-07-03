@@ -12,7 +12,7 @@ import lombok.ToString;
 public class MobileIDCredential extends TaraCredential {
 
     private final String phoneNumber;
-    private final Boolean phoneNumberVerified = false;
+    private final Boolean phoneNumberVerified = true;
 
     public MobileIDCredential(String principalCode, String firstName, String lastName) {
         super(AuthenticationType.MobileID, principalCode, firstName, lastName);

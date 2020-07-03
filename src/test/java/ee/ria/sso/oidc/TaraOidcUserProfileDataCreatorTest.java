@@ -53,8 +53,8 @@ public class TaraOidcUserProfileDataCreatorTest {
                 "  \"sub\": \"" + MockPrincipalUtils.MOCK_SUBJECT_CODE_EE + "\",\n" +
                 "  \"given_name\": \"" + MockPrincipalUtils.MOCK_GIVEN_NAME + "\",\n" +
                 "  \"family_name\": \"" + MockPrincipalUtils.MOCK_FAMILY_NAME + "\",\n" +
-                "  \"phone_number\": \"" + MockPrincipalUtils.MOCK_PHONE_NUBMER + "\",\n" +
-                "  \"phone_number_verified\": false\n," +
+                "  \"phone\": \"" + MockPrincipalUtils.MOCK_PHONE_NUBMER + "\",\n" +
+                "  \"phone_verified\": true\n," +
                 "  \"date_of_birth\": \"" + MockPrincipalUtils.MOCK_DATE_OF_BIRTH + "\",\n" +
                 "  \"amr\": [\n" +
                 "    \"" + AuthenticationType.MobileID.getAmrName() + "\"\n" +

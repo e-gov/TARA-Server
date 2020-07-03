@@ -19,8 +19,8 @@ public class TaraPrincipal implements Principal {
         AMR,
         EMAIL,
         EMAIL_VERIFIED,
-        PHONE_NUMBER,
-        PHONE_NUMBER_VERIFIED,
+        PHONE,
+        PHONE_VERIFIED,
         ACR;
     }
 

@@ -38,8 +38,8 @@ public class MockPrincipalUtils {
         map.put(SUB.name(), Arrays.asList(MOCK_SUBJECT_CODE_EE));
         map.put(GIVEN_NAME.name(), Arrays.asList(MOCK_GIVEN_NAME));
         map.put(FAMILY_NAME.name(), Arrays.asList(MOCK_FAMILY_NAME));
-        map.put(PHONE_NUMBER.name(), Arrays.asList(MOCK_PHONE_NUBMER));
-        map.put(PHONE_NUMBER_VERIFIED.name(), Arrays.asList(false));
+        map.put(PHONE.name(), Arrays.asList(MOCK_PHONE_NUBMER));
+        map.put(PHONE_VERIFIED.name(), Arrays.asList(true));
         map.put(DATE_OF_BIRTH.name(), Arrays.asList(MOCK_DATE_OF_BIRTH));
         map.put(AMR.name(), Arrays.asList(Arrays.asList(AuthenticationType.MobileID.getAmrName())));
         return map;
