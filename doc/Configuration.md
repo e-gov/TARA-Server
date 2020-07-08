@@ -27,6 +27,9 @@ _CAS tarkvaras tehtud kohanduste ja täienduste kirjeldus._
 - [3. TARA truststore](#tara_truststore)
   * [3.1 Mobile-ID CA certs](#dds_ca_certs)
   * [3.2 Smart-ID CA certs](#smart-id_ca_certs)
+- [4. CAS properties](#cas_properties)
+  * [4.1 Showing service's short name](#cas_short_name)
+  * [4.2 Translating service's short name](#cas_short_name_translation)
 
 <a name="logging"></a>
 ## 1. Logging
@@ -881,6 +884,7 @@ After copying the certificate into a file, it can be imported into TARA truststo
 ## 4. CAS properties
 ------------------
 
+<a name="cas_short_name"></a>
 ### 4.1 Showing service's short name
 On Mobile-ID and Smart-ID authentication pages, it's possible to show the service name in short form, so users can see the service they're entering more clearly.
 
@@ -898,6 +902,7 @@ Example:
 
 If no short name is defined, Mobile-ID and Smart-ID pages will be displayed without the service's short name.
 
+<a name="cas_short_name_translation"></a>
 ### 4.2 Translating service's short name
 
 In addition to showing the service's short name, it's possible to translate it to English and Russian languages.
