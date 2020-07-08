@@ -133,6 +133,8 @@ public class TaraOidcIdTokenGeneratorServiceTest extends AbstractTest {
                 "\"iat\":1545337304," +
                 "\"nbf\":1545337004," +
                 "\"sub\":\"" + MockPrincipalUtils.MOCK_SUBJECT_CODE_EE + "\"," +
+                "\"phone_number\":\"" + MockPrincipalUtils.MOCK_PHONE_NUMBER + "\"," +
+                "\"phone_number_verified\":true," +
                 "\"profile_attributes\":{\"family_name\":\"" + MockPrincipalUtils.MOCK_FAMILY_NAME + "\",\"given_name\":\"" + MockPrincipalUtils.MOCK_GIVEN_NAME + "\",\"date_of_birth\":\"" + MockPrincipalUtils.MOCK_DATE_OF_BIRTH + "\"}," +
                 "\"amr\":[\"" + AuthenticationType.MobileID.getAmrName() + "\"]," +
                 "\"state\":\"" + MockPrincipalUtils.STATE + "\"," +

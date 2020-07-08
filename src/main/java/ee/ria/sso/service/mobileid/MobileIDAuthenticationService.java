@@ -5,6 +5,7 @@ import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.credential.PreAuthenticationCredential;
 import ee.ria.sso.authentication.credential.TaraCredential;
 import ee.ria.sso.config.mobileid.MobileIDConfigurationProvider;
+import ee.ria.sso.oidc.TaraScope;
 import ee.ria.sso.service.AbstractService;
 import ee.ria.sso.service.UserAuthenticationFailedException;
 import ee.ria.sso.service.mobileid.rest.MobileIDErrorMessage;
@@ -18,6 +19,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
+
+import java.util.List;
 
 import static ee.ria.sso.statistics.StatisticsOperation.START_AUTH;
 import static ee.ria.sso.statistics.StatisticsOperation.SUCCESSFUL_AUTH;
@@ -48,7 +51,7 @@ public class MobileIDAuthenticationService extends AbstractService {
         final PreAuthenticationCredential credential = context.getFlowExecutionContext().getActiveSession().getScope().get("credential", PreAuthenticationCredential.class);
         notNull(credential, "PreAuthenticationCredential is missing!");
 
-        String mobileNumber = StringUtils.isBlank(credential.getMobileNumber()) ? credential.getMobileNumber() : confProvider.getAreaCode() + credential.getMobileNumber();
+        String mobileNumber = getPhoneNumber(credential);
         log.info("Starting Mobile-ID authentication: <mobileNumber:{}>, <identityCode:{}>", mobileNumber, credential.getPrincipalCode());
         try {
             logEvent(context, AuthenticationType.MobileID, START_AUTH);
@@ -112,7 +115,7 @@ public class MobileIDAuthenticationService extends AbstractService {
                 log.info("Mobile-ID authentication complete <sessionId:{}>", session.getSessionId());
                 AuthenticationIdentity authIdentity = authenticationClient.getAuthenticationIdentity(session, sessionStatus);
                 context.getFlowExecutionContext().getActiveSession().getScope()
-                       .put(CasWebflowConstants.VAR_ID_CREDENTIAL, constructTaraCredential(authIdentity));
+                       .put(CasWebflowConstants.VAR_ID_CREDENTIAL, constructTaraCredential(authIdentity, context));
                 logEvent(context, AuthenticationType.MobileID, SUCCESSFUL_AUTH);
                 return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
             } else {
@@ -126,8 +129,19 @@ public class MobileIDAuthenticationService extends AbstractService {
         }
     }
 
-    private TaraCredential constructTaraCredential(AuthenticationIdentity authIdentity) {
-        return new TaraCredential(AuthenticationType.MobileID,
+    private TaraCredential constructTaraCredential(AuthenticationIdentity authIdentity, RequestContext context) {
+        if (isPhoneNumberRequested(context)) {
+            final PreAuthenticationCredential credential = context.getFlowExecutionContext().getActiveSession().getScope().get("credential", PreAuthenticationCredential.class);
+            String mobileNumber = getPhoneNumber(credential);
+
+            return new MobileIDCredential(
+                    confProvider.getCountryCode() + authIdentity.getIdentityCode(),
+                    authIdentity.getGivenName(),
+                    authIdentity.getSurname(),
+                    mobileNumber);
+        }
+
+        return new MobileIDCredential(
                 confProvider.getCountryCode() + authIdentity.getIdentityCode(),
                 authIdentity.getGivenName(),
                 authIdentity.getSurname());
@@ -140,6 +154,15 @@ public class MobileIDAuthenticationService extends AbstractService {
         if (!MidInputUtil.isPhoneNumberValid(mobileNumber)) {
             throw new UserAuthenticationFailedException(MobileIDErrorMessage.INVALID_MOBILE_NUMBER, String.format("User provided invalid mobileNumber: <%s>", mobileNumber));
         }
+    }
+
+    private String getPhoneNumber(PreAuthenticationCredential credential) {
+        return StringUtils.isBlank(credential.getMobileNumber()) ? credential.getMobileNumber() : confProvider.getAreaCode() + credential.getMobileNumber();
+    }
+
+    private boolean isPhoneNumberRequested(RequestContext context) {
+        List<TaraScope> scopes = context.getExternalContext().getSessionMap().get(Constants.TARA_OIDC_SESSION_SCOPES, List.class, null);
+        return scopes != null && scopes.contains(TaraScope.PHONE);
     }
 
     private void logEvent(RequestContext context, Exception e) {

@@ -123,6 +123,15 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
     }
 
     @Test
+    public void assertStateInSessionWhenValidationSucceeds() throws IOException, ServletException {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addParameter(OidcAuthorizeRequestParameter.STATE.getParameterKey(), "stateValue");
+
+        servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
+        Assert.assertEquals("stateValue", request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_STATE));
+    }
+
+    @Test
     public void assertLoaInSessionWhenValidationSucceedsAndAcrValuesProvided() throws IOException, ServletException {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addParameter(OidcAuthorizeRequestParameter.ACR_VALUES.getParameterKey(),
