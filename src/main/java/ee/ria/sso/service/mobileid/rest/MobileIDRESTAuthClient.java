@@ -1,9 +1,13 @@
 package ee.ria.sso.service.mobileid.rest;
 
+import ee.ria.sso.Constants;
 import ee.ria.sso.config.mobileid.MobileIDConfigurationProvider;
 import ee.ria.sso.service.ExternalServiceHasFailedException;
+import ee.ria.sso.service.manager.ManagerService;
+import ee.ria.sso.service.manager.ManagerServiceImpl;
 import ee.ria.sso.service.mobileid.AuthenticationIdentity;
 import ee.ria.sso.service.mobileid.MobileIDAuthenticationClient;
+import ee.ria.sso.utils.SessionMapUtil;
 import ee.sk.mid.MidAuthentication;
 import ee.sk.mid.MidAuthenticationHashToSign;
 import ee.sk.mid.MidAuthenticationIdentity;
@@ -28,22 +32,28 @@ public class MobileIDRESTAuthClient implements MobileIDAuthenticationClient<Mobi
 
     private final MobileIDConfigurationProvider confProvider;
     private final MidClient client;
+    private final ManagerService managerService;
 
-    public MobileIDRESTAuthClient(MobileIDConfigurationProvider confProvider, MidClient client) {
+    public MobileIDRESTAuthClient(MobileIDConfigurationProvider confProvider, MidClient client, ManagerService managerService) {
         this.confProvider = confProvider;
         this.client = client;
+        this.managerService = managerService;
     }
 
     @Override
     public MobileIDRESTSession initAuthentication(String personalCode, String countryCode, String phoneNumber) {
         MidAuthenticationHashToSign authenticationHash = MidAuthenticationHashToSign.generateRandomHashOfType(confProvider.getAuthenticationHashType());
 
+        String serviceShortName = managerService.getServiceShortName(
+                SessionMapUtil.getSessionMapValue(Constants.TARA_OIDC_SESSION_CLIENT_ID)
+        );
+
         MidAuthenticationRequest request = MidAuthenticationRequest.newBuilder()
                 .withPhoneNumber(phoneNumber)
                 .withNationalIdentityNumber(personalCode)
                 .withHashToSign(authenticationHash)
                 .withLanguage(MidLanguage.valueOf(confProvider.getLanguage()))
-                .withDisplayText(confProvider.getMessageToDisplay())
+                .withDisplayText(serviceShortName.isEmpty() ? confProvider.getMessageToDisplay() : serviceShortName)
                 .withDisplayTextFormat(confProvider.getMessageToDisplayEncoding())
                 .build();
 

@@ -1,9 +1,11 @@
 package ee.ria.sso.service.mobileid.rest;
 
+import ee.ria.sso.Constants;
 import ee.ria.sso.config.mobileid.MobileIDConfigurationProvider;
 import ee.ria.sso.config.mobileid.TestMobileIDConfiguration;
 import ee.ria.sso.service.ExternalServiceHasFailedException;
 import ee.ria.sso.service.UserAuthenticationFailedException;
+import ee.ria.sso.service.manager.ManagerService;
 import ee.ria.sso.service.mobileid.AuthenticationIdentity;
 import ee.sk.mid.MidAuthentication;
 import ee.sk.mid.MidAuthenticationHashToSign;
@@ -31,15 +33,31 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.webflow.core.collection.SharedAttributeMap;
+import org.springframework.webflow.execution.RequestContextHolder;
+import org.springframework.webflow.test.MockExternalContext;
+import org.springframework.webflow.test.MockRequestContext;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -54,6 +72,8 @@ public class MobileIDRESTAuthClientTest {
     private static final String PERSONAL_CODE = "60001019906";
     private static final String PHONE_NUMBER = "00000766";
     private static final String COUNTRY_CODE = "EE";
+    private static final String CLIENT_ID = "openIdDemo";
+    private static final String SERVICE_SHORT_NAME = "openIdDemoShortName";
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -69,6 +89,9 @@ public class MobileIDRESTAuthClientTest {
 
     private MobileIDRESTAuthClient authClient;
 
+    @Mock
+    private ManagerService managerService;
+
     @Captor
     private ArgumentCaptor<MidAuthenticationRequest> authRequestCaptor;
 
@@ -78,13 +101,17 @@ public class MobileIDRESTAuthClientTest {
     @Before
     public void init() {
         when(midClient.getMobileIdConnector()).thenReturn(midConnector);
-        authClient = new MobileIDRESTAuthClient(confProvider, midClient);
+        authClient = new MobileIDRESTAuthClient(confProvider, midClient, managerService);
     }
 
     @Test
     public void initAuthentication_successful() {
         MidAuthenticationResponse mockAuthResponse = new MidAuthenticationResponse(UUID.randomUUID().toString());
         when(midConnector.authenticate(authRequestCaptor.capture())).thenReturn(mockAuthResponse);
+
+        mockRequestWithSessionMap();
+
+        when(managerService.getServiceShortName(CLIENT_ID)).thenReturn(SERVICE_SHORT_NAME);
 
         MobileIDRESTSession session = authClient.initAuthentication(PERSONAL_CODE, COUNTRY_CODE, PHONE_NUMBER);
         assertEquals(mockAuthResponse.getSessionID(), session.getSessionId());
@@ -99,7 +126,8 @@ public class MobileIDRESTAuthClientTest {
         assertEquals(authenticationHash.getHashInBase64(), authRequest.getHash());
         assertSame(confProvider.getAuthenticationHashType(), authRequest.getHashType());
         assertSame(MidLanguage.valueOf(confProvider.getLanguage()), authRequest.getLanguage());
-        assertEquals(confProvider.getMessageToDisplay(), authRequest.getDisplayText());
+        assertEquals(SERVICE_SHORT_NAME, authRequest.getDisplayText());
+//        assertEquals(confProvider.getMessageToDisplay(), authRequest.getDisplayText());
         assertEquals(confProvider.getMessageToDisplayEncoding(), authRequest.getDisplayTextFormat());
     }
 
@@ -109,6 +137,9 @@ public class MobileIDRESTAuthClientTest {
         expectedException.expectMessage("MID service returned internal error that cannot be handled locally");
 
         when(midConnector.authenticate(any())).thenThrow(MidInternalErrorException.class);
+        mockRequestWithSessionMap();
+
+        when(managerService.getServiceShortName(CLIENT_ID)).thenReturn(SERVICE_SHORT_NAME);
 
         authClient.initAuthentication(PERSONAL_CODE, COUNTRY_CODE, PHONE_NUMBER);
     }
@@ -117,6 +148,8 @@ public class MobileIDRESTAuthClientTest {
     public void initiAuthentication_failsWithIntegrationRelatedException() throws Exception {
         for (Exception e : Arrays.asList(new MidMissingOrInvalidParameterException("details"), new MidUnauthorizedException("details"))) {
             Mockito.reset(midConnector);
+            mockRequestWithSessionMap();
+            when(managerService.getServiceShortName(CLIENT_ID)).thenReturn(SERVICE_SHORT_NAME);
             when(midConnector.authenticate(any())).thenThrow(e);
             try {
                 authClient.initAuthentication(PERSONAL_CODE, COUNTRY_CODE, PHONE_NUMBER);
@@ -133,6 +166,8 @@ public class MobileIDRESTAuthClientTest {
         expectedException.expect(IllegalStateException.class);
         expectedException.expectMessage("Unexpected error occurred during authentication initiation");
 
+        mockRequestWithSessionMap();
+        when(managerService.getServiceShortName(CLIENT_ID)).thenReturn(SERVICE_SHORT_NAME);
         when(midConnector.authenticate(any())).thenThrow(NullPointerException.class);
 
         authClient.initAuthentication(PERSONAL_CODE, COUNTRY_CODE, PHONE_NUMBER);
@@ -318,5 +353,31 @@ public class MobileIDRESTAuthClientTest {
 
         when(midClient.createMobileIdAuthentication(any(), any())).thenThrow(NullPointerException.class);
         authClient.getAuthenticationIdentity(MobileIDRESTSession.builder().build(), MobileIDRESTSessionStatus.builder().build());
+    }
+
+    private static void mockSpringServletRequestAttributes() {
+        HttpServletRequest request = new MockHttpServletRequest();
+        HttpServletResponse response = new MockHttpServletResponse();
+        org.springframework.web.context.request.RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request, response));
+    }
+
+    private static void setRequestContextWithSessionMap(final Map<String, Object> sessionMap) {
+        mockSpringServletRequestAttributes();
+        final MockRequestContext requestContext = new MockRequestContext();
+        final MockExternalContext externalContext = new MockExternalContext();
+        final SharedAttributeMap<Object> map = externalContext.getSessionMap();
+
+        if (sessionMap != null) sessionMap.forEach(map::put);
+
+        externalContext.setNativeRequest(new MockHttpServletRequest());
+        requestContext.setExternalContext(externalContext);
+        RequestContextHolder.setRequestContext(requestContext);
+    }
+
+    private static void mockRequestWithSessionMap() {
+        Map<String, Object> sessionMap = new HashMap<>();
+        sessionMap.put(Constants.TARA_OIDC_SESSION_CLIENT_ID, CLIENT_ID);
+
+        setRequestContextWithSessionMap(sessionMap);
     }
 }

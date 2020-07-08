@@ -11,5 +11,6 @@ import java.util.Optional;
 public interface ManagerService {
 
    Optional<OidcRegisteredService> getServiceByName(String serviceName);
+   String getServiceShortName(String serviceName);
 
 }

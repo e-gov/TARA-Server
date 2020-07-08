@@ -876,3 +876,45 @@ openssl s_client -connect sid.demo.sk.ee:443 -showcerts
 ````
 The relevant certificate is displayed at depth 0 of the certificate chain in the command output.
 After copying the certificate into a file, it can be imported into TARA truststore the same way as shown for the live certificate.
+
+<a name="cas_properties"></a>
+## 4. CAS properties
+------------------
+
+### 4.1 Showing service's short name
+On Mobile-ID and Smart-ID authentication pages, it's possible to show the service name in short form, so users can see the service they're entering more clearly.
+
+Example: Full name - ````Eesti riigi infoportaal````, short name - ````eesti.ee````
+
+In order to show service's short name on Mobile-ID and Smart-ID authentication pages, the short name must be defined in CAS Management.
+
+In ````CAS Management -> Properties```` tab, set the property name as ````service.shortName```` and value as the service's short name.
+
+Example:
+
+|        Name       |   Value  |   
+|:-----------------:|:--------:|
+| service.shortName | eesti.ee |
+
+If no short name is defined, Mobile-ID and Smart-ID pages will be displayed without the service's short name.
+
+### 4.2 Translating service's short name
+
+In addition to showing the service's short name, it's possible to translate it to English and Russian languages.
+
+Navigate to  ````CAS Management -> Properties```` tab.
+
+Translate to English: set the property name as ````service.shortName.en````.
+
+Translate to Russian: set the property name as ````service.shortName.ru````.
+
+Set the service value(s) as needed.
+
+If translated short names aren't defined, Mobile-ID and Smart-ID pages will be displayed with the default service's short name (if defined).
+
+Example:
+
+|        Name          |     Value      |   
+|:--------------------:|:--------------:|
+| service.shortName.en | englishService |
+| service.shortName.ru | russianService |

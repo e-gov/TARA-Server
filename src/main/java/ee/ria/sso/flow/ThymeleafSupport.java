@@ -6,6 +6,7 @@ import ee.ria.sso.config.TaraProperties;
 import ee.ria.sso.oidc.TaraScope;
 import ee.ria.sso.service.manager.ManagerService;
 import ee.ria.sso.utils.RedirectUrlUtil;
+import ee.ria.sso.utils.SessionMapUtil;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +14,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.apereo.cas.configuration.CasConfigurationProperties;
 import org.apereo.cas.services.OidcRegisteredService;
+import org.apereo.cas.services.RegisteredService;
+import org.apereo.cas.services.RegisteredServiceProperty;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.webflow.core.collection.SharedAttributeMap;
@@ -25,6 +30,7 @@ import java.net.URLEncoder;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -96,17 +102,9 @@ public class ThymeleafSupport {
     }
 
     public String getHomeUrl() {
-        final String redirectUri = RequestContextHolder.getRequestContext()
-                .getExternalContext()
-                .getSessionMap()
-                .getString(Constants.TARA_OIDC_SESSION_REDIRECT_URI);
+        final String redirectUri = SessionMapUtil.getSessionMapValue(Constants.TARA_OIDC_SESSION_REDIRECT_URI);
 
-        final String clientId = RequestContextHolder.getRequestContext()
-                .getExternalContext()
-                .getSessionMap()
-                .getString(Constants.TARA_OIDC_SESSION_CLIENT_ID);
-
-        String informationUrl = getHomeUrl(clientId);
+        String informationUrl = getHomeUrl(SessionMapUtil.getSessionMapValue(Constants.TARA_OIDC_SESSION_CLIENT_ID));
 
         if (StringUtils.isNotBlank(informationUrl)) {
             return informationUrl;
@@ -132,10 +130,7 @@ public class ThymeleafSupport {
     }
 
     public String getUserCancelUrl(String redirectUri) {
-        final String sessionState = RequestContextHolder.getRequestContext()
-                .getExternalContext()
-                .getSessionMap()
-                .getString(Constants.TARA_OIDC_SESSION_STATE);
+        final String sessionState = SessionMapUtil.getSessionMapValue(Constants.TARA_OIDC_SESSION_STATE);
 
         return getUserCancelUrl(redirectUri, sessionState);
     }
@@ -143,6 +138,10 @@ public class ThymeleafSupport {
     @SneakyThrows
     public String getUserCancelUrl(String redirectUri, String sessionState) {
         return RedirectUrlUtil.createRedirectUrl(redirectUri, "user_cancel", "User canceled the login process", sessionState);
+    }
+
+    public String getServiceShortName() {
+        return this.managerService.getServiceShortName(SessionMapUtil.getSessionMapValue(Constants.TARA_OIDC_SESSION_CLIENT_ID));
     }
 
     public String getCurrentRequestIdentifier(HttpServletRequest request) {

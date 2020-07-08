@@ -5,6 +5,7 @@ import ee.ria.sso.flow.ThymeleafSupport;
 import ee.ria.sso.flow.action.MobileIDCheckAuthenticationAction;
 import ee.ria.sso.flow.action.MobileIDCheckCancelAction;
 import ee.ria.sso.flow.action.MobileIDStartAuthenticationAction;
+import ee.ria.sso.service.manager.ManagerService;
 import ee.ria.sso.statistics.StatisticsHandler;
 import org.mockito.Mockito;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -31,5 +32,10 @@ public class TestMobileIDConfiguration {
     @Bean
     public ThymeleafSupport thymeleafSupport() {
         return Mockito.mock(ThymeleafSupport.class);
+    }
+
+    @Bean
+    public ManagerService managerService() {
+        return Mockito.mock(ManagerService.class);
     }
 }

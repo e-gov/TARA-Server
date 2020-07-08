@@ -33,6 +33,7 @@ import java.util.*;
 public class ThymeleafSupportTest {
 
     private static final String CLIENT_ID = "openIdDemo";
+    private static final String SERVICE_SHORT_NAME = "openIdDemoShortName";
 
     @Mock
     ManagerService managerService;
@@ -142,6 +143,18 @@ public class ThymeleafSupportTest {
 
         setRequestContextWithSessionMap(Collections.singletonMap(Constants.TARA_OIDC_SESSION_REDIRECT_URI, "https://client/url"));
         Assert.assertEquals("#", thymeleafSupport.getHomeUrl());
+    }
+
+    @Test
+    public void getServiceShortNameShouldReturnShortNameSuccessfully() {
+        ManagerService managerService = Mockito.mock(ManagerService.class);
+        Mockito.when(managerService.getServiceShortName(CLIENT_ID))
+                .thenReturn(SERVICE_SHORT_NAME);
+
+        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(managerService, casProperties, null, null);
+
+        setRequestContextWithSessionMap(Collections.singletonMap(Constants.TARA_OIDC_SESSION_CLIENT_ID, CLIENT_ID));
+        Assert.assertEquals(SERVICE_SHORT_NAME, thymeleafSupport.getServiceShortName());
     }
 
     @Test

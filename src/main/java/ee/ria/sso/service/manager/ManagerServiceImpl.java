@@ -2,6 +2,8 @@ package ee.ria.sso.service.manager;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -9,9 +11,12 @@ import java.util.stream.Stream;
 
 import org.apereo.cas.services.OidcRegisteredService;
 import org.apereo.cas.services.RegisteredService;
+import org.apereo.cas.services.RegisteredServiceProperty;
 import org.apereo.cas.services.ServicesManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import ee.ria.sso.service.AbstractService;
@@ -56,6 +61,27 @@ public class ManagerServiceImpl implements ManagerService {
         return service;
     }
 
+    @Override
+    public String getServiceShortName(String serviceName) {
+            String serviceShortName = "service.shortName";
+            Locale locale = LocaleContextHolder.getLocale();
+            Optional<OidcRegisteredService> service = getServiceByName(serviceName);
+            if (service.isPresent()) {
+                switch (locale.getLanguage().toLowerCase()) {
+                    case "en":
+                        serviceShortName = "service.shortName.en";
+                        break;
+                    case "ru":
+                        serviceShortName = "service.shortName.ru";
+                        break;
+                }
 
+                Map<String, RegisteredServiceProperty> serviceProperties = service.get().getProperties();
+                if (serviceProperties.containsKey(serviceShortName)) {
+                    return serviceProperties.get(serviceShortName).getValue();
+                }
+            }
 
+            return "";
+        }
 }
