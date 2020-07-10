@@ -1,7 +1,9 @@
 package ee.ria.sso.service.manager;
 
 import org.apereo.cas.services.OidcRegisteredService;
+import org.apereo.cas.services.RegisteredServiceProperty;
 
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -11,6 +13,6 @@ import java.util.Optional;
 public interface ManagerService {
 
    Optional<OidcRegisteredService> getServiceByName(String serviceName);
-   String getServiceShortName(String serviceName);
+   Optional<Map<String, RegisteredServiceProperty>> getServiceNames(String serviceName);
 
 }

@@ -22,6 +22,7 @@ import ee.sk.mid.rest.dao.request.MidAuthenticationRequest;
 import ee.sk.mid.rest.dao.request.MidSessionStatusRequest;
 import ee.sk.mid.rest.dao.response.MidAuthenticationResponse;
 import org.apache.commons.codec.binary.Base64;
+import org.apereo.cas.services.RegisteredServiceProperty;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,6 +34,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.ContextConfiguration;
@@ -49,7 +51,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
@@ -111,7 +115,39 @@ public class MobileIDRESTAuthClientTest {
 
         mockRequestWithSessionMap();
 
-        when(managerService.getServiceShortName(CLIENT_ID)).thenReturn(SERVICE_SHORT_NAME);
+        when(managerService.getServiceNames(CLIENT_ID)).thenReturn(Optional.of(new HashMap<>()));
+
+        MobileIDRESTSession session = authClient.initAuthentication(PERSONAL_CODE, COUNTRY_CODE, PHONE_NUMBER);
+        assertEquals(mockAuthResponse.getSessionID(), session.getSessionId());
+        MidAuthenticationHashToSign authenticationHash = session.getAuthenticationHash();
+        assertNotNull(authenticationHash);
+        assertEquals(session.getVerificationCode(), authenticationHash.calculateVerificationCode());
+
+        verify(midConnector).authenticate(authRequestCaptor.capture());
+        MidAuthenticationRequest authRequest = authRequestCaptor.getValue();
+        assertEquals(PHONE_NUMBER, authRequest.getPhoneNumber());
+        assertEquals(PERSONAL_CODE, authRequest.getNationalIdentityNumber());
+        assertEquals(authenticationHash.getHashInBase64(), authRequest.getHash());
+        assertSame(confProvider.getAuthenticationHashType(), authRequest.getHashType());
+        assertSame(MidLanguage.valueOf(confProvider.getLanguage()), authRequest.getLanguage());
+        assertEquals(confProvider.getMessageToDisplay(), authRequest.getDisplayText());
+        assertEquals(confProvider.getMessageToDisplayEncoding(), authRequest.getDisplayTextFormat());
+    }
+
+    @Test
+    public void initAuthentication_successful_with_short_name() {
+        MidAuthenticationResponse mockAuthResponse = new MidAuthenticationResponse(UUID.randomUUID().toString());
+        when(midConnector.authenticate(authRequestCaptor.capture())).thenReturn(mockAuthResponse);
+
+        mockRequestWithSessionMap();
+
+        RegisteredServiceProperty rsp = Mockito.mock(RegisteredServiceProperty.class);
+        Map<String, RegisteredServiceProperty> serviceShortNames = new HashMap<>();
+        serviceShortNames.put("service.shortName", rsp);
+        LocaleContextHolder.setLocale(Locale.forLanguageTag("et"));
+
+        when(managerService.getServiceNames(CLIENT_ID)).thenReturn(Optional.of(serviceShortNames));
+        when(rsp.getValue()).thenReturn(SERVICE_SHORT_NAME);
 
         MobileIDRESTSession session = authClient.initAuthentication(PERSONAL_CODE, COUNTRY_CODE, PHONE_NUMBER);
         assertEquals(mockAuthResponse.getSessionID(), session.getSessionId());
@@ -127,7 +163,6 @@ public class MobileIDRESTAuthClientTest {
         assertSame(confProvider.getAuthenticationHashType(), authRequest.getHashType());
         assertSame(MidLanguage.valueOf(confProvider.getLanguage()), authRequest.getLanguage());
         assertEquals(SERVICE_SHORT_NAME, authRequest.getDisplayText());
-//        assertEquals(confProvider.getMessageToDisplay(), authRequest.getDisplayText());
         assertEquals(confProvider.getMessageToDisplayEncoding(), authRequest.getDisplayTextFormat());
     }
 
@@ -139,7 +174,7 @@ public class MobileIDRESTAuthClientTest {
         when(midConnector.authenticate(any())).thenThrow(MidInternalErrorException.class);
         mockRequestWithSessionMap();
 
-        when(managerService.getServiceShortName(CLIENT_ID)).thenReturn(SERVICE_SHORT_NAME);
+        when(managerService.getServiceNames(CLIENT_ID)).thenReturn(Optional.of(new HashMap<>()));
 
         authClient.initAuthentication(PERSONAL_CODE, COUNTRY_CODE, PHONE_NUMBER);
     }
@@ -149,7 +184,7 @@ public class MobileIDRESTAuthClientTest {
         for (Exception e : Arrays.asList(new MidMissingOrInvalidParameterException("details"), new MidUnauthorizedException("details"))) {
             Mockito.reset(midConnector);
             mockRequestWithSessionMap();
-            when(managerService.getServiceShortName(CLIENT_ID)).thenReturn(SERVICE_SHORT_NAME);
+            when(managerService.getServiceNames(CLIENT_ID)).thenReturn(Optional.of(new HashMap<>()));
             when(midConnector.authenticate(any())).thenThrow(e);
             try {
                 authClient.initAuthentication(PERSONAL_CODE, COUNTRY_CODE, PHONE_NUMBER);
@@ -167,7 +202,7 @@ public class MobileIDRESTAuthClientTest {
         expectedException.expectMessage("Unexpected error occurred during authentication initiation");
 
         mockRequestWithSessionMap();
-        when(managerService.getServiceShortName(CLIENT_ID)).thenReturn(SERVICE_SHORT_NAME);
+        when(managerService.getServiceNames(CLIENT_ID)).thenReturn(Optional.of(new HashMap<>()));
         when(midConnector.authenticate(any())).thenThrow(NullPointerException.class);
 
         authClient.initAuthentication(PERSONAL_CODE, COUNTRY_CODE, PHONE_NUMBER);

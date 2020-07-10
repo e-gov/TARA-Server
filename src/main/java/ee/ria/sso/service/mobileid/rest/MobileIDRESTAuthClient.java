@@ -4,7 +4,6 @@ import ee.ria.sso.Constants;
 import ee.ria.sso.config.mobileid.MobileIDConfigurationProvider;
 import ee.ria.sso.service.ExternalServiceHasFailedException;
 import ee.ria.sso.service.manager.ManagerService;
-import ee.ria.sso.service.manager.ManagerServiceImpl;
 import ee.ria.sso.service.mobileid.AuthenticationIdentity;
 import ee.ria.sso.service.mobileid.MobileIDAuthenticationClient;
 import ee.ria.sso.utils.SessionMapUtil;
@@ -24,7 +23,13 @@ import ee.sk.mid.rest.dao.request.MidAuthenticationRequest;
 import ee.sk.mid.rest.dao.request.MidSessionStatusRequest;
 import ee.sk.mid.rest.dao.response.MidAuthenticationResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.apereo.cas.services.RegisteredServiceProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.i18n.LocaleContextHolder;
+
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
 
 @ConditionalOnProperty("mobile-id.enabled")
 @Slf4j
@@ -44,16 +49,14 @@ public class MobileIDRESTAuthClient implements MobileIDAuthenticationClient<Mobi
     public MobileIDRESTSession initAuthentication(String personalCode, String countryCode, String phoneNumber) {
         MidAuthenticationHashToSign authenticationHash = MidAuthenticationHashToSign.generateRandomHashOfType(confProvider.getAuthenticationHashType());
 
-        String serviceShortName = managerService.getServiceShortName(
-                SessionMapUtil.getSessionMapValue(Constants.TARA_OIDC_SESSION_CLIENT_ID)
-        );
+
 
         MidAuthenticationRequest request = MidAuthenticationRequest.newBuilder()
                 .withPhoneNumber(phoneNumber)
                 .withNationalIdentityNumber(personalCode)
                 .withHashToSign(authenticationHash)
                 .withLanguage(MidLanguage.valueOf(confProvider.getLanguage()))
-                .withDisplayText(serviceShortName.isEmpty() ? confProvider.getMessageToDisplay() : serviceShortName)
+                .withDisplayText(getServiceShortName().orElse(confProvider.getMessageToDisplay()))
                 .withDisplayTextFormat(confProvider.getMessageToDisplayEncoding())
                 .build();
 
@@ -64,6 +67,28 @@ public class MobileIDRESTAuthClient implements MobileIDAuthenticationClient<Mobi
                 .verificationCode(authenticationHash.calculateVerificationCode())
                 .authenticationHash(authenticationHash)
                 .build();
+    }
+
+    private Optional<String> getServiceShortName() {
+        String serviceName;
+        Locale locale = LocaleContextHolder.getLocale();
+
+        Map<String, RegisteredServiceProperty> serviceShortNames = managerService.getServiceNames(
+                SessionMapUtil.getStringSessionMapValue(Constants.TARA_OIDC_SESSION_CLIENT_ID)).orElse(null);
+
+        if (Locale.ENGLISH.getLanguage().equalsIgnoreCase(locale.getLanguage())) {
+            serviceName = "service.shortName.en";
+        } else if (Locale.forLanguageTag("ru").getLanguage().equalsIgnoreCase(locale.getLanguage())) {
+            serviceName = "service.shortName.ru";
+        } else {
+            serviceName = "service.shortName";
+        }
+
+        if (serviceShortNames != null && serviceShortNames.containsKey(serviceName)) {
+            return Optional.ofNullable(serviceShortNames.get(serviceName).getValue());
+        }
+
+        return Optional.empty();
     }
 
     @Override

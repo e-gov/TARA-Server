@@ -23,6 +23,12 @@ import static org.mockito.Mockito.when;
 public class ManagerServiceImplTest {
 
     private static final String SERVICE_NAME = "ServiceName";
+    private static final String SERVICE_NAME_KEY = "service.name";
+    private static final String SERVICE_NAME_KEY_EN = "service.name.en";
+    private static final String SERVICE_NAME_KEY_RU = "service.name.ru";
+    private static final String SERVICE_NAME_VALUE = "openIdDemoName";
+    private static final String SERVICE_NAME_VALUE_EN = "openIdDemoNameEN";
+    private static final String SERVICE_NAME_VALUE_RU = "openIdDemoNameRU";
     private static final String SERVICE_SHORT_NAME_KEY = "service.shortName";
     private static final String SERVICE_SHORT_NAME_KEY_EN = "service.shortName.en";
     private static final String SERVICE_SHORT_NAME_KEY_RU = "service.shortName.ru";
@@ -77,17 +83,20 @@ public class ManagerServiceImplTest {
     }
 
     @Test
-    public void getServiceShortName_managerReturnsValidShortName_shouldReturnShortName() {
+    public void getServiceName_managerReturnsValidName_shouldReturnName() {
         Collection<RegisteredService> registeredServices = new ArrayList<>();
         OidcRegisteredService oidcRegisteredService = new OidcRegisteredService();
         oidcRegisteredService.setClientId(SERVICE_NAME);
-        oidcRegisteredService.setProperties(mockOidcRegisteredServiceProperties(SERVICE_SHORT_NAME_KEY, SERVICE_SHORT_NAME_VALUE));
+        oidcRegisteredService.setProperties(mockOidcRegisteredServiceProperties(SERVICE_NAME_KEY, SERVICE_NAME_VALUE));
         registeredServices.add(oidcRegisteredService);
         LocaleContextHolder.setLocale(Locale.forLanguageTag("et"));
         ServicesManager servicesManager = createValidServicesManagerWith(registeredServices);
         ManagerService managerService = new ManagerServiceImpl(servicesManager);
 
-        Assert.assertEquals(SERVICE_SHORT_NAME_VALUE, managerService.getServiceShortName(SERVICE_NAME));
+        HashMap<String, RegisteredServiceProperty> serviceNames = new HashMap<>();
+        serviceNames.put(SERVICE_NAME_KEY, oidcRegisteredService.getProperties().get(SERVICE_NAME_KEY));
+
+        Assert.assertEquals(Optional.of(serviceNames), managerService.getServiceNames(SERVICE_NAME));
     }
 
     @Test
@@ -101,7 +110,10 @@ public class ManagerServiceImplTest {
         ServicesManager servicesManager = createValidServicesManagerWith(registeredServices);
         ManagerService managerService = new ManagerServiceImpl(servicesManager);
 
-        Assert.assertEquals(SERVICE_SHORT_NAME_VALUE_EN, managerService.getServiceShortName(SERVICE_NAME));
+        HashMap<String, RegisteredServiceProperty> serviceShortNames = new HashMap<>();
+        serviceShortNames.put(SERVICE_SHORT_NAME_KEY_EN, oidcRegisteredService.getProperties().get(SERVICE_SHORT_NAME_KEY_EN));
+
+        Assert.assertEquals(Optional.of(serviceShortNames), managerService.getServiceNames(SERVICE_NAME));
     }
 
     @Test
@@ -115,11 +127,65 @@ public class ManagerServiceImplTest {
         ServicesManager servicesManager = createValidServicesManagerWith(registeredServices);
         ManagerService managerService = new ManagerServiceImpl(servicesManager);
 
-        Assert.assertEquals(SERVICE_SHORT_NAME_VALUE_RU, managerService.getServiceShortName(SERVICE_NAME));
+        HashMap<String, RegisteredServiceProperty> serviceShortNames = new HashMap<>();
+        serviceShortNames.put(SERVICE_SHORT_NAME_KEY_RU, oidcRegisteredService.getProperties().get(SERVICE_SHORT_NAME_KEY_RU));
+
+        Assert.assertEquals(Optional.of(serviceShortNames), managerService.getServiceNames(SERVICE_NAME));
     }
 
     @Test
-    public void getServiceShortName_managerReturnsNoProperties_shouldReturnEmptyShortName() {
+    public void getServiceShortName_managerReturnsValidShortName_shouldReturnShortName() {
+        Collection<RegisteredService> registeredServices = new ArrayList<>();
+        OidcRegisteredService oidcRegisteredService = new OidcRegisteredService();
+        oidcRegisteredService.setClientId(SERVICE_NAME);
+        oidcRegisteredService.setProperties(mockOidcRegisteredServiceProperties(SERVICE_SHORT_NAME_KEY, SERVICE_SHORT_NAME_VALUE));
+        registeredServices.add(oidcRegisteredService);
+        LocaleContextHolder.setLocale(Locale.forLanguageTag("et"));
+        ServicesManager servicesManager = createValidServicesManagerWith(registeredServices);
+        ManagerService managerService = new ManagerServiceImpl(servicesManager);
+
+        HashMap<String, RegisteredServiceProperty> serviceShortNames = new HashMap<>();
+        serviceShortNames.put(SERVICE_SHORT_NAME_KEY, oidcRegisteredService.getProperties().get(SERVICE_SHORT_NAME_KEY));
+
+        Assert.assertEquals(Optional.of(serviceShortNames), managerService.getServiceNames(SERVICE_NAME));
+    }
+
+    @Test
+    public void getServiceName_managerReturnsValidEnglishName_shouldReturnEnglishName() {
+        Collection<RegisteredService> registeredServices = new ArrayList<>();
+        OidcRegisteredService oidcRegisteredService = new OidcRegisteredService();
+        oidcRegisteredService.setClientId(SERVICE_NAME);
+        oidcRegisteredService.setProperties(mockOidcRegisteredServiceProperties(SERVICE_NAME_KEY_EN, SERVICE_NAME_VALUE_EN));
+        registeredServices.add(oidcRegisteredService);
+        LocaleContextHolder.setLocale(Locale.ENGLISH);
+        ServicesManager servicesManager = createValidServicesManagerWith(registeredServices);
+        ManagerService managerService = new ManagerServiceImpl(servicesManager);
+
+        HashMap<String, RegisteredServiceProperty> serviceNames = new HashMap<>();
+        serviceNames.put(SERVICE_NAME_KEY_EN, oidcRegisteredService.getProperties().get(SERVICE_NAME_KEY_EN));
+
+        Assert.assertEquals(Optional.of(serviceNames), managerService.getServiceNames(SERVICE_NAME));
+    }
+
+    @Test
+    public void getServiceName_managerReturnsValidRussianName_shouldReturnRussianName() {
+        Collection<RegisteredService> registeredServices = new ArrayList<>();
+        OidcRegisteredService oidcRegisteredService = new OidcRegisteredService();
+        oidcRegisteredService.setClientId(SERVICE_NAME);
+        oidcRegisteredService.setProperties(mockOidcRegisteredServiceProperties(SERVICE_NAME_KEY_RU, SERVICE_NAME_VALUE_RU));
+        registeredServices.add(oidcRegisteredService);
+        LocaleContextHolder.setLocale(Locale.forLanguageTag("ru"));
+        ServicesManager servicesManager = createValidServicesManagerWith(registeredServices);
+        ManagerService managerService = new ManagerServiceImpl(servicesManager);
+
+        HashMap<String, RegisteredServiceProperty> serviceNames = new HashMap<>();
+        serviceNames.put(SERVICE_NAME_KEY_RU, oidcRegisteredService.getProperties().get(SERVICE_NAME_KEY_RU));
+
+        Assert.assertEquals(Optional.of(serviceNames), managerService.getServiceNames(SERVICE_NAME));
+    }
+
+    @Test
+    public void getServiceShortName_managerReturnsNoProperties_shouldReturnEmptyName() {
         Collection<RegisteredService> registeredServices = new ArrayList<>();
         OidcRegisteredService oidcRegisteredService = new OidcRegisteredService();
         oidcRegisteredService.setClientId(SERVICE_NAME);
@@ -127,7 +193,7 @@ public class ManagerServiceImplTest {
         ServicesManager servicesManager = createValidServicesManagerWith(registeredServices);
         ManagerService managerService = new ManagerServiceImpl(servicesManager);
 
-        Assert.assertEquals("", managerService.getServiceShortName(SERVICE_NAME));
+        Assert.assertEquals(Optional.of(new HashMap<String, RegisteredServiceProperty>()), managerService.getServiceNames(SERVICE_NAME));
     }
 
     private Map<String, RegisteredServiceProperty> mockOidcRegisteredServiceProperties(String key, String value) {

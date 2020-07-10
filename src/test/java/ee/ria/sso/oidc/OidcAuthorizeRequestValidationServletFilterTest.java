@@ -6,7 +6,14 @@ import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.LevelOfAssurance;
 import ee.ria.sso.config.TaraProperties;
 import ee.ria.sso.config.eidas.EidasConfigurationProvider;
-import org.junit.*;
+import ee.ria.sso.service.manager.ManagerService;
+import org.apereo.cas.services.OidcRegisteredService;
+import org.apereo.cas.services.RegisteredServiceProperty;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -21,11 +28,20 @@ import javax.servlet.ServletException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static ee.ria.sso.authentication.AuthenticationType.*;
-import static ee.ria.sso.authentication.LevelOfAssurance.*;
+import static ee.ria.sso.authentication.AuthenticationType.BankLink;
+import static ee.ria.sso.authentication.AuthenticationType.IDCard;
+import static ee.ria.sso.authentication.AuthenticationType.MobileID;
+import static ee.ria.sso.authentication.AuthenticationType.SmartID;
+import static ee.ria.sso.authentication.AuthenticationType.eIDAS;
+import static ee.ria.sso.authentication.LevelOfAssurance.HIGH;
+import static ee.ria.sso.authentication.LevelOfAssurance.LOW;
+import static ee.ria.sso.authentication.LevelOfAssurance.SUBSTANTIAL;
 import static org.mockito.Mockito.when;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -54,6 +70,9 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
     @Mock
     private TaraProperties taraProperties;
 
+    @Mock
+    private ManagerService managerService;
+
     private OidcAuthorizeRequestValidationServletFilter servletFilter;
 
     @Before
@@ -63,7 +82,7 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
         setEnabledAuthMethods(DEFAULT_LIST_OF_ENABLED_AUTH_METHODS);
         setDefaultAuthMethodsList(DEFAULT_LIST_OF_ENABLED_AUTH_METHODS);
 
-        servletFilter = new OidcAuthorizeRequestValidationServletFilter(oidcRequestValidator, eidasConfigurationProvider, taraProperties);
+        servletFilter = new OidcAuthorizeRequestValidationServletFilter(oidcRequestValidator, eidasConfigurationProvider, taraProperties, managerService);
         servletFilter.init(Mockito.mock(FilterConfig.class));
     }
 
@@ -114,12 +133,59 @@ public class OidcAuthorizeRequestValidationServletFilterTest {
     }
 
     @Test
-    public void assertRedirectUriInSessionWhenValidationSucceeds() throws IOException, ServletException {
+    public void assertHomeUrlInSessionWhenValidationSucceeds() throws IOException, ServletException {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addParameter(OidcAuthorizeRequestParameter.REDIRECT_URI.getParameterKey(), "redirectUriValue");
 
         servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
         Assert.assertEquals("redirectUriValue", request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_REDIRECT_URI));
+    }
+
+    @Test
+    public void assertRedirectUriInSessionWhenValidationSucceeds() throws IOException, ServletException {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addParameter(OidcAuthorizeRequestParameter.CLIENT_ID.getParameterKey(), "openIdDemo");
+
+        OidcRegisteredService oidcRegisteredService = new OidcRegisteredService();
+        oidcRegisteredService.setClientId("openIdDemo");
+        oidcRegisteredService.setInformationUrl("http://client.url");
+
+        when(managerService.getServiceByName("openIdDemo")).thenReturn(Optional.of(oidcRegisteredService));
+
+        servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
+        Assert.assertEquals("http://client.url", request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_HOME_URL));
+    }
+
+    @Test
+    public void assertRedirectUriEmptyInSessionWhenValidationSucceedsAndInformationUrlNotExist() throws IOException, ServletException {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addParameter(OidcAuthorizeRequestParameter.CLIENT_ID.getParameterKey(), "");
+
+        servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
+        Assert.assertEquals("#", request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_HOME_URL));
+    }
+
+    @Test
+    public void assertSessionShortNamesExistInSessionWhenValidationSucceeds() throws IOException, ServletException {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addParameter(OidcAuthorizeRequestParameter.CLIENT_ID.getParameterKey(), "openIdDemo");
+
+        RegisteredServiceProperty rsp = Mockito.mock(RegisteredServiceProperty.class);
+        Map<String, RegisteredServiceProperty> serviceShortNames = new HashMap<>();
+        serviceShortNames.put("service.shortName", rsp);
+        request.getSession().setAttribute(Constants.TARA_OIDC_SESSION_NAMES, serviceShortNames);
+
+        servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
+        Assert.assertEquals(new HashMap<>(), request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_NAMES));
+    }
+
+    @Test
+    public void assertSessionShortNamesEmptyInSessionWhenValidationSucceedsAndShortNamesDontExist() throws IOException, ServletException {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addParameter(OidcAuthorizeRequestParameter.CLIENT_ID.getParameterKey(), "openIdDemo");
+
+        servletFilter.doFilter(request, new MockHttpServletResponse(), Mockito.mock(FilterChain.class));
+        Assert.assertEquals(new HashMap<>(), request.getSession(false).getAttribute(Constants.TARA_OIDC_SESSION_NAMES));
     }
 
     @Test
