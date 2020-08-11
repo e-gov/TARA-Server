@@ -11,6 +11,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -35,7 +36,6 @@ public class ThymeleafSupportTest {
 
     private static final String CLIENT_ID = "openIdDemo";
     private static final String SERVICE_NAME = "openIdDemoName";
-    private static final String SERVICE_SHORT_NAME = "openIdDemoShortName";
 
     @Mock
     CasConfigurationProperties casProperties;
@@ -48,6 +48,7 @@ public class ThymeleafSupportTest {
     @Before
     public void setUp() {
         thymeleafSupport = new ThymeleafSupport(casProperties, taraProperties, "paramName");
+        LocaleContextHolder.setLocale(Locale.ENGLISH);
     }
 
     @Test
@@ -127,6 +128,56 @@ public class ThymeleafSupportTest {
         sessionMap.put(Constants.TARA_OIDC_SESSION_CLIENT_ID, CLIENT_ID);
         sessionMap.put(Constants.TARA_OIDC_SESSION_NAMES, serviceNames);
         setRequestContextWithSessionMap(sessionMap);
+
+        LocaleContextHolder.setLocale(Locale.forLanguageTag("et"));
+
+        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(casProperties, null, null);
+        Assert.assertEquals(SERVICE_NAME, thymeleafSupport.getServiceName());
+    }
+
+    @Test
+    public void getServiceNameShouldReturnEnglishNameSuccessfully() {
+        Map<String, String> serviceNames = new HashMap<>();
+        serviceNames.put("service.name.en", SERVICE_NAME);
+
+        Map<String, Object> sessionMap = new HashMap<>();
+        sessionMap.put(Constants.TARA_OIDC_SESSION_CLIENT_ID, CLIENT_ID);
+        sessionMap.put(Constants.TARA_OIDC_SESSION_NAMES, serviceNames);
+        setRequestContextWithSessionMap(sessionMap);
+
+        LocaleContextHolder.setLocale(Locale.ENGLISH);
+
+        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(casProperties, null, null);
+        Assert.assertEquals(SERVICE_NAME, thymeleafSupport.getServiceName());
+    }
+
+    @Test
+    public void getServiceNameShouldReturnRussianNameSuccessfully() {
+        Map<String, String> serviceNames = new HashMap<>();
+        serviceNames.put("service.name.ru", SERVICE_NAME);
+
+        Map<String, Object> sessionMap = new HashMap<>();
+        sessionMap.put(Constants.TARA_OIDC_SESSION_CLIENT_ID, CLIENT_ID);
+        sessionMap.put(Constants.TARA_OIDC_SESSION_NAMES, serviceNames);
+        setRequestContextWithSessionMap(sessionMap);
+
+        LocaleContextHolder.setLocale(Locale.forLanguageTag("ru"));
+
+        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(casProperties, null, null);
+        Assert.assertEquals(SERVICE_NAME, thymeleafSupport.getServiceName());
+    }
+
+    @Test
+    public void getServiceNameShouldReturnDefaultServiceNameOnUnknownLanguage() {
+        Map<String, String> serviceNames = new HashMap<>();
+        serviceNames.put("service.name", SERVICE_NAME);
+
+        Map<String, Object> sessionMap = new HashMap<>();
+        sessionMap.put(Constants.TARA_OIDC_SESSION_CLIENT_ID, CLIENT_ID);
+        sessionMap.put(Constants.TARA_OIDC_SESSION_NAMES, serviceNames);
+        setRequestContextWithSessionMap(sessionMap);
+
+        LocaleContextHolder.setLocale(Locale.forLanguageTag("invalid"));
 
         ThymeleafSupport thymeleafSupport = new ThymeleafSupport(casProperties, null, null);
         Assert.assertEquals(SERVICE_NAME, thymeleafSupport.getServiceName());
