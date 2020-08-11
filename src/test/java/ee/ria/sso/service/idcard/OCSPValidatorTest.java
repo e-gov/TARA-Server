@@ -240,10 +240,86 @@ public class OCSPValidatorTest {
             ocspValidator.checkCert(userCert);
             fail("Should not reach this!");
         } catch (Exception e) {
-            assertEquals(IllegalStateException.class, e.getClass());
-            assertThat(e.getMessage(), containsString("Invalid OCSP response! OCSP response object bytes could not be read!"));
+            assertEquals(OCSPServiceNotAvailableException.class, e.getClass());
+            assertThat(e.getMessage(), containsString("Invalid OCSP response! Response returned empty body!"));
             assertMdcContent(null);
         }
+    }
+
+    @Test
+    public void checkCertShouldThrowExceptionWhenOcspResponseIsMissingResponseStatus() throws Exception {
+        String ocspUrl = String.format("http://localhost:%d/ocsp", mockOcspServer.port());
+        IDCardConfigurationProvider.Ocsp ocspConfiguration = getMockOcspConfiguration(Arrays.asList("TEST of ESTEID-SK 2015"),
+                ocspUrl,
+                "TEST of SK OCSP RESPONDER 2011",
+                true);
+
+        Mockito.when(ocspConfigurationResolver.resolve(Mockito.any())).thenReturn(
+                Arrays.asList(ocspConfiguration)
+        );
+
+        setUpMockOcspResponse(-1, org.bouncycastle.cert.ocsp.CertificateStatus.GOOD, ocspConfiguration);
+
+        X509Certificate userCert = loadCertificateFromResource(MOCK_USER_CERT_2015_PATH);
+        try {
+            ocspValidator.checkCert(userCert);
+            fail("Should not reach this!");
+        } catch (Exception e) {
+            assertEquals(OCSPServiceNotAvailableException.class, e.getClass());
+            assertThat(e.getMessage(), containsString("Invalid OCSP response! Response status is missing or invalid!"));
+            assertMdcContent(null);
+        }
+    }
+
+    @Test
+    public void checkCertShouldThrowExceptionWhenOcspResponseStatusIsInternalError() throws Exception {
+        String ocspUrl = String.format("http://localhost:%d/ocsp", mockOcspServer.port());
+        IDCardConfigurationProvider.Ocsp ocspConfiguration = getMockOcspConfiguration(Arrays.asList("TEST of ESTEID-SK 2015"),
+                ocspUrl,
+                "TEST of SK OCSP RESPONDER 2011",
+                true);
+
+        Mockito.when(ocspConfigurationResolver.resolve(Mockito.any())).thenReturn(
+                Arrays.asList(ocspConfiguration)
+        );
+
+        setUpMockOcspResponse(OCSPResp.INTERNAL_ERROR, org.bouncycastle.cert.ocsp.CertificateStatus.GOOD, ocspConfiguration);
+
+        X509Certificate userCert = loadCertificateFromResource(MOCK_USER_CERT_2015_PATH);
+        try {
+            ocspValidator.checkCert(userCert);
+            fail("Should not reach this!");
+        } catch (Exception e) {
+            assertEquals(OCSPServiceNotAvailableException.class, e.getClass());
+            assertThat(e.getMessage(), containsString("Response returned Internal Server error!"));
+            assertMdcContent(null);
+        }
+    }
+
+    @Test
+    public void checkCertShouldThrowExceptionWhenOcspResponseStatusIsTryLater() throws Exception {
+        String ocspUrl = String.format("http://localhost:%d/ocsp", mockOcspServer.port());
+        IDCardConfigurationProvider.Ocsp ocspConfiguration = getMockOcspConfiguration(Arrays.asList("TEST of ESTEID-SK 2015"),
+                ocspUrl,
+                "TEST of SK OCSP RESPONDER 2011",
+                true);
+
+        Mockito.when(ocspConfigurationResolver.resolve(Mockito.any())).thenReturn(
+                Arrays.asList(ocspConfiguration)
+        );
+
+        setUpMockOcspResponse(OCSPResp.TRY_LATER, org.bouncycastle.cert.ocsp.CertificateStatus.GOOD, ocspConfiguration);
+
+        X509Certificate userCert = loadCertificateFromResource(MOCK_USER_CERT_2015_PATH);
+        try {
+            ocspValidator.checkCert(userCert);
+            fail("Should not reach this!");
+        } catch (Exception e) {
+            assertEquals(OCSPServiceNotAvailableException.class, e.getClass());
+            assertThat(e.getMessage(), containsString("Response returned Try Later error!"));
+            assertMdcContent(null);
+        }
+
     }
 
     @Test

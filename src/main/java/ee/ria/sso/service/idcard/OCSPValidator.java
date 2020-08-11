@@ -79,6 +79,8 @@ public class OCSPValidator {
             OCSPReq request = buildOCSPReq(userCert, issuerCert, ocspConf);
             OCSPResp response = sendOCSPReq(request, ocspConf);
 
+            validateOCSPResponse(response);
+
             BasicOCSPResp ocspResponse = getResponse(response, ocspConf);
             validateResponseNonce(request, ocspResponse, ocspConf);
             validateResponseSignature(ocspResponse, issuerCert, ocspConf);
@@ -92,6 +94,18 @@ public class OCSPValidator {
             throw new OCSPServiceNotAvailableException("OCSP not available: " + ocspConf.getUrl(), e);
         } catch (Exception e) {
             throw new IllegalStateException("OCSP validation failed: " + e.getMessage(), e);
+        }
+    }
+
+    private void validateOCSPResponse(OCSPResp ocspResp) throws OCSPException {
+        if (ocspResp.getResponseObject() == null) {
+            throw new OCSPServiceNotAvailableException("Invalid OCSP response! Response returned empty body!");
+        } else if (ocspResp.getStatus() < 0 || ocspResp.getStatus() > 6) {
+            throw new OCSPServiceNotAvailableException("Invalid OCSP response! Response status is missing or invalid!");
+        } else if (ocspResp.getStatus() == OCSPResp.INTERNAL_ERROR) {
+            throw new OCSPServiceNotAvailableException("Response returned Internal Server error!");
+        } else if (ocspResp.getStatus() == OCSPResp.TRY_LATER) {
+            throw new OCSPServiceNotAvailableException("Response returned Try Later error!");
         }
     }
 
