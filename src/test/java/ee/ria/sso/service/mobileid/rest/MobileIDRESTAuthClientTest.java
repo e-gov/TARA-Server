@@ -22,7 +22,6 @@ import ee.sk.mid.rest.dao.request.MidAuthenticationRequest;
 import ee.sk.mid.rest.dao.request.MidSessionStatusRequest;
 import ee.sk.mid.rest.dao.response.MidAuthenticationResponse;
 import org.apache.commons.codec.binary.Base64;
-import org.apereo.cas.services.RegisteredServiceProperty;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -115,8 +114,6 @@ public class MobileIDRESTAuthClientTest {
 
         mockRequestWithSessionMap();
 
-        when(managerService.getServiceNames(CLIENT_ID)).thenReturn(Optional.of(new HashMap<>()));
-
         MobileIDRESTSession session = authClient.initAuthentication(PERSONAL_CODE, COUNTRY_CODE, PHONE_NUMBER);
         assertEquals(mockAuthResponse.getSessionID(), session.getSessionId());
         MidAuthenticationHashToSign authenticationHash = session.getAuthenticationHash();
@@ -141,13 +138,9 @@ public class MobileIDRESTAuthClientTest {
 
         mockRequestWithSessionMap();
 
-        RegisteredServiceProperty rsp = Mockito.mock(RegisteredServiceProperty.class);
-        Map<String, RegisteredServiceProperty> serviceShortNames = new HashMap<>();
-        serviceShortNames.put("service.shortName", rsp);
         LocaleContextHolder.setLocale(Locale.forLanguageTag("et"));
 
-        when(managerService.getServiceNames(CLIENT_ID)).thenReturn(Optional.of(serviceShortNames));
-        when(rsp.getValue()).thenReturn(SERVICE_SHORT_NAME);
+        when(managerService.getServiceShortName()).thenReturn(Optional.of(SERVICE_SHORT_NAME));
 
         MobileIDRESTSession session = authClient.initAuthentication(PERSONAL_CODE, COUNTRY_CODE, PHONE_NUMBER);
         assertEquals(mockAuthResponse.getSessionID(), session.getSessionId());

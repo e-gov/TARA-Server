@@ -98,7 +98,9 @@ public class ThymeleafSupport {
 
         String informationUrl = SessionMapUtil.getStringSessionMapValue(Constants.TARA_OIDC_SESSION_HOME_URL);
 
-        if (StringUtils.isNotBlank(informationUrl)) {
+        if (StringUtils.isBlank(redirectUri)) {
+            return "#";
+        } else if (StringUtils.isNotBlank(informationUrl)) {
             return informationUrl;
         }
 
