@@ -16,11 +16,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.apereo.cas.web.flow.CasWebflowConstants;
 import org.apereo.inspektr.audit.annotation.Audit;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
 
 import java.util.List;
+import java.util.Locale;
 
 import static ee.ria.sso.statistics.StatisticsOperation.START_AUTH;
 import static ee.ria.sso.statistics.StatisticsOperation.SUCCESSFUL_AUTH;
@@ -50,6 +52,8 @@ public class MobileIDAuthenticationService extends AbstractService {
     public Event startLoginByMobileID(RequestContext context) {
         final PreAuthenticationCredential credential = context.getFlowExecutionContext().getActiveSession().getScope().get("credential", PreAuthenticationCredential.class);
         notNull(credential, "PreAuthenticationCredential is missing!");
+
+        setInterfaceLanguage();
 
         String mobileNumber = getPhoneNumber(credential);
         log.info("Starting Mobile-ID authentication: <mobileNumber:{}>, <identityCode:{}>", mobileNumber, credential.getPrincipalCode());
@@ -163,6 +167,18 @@ public class MobileIDAuthenticationService extends AbstractService {
     private boolean isPhoneNumberRequested(RequestContext context) {
         List<TaraScope> scopes = context.getExternalContext().getSessionMap().get(Constants.TARA_OIDC_SESSION_SCOPES, List.class, null);
         return scopes != null && scopes.contains(TaraScope.PHONE);
+    }
+
+    private void setInterfaceLanguage() {
+        Locale locale = LocaleContextHolder.getLocale();
+
+        if (Locale.ENGLISH.getLanguage().equalsIgnoreCase(locale.getLanguage())) {
+            confProvider.setLanguage("ENG");
+        } else if (Locale.forLanguageTag("ru").getLanguage().equalsIgnoreCase(locale.getLanguage())) {
+            confProvider.setLanguage("RUS");
+        } else {
+            confProvider.setLanguage("EST");
+        }
     }
 
     private void logEvent(RequestContext context, Exception e) {
