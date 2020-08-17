@@ -35,6 +35,8 @@ public final class Constants {
     public static final String TARA_OIDC_SESSION_AUTH_METHODS = "taraOidcSessionAllowedAuthMethods";
     public static final String TARA_OIDC_SESSION_LOA = "taraOidcSessionLoA";
     public static final String TARA_OIDC_SESSION_STATE = "taraOidcSessionState";
+    public static final String TARA_OIDC_SESSION_HOME_URL = "taraOidcSessionHomeURL";
+    public static final String TARA_OIDC_SESSION_NAMES = "taraOidcSessionNames";
 
     public static final String TARA_OIDC_DYNAMIC_CLIENT_REGISTRATION_ENDPOINT_ENABLED = "oidc.dynamic-client-registration.enabled";
     public static final String TARA_OIDC_PROFILE_ENDPOINT_ENABLED = "oidc.profile-endpoint.enabled";

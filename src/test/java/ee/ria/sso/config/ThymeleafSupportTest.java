@@ -2,21 +2,16 @@ package ee.ria.sso.config;
 
 import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
-import ee.ria.sso.authentication.LevelOfAssurance;
 import ee.ria.sso.flow.ThymeleafSupport;
-import ee.ria.sso.service.manager.ManagerService;
-import org.apache.commons.collections.keyvalue.DefaultMapEntry;
-import org.apache.commons.collections4.MapUtils;
 import org.apereo.cas.configuration.CasConfigurationProperties;
 import org.apereo.cas.configuration.model.core.CasServerProperties;
-import org.apereo.cas.services.OidcRegisteredService;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -27,15 +22,20 @@ import org.springframework.webflow.test.MockRequestContext;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
+
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ThymeleafSupportTest {
 
     private static final String CLIENT_ID = "openIdDemo";
-
-    @Mock
-    ManagerService managerService;
+    private static final String SERVICE_NAME = "openIdDemoName";
 
     @Mock
     CasConfigurationProperties casProperties;
@@ -47,7 +47,8 @@ public class ThymeleafSupportTest {
 
     @Before
     public void setUp() {
-        thymeleafSupport = new ThymeleafSupport(managerService, casProperties, taraProperties, "paramName");
+        thymeleafSupport = new ThymeleafSupport(casProperties, taraProperties, "paramName");
+        LocaleContextHolder.setLocale(Locale.ENGLISH);
     }
 
     @Test
@@ -77,8 +78,7 @@ public class ThymeleafSupportTest {
 
     @Test
     public void isAuthMethodAllowedShouldReturnFalseWhenAllowedInSessionList() {
-        final ThymeleafSupport thymeleafSupport = new ThymeleafSupport(null,
-                casProperties, taraProperties, null);
+        final ThymeleafSupport thymeleafSupport = new ThymeleafSupport(casProperties, taraProperties, null);
         setRequestContextWithSessionMap(Collections.singletonMap(
                 Constants.TARA_OIDC_SESSION_AUTH_METHODS, Collections.emptyList()
         ));
@@ -88,25 +88,20 @@ public class ThymeleafSupportTest {
 
     @Test
     public void getHomeUrlShouldReturnEmptyUrlWhenRedirectUriNotPresentInSession() {
-        setRequestContextWithSessionMap(null);
+        Map<String, Object> sessionMap = new HashMap<>();
+        sessionMap.put(Constants.TARA_OIDC_SESSION_HOME_URL, "#");
+        setRequestContextWithSessionMap(sessionMap);
         Assert.assertEquals("#", this.thymeleafSupport.getHomeUrl());
     }
 
     @Test
     public void getHomeUrlShouldReturnValidHomeUrlWhenValidRedirectUriPresentInSession() {
-        OidcRegisteredService oidcRegisteredService = Mockito.mock(OidcRegisteredService.class);
-        Mockito.when(oidcRegisteredService.getInformationUrl()).thenReturn("https://client/url");
-
-        ManagerService managerService = Mockito.mock(ManagerService.class);
-        Mockito.when(managerService.getServiceByName(CLIENT_ID))
-                .thenReturn(Optional.of(oidcRegisteredService));
-
-        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(managerService, null, null, null);
+        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(null, null, null);
 
         Map<String, Object> sessionMap = new HashMap<>();
-
         sessionMap.put(Constants.TARA_OIDC_SESSION_REDIRECT_URI, "https://client/url");
         sessionMap.put(Constants.TARA_OIDC_SESSION_CLIENT_ID, CLIENT_ID);
+        sessionMap.put(Constants.TARA_OIDC_SESSION_HOME_URL, "https://client/url");
 
         setRequestContextWithSessionMap(sessionMap);
         Assert.assertEquals("https://client/url", thymeleafSupport.getHomeUrl());
@@ -114,20 +109,10 @@ public class ThymeleafSupportTest {
 
     @Test
     public void getHomeUrlShouldReturnValidCancelUrlWhenValidRedirectUriPresentInSessionAndInformationUriNotPresent() {
-        OidcRegisteredService oidcRegisteredService = Mockito.mock(OidcRegisteredService.class);
-        Mockito.when(oidcRegisteredService.getInformationUrl()).thenReturn(null);
-
-        ManagerService managerService = Mockito.mock(ManagerService.class);
-        Mockito.when(managerService.getServiceByName(CLIENT_ID))
-                .thenReturn(Optional.of(oidcRegisteredService));
-
-        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(managerService, null, null, null);
-
+        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(null, null, null);
         Map<String, Object> sessionMap = new HashMap<>();
-
         sessionMap.put(Constants.TARA_OIDC_SESSION_REDIRECT_URI, "https://client/url");
         sessionMap.put(Constants.TARA_OIDC_SESSION_STATE, "randomSessionState");
-        sessionMap.put(Constants.TARA_OIDC_SESSION_CLIENT_ID, CLIENT_ID);
 
         setRequestContextWithSessionMap(sessionMap);
 
@@ -135,13 +120,78 @@ public class ThymeleafSupportTest {
     }
 
     @Test
-    public void getHomeUrlShouldReturnEmptyUrlWhenInvalidRedirectUriPresentInSession() {
-        ManagerService managerService = Mockito.mock(ManagerService.class);
+    public void getServiceNameShouldReturnNameSuccessfully() {
+        Map<String, String> serviceNames = new HashMap<>();
+        serviceNames.put("service.name", SERVICE_NAME);
 
-        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(managerService, casProperties, null, null);
+        Map<String, Object> sessionMap = new HashMap<>();
+        sessionMap.put(Constants.TARA_OIDC_SESSION_CLIENT_ID, CLIENT_ID);
+        sessionMap.put(Constants.TARA_OIDC_SESSION_NAMES, serviceNames);
+        setRequestContextWithSessionMap(sessionMap);
 
-        setRequestContextWithSessionMap(Collections.singletonMap(Constants.TARA_OIDC_SESSION_REDIRECT_URI, "https://client/url"));
-        Assert.assertEquals("#", thymeleafSupport.getHomeUrl());
+        LocaleContextHolder.setLocale(Locale.forLanguageTag("et"));
+
+        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(casProperties, null, null);
+        Assert.assertEquals(SERVICE_NAME, thymeleafSupport.getServiceName());
+    }
+
+    @Test
+    public void getServiceNameShouldReturnEnglishNameSuccessfully() {
+        Map<String, String> serviceNames = new HashMap<>();
+        serviceNames.put("service.name.en", SERVICE_NAME);
+
+        Map<String, Object> sessionMap = new HashMap<>();
+        sessionMap.put(Constants.TARA_OIDC_SESSION_CLIENT_ID, CLIENT_ID);
+        sessionMap.put(Constants.TARA_OIDC_SESSION_NAMES, serviceNames);
+        setRequestContextWithSessionMap(sessionMap);
+
+        LocaleContextHolder.setLocale(Locale.ENGLISH);
+
+        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(casProperties, null, null);
+        Assert.assertEquals(SERVICE_NAME, thymeleafSupport.getServiceName());
+    }
+
+    @Test
+    public void getServiceNameShouldReturnRussianNameSuccessfully() {
+        Map<String, String> serviceNames = new HashMap<>();
+        serviceNames.put("service.name.ru", SERVICE_NAME);
+
+        Map<String, Object> sessionMap = new HashMap<>();
+        sessionMap.put(Constants.TARA_OIDC_SESSION_CLIENT_ID, CLIENT_ID);
+        sessionMap.put(Constants.TARA_OIDC_SESSION_NAMES, serviceNames);
+        setRequestContextWithSessionMap(sessionMap);
+
+        LocaleContextHolder.setLocale(Locale.forLanguageTag("ru"));
+
+        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(casProperties, null, null);
+        Assert.assertEquals(SERVICE_NAME, thymeleafSupport.getServiceName());
+    }
+
+    @Test
+    public void getServiceNameShouldReturnDefaultServiceNameOnUnknownLanguage() {
+        Map<String, String> serviceNames = new HashMap<>();
+        serviceNames.put("service.name", SERVICE_NAME);
+
+        Map<String, Object> sessionMap = new HashMap<>();
+        sessionMap.put(Constants.TARA_OIDC_SESSION_CLIENT_ID, CLIENT_ID);
+        sessionMap.put(Constants.TARA_OIDC_SESSION_NAMES, serviceNames);
+        setRequestContextWithSessionMap(sessionMap);
+
+        LocaleContextHolder.setLocale(Locale.forLanguageTag("invalid"));
+
+        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(casProperties, null, null);
+        Assert.assertEquals(SERVICE_NAME, thymeleafSupport.getServiceName());
+    }
+
+    @Test
+    public void getServiceNameShouldReturnEmptyName() {
+        Map<String, Object> sessionMap = new HashMap<>();
+        sessionMap.put(Constants.TARA_OIDC_SESSION_CLIENT_ID, CLIENT_ID);
+        sessionMap.put(Constants.TARA_OIDC_SESSION_NAMES, new HashMap<>());
+        setRequestContextWithSessionMap(sessionMap);
+
+        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(casProperties, null, null);
+        Assert.assertNull(thymeleafSupport.getServiceName());
     }
 
     @Test
@@ -150,9 +200,9 @@ public class ThymeleafSupportTest {
 
         CasServerProperties casServerProperties =  new CasServerProperties();
         casServerProperties.setName("https://example.tara.url");
-        Mockito.when(casProperties.getServer()).thenReturn(casServerProperties);
+        when(casProperties.getServer()).thenReturn(casServerProperties);
 
-        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(null, casProperties, null, "somelocaleparam");
+        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(casProperties, null, "somelocaleparam");
         Assert.assertEquals("https://example.tara.url:443?somelocaleparam=et", thymeleafSupport.getLocaleUrl("et"));
     }
 
@@ -175,23 +225,23 @@ public class ThymeleafSupportTest {
 
         CasServerProperties casServerProperties =  new CasServerProperties();
         casServerProperties.setName("https://example.tara.url");
-        Mockito.when(casProperties.getServer()).thenReturn(casServerProperties);
+        when(casProperties.getServer()).thenReturn(casServerProperties);
 
-        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(null, casProperties, null, "somelocaleparam");
+        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(casProperties, null, "somelocaleparam");
         Assert.assertEquals("#", thymeleafSupport.getLocaleUrl("et"));
     }
 
     @Test
     public void getBackUrlShouldReturnPac4jRequestedUrlWithSpecifiedLocale() throws Exception {
         setRequestContextWithSessionMap(new HashMap<>());
-        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(null, casProperties, null, "somelocaleparam");
+        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(casProperties, null, "somelocaleparam");
         Assert.assertEquals("https://example.tara.ee?somelocaleparam=et", thymeleafSupport.getBackUrl("https://example.tara.ee", Locale.forLanguageTag("et")));
     }
 
     @Test
     public void getBackUrlShouldReturnHashTagWhenEmpty() throws Exception {
         setRequestContextWithSessionMap(new HashMap<>());
-        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(null, casProperties, null, "somelocaleparam");
+        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(casProperties, null, "somelocaleparam");
         Assert.assertEquals("#", thymeleafSupport.getBackUrl("", Locale.forLanguageTag("et")));
         Assert.assertEquals("#", thymeleafSupport.getBackUrl("          ", Locale.forLanguageTag("et")));
         Assert.assertEquals("#", thymeleafSupport.getBackUrl(null, Locale.forLanguageTag("et")));
@@ -199,14 +249,14 @@ public class ThymeleafSupportTest {
 
     @Test
     public void isNotLocaleShouldReturnTrue() {
-        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(null, null, null, null);
+        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(null, null, null);
         Assert.assertTrue(thymeleafSupport.isNotLocale("en", Locale.forLanguageTag("et")));
         Assert.assertTrue(thymeleafSupport.isNotLocale("xxx", Locale.forLanguageTag("et")));
     }
 
     @Test
     public void isNotLocaleShouldReturnFalse() {
-        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(null, null, null, null);
+        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(null, null, null);
         Assert.assertFalse(thymeleafSupport.isNotLocale("ET", Locale.forLanguageTag("et")));
         Assert.assertFalse(thymeleafSupport.isNotLocale("et", Locale.forLanguageTag("et")));
     }
@@ -214,15 +264,15 @@ public class ThymeleafSupportTest {
     @Test
     public void getTestEnvironmentAlertMessageIfAvailableShouldReturnProperyValue() {
         String testMessage = "test123";
-        Mockito.when(taraProperties.getTestEnvironmentWarningMessage()).thenReturn(testMessage);
-        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(null, null, taraProperties, null);
+        when(taraProperties.getTestEnvironmentWarningMessage()).thenReturn(testMessage);
+        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(null, taraProperties, null);
         Assert.assertEquals(testMessage, thymeleafSupport.getTestEnvironmentAlertMessageIfAvailable());
     }
 
     @Test
     public void getTestEnvironmentAlertMessageIfAvailableShouldReturnNull() {
-        Mockito.when(taraProperties.getTestEnvironmentWarningMessage()).thenReturn(null);
-        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(null, null, taraProperties, null);
+        when(taraProperties.getTestEnvironmentWarningMessage()).thenReturn(null);
+        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(null, taraProperties, null);
         Assert.assertEquals(null, thymeleafSupport.getTestEnvironmentAlertMessageIfAvailable());
     }
 
@@ -231,7 +281,7 @@ public class ThymeleafSupportTest {
         String uniqueRequestId = UUID.randomUUID().toString();
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setAttribute(Constants.MDC_ATTRIBUTE_REQUEST_ID, uniqueRequestId);
-        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(null, null, taraProperties, null);
+        ThymeleafSupport thymeleafSupport = new ThymeleafSupport(null, taraProperties, null);
         Assert.assertEquals(uniqueRequestId, thymeleafSupport.getCurrentRequestIdentifier(request));
     }
 

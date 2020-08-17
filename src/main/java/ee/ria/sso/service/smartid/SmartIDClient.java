@@ -1,6 +1,7 @@
 package ee.ria.sso.service.smartid;
 
 import ee.ria.sso.config.smartid.SmartIDConfigurationProvider;
+import ee.ria.sso.service.manager.ManagerService;
 import ee.sk.smartid.AuthenticationHash;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
@@ -20,6 +21,8 @@ class SmartIDClient {
 
     private final SmartIdConnector smartIdConnector;
     private final SmartIDConfigurationProvider confProvider;
+    private final ManagerService managerService;
+
 
     public AuthenticationSessionResponse authenticateSubject(AuthenticationRequest authRequest) {
         NationalIdentity nationalIdentity = new NationalIdentity(authRequest.getPersonCountry(), authRequest.getPersonIdentifier());
@@ -36,7 +39,7 @@ class SmartIDClient {
         request.setRelyingPartyUUID(confProvider.getRelyingPartyUuid());
         request.setRelyingPartyName(confProvider.getRelyingPartyName());
         request.setCertificateLevel(authRequest.getCertificateLevel().name());
-        request.setDisplayText(confProvider.getAuthenticationConsentDialogDisplayText());
+        request.setDisplayText(managerService.getServiceShortName().orElse(confProvider.getAuthenticationConsentDialogDisplayText()));
         AuthenticationHash authHash = authRequest.getAuthenticationHash();
         request.setHashType(authHash.getHashType().getHashTypeName());
         request.setHash(authHash.getHashInBase64());

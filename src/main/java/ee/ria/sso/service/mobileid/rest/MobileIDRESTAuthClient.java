@@ -2,6 +2,7 @@ package ee.ria.sso.service.mobileid.rest;
 
 import ee.ria.sso.config.mobileid.MobileIDConfigurationProvider;
 import ee.ria.sso.service.ExternalServiceHasFailedException;
+import ee.ria.sso.service.manager.ManagerService;
 import ee.ria.sso.service.mobileid.AuthenticationIdentity;
 import ee.ria.sso.service.mobileid.MobileIDAuthenticationClient;
 import ee.sk.mid.MidAuthentication;
@@ -28,22 +29,26 @@ public class MobileIDRESTAuthClient implements MobileIDAuthenticationClient<Mobi
 
     private final MobileIDConfigurationProvider confProvider;
     private final MidClient client;
+    private final ManagerService managerService;
 
-    public MobileIDRESTAuthClient(MobileIDConfigurationProvider confProvider, MidClient client) {
+    public MobileIDRESTAuthClient(MobileIDConfigurationProvider confProvider, MidClient client, ManagerService managerService) {
         this.confProvider = confProvider;
         this.client = client;
+        this.managerService = managerService;
     }
 
     @Override
     public MobileIDRESTSession initAuthentication(String personalCode, String countryCode, String phoneNumber) {
         MidAuthenticationHashToSign authenticationHash = MidAuthenticationHashToSign.generateRandomHashOfType(confProvider.getAuthenticationHashType());
 
+
+
         MidAuthenticationRequest request = MidAuthenticationRequest.newBuilder()
                 .withPhoneNumber(phoneNumber)
                 .withNationalIdentityNumber(personalCode)
                 .withHashToSign(authenticationHash)
                 .withLanguage(MidLanguage.valueOf(confProvider.getLanguage()))
-                .withDisplayText(confProvider.getMessageToDisplay())
+                .withDisplayText(managerService.getServiceShortName().orElse(confProvider.getMessageToDisplay()))
                 .withDisplayTextFormat(confProvider.getMessageToDisplayEncoding())
                 .build();
 

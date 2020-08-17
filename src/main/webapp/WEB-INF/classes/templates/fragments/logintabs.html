@@ -53,7 +53,7 @@
                 <div role="heading" aria-level="2" >
                     <h2 th:utext="${#messages.msg('label.' + tab_id + '.' + (title ?: 'title'))}"></h2>
                 </div>
-                <p th:utext="${#messages.msg('label.' + tab_id + '.' + (instruction ?: 'instruction'))}"></p>
+                <p th:utext="${#strings.isEmpty(@thymeleafSupport.getServiceName()) ? #messages.msg('label.' + tab_id + '.' + (instruction ?: 'instruction')) : #messages.msg('label.' + tab_id + '.' + (instructionWithShortName ?: 'instructionWithShortName'), @thymeleafSupport.getServiceName())}" ></p>
                 <form role="form" layout:fragment="login-form-content"></form>
             </div>
         </div>
