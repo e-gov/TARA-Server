@@ -21,6 +21,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.env.Environment;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -414,7 +415,7 @@ public class BanklinkAuthenticationServiceTest {
     }
 
     private RequestContext startSuccessfulLoginByBanklink(String bank) {
-        Locale.setDefault(new Locale("en", "EN"));
+        LocaleContextHolder.setLocale(Locale.ENGLISH);
         Map<String, String> map = new HashMap<>();
         map.put("bank", bank);
         RequestContext requestContext = this.getRequestContext(map);
@@ -426,7 +427,7 @@ public class BanklinkAuthenticationServiceTest {
 
     private void verifyStartLoginByBankLinkSucceeds(BankEnum bank) {
         SimpleTestAppender.events.clear();
-        Locale.setDefault(new Locale("en", "EN"));
+        LocaleContextHolder.setLocale(Locale.ENGLISH);
         Map<String, String> map = new HashMap<>();
         map.put("bank", bank.getName());
 
