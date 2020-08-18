@@ -9,6 +9,7 @@ import ee.ria.sso.oidc.TaraOidcAccessTokenEndpointController;
 import ee.ria.sso.oidc.TaraOidcAuthorizeEndpointController;
 import ee.ria.sso.oidc.TaraOidcIdTokenGeneratorService;
 import ee.ria.sso.oidc.TaraOidcServerDiscoverySettings;
+import ee.ria.sso.service.manager.ManagerService;
 import org.apache.http.HttpStatus;
 import org.apereo.cas.audit.AuditableExecution;
 import org.apereo.cas.authentication.principal.PrincipalFactory;
@@ -80,6 +81,9 @@ public class TaraOidcConfiguration {
 
     @Autowired
     private CasConfigurationProperties casProperties;
+
+    @Autowired
+    private ManagerService managerService;
 
     @Autowired
     @Qualifier("oauthSecConfig")
@@ -250,7 +254,7 @@ public class TaraOidcConfiguration {
     public FilterRegistrationBean oidcAuthorizeCheckingServletFilter(OidcAuthorizeRequestValidator oidcAuthorizeRequestValidator) {
         final Map<String, String> initParams = new HashMap<>();
         final FilterRegistrationBean bean = new FilterRegistrationBean();
-        bean.setFilter(new OidcAuthorizeRequestValidationServletFilter(oidcAuthorizeRequestValidator, eidasConfigurationProvider, taraProperties));
+        bean.setFilter(new OidcAuthorizeRequestValidationServletFilter(oidcAuthorizeRequestValidator, eidasConfigurationProvider, taraProperties, managerService));
         bean.setUrlPatterns(Collections.singleton("/oidc/authorize"));
         bean.setInitParameters(initParams);
         bean.setName("oidcAuthorizeCheckingServletFilter");

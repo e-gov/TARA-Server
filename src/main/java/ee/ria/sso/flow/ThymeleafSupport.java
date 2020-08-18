@@ -1,18 +1,20 @@
 package ee.ria.sso.flow;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.config.TaraProperties;
 import ee.ria.sso.oidc.TaraScope;
-import ee.ria.sso.service.manager.ManagerService;
 import ee.ria.sso.utils.RedirectUrlUtil;
+import ee.ria.sso.utils.SessionMapUtil;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.apereo.cas.configuration.CasConfigurationProperties;
-import org.apereo.cas.services.OidcRegisteredService;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.webflow.core.collection.SharedAttributeMap;
@@ -21,18 +23,14 @@ import org.springframework.webflow.execution.RequestContextHolder;
 import javax.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URLEncoder;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Slf4j
 @AllArgsConstructor
 public class ThymeleafSupport {
 
-    private final ManagerService managerService;
     private final CasConfigurationProperties casProperties;
     private final TaraProperties taraProperties;
     private final String defaultLocaleChangeParam;
@@ -96,46 +94,21 @@ public class ThymeleafSupport {
     }
 
     public String getHomeUrl() {
-        final String redirectUri = RequestContextHolder.getRequestContext()
-                .getExternalContext()
-                .getSessionMap()
-                .getString(Constants.TARA_OIDC_SESSION_REDIRECT_URI);
+        final String redirectUri = SessionMapUtil.getStringSessionMapValue(Constants.TARA_OIDC_SESSION_REDIRECT_URI);
 
-        final String clientId = RequestContextHolder.getRequestContext()
-                .getExternalContext()
-                .getSessionMap()
-                .getString(Constants.TARA_OIDC_SESSION_CLIENT_ID);
+        String informationUrl = SessionMapUtil.getStringSessionMapValue(Constants.TARA_OIDC_SESSION_HOME_URL);
 
-        String informationUrl = getHomeUrl(clientId);
-
-        if (StringUtils.isNotBlank(informationUrl)) {
+        if (StringUtils.isBlank(redirectUri)) {
+            return "#";
+        } else if (StringUtils.isNotBlank(informationUrl)) {
             return informationUrl;
         }
 
         return getUserCancelUrl(redirectUri);
     }
 
-    public String getHomeUrl(String clientId) {
-        if (StringUtils.isNotBlank(clientId)) {
-            return this.managerService.getServiceByName(clientId)
-                    .orElse(new OidcRegisteredService() {
-                        @Override
-                        public String getInformationUrl() {
-                            return "#";
-                        }
-                    })
-                    .getInformationUrl();
-        } else {
-            log.debug("Could not find home url from session");
-            return "#";
-        }
-    }
-
     public String getUserCancelUrl(String redirectUri) {
-        final String sessionState = RequestContextHolder.getRequestContext()
-                .getExternalContext()
-                .getSessionMap()
-                .getString(Constants.TARA_OIDC_SESSION_STATE);
+        final String sessionState = SessionMapUtil.getStringSessionMapValue(Constants.TARA_OIDC_SESSION_STATE);
 
         return getUserCancelUrl(redirectUri, sessionState);
     }
@@ -143,6 +116,27 @@ public class ThymeleafSupport {
     @SneakyThrows
     public String getUserCancelUrl(String redirectUri, String sessionState) {
         return RedirectUrlUtil.createRedirectUrl(redirectUri, "user_cancel", "User canceled the login process", sessionState);
+    }
+
+    public String getServiceName() {
+        String serviceName;
+        Locale locale = LocaleContextHolder.getLocale();
+
+        Map<String, String> serviceNames = new ObjectMapper().convertValue(SessionMapUtil.getSessionMapValue(Constants.TARA_OIDC_SESSION_NAMES), new TypeReference<Map<String, String>>() {});
+
+        if (Locale.ENGLISH.getLanguage().equalsIgnoreCase(locale.getLanguage())) {
+            serviceName = "service.name.en";
+        } else if (Locale.forLanguageTag("ru").getLanguage().equalsIgnoreCase(locale.getLanguage())) {
+            serviceName = "service.name.ru";
+        } else {
+            serviceName = "service.name";
+        }
+
+        if (serviceNames != null && serviceNames.containsKey(serviceName)) {
+            return serviceNames.get(serviceName);
+        }
+
+        return null;
     }
 
     public String getCurrentRequestIdentifier(HttpServletRequest request) {

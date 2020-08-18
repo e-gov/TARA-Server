@@ -5,7 +5,6 @@ import ee.ria.sso.authentication.principal.TaraPrincipalFactory;
 import ee.ria.sso.flow.TaraWebflowConfigurer;
 import ee.ria.sso.flow.ThymeleafSupport;
 import ee.ria.sso.i18n.TaraLocaleChangeInterceptor;
-import ee.ria.sso.service.manager.ManagerService;
 import lombok.extern.slf4j.Slf4j;
 import org.apereo.cas.authentication.AuthenticationEventExecutionPlan;
 import org.apereo.cas.authentication.AuthenticationEventExecutionPlanConfigurer;
@@ -20,7 +19,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
@@ -54,8 +56,8 @@ public class TaraConfiguration extends WebMvcConfigurerAdapter {
     }
 
     @Bean
-    public ThymeleafSupport thymeleafSupport(ManagerService managerService, CasConfigurationProperties casProperties, TaraProperties taraProperties) {
-        return new ThymeleafSupport(managerService, casProperties, taraProperties, getDefaultLocaleChangeParam());
+    public ThymeleafSupport thymeleafSupport(CasConfigurationProperties casProperties, TaraProperties taraProperties) {
+        return new ThymeleafSupport(casProperties, taraProperties, getDefaultLocaleChangeParam());
     }
 
     @Bean

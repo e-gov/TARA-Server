@@ -23,10 +23,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
+
+import java.util.Locale;
 
 import static ee.ria.sso.Constants.MOBILE_ID_AUTHENTICATION_SESSION;
 import static ee.ria.sso.Constants.MOBILE_ID_VERIFICATION_CODE;
@@ -55,6 +58,9 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
     private static final String MOCK_AREA_CODE = "+372";
     private static final String MOCK_PHONE_NUMBER_WITH_AREA_CODE = MOCK_AREA_CODE + MOCK_PHONE_NUMBER;
     private static final String MOCK_COUNTRY_CODE = "EE";
+    private static final String MOCK_LANGUAGE_EST = "EST";
+    private static final String MOCK_LANGUAGE_ENG = "ENG";
+    private static final String MOCK_LANGUAGE_RUS = "RUS";
 
     @Mock
     private MobileIDConfigurationProvider configurationProvider;
@@ -121,6 +127,80 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
         assertEquals(mockMobileIDSession.getSessionId(), authSession.getSessionId());
         assertEquals(0, getAttrFromFlowScope(mockRequestContext, Constants.AUTH_COUNT));
         assertEquals(CasWebflowConstants.TRANSITION_ID_SUCCESS, event.getId());
+
+        assertStatisticsEventCollected(StatisticsOperation.START_AUTH, AuthenticationType.MobileID);
+    }
+
+    @Test
+    public void startLoginByMobileIDSucceedsWithEnglishLanguage() {
+        LocaleContextHolder.setLocale(Locale.ENGLISH);
+        when(configurationProvider.getLanguage()).thenReturn(LocaleContextHolder.getLocale().getISO3Language().toUpperCase());
+
+        RequestContext mockRequestContext = createPreAuthenticationRequestContext(createPreAuthenticationCredentialWithIdAndNumber());
+
+        final MobileIDSession mockMobileIDSession = createMockMobileIDSession();
+        when(authenticationClient.initAuthentication(MOCK_PERSONAL_CODE, configurationProvider.getCountryCode(), MOCK_PHONE_NUMBER_WITH_AREA_CODE))
+                .thenReturn(mockMobileIDSession);
+
+        Event event = this.authenticationService.startLoginByMobileID(mockRequestContext);
+
+        assertEquals(mockMobileIDSession.getVerificationCode(), getAttrFromFlowScope(mockRequestContext, MOBILE_ID_VERIFICATION_CODE));
+        MobileIDRESTSession authSession = (MobileIDRESTSession) getAttrFromFlowScope(mockRequestContext, MOBILE_ID_AUTHENTICATION_SESSION);
+        assertEquals(mockMobileIDSession.getVerificationCode(), authSession.getVerificationCode());
+        assertEquals(mockMobileIDSession.getSessionId(), authSession.getSessionId());
+        assertEquals(0, getAttrFromFlowScope(mockRequestContext, Constants.AUTH_COUNT));
+        assertEquals(CasWebflowConstants.TRANSITION_ID_SUCCESS, event.getId());
+        assertEquals(MOCK_LANGUAGE_ENG, configurationProvider.getLanguage());
+
+        assertStatisticsEventCollected(StatisticsOperation.START_AUTH, AuthenticationType.MobileID);
+    }
+
+    @Test
+    public void startLoginByMobileIDSucceedsWithRussianLanguage() {
+
+        LocaleContextHolder.setLocale(Locale.forLanguageTag("ru"));
+        when(configurationProvider.getLanguage()).thenReturn(LocaleContextHolder.getLocale().getISO3Language().toUpperCase());
+
+        RequestContext mockRequestContext = createPreAuthenticationRequestContext(createPreAuthenticationCredentialWithIdAndNumber());
+
+        final MobileIDSession mockMobileIDSession = createMockMobileIDSession();
+        when(authenticationClient.initAuthentication(MOCK_PERSONAL_CODE, configurationProvider.getCountryCode(), MOCK_PHONE_NUMBER_WITH_AREA_CODE))
+                .thenReturn(mockMobileIDSession);
+
+        Event event = this.authenticationService.startLoginByMobileID(mockRequestContext);
+
+        assertEquals(mockMobileIDSession.getVerificationCode(), getAttrFromFlowScope(mockRequestContext, MOBILE_ID_VERIFICATION_CODE));
+        MobileIDRESTSession authSession = (MobileIDRESTSession) getAttrFromFlowScope(mockRequestContext, MOBILE_ID_AUTHENTICATION_SESSION);
+        assertEquals(mockMobileIDSession.getVerificationCode(), authSession.getVerificationCode());
+        assertEquals(mockMobileIDSession.getSessionId(), authSession.getSessionId());
+        assertEquals(0, getAttrFromFlowScope(mockRequestContext, Constants.AUTH_COUNT));
+        assertEquals(CasWebflowConstants.TRANSITION_ID_SUCCESS, event.getId());
+        assertEquals(MOCK_LANGUAGE_RUS, configurationProvider.getLanguage());
+
+        assertStatisticsEventCollected(StatisticsOperation.START_AUTH, AuthenticationType.MobileID);
+    }
+
+    @Test
+    public void startLoginByMobileIDSucceedsWithUnknownLanguageDefaultsToEstonian() {
+
+        LocaleContextHolder.setLocale(Locale.forLanguageTag("invalid"));
+        when(configurationProvider.getLanguage()).thenReturn(MOCK_LANGUAGE_EST);
+
+        RequestContext mockRequestContext = createPreAuthenticationRequestContext(createPreAuthenticationCredentialWithIdAndNumber());
+
+        final MobileIDSession mockMobileIDSession = createMockMobileIDSession();
+        when(authenticationClient.initAuthentication(MOCK_PERSONAL_CODE, configurationProvider.getCountryCode(), MOCK_PHONE_NUMBER_WITH_AREA_CODE))
+                .thenReturn(mockMobileIDSession);
+
+        Event event = this.authenticationService.startLoginByMobileID(mockRequestContext);
+
+        assertEquals(mockMobileIDSession.getVerificationCode(), getAttrFromFlowScope(mockRequestContext, MOBILE_ID_VERIFICATION_CODE));
+        MobileIDRESTSession authSession = (MobileIDRESTSession) getAttrFromFlowScope(mockRequestContext, MOBILE_ID_AUTHENTICATION_SESSION);
+        assertEquals(mockMobileIDSession.getVerificationCode(), authSession.getVerificationCode());
+        assertEquals(mockMobileIDSession.getSessionId(), authSession.getSessionId());
+        assertEquals(0, getAttrFromFlowScope(mockRequestContext, Constants.AUTH_COUNT));
+        assertEquals(CasWebflowConstants.TRANSITION_ID_SUCCESS, event.getId());
+        assertEquals(MOCK_LANGUAGE_EST, configurationProvider.getLanguage());
 
         assertStatisticsEventCollected(StatisticsOperation.START_AUTH, AuthenticationType.MobileID);
     }

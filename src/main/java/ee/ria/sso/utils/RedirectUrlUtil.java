@@ -9,6 +9,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class RedirectUrlUtil {
 
+    private RedirectUrlUtil() {}
+
     public static String createRedirectUrl(String redirectUri, String error, String errorDesc, String state) throws UnsupportedEncodingException {
         StringBuilder sb = new StringBuilder();
         sb.append(redirectUri);

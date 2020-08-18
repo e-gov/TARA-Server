@@ -5,6 +5,7 @@ import ee.ria.sso.flow.ThymeleafSupport;
 import ee.ria.sso.flow.action.SmartIDCheckAuthenticationAction;
 import ee.ria.sso.flow.action.SmartIDCheckCancelAction;
 import ee.ria.sso.flow.action.SmartIDStartAuthenticationAction;
+import ee.ria.sso.service.manager.ManagerService;
 import ee.ria.sso.statistics.StatisticsHandler;
 import org.mockito.Mockito;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -32,5 +33,10 @@ public class TestSmartIDConfiguration {
     @Bean
     public ThymeleafSupport thymeleafSupport() {
         return Mockito.mock(ThymeleafSupport.class);
+    }
+
+    @Bean
+    public ManagerService managerService() {
+        return Mockito.mock(ManagerService.class);
     }
 }

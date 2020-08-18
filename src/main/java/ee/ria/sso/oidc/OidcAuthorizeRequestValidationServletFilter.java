@@ -5,27 +5,35 @@ import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.authentication.LevelOfAssurance;
 import ee.ria.sso.config.TaraProperties;
 import ee.ria.sso.config.eidas.EidasConfigurationProvider;
+import ee.ria.sso.service.manager.ManagerService;
 import ee.ria.sso.utils.RedirectUrlUtil;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apereo.cas.services.OidcRegisteredService;
+import org.apereo.cas.services.RegisteredServiceProperty;
 import org.springframework.util.Assert;
 
-import javax.servlet.*;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
-import java.net.URLEncoder;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static ee.ria.sso.authentication.AuthenticationType.eIDAS;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.springframework.util.CollectionUtils.isEmpty;
 
 @Slf4j
@@ -37,6 +45,8 @@ public class OidcAuthorizeRequestValidationServletFilter implements Filter {
     private final EidasConfigurationProvider eidasConfigurationProvider;
 
     private final TaraProperties taraProperties;
+
+    private final ManagerService managerService;
 
     @Override
     public void init(FilterConfig filterConfig) {
@@ -80,7 +90,16 @@ public class OidcAuthorizeRequestValidationServletFilter implements Filter {
                 request.getParameter(OidcAuthorizeRequestParameter.REDIRECT_URI.getParameterKey())
         );
         session.setAttribute(Constants.TARA_OIDC_SESSION_STATE,
-                request.getParameter(OidcAuthorizeRequestParameter.STATE.getParameterKey()));
+                request.getParameter(OidcAuthorizeRequestParameter.STATE.getParameterKey())
+        );
+
+        session.setAttribute(Constants.TARA_OIDC_SESSION_NAMES,
+                getServiceNames(request.getParameter(OidcAuthorizeRequestParameter.CLIENT_ID.getParameterKey()))
+        );
+
+        session.setAttribute(Constants.TARA_OIDC_SESSION_HOME_URL,
+                getHomeUrl(request.getParameter(OidcAuthorizeRequestParameter.CLIENT_ID.getParameterKey()))
+        );
 
         LevelOfAssurance requestedLoa = getLevelOfAssurance(request);
         if (requestedLoa != null) {
@@ -149,6 +168,33 @@ public class OidcAuthorizeRequestValidationServletFilter implements Filter {
         } else {
             return clientRequestedAuthMethods;
         }
+    }
+
+    private String getHomeUrl(String clientId) {
+        if (StringUtils.isNotBlank(clientId)) {
+            return this.managerService.getServiceByName(clientId)
+                    .orElse(new OidcRegisteredService() {
+                        @Override
+                        public String getInformationUrl() {
+                            return "#";
+                        }
+                    })
+                    .getInformationUrl();
+        } else {
+            log.debug("Could not find home url from session");
+            return "#";
+        }
+    }
+
+    private Map<String, String> getServiceNames(String clientId) {
+        Map<String, RegisteredServiceProperty> serviceNames = this.managerService.getServiceNames(clientId).orElse(null);
+
+        Map<String, String> names = new HashMap<>();
+        if (serviceNames != null) {
+            serviceNames.forEach((s, r) -> names.put(s, r.getValue()));
+        }
+
+        return names;
     }
 
     private String[] getScopeElements(HttpServletRequest request) {

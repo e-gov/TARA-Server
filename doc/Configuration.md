@@ -27,6 +27,11 @@ _CAS tarkvaras tehtud kohanduste ja täienduste kirjeldus._
 - [3. TARA truststore](#tara_truststore)
   * [3.1 Mobile-ID CA certs](#dds_ca_certs)
   * [3.2 Smart-ID CA certs](#smart-id_ca_certs)
+- [4. CAS properties](#cas_properties)
+  * [4.1 Showing service's name](#cas_service_name)
+  * [4.2 Translating service's name](#cas_service_name_translation)
+  * [4.3 Showing service's short name](#cas_service_short_name)
+  * [4.4 Translating service's short name](#cas_service_short_name_translation)
 
 <a name="logging"></a>
 ## 1. Logging
@@ -876,3 +881,86 @@ openssl s_client -connect sid.demo.sk.ee:443 -showcerts
 ````
 The relevant certificate is displayed at depth 0 of the certificate chain in the command output.
 After copying the certificate into a file, it can be imported into TARA truststore the same way as shown for the live certificate.
+
+<a name="cas_properties"></a>
+## 4. CAS properties
+------------------
+
+<a name="cas_service_name"></a>
+### 4.1 Showing service's name
+On Mobile-ID and Smart-ID authentication pages, showing the service name is possible, so users can see the service they're entering more clearly.
+
+In order to show service's name when on Mobile-ID or Smart-ID authentication pages, the service name must be defined in CAS Management.
+
+In ````CAS Management -> Properties```` tab, set the property name as ````service.name```` and value as the service's name.
+
+Example:
+
+|     Name     |          Value          |   
+|:------------:|:-----------------------:|
+| service.name | Eesti riigi infoportaal |
+
+If no service name is defined, Mobile-ID and Smart-ID pages will be displayed without the service's name.
+
+
+<a name="cas_service_name_translation"></a>
+### 4.2 Translating service's name
+
+In addition to showing the service's name, translating the service name to English and Russian languages is possible.
+
+Navigate to  ````CAS Management -> Properties```` tab.
+
+Translate to English: set the property name as ````service.name.en````.
+
+Translate to Russian: set the property name as ````service.name.ru````.
+
+Set the service value(s) as needed.
+
+If translated names aren't defined, Mobile-ID and Smart-ID pages will be displayed with the default service's name (if defined).
+
+Example:
+
+|       Name      |                   Value                      |   
+|:-------------- :|:--------------------------------------------:|
+| service.name.en | Estonian government information portal       |
+| service.name.ru | Информационный портал эстонского государства |
+
+<a name="cas_service_short_name"></a>
+### 4.3 Showing service's short name
+During Mobile-ID and Smart-ID authentication (where user enters PIN code), it's possible to show the service name in short form.
+
+Example: Full name - ````Eesti riigi infoportaal````, short name - ````eesti.ee````
+
+In order to show service's short name when authenticating with Mobile-ID or Smart-ID, the short name must be defined in CAS Management.
+
+In ````CAS Management -> Properties```` tab, set the property name as ````service.shortName```` and value as the service's short name.
+
+Example:
+
+|        Name       |   Value  |   
+|:-----------------:|:--------:|
+| service.shortName | eesti.ee |
+
+If no short name is defined, Mobile-ID and Smart-ID pages will be displayed without the service's short name.
+
+<a name="cas_service_short_name_translation"></a>
+### 4.4 Translating service's short name
+
+In addition to showing the service's short name, it's possible to translate it to English and Russian languages.
+
+Navigate to  ````CAS Management -> Properties```` tab.
+
+Translate to English: set the property name as ````service.shortName.en````.
+
+Translate to Russian: set the property name as ````service.shortName.ru````.
+
+Set the service value(s) as needed.
+
+If translated short names aren't defined, Mobile-ID and Smart-ID pages will be displayed with the default service's short name (if defined).
+
+Example:
+
+|        Name          |     Value      |   
+|:--------------------:|:--------------:|
+| service.shortName.en | englishService |
+| service.shortName.ru | russianService |

@@ -1,5 +1,6 @@
 package ee.ria.sso.config.mobileid;
 
+import ee.ria.sso.service.manager.ManagerService;
 import ee.ria.sso.service.mobileid.MobileIDAuthenticationClient;
 import ee.ria.sso.service.mobileid.MobileIDAuthenticationService;
 import ee.ria.sso.service.mobileid.rest.MobileIDRESTAuthClient;
@@ -28,10 +29,13 @@ public class MobileIDConfiguration {
     @Autowired
     private MobileIDConfigurationProvider configurationProvider;
 
+    @Autowired
+    private ManagerService managerService;
+
     @Bean
     public MobileIDAuthenticationClient constructAuthenticationClient() throws IOException, CertificateException {
         log.info("Initializing REST protocol based authentication client for Mobile-ID REST service");
-        return new MobileIDRESTAuthClient(configurationProvider, midClient());
+        return new MobileIDRESTAuthClient(configurationProvider, midClient(), managerService);
     }
 
     @Bean
