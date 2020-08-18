@@ -35,7 +35,9 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.cert.CertificateException;
 import java.util.Arrays;
 import java.util.UUID;
 
@@ -76,7 +78,7 @@ public class MobileIDRESTAuthClientTest {
     private ArgumentCaptor<MidSessionStatusRequest> sessionStatusRequestCaptor;
 
     @Before
-    public void init() {
+    public void init() throws IOException, CertificateException {
         when(midClient.getMobileIdConnector()).thenReturn(midConnector);
         authClient = new MobileIDRESTAuthClient(confProvider, midClient);
     }
