@@ -39,10 +39,15 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.webflow.core.collection.SharedAttributeMap;
+import org.springframework.webflow.execution.RequestContextHolder;
+import org.springframework.webflow.test.MockExternalContext;
+import org.springframework.webflow.test.MockRequestContext;
 
-import java.io.IOException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
-import java.security.cert.CertificateException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
@@ -97,7 +102,7 @@ public class MobileIDRESTAuthClientTest {
     private ArgumentCaptor<MidSessionStatusRequest> sessionStatusRequestCaptor;
 
     @Before
-    public void init() throws IOException, CertificateException {
+    public void init() {
         when(midClient.getMobileIdConnector()).thenReturn(midConnector);
         authClient = new MobileIDRESTAuthClient(confProvider, midClient, managerService);
     }
