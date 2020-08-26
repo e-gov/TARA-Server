@@ -33,11 +33,13 @@ public class MobileIDRESTAuthClient implements MobileIDAuthenticationClient<Mobi
 
     private final MobileIDConfigurationProvider confProvider;
     private final MidClient client;
+    private final ManagerService managerService;
     private final MidAuthenticationResponseValidator validator = new MidAuthenticationResponseValidator();
 
-    public MobileIDRESTAuthClient(MobileIDConfigurationProvider confProvider, MidClient client) throws IOException, CertificateException {
+    public MobileIDRESTAuthClient(MobileIDConfigurationProvider confProvider, MidClient client, ManagerService managerService) throws IOException, CertificateException {
         this.confProvider = confProvider;
         this.client = client;
+        this.managerService = managerService;
         validator.addTrustedCACertificate(FileUtils.getFile(MobileIDRESTAuthClient.class.getResource("/trusted_certificates/TEST_of_ESTEID-SK_2015.pem.crt").getFile()));
     }
 

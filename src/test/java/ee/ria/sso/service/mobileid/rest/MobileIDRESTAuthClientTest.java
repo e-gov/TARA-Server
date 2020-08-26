@@ -39,7 +39,14 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.webflow.core.collection.SharedAttributeMap;
+import org.springframework.webflow.execution.RequestContextHolder;
+import org.springframework.webflow.test.MockExternalContext;
+import org.springframework.webflow.test.MockRequestContext;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateException;
