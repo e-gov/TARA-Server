@@ -47,7 +47,6 @@ public class MobileIDRESTProtocolConfigurationTest extends AbstractDisabledConfi
         assertEquals("EST", configurationProvider.getLanguage());
         assertEquals("+372", configurationProvider.getAreaCode());
         assertEquals("Test value - message to display", configurationProvider.getMessageToDisplay());
-        assertSame(MidDisplayTextFormat.UCS2, configurationProvider.getMessageToDisplayEncoding());
         assertSame(MidHashType.SHA256, configurationProvider.getAuthenticationHashType());
         assertEquals("Test value - 00000000-0000-0000-0000-000000000000", configurationProvider.getRelyingPartyUuid());
         assertEquals("Test value - DEMO", configurationProvider.getRelyingPartyName());

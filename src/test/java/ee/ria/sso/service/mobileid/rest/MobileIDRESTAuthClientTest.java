@@ -11,6 +11,7 @@ import ee.sk.mid.MidAuthentication;
 import ee.sk.mid.MidAuthenticationHashToSign;
 import ee.sk.mid.MidCertificateParser;
 import ee.sk.mid.MidClient;
+import ee.sk.mid.MidDisplayTextFormat;
 import ee.sk.mid.MidLanguage;
 import ee.sk.mid.exception.MidInternalErrorException;
 import ee.sk.mid.exception.MidMissingOrInvalidParameterException;
@@ -77,6 +78,7 @@ public class MobileIDRESTAuthClientTest {
     private static final String COUNTRY_CODE = "EE";
     private static final String CLIENT_ID = "openIdDemo";
     private static final String SERVICE_SHORT_NAME = "openIdDemoShortName";
+    private static final String SERVICE_SHORT_NAME_WITH_SPECIAL_CHARACTERS = "Тест название и ÕšĄČąč";
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -108,7 +110,7 @@ public class MobileIDRESTAuthClientTest {
     }
 
     @Test
-    public void initAuthentication_successful() {
+    public void initAuthentication_successful_no_special_characters() {
         MidAuthenticationResponse mockAuthResponse = new MidAuthenticationResponse(UUID.randomUUID().toString());
         when(midConnector.authenticate(authRequestCaptor.capture())).thenReturn(mockAuthResponse);
 
@@ -128,7 +130,33 @@ public class MobileIDRESTAuthClientTest {
         assertSame(confProvider.getAuthenticationHashType(), authRequest.getHashType());
         assertSame(MidLanguage.valueOf(confProvider.getLanguage()), authRequest.getLanguage());
         assertEquals(confProvider.getMessageToDisplay(), authRequest.getDisplayText());
-        assertEquals(confProvider.getMessageToDisplayEncoding(), authRequest.getDisplayTextFormat());
+        assertEquals(MidDisplayTextFormat.GSM7, authRequest.getDisplayTextFormat());
+    }
+
+    @Test
+    public void initAuthentication_successful_with_short_name_and_with_special_characters() {
+        MidAuthenticationResponse mockAuthResponse = new MidAuthenticationResponse(UUID.randomUUID().toString());
+        when(midConnector.authenticate(authRequestCaptor.capture())).thenReturn(mockAuthResponse);
+
+        mockRequestWithSessionMapWithSpecialCharacters();
+
+        when(managerService.getServiceShortName()).thenReturn(Optional.of(SERVICE_SHORT_NAME_WITH_SPECIAL_CHARACTERS));
+
+        MobileIDRESTSession session = authClient.initAuthentication(PERSONAL_CODE, COUNTRY_CODE, PHONE_NUMBER);
+        assertEquals(mockAuthResponse.getSessionID(), session.getSessionId());
+        MidAuthenticationHashToSign authenticationHash = session.getAuthenticationHash();
+        assertNotNull(authenticationHash);
+        assertEquals(session.getVerificationCode(), authenticationHash.calculateVerificationCode());
+
+        verify(midConnector).authenticate(authRequestCaptor.capture());
+        MidAuthenticationRequest authRequest = authRequestCaptor.getValue();
+        assertEquals(PHONE_NUMBER, authRequest.getPhoneNumber());
+        assertEquals(PERSONAL_CODE, authRequest.getNationalIdentityNumber());
+        assertEquals(authenticationHash.getHashInBase64(), authRequest.getHash());
+        assertSame(confProvider.getAuthenticationHashType(), authRequest.getHashType());
+        assertSame(MidLanguage.valueOf(confProvider.getLanguage()), authRequest.getLanguage());
+        assertEquals(SERVICE_SHORT_NAME_WITH_SPECIAL_CHARACTERS, authRequest.getDisplayText());
+        assertEquals(MidDisplayTextFormat.UCS2, authRequest.getDisplayTextFormat());
     }
 
     @Test
@@ -156,7 +184,7 @@ public class MobileIDRESTAuthClientTest {
         assertSame(confProvider.getAuthenticationHashType(), authRequest.getHashType());
         assertSame(MidLanguage.valueOf(confProvider.getLanguage()), authRequest.getLanguage());
         assertEquals(SERVICE_SHORT_NAME, authRequest.getDisplayText());
-        assertEquals(confProvider.getMessageToDisplayEncoding(), authRequest.getDisplayTextFormat());
+        assertEquals(MidDisplayTextFormat.GSM7, authRequest.getDisplayTextFormat());
     }
 
     @Test
@@ -405,6 +433,13 @@ public class MobileIDRESTAuthClientTest {
     private static void mockRequestWithSessionMap() {
         Map<String, Object> sessionMap = new HashMap<>();
         sessionMap.put(Constants.TARA_OIDC_SESSION_CLIENT_ID, CLIENT_ID);
+
+        setRequestContextWithSessionMap(sessionMap);
+    }
+
+    private static void mockRequestWithSessionMapWithSpecialCharacters() {
+        Map<String, Object> sessionMap = new HashMap<>();
+        sessionMap.put(Constants.TARA_OIDC_SESSION_CLIENT_ID, SERVICE_SHORT_NAME_WITH_SPECIAL_CHARACTERS);
 
         setRequestContextWithSessionMap(sessionMap);
     }

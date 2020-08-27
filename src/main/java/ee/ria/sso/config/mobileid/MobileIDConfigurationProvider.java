@@ -31,7 +31,6 @@ public class MobileIDConfigurationProvider {
     private static final String DEFAULT_LANGUAGE = "EST";
     private static final String DEFAULT_AREA_CODE = "+372";
 
-    private static final MidDisplayTextFormat DEFAULT_MESSAGE_TO_DISPLAY_ENCODING = MidDisplayTextFormat.GSM7;
     private static final MidHashType DEFAULT_AUTHENTICATION_HASH_TYPE = MidHashType.SHA256;
 
     private static final int DEFAULT_SESSION_STATUS_SOCKET_OPEN_DURATION = 1000;
@@ -56,9 +55,6 @@ public class MobileIDConfigurationProvider {
 
     @NotBlank
     private String messageToDisplay;
-
-    @NotNull
-    private MidDisplayTextFormat messageToDisplayEncoding = DEFAULT_MESSAGE_TO_DISPLAY_ENCODING;
 
     @NotNull
     private MidHashType authenticationHashType = DEFAULT_AUTHENTICATION_HASH_TYPE;

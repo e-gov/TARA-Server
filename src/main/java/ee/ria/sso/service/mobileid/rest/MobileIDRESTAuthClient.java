@@ -11,6 +11,7 @@ import ee.sk.mid.MidAuthenticationIdentity;
 import ee.sk.mid.MidAuthenticationResponseValidator;
 import ee.sk.mid.MidAuthenticationResult;
 import ee.sk.mid.MidClient;
+import ee.sk.mid.MidDisplayTextFormat;
 import ee.sk.mid.MidLanguage;
 import ee.sk.mid.exception.MidInternalErrorException;
 import ee.sk.mid.exception.MidMissingOrInvalidParameterException;
@@ -23,9 +24,16 @@ import ee.sk.mid.rest.dao.response.MidAuthenticationResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
+import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 @ConditionalOnProperty("mobile-id.enabled")
 @Slf4j
 public class MobileIDRESTAuthClient implements MobileIDAuthenticationClient<MobileIDRESTSession, MobileIDRESTSessionStatus> {
+
+    private static final MidDisplayTextFormat DISPLAY_ENCODING = MidDisplayTextFormat.GSM7;
+    private static final MidDisplayTextFormat SPECIAL_CHARACTERS_DISPLAY_ENCODING = MidDisplayTextFormat.UCS2;
 
     private final MobileIDConfigurationProvider confProvider;
     private final MidClient client;
@@ -49,7 +57,7 @@ public class MobileIDRESTAuthClient implements MobileIDAuthenticationClient<Mobi
                 .withHashToSign(authenticationHash)
                 .withLanguage(MidLanguage.valueOf(confProvider.getLanguage()))
                 .withDisplayText(managerService.getServiceShortName().orElse(confProvider.getMessageToDisplay()))
-                .withDisplayTextFormat(confProvider.getMessageToDisplayEncoding())
+                .withDisplayTextFormat(isServiceNameUsingSpecialCharacters(managerService.getServiceShortName().orElse(confProvider.getMessageToDisplay())) ? SPECIAL_CHARACTERS_DISPLAY_ENCODING : DISPLAY_ENCODING)
                 .build();
 
         MidAuthenticationResponse response = authenticate(request);
@@ -144,4 +152,13 @@ public class MobileIDRESTAuthClient implements MobileIDAuthenticationClient<Mobi
             throw new IllegalStateException("Unexpected error occurred during authentication validation", e);
         }
     }
+
+    private static boolean isServiceNameUsingSpecialCharacters(String serviceName) {
+        Pattern p = Pattern.compile("[а-яА-ЯЁё]", Pattern.CASE_INSENSITIVE);
+        String[] specialCharacters = { "Õ", "Š", "Ž", "š", "ž", "õ", "Ą", "Č", "Ę", "Ė", "Į", "Š", "Ų", "Ū", "Ž", "ą", "č", "ę", "ė", "į", "š", "ų", "ū", "ž" };
+        Matcher m = p.matcher(serviceName);
+        boolean isSpecialCharacterIncluded = m.find();
+        return Arrays.stream(specialCharacters).anyMatch(serviceName::contains) || isSpecialCharacterIncluded;
+    }
+
 }
