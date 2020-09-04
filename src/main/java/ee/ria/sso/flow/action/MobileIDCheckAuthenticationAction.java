@@ -7,6 +7,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
 
+import java.io.IOException;
+import java.security.cert.CertificateException;
+
 /**
  * @author Janar Rahumeel (CGI Estonia)
  */
@@ -26,7 +29,7 @@ public class MobileIDCheckAuthenticationAction extends AbstractAuthenticationAct
      */
 
     @Override
-    protected Event doAuthenticationExecute(RequestContext requestContext) {
+    protected Event doAuthenticationExecute(RequestContext requestContext) throws IOException, CertificateException {
         return this.authenticationService.checkLoginForMobileID(requestContext);
     }
 

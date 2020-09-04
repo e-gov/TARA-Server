@@ -29,6 +29,8 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
 
+import java.io.IOException;
+import java.security.cert.CertificateException;
 import java.util.Locale;
 
 import static ee.ria.sso.Constants.MOBILE_ID_AUTHENTICATION_SESSION;
@@ -230,7 +232,7 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
     }
 
     @Test
-    public void checkLoginForMobileIDSucceedsAsRunning() {
+    public void checkLoginForMobileIDSucceedsAsRunning() throws IOException, CertificateException {
 
         RequestContext mockRequestContext = getMockRequestContext();
         final MobileIDSession mockMobileIDSession = createMockMobileIDSession();
@@ -258,7 +260,7 @@ public class MobileIDAuthenticationServiceTest extends AbstractAuthenticationSer
     }
 
     @Test
-    public void checkLoginForMobileIDSucceedsAsComplete() {
+    public void checkLoginForMobileIDSucceedsAsComplete() throws IOException, CertificateException {
 
         RequestContext mockRequestContext = getMockRequestContext();
         final MobileIDSession mockMobileIDSession = createMockMobileIDSession();

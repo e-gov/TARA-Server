@@ -35,6 +35,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.ContextConfiguration;
@@ -48,7 +49,11 @@ import org.springframework.webflow.test.MockRequestContext;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
@@ -94,6 +99,9 @@ public class MobileIDRESTAuthClientTest {
 
     private MobileIDRESTAuthClient authClient;
 
+    @Autowired
+    private ResourceLoader resourceLoader;
+
     @Mock
     private ManagerService managerService;
 
@@ -104,9 +112,9 @@ public class MobileIDRESTAuthClientTest {
     private ArgumentCaptor<MidSessionStatusRequest> sessionStatusRequestCaptor;
 
     @Before
-    public void init() {
+    public void init() throws IOException, CertificateException, KeyStoreException, NoSuchAlgorithmException {
         when(midClient.getMobileIdConnector()).thenReturn(midConnector);
-        authClient = new MobileIDRESTAuthClient(confProvider, midClient, managerService);
+        authClient = new MobileIDRESTAuthClient(confProvider, midClient, managerService, resourceLoader);
     }
 
     @Test
@@ -330,7 +338,7 @@ public class MobileIDRESTAuthClientTest {
     }
 
     @Test
-    public void getAuthenticationIdentity_successful() {
+    public void getAuthenticationIdentity_successful() throws IOException, CertificateException {
         MidAuthenticationHashToSign authenticationHash = MidAuthenticationHashToSign.newBuilder()
                 .withHashInBase64("2VycgINMWA0mO9979MG9wpmu4d5rXMt3TXd0u3TYDSw=")
                 .withHashType(confProvider.getAuthenticationHashType())
@@ -362,7 +370,7 @@ public class MobileIDRESTAuthClientTest {
     }
 
     @Test
-    public void getAuthenticationIdentity_signatureDoesNotMatch() {
+    public void getAuthenticationIdentity_signatureDoesNotMatch() throws IOException, CertificateException {
         expectedException.expectMessage("Authentication result validation failed with: [Signature verification failed]");
         expectedException.expect(AuthenticationValidationException.class);
 
@@ -394,7 +402,7 @@ public class MobileIDRESTAuthClientTest {
     }
 
     @Test
-    public void createMobileIdAuthenticationThrowsMidInternalErrorException_externalServiceHasFailedExceptionThrown() {
+    public void createMobileIdAuthenticationThrowsMidInternalErrorException_externalServiceHasFailedExceptionThrown() throws IOException, CertificateException {
         expectedException.expect(ExternalServiceHasFailedException.class);
         expectedException.expectMessage("MID service returned internal error that cannot be handled locally");
 
@@ -403,7 +411,7 @@ public class MobileIDRESTAuthClientTest {
     }
 
     @Test
-    public void createMobileIdAuthenticationThrowsUnhandledException_illegalStateExceptionThrown() {
+    public void createMobileIdAuthenticationThrowsUnhandledException_illegalStateExceptionThrown() throws IOException, CertificateException {
         expectedException.expect(IllegalStateException.class);
         expectedException.expectMessage("Unexpected error occurred during creating Mobile-ID authentication");
 

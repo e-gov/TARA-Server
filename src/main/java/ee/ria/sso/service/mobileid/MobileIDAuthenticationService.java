@@ -21,6 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
 
+import java.io.IOException;
+import java.security.cert.CertificateException;
 import java.util.List;
 import java.util.Locale;
 
@@ -107,7 +109,7 @@ public class MobileIDAuthenticationService extends AbstractService {
             actionResolverName = "AUTHENTICATION_RESOLVER",
             resourceResolverName = "TARA_AUTHENTICATION_RESOURCE_RESOLVER"
     )
-    public Event checkLoginForMobileID(RequestContext context) {
+    public Event checkLoginForMobileID(RequestContext context) throws IOException, CertificateException {
         try {
             MobileIDSession session = context.getFlowScope().get(Constants.MOBILE_ID_AUTHENTICATION_SESSION, MobileIDSession.class);
             int checkCount = context.getFlowScope().get(Constants.AUTH_COUNT, Integer.class);
