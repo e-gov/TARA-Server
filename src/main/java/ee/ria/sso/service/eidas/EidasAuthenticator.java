@@ -42,7 +42,7 @@ public class EidasAuthenticator {
         String uri = eidasClientUrl + "/login" + "?Country=" + country + "&RelayState=" + relayState;
         if (loa != null) uri += ("&LoA=" + loa.getAcrName().toUpperCase());
 
-        log.debug("Sending authentication request to eIDAS-Client: <{}>", uri);
+        log.info("Sending authentication request to eIDAS-Client: <{}>", uri);
 
         HttpGet get = new HttpGet(uri);
         CorrelationIdUtil.setCorrelationIdHeadersFromMDC(get);
@@ -51,7 +51,7 @@ public class EidasAuthenticator {
 
     public byte[] getAuthenticationResult(HttpServletRequest request) throws IOException {
         String uri = eidasClientUrl + "/returnUrl";
-        log.debug("Requesting authentication result from eIDAS-Client: <{}>", uri);
+        log.info("Requesting authentication result from eIDAS-Client: <{}>", uri);
 
         HttpPost post = new HttpPost(uri);
         CorrelationIdUtil.setCorrelationIdHeadersFromMDC(post);
