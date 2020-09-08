@@ -6,6 +6,7 @@ import ee.ria.sso.statistics.StatisticsHandler;
 import ee.ria.sso.statistics.StatisticsOperation;
 import ee.ria.sso.statistics.StatisticsRecord;
 import ee.ria.sso.utils.X509Utils;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apereo.inspektr.audit.annotation.Audit;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,12 +33,13 @@ import java.util.Map;
 @Slf4j
 @Controller
 @ConditionalOnProperty("id-card.enabled")
+@RequiredArgsConstructor
 public class IDCardController {
 
     public static final String HEADER_SSL_CLIENT_CERT = "XCLIENTCERTIFICATE";
 
     @Autowired
-    private StatisticsHandler statistics;
+    private final StatisticsHandler statistics;
 
     @Audit(
             action = "CLIENT_CERT_HANDLING",
@@ -74,18 +76,14 @@ public class IDCardController {
     private void logStatistics(HttpSession httpSession) {
         String clientId = (String) httpSession.getAttribute(Constants.TARA_OIDC_SESSION_CLIENT_ID);
 
-        try {
-            this.statistics.collect(
-                    StatisticsRecord.builder()
-                            .time(LocalDateTime.now())
-                            .clientId(clientId)
-                            .method(AuthenticationType.IDCard)
-                            .operation(StatisticsOperation.START_AUTH)
-                            .build()
-            );
-        } catch (Exception ex) {
-            log.error("Failed to collect error statistics!", ex);
-        }
+        this.statistics.collect(
+                StatisticsRecord.builder()
+                        .time(LocalDateTime.now())
+                        .clientId(clientId)
+                        .method(AuthenticationType.IDCard)
+                        .operation(StatisticsOperation.START_AUTH)
+                        .build()
+        );
     }
 
     private HttpSession getRenewedSession(HttpServletRequest request) {
