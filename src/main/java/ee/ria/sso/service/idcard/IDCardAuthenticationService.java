@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 
 import static ee.ria.sso.Constants.MDC_ATTRIBUTE_OCSP_ID;
-import static ee.ria.sso.statistics.StatisticsOperation.START_AUTH;
 import static ee.ria.sso.statistics.StatisticsOperation.SUCCESSFUL_AUTH;
 
 @Slf4j
@@ -59,8 +58,6 @@ public class IDCardAuthenticationService extends AbstractService {
     public Event loginByIDCard(RequestContext context) {
         SharedAttributeMap<Object> sessionMap = this.getSessionMap(context);
         try {
-            logEvent(context, AuthenticationType.IDCard, START_AUTH);
-
             X509Certificate certificate = sessionMap.get(Constants.CERTIFICATE_SESSION_ATTRIBUTE, X509Certificate.class);
             if (certificate == null)
                 throw new IllegalStateException("Unable to find certificate from session");

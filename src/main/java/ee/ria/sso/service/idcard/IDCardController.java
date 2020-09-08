@@ -1,9 +1,14 @@
 package ee.ria.sso.service.idcard;
 
 import ee.ria.sso.Constants;
+import ee.ria.sso.authentication.AuthenticationType;
+import ee.ria.sso.statistics.StatisticsHandler;
+import ee.ria.sso.statistics.StatisticsOperation;
+import ee.ria.sso.statistics.StatisticsRecord;
 import ee.ria.sso.utils.X509Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.apereo.inspektr.audit.annotation.Audit;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.Assert;
@@ -14,6 +19,7 @@ import org.springframework.web.servlet.view.json.MappingJackson2JsonView;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.security.cert.X509Certificate;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
@@ -30,6 +36,9 @@ public class IDCardController {
 
     public static final String HEADER_SSL_CLIENT_CERT = "XCLIENTCERTIFICATE";
 
+    @Autowired
+    private StatisticsHandler statistics;
+
     @Audit(
             action = "CLIENT_CERT_HANDLING",
             actionResolverName = "AUTHENTICATION_RESOLVER",
@@ -42,7 +51,11 @@ public class IDCardController {
             Assert.notNull(encodedCertificate, "Expected header '" + HEADER_SSL_CLIENT_CERT + "' could not be found in request");
             Assert.hasLength(encodedCertificate, "Unable to find certificate from request");
             X509Certificate cert = X509Utils.toX509Certificate(encodedCertificate);
-            getRenewedSession(request).setAttribute(Constants.CERTIFICATE_SESSION_ATTRIBUTE, cert);
+            HttpSession renewedSession = getRenewedSession(request);
+            renewedSession.setAttribute(Constants.CERTIFICATE_SESSION_ATTRIBUTE, cert);
+
+            logStatistics(renewedSession);
+
             return new ModelAndView(new MappingJackson2JsonView(), Collections.singletonMap("ok", true));
         } catch (Exception e) {
             this.log(e);
@@ -55,6 +68,23 @@ public class IDCardController {
             this.log.error("ID-Card controller error: {}", e.getMessage(), e);
         } else {
             this.log.error("ID-Card controller error: {}", e.getMessage());
+        }
+    }
+
+    private void logStatistics(HttpSession httpSession) {
+        String clientId = (String) httpSession.getAttribute(Constants.TARA_OIDC_SESSION_CLIENT_ID);
+
+        try {
+            this.statistics.collect(
+                    StatisticsRecord.builder()
+                            .time(LocalDateTime.now())
+                            .clientId(clientId)
+                            .method(AuthenticationType.IDCard)
+                            .operation(StatisticsOperation.START_AUTH)
+                            .build()
+            );
+        } catch (Exception ex) {
+            log.error("Failed to collect error statistics!", ex);
         }
     }
 
