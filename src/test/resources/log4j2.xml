@@ -107,6 +107,13 @@
             <AppenderRef ref="taraAuthentication"/>
         </AsyncLogger>
 
+        <AsyncLogger name="ee.sk.mid.rest.MidLoggingFilter" level="trace" additivity="false">
+            <AppenderRef ref="casConsole" />
+        </AsyncLogger>
+        <AsyncLogger name="ee.sk.smartid.rest.LoggingFilter" level="trace" additivity="false">
+            <AppenderRef ref="casConsole" />
+        </AsyncLogger>
+
         <!-- All Loggers inherit appenders specified here, unless additivity="false" on the Logger -->
         <AsyncRoot level="warn">
             <AppenderRef ref="file"/>

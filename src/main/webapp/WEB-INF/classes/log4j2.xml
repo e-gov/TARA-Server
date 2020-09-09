@@ -197,6 +197,12 @@
 
             <AppenderRef ref="casConsole" level="${sys:tara.console.level}" />
         </AsyncLogger>
+        <AsyncLogger name="ee.sk.mid.rest.MidLoggingFilter" level="trace" additivity="false">
+            <AppenderRef ref="casFile" />
+        </AsyncLogger>
+        <AsyncLogger name="ee.sk.smartid.rest.LoggingFilter" level="trace" additivity="false">
+            <AppenderRef ref="casFile" />
+        </AsyncLogger>
         <AsyncRoot level="warn">
             <AppenderRef ref="casConsole" level="${sys:tara.console.level}" />
             <AppenderRef ref="casFile" level="${sys:tara.log.level}" />

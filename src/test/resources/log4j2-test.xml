@@ -71,5 +71,11 @@
         <logger name="ee.ria.sso.statistics.TaraStatHandler" additivity="false">
             <appender-ref ref="TestAppender"/>
         </logger>
+        <logger name="ee.sk.mid.rest.MidLoggingFilter" additivity="false">
+            <appender-ref ref="TestAppender" />
+        </logger>
+        <logger name="ee.sk.smartid.rest.LoggingFilter" additivity="false">
+            <appender-ref ref="TestAppender" />
+        </logger>
     </Loggers>
 </Configuration>
