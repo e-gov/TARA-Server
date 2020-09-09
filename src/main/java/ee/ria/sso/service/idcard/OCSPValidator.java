@@ -63,7 +63,7 @@ public class OCSPValidator {
                 checkCert(userCert, ocspConf);
                 return;
             } catch (OCSPServiceNotAvailableException e) {
-                log.error("OCSP request has failed...");
+                log.error("OCSP request has failed: {}", e.getMessage(), e);
                 if (++count == maxTries) throw e;
             } catch (OCSPValidationException e) {
                 throw e;
