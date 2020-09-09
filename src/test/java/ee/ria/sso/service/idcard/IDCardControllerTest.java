@@ -1,16 +1,30 @@
 package ee.ria.sso.service.idcard;
 
+import ee.ria.sso.Constants;
+import ee.ria.sso.authentication.AuthenticationType;
+import ee.ria.sso.statistics.StatisticsHandler;
+import ee.ria.sso.statistics.StatisticsOperation;
 import ee.ria.sso.test.SimpleTestAppender;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.web.servlet.ModelAndView;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 import static ee.ria.sso.service.idcard.IDCardController.HEADER_SSL_CLIENT_CERT;
 import static org.hamcrest.Matchers.containsString;
 
 public class IDCardControllerTest {
+
+    private StatisticsHandler statistics = new StatisticsHandler();
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss");
 
     public static final String X509_CERT = "-----BEGIN CERTIFICATE-----\n" +
             "MIIGRDCCBCygAwIBAgIQFRkmAJhm0EFZ3Lplb5xtuzANBgkqhkiG9w0BAQsFADBr\n" +
@@ -60,7 +74,7 @@ public class IDCardControllerTest {
     @Test
     public void certificateHeaderNotFoundInRequest() throws Exception {
 
-        ModelAndView response = new IDCardController().handleRequest(new MockHttpServletRequest());
+        ModelAndView response = new IDCardController(statistics).handleRequest(new MockHttpServletRequest());
 
         Assert.assertEquals(new Boolean(false),response.getModel().get("ok"));
         SimpleTestAppender.verifyLogEventsExistInOrder(
@@ -74,7 +88,7 @@ public class IDCardControllerTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader(HEADER_SSL_CLIENT_CERT, "");
 
-        ModelAndView response = new IDCardController().handleRequest(request);
+        ModelAndView response = new IDCardController(statistics).handleRequest(request);
 
         Assert.assertEquals(new Boolean(false),response.getModel().get("ok"));
         SimpleTestAppender.verifyLogEventsExistInOrder(
@@ -88,7 +102,7 @@ public class IDCardControllerTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader(HEADER_SSL_CLIENT_CERT, "dGVzdA==");
 
-        ModelAndView response = new IDCardController().handleRequest(request);
+        ModelAndView response = new IDCardController(statistics).handleRequest(request);
 
         Assert.assertEquals(new Boolean(false),response.getModel().get("ok"));
         SimpleTestAppender.verifyLogEventsExistInOrder(
@@ -98,31 +112,33 @@ public class IDCardControllerTest {
 
     @Test
     public void okWithExistingSession() throws Exception {
-
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader(HEADER_SSL_CLIENT_CERT, X509_CERT);
         MockHttpSession session = new MockHttpSession();
+        session.setAttribute(Constants.TARA_OIDC_SESSION_CLIENT_ID, "openIdDemo");
         request.setSession(session);
 
-        ModelAndView response = new IDCardController().handleRequest(request);
-        Assert.assertEquals(new Boolean(true),response.getModel().get("ok"));
-        Assert.assertTrue("Old session must be invalidated!",session.isInvalid());
+        ModelAndView response = new IDCardController(statistics).handleRequest(request);
+        Assert.assertEquals(true, response.getModel().get("ok"));
+        Assert.assertTrue("Old session must be invalidated!", session.isInvalid());
+
         SimpleTestAppender.verifyLogEventsExistInOrder(
-                containsString("ID-Card certificate stored in renewed user session")
+                containsString("ID-Card certificate stored in renewed user session"),
+                containsString(String.format("%s;%s;%s;%s;", formatter.format(LocalDateTime.now()), request.getSession().getAttribute(Constants.TARA_OIDC_SESSION_CLIENT_ID), AuthenticationType.IDCard, StatisticsOperation.START_AUTH))
         );
     }
 
     @Test
-    public void okWithNoExistingSession() throws Exception {
-
+    public void shouldFailWithNoExistingSession() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader(HEADER_SSL_CLIENT_CERT, X509_CERT);
         request.setSession(null);
 
-        ModelAndView response = new IDCardController().handleRequest(request);
-        Assert.assertEquals(new Boolean(true),response.getModel().get("ok"));
+        ModelAndView response = new IDCardController(statistics).handleRequest(request);
+        Assert.assertEquals(false, response.getModel().get("ok"));
         SimpleTestAppender.verifyLogEventsExistInOrder(
-                containsString("ID-Card certificate stored in new user session")
+                containsString("ID-Card certificate stored in new user session"),
+                containsString("ID-Card controller error: Client-ID cannot be null!")
         );
     }
 }
