@@ -198,16 +198,10 @@
             <AppenderRef ref="casConsole" level="${sys:tara.console.level}" />
         </AsyncLogger>
         <AsyncLogger name="ee.sk.mid.rest.MidLoggingFilter" level="trace" additivity="false">
-            <!-- Uncomment when using Tara-Stat service -->
-            <!--AppenderRef ref="taraStatServiceAppender"/-->
-
-            <AppenderRef ref="casConsole" level="${sys:tara.console.level}" />
+            <AppenderRef ref="casFile" />
         </AsyncLogger>
         <AsyncLogger name="ee.sk.smartid.rest.LoggingFilter" level="trace" additivity="false">
-            <!-- Uncomment when using Tara-Stat service -->
-            <!--AppenderRef ref="taraStatServiceAppender"/-->
-
-            <AppenderRef ref="casConsole" level="${sys:tara.console.level}" />
+            <AppenderRef ref="casFile" />
         </AsyncLogger>
         <AsyncRoot level="warn">
             <AppenderRef ref="casConsole" level="${sys:tara.console.level}" />
