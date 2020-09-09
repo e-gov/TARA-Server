@@ -23,18 +23,8 @@ import ee.sk.mid.rest.dao.request.MidSessionStatusRequest;
 import ee.sk.mid.rest.dao.response.MidAuthenticationResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -48,15 +38,13 @@ public class MobileIDRESTAuthClient implements MobileIDAuthenticationClient<Mobi
     private final MobileIDConfigurationProvider confProvider;
     private final MidClient client;
     private final ManagerService managerService;
-    private final MidAuthenticationResponseValidator validator = new MidAuthenticationResponseValidator();
-    private final ResourceLoader resourceLoader;
+    private final MidAuthenticationResponseValidator validator;
 
-    public MobileIDRESTAuthClient(MobileIDConfigurationProvider confProvider, MidClient client, ManagerService managerService, ResourceLoader resourceLoader) throws IOException, CertificateException, KeyStoreException, NoSuchAlgorithmException {
+    public MobileIDRESTAuthClient(MobileIDConfigurationProvider confProvider, MidClient client, ManagerService managerService, MidAuthenticationResponseValidator validator) {
         this.confProvider = confProvider;
         this.client = client;
         this.managerService = managerService;
-        this.resourceLoader = resourceLoader;
-        addTrustedCACertificates();
+        this.validator = validator;
     }
 
     @Override
@@ -96,7 +84,7 @@ public class MobileIDRESTAuthClient implements MobileIDAuthenticationClient<Mobi
     }
 
     @Override
-    public AuthenticationIdentity getAuthenticationIdentity(MobileIDRESTSession session, MobileIDRESTSessionStatus sessionStatus) throws IOException, CertificateException {
+    public AuthenticationIdentity getAuthenticationIdentity(MobileIDRESTSession session, MobileIDRESTSessionStatus sessionStatus) {
         MidAuthentication authentication = createMobileIdAuthentication(sessionStatus.getWrappedSessionStatus(), session.getAuthenticationHash());
         MidAuthenticationIdentity authenticationIdentity = validateAndGetAuthIdentity(authentication);
 
@@ -105,24 +93,6 @@ public class MobileIDRESTAuthClient implements MobileIDAuthenticationClient<Mobi
                 .givenName(authenticationIdentity.getGivenName())
                 .surname(authenticationIdentity.getSurName())
                 .build();
-    }
-
-    private void addTrustedCACertificates() throws IOException, CertificateException, NoSuchAlgorithmException, KeyStoreException {
-        Resource resource = resourceLoader.getResource(confProvider.getTruststore());
-        if (!resource.exists()) {
-            throw new IllegalArgumentException("Could not find resource " + resource.getDescription());
-        }
-
-        InputStream is = resource.getInputStream();
-        KeyStore keyStore = KeyStore.getInstance(confProvider.getTruststoreType());
-        keyStore.load(is, confProvider.getTruststorePass().toCharArray());
-
-        Enumeration<String> keyStoreAliases = keyStore.aliases();
-        while (keyStoreAliases.hasMoreElements()) {
-            String keyStoreAlias = keyStoreAliases.nextElement();
-            X509Certificate cert = (X509Certificate) keyStore.getCertificate(keyStoreAlias);
-            validator.addTrustedCACertificate(cert);
-        }
     }
 
     private boolean isAuthenticationComplete(MidSessionStatus sessionStatus) {

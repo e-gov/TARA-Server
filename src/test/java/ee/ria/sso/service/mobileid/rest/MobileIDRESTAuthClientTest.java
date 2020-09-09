@@ -9,6 +9,7 @@ import ee.ria.sso.service.manager.ManagerService;
 import ee.ria.sso.service.mobileid.AuthenticationIdentity;
 import ee.sk.mid.MidAuthentication;
 import ee.sk.mid.MidAuthenticationHashToSign;
+import ee.sk.mid.MidAuthenticationResponseValidator;
 import ee.sk.mid.MidCertificateParser;
 import ee.sk.mid.MidClient;
 import ee.sk.mid.MidDisplayTextFormat;
@@ -23,6 +24,7 @@ import ee.sk.mid.rest.dao.request.MidAuthenticationRequest;
 import ee.sk.mid.rest.dao.request.MidSessionStatusRequest;
 import ee.sk.mid.rest.dao.response.MidAuthenticationResponse;
 import org.apache.commons.codec.binary.Base64;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -35,6 +37,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -50,11 +53,15 @@ import org.springframework.webflow.test.MockRequestContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -97,10 +104,12 @@ public class MobileIDRESTAuthClientTest {
     @Autowired
     private MobileIDConfigurationProvider confProvider;
 
-    private MobileIDRESTAuthClient authClient;
-
     @Autowired
     private ResourceLoader resourceLoader;
+
+    private MobileIDRESTAuthClient authClient;
+
+    private MidAuthenticationResponseValidator validator = new MidAuthenticationResponseValidator();
 
     @Mock
     private ManagerService managerService;
@@ -112,9 +121,14 @@ public class MobileIDRESTAuthClientTest {
     private ArgumentCaptor<MidSessionStatusRequest> sessionStatusRequestCaptor;
 
     @Before
-    public void init() throws IOException, CertificateException, KeyStoreException, NoSuchAlgorithmException {
+    public void init() {
         when(midClient.getMobileIdConnector()).thenReturn(midConnector);
-        authClient = new MobileIDRESTAuthClient(confProvider, midClient, managerService, resourceLoader);
+        authClient = new MobileIDRESTAuthClient(confProvider, midClient, managerService, validator);
+    }
+
+    @After
+    public void resetValidator() {
+        validator = new MidAuthenticationResponseValidator();
     }
 
     @Test
@@ -338,7 +352,9 @@ public class MobileIDRESTAuthClientTest {
     }
 
     @Test
-    public void getAuthenticationIdentity_successful() throws IOException, CertificateException {
+    public void getAuthenticationIdentity_successful() throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
+        addTrustedCACertificates(resourceLoader);
+
         MidAuthenticationHashToSign authenticationHash = MidAuthenticationHashToSign.newBuilder()
                 .withHashInBase64("2VycgINMWA0mO9979MG9wpmu4d5rXMt3TXd0u3TYDSw=")
                 .withHashType(confProvider.getAuthenticationHashType())
@@ -370,8 +386,8 @@ public class MobileIDRESTAuthClientTest {
     }
 
     @Test
-    public void getAuthenticationIdentity_signatureDoesNotMatch() throws IOException, CertificateException {
-        expectedException.expectMessage("Authentication result validation failed with: [Signature verification failed]");
+    public void getAuthenticationIdentity_signatureDoesNotMatch() {
+        expectedException.expectMessage("Authentication result validation failed with: [Signature verification failed, Signer's certificate is not trusted]");
         expectedException.expect(AuthenticationValidationException.class);
 
         MidAuthenticationHashToSign authenticationHash = MidAuthenticationHashToSign.newBuilder()
@@ -402,7 +418,39 @@ public class MobileIDRESTAuthClientTest {
     }
 
     @Test
-    public void createMobileIdAuthenticationThrowsMidInternalErrorException_externalServiceHasFailedExceptionThrown() throws IOException, CertificateException {
+    public void getAuthenticationIdentity_certificateNotTrusted() {
+        expectedException.expectMessage("Authentication result validation failed with: [Signature verification failed, Signer's certificate is not trusted]");
+        expectedException.expect(AuthenticationValidationException.class);
+
+        MidAuthenticationHashToSign authenticationHash = MidAuthenticationHashToSign.newBuilder()
+                .withHashInBase64("2VycgINMWA0mO9979MG9wpmu4d5rXMt3TXd0u3TYDSw=")
+                .withHashType(confProvider.getAuthenticationHashType())
+                .build();
+        MobileIDRESTSession session = MobileIDRESTSession.builder()
+                .sessionId(UUID.randomUUID().toString())
+                .authenticationHash(authenticationHash)
+                .build();
+        MidSessionStatus midSessionStatus = new MidSessionStatus();
+        midSessionStatus.setCert("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");
+
+        MobileIDRESTSessionStatus sessionStatus = MobileIDRESTSessionStatus.builder()
+                .wrappedSessionStatus(midSessionStatus)
+                .build();
+        MidAuthentication mockAuthentication = MidAuthentication.newBuilder()
+                .withSignatureValueInBase64("RYPBhVnrY4yobitFlVGLbFeCAz07/QWOJby/bIpk1kpG2vWXGbikVu0Ml4Y7bVgya2GUUZkXhGl8Oha+lJ5gmA==")
+                .withAlgorithmName("SHA256WithECEncryption")
+                .withCertificate(MidCertificateParser.parseX509Certificate(midSessionStatus.getCert()))
+                .withHashType(confProvider.getAuthenticationHashType())
+                .withSignedHashInBase64(session.getAuthenticationHash().getHashInBase64())
+                .withResult("OK")
+                .build();
+        when(midClient.createMobileIdAuthentication(sessionStatus.getWrappedSessionStatus(), session.getAuthenticationHash())).thenReturn(mockAuthentication);
+
+        authClient.getAuthenticationIdentity(session, sessionStatus);
+    }
+
+    @Test
+    public void createMobileIdAuthenticationThrowsMidInternalErrorException_externalServiceHasFailedExceptionThrown() {
         expectedException.expect(ExternalServiceHasFailedException.class);
         expectedException.expectMessage("MID service returned internal error that cannot be handled locally");
 
@@ -411,12 +459,36 @@ public class MobileIDRESTAuthClientTest {
     }
 
     @Test
-    public void createMobileIdAuthenticationThrowsUnhandledException_illegalStateExceptionThrown() throws IOException, CertificateException {
+    public void createMobileIdAuthenticationThrowsUnhandledException_illegalStateExceptionThrown() {
         expectedException.expect(IllegalStateException.class);
         expectedException.expectMessage("Unexpected error occurred during creating Mobile-ID authentication");
 
         when(midClient.createMobileIdAuthentication(any(), any())).thenThrow(NullPointerException.class);
         authClient.getAuthenticationIdentity(MobileIDRESTSession.builder().build(), MobileIDRESTSessionStatus.builder().build());
+    }
+
+    @Test
+    public void initAuthenticationThrowsException_certificateNotTrusted() {
+        MidAuthenticationResponse mockAuthResponse = new MidAuthenticationResponse(UUID.randomUUID().toString());
+        when(midConnector.authenticate(authRequestCaptor.capture())).thenReturn(mockAuthResponse);
+
+        mockRequestWithSessionMap();
+
+        MobileIDRESTSession session = authClient.initAuthentication(PERSONAL_CODE, COUNTRY_CODE, PHONE_NUMBER);
+        assertEquals(mockAuthResponse.getSessionID(), session.getSessionId());
+        MidAuthenticationHashToSign authenticationHash = session.getAuthenticationHash();
+        assertNotNull(authenticationHash);
+        assertEquals(session.getVerificationCode(), authenticationHash.calculateVerificationCode());
+
+        verify(midConnector).authenticate(authRequestCaptor.capture());
+        MidAuthenticationRequest authRequest = authRequestCaptor.getValue();
+        assertEquals(PHONE_NUMBER, authRequest.getPhoneNumber());
+        assertEquals(PERSONAL_CODE, authRequest.getNationalIdentityNumber());
+        assertEquals(authenticationHash.getHashInBase64(), authRequest.getHash());
+        assertSame(confProvider.getAuthenticationHashType(), authRequest.getHashType());
+        assertSame(MidLanguage.valueOf(confProvider.getLanguage()), authRequest.getLanguage());
+        assertEquals(confProvider.getMessageToDisplay(), authRequest.getDisplayText());
+        assertEquals(MidDisplayTextFormat.GSM7, authRequest.getDisplayTextFormat());
     }
 
     private static void mockSpringServletRequestAttributes() {
@@ -450,5 +522,23 @@ public class MobileIDRESTAuthClientTest {
         sessionMap.put(Constants.TARA_OIDC_SESSION_CLIENT_ID, SERVICE_SHORT_NAME_WITH_SPECIAL_CHARACTERS);
 
         setRequestContextWithSessionMap(sessionMap);
+    }
+
+    private void addTrustedCACertificates(ResourceLoader resourceLoader) throws IOException, CertificateException, NoSuchAlgorithmException, KeyStoreException {
+        Resource resource = resourceLoader.getResource(confProvider.getTruststore());
+        if (!resource.exists()) {
+            throw new IllegalArgumentException("Could not find resource " + resource.getDescription());
+        }
+
+        InputStream is = resource.getInputStream();
+        KeyStore keyStore = KeyStore.getInstance(confProvider.getTruststoreType());
+        keyStore.load(is, confProvider.getTruststorePass().toCharArray());
+
+        Enumeration<String> keyStoreAliases = keyStore.aliases();
+        while (keyStoreAliases.hasMoreElements()) {
+            String keyStoreAlias = keyStoreAliases.nextElement();
+            X509Certificate cert = (X509Certificate) keyStore.getCertificate(keyStoreAlias);
+            validator.addTrustedCACertificate(cert);
+        }
     }
 }

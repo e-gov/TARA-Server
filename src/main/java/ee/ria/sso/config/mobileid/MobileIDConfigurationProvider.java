@@ -76,10 +76,13 @@ public class MobileIDConfigurationProvider {
     @NotNull
     private Integer connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
 
+    @NotNull
     private String truststore;
 
+    @NotNull
     private String truststoreType = "PKCS12";
 
+    @NotNull
     private String truststorePass;
 
     @PostConstruct
