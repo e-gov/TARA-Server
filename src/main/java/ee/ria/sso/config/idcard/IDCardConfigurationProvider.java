@@ -32,7 +32,6 @@ public class IDCardConfigurationProvider {
     @NotNull
     private String truststore;
 
-    @NotNull
     private String truststoreType = "PKCS12";
 
     @NotNull
