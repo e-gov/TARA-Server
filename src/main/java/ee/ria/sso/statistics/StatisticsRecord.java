@@ -28,10 +28,10 @@ public class StatisticsRecord {
     private final String ocsp;
 
     public StatisticsRecord(LocalDateTime time, String clientId, AuthenticationType method, StatisticsOperation operation, String error, String bank, String country, String ocsp) {
-        Assert.notNull(time, "Authentication time cannot be null!");
-        Assert.notNull(clientId, "Client-ID cannot be null!");
-        Assert.notNull(method, "Authentication method cannot be null!");
-        Assert.notNull(operation, "Statistics operation cannot be null!");
+        Assert.notNull(time, "Unable to log StatisticsRecord. Authentication time cannot be null!");
+        Assert.notNull(clientId, "Unable to log StatisticsRecord. Client-ID cannot be null!");
+        Assert.notNull(method, "Unable to log StatisticsRecord. Authentication method cannot be null!");
+        Assert.notNull(operation, "Unable to log StatisticsRecord. Statistics operation cannot be null!");
 
         if (method == AuthenticationType.BankLink) {
             Assert.notNull(bank, "Bank cannot be null!");
