@@ -38,11 +38,13 @@ public class MobileIDRESTAuthClient implements MobileIDAuthenticationClient<Mobi
     private final MobileIDConfigurationProvider confProvider;
     private final MidClient client;
     private final ManagerService managerService;
+    private final MidAuthenticationResponseValidator validator;
 
-    public MobileIDRESTAuthClient(MobileIDConfigurationProvider confProvider, MidClient client, ManagerService managerService) {
+    public MobileIDRESTAuthClient(MobileIDConfigurationProvider confProvider, MidClient client, ManagerService managerService, MidAuthenticationResponseValidator validator) {
         this.confProvider = confProvider;
         this.client = client;
         this.managerService = managerService;
+        this.validator = validator;
     }
 
     @Override
@@ -143,7 +145,6 @@ public class MobileIDRESTAuthClient implements MobileIDAuthenticationClient<Mobi
     }
 
     private MidAuthenticationResult validateAuthentication(MidAuthentication authentication) {
-        MidAuthenticationResponseValidator validator = new MidAuthenticationResponseValidator();
         try {
             return validator.validate(authentication);
         } catch (MidInternalErrorException e) {

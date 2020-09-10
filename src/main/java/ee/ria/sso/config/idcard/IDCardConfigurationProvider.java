@@ -13,6 +13,7 @@ import org.springframework.validation.annotation.Validated;
 import javax.annotation.PostConstruct;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -28,10 +29,12 @@ import java.util.stream.Collectors;
 @Slf4j
 public class IDCardConfigurationProvider {
 
+    @NotNull
     private String truststore;
 
     private String truststoreType = "PKCS12";
 
+    @NotNull
     private String truststorePass;
 
     private boolean ocspEnabled = true;

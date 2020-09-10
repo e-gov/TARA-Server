@@ -20,6 +20,9 @@ import org.springframework.webflow.action.AbstractAction;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
 
+import java.io.IOException;
+import java.security.cert.CertificateException;
+
 import static ee.ria.sso.Constants.CAS_SERVICE_ATTRIBUTE_NAME;
 
 @Slf4j
@@ -33,7 +36,7 @@ public abstract class AbstractAuthenticationAction extends AbstractAction {
     @Autowired
     private ThymeleafSupport thymeleafSupport;
 
-    protected abstract Event doAuthenticationExecute(RequestContext requestContext);
+    protected abstract Event doAuthenticationExecute(RequestContext requestContext) throws IOException, CertificateException;
 
     protected abstract AuthenticationType getAuthenticationType();
 

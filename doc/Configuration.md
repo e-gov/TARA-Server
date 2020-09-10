@@ -390,7 +390,15 @@ Table 2.2.1 - Enabling mobile-ID authentication feature in TARA
 | :---------------- | :---------- | :----------------|
 | `mobile-id.enabled` | N | Feature toggle for authentication with mobile-ID in TARA. Enables this feature to be loaded if set to `true`, otherwise ignores all other mobile-ID related configuration. Defaults to `false`, if not specified. |
 
-Table 2.2.2 - Configuring Mobile-ID authentication ([MID-REST](https://github.com/SK-EID/MID))
+Table 2.2.2 - Configuring Mobile-ID truststore 
+
+| Property        | Mandatory | Description |
+| :---------------- | :---------- | :----------------|
+| `mobile-id.truststore` | Y | Path to the truststore that holds list of OCSP responder certificates and Mobile-ID issuer certificates. For example: `classpath:mobile-id-truststore.p12`, when the file is to be accessed from the classpath or `file:/etc/cas/mobile-id-truststore.p12` when the file is referenced in the local filesystem.  |
+| `mobile-id.truststore-type` | N | Truststore type. Defaults to `PKCS12` |
+| `mobile-id.truststore-pass` | Y | Truststore password |
+
+Table 2.2.3 - Configuring Mobile-ID authentication ([MID-REST](https://github.com/SK-EID/MID))
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
@@ -421,8 +429,10 @@ mobile-id.session-status-socket-open-duration=1000
 mobile-id.timeout-between-session-status-queries=3000
 mobile-id.read-timeout=30000
 mobile-id.connection-timeout=5000
+mobile-id.truststore=classpath:/mobile-id/mobileid-truststore-test.p12
+mobile-id.truststore-type=PKCS12
+mobile-id.truststore-pass=changeit
 ````
-
 
 <a name="eidas"></a>
 ### 2.3 eIDAS authentication

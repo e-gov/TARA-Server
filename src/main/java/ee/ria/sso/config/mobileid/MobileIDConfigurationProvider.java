@@ -1,6 +1,5 @@
 package ee.ria.sso.config.mobileid;
 
-import ee.sk.mid.MidDisplayTextFormat;
 import ee.sk.mid.MidHashType;
 import lombok.Getter;
 import lombok.Setter;
@@ -76,6 +75,14 @@ public class MobileIDConfigurationProvider {
 
     @NotNull
     private Integer connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
+
+    @NotNull
+    private String truststore;
+
+    private String truststoreType = "PKCS12";
+
+    @NotNull
+    private String truststorePass;
 
     @PostConstruct
     public void init() {
