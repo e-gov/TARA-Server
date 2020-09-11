@@ -1,13 +1,13 @@
 package ee.ria.sso.service.idcard;
 
 import ee.ria.sso.Constants;
-import ee.ria.sso.service.ExternalServiceHasFailedException;
-import ee.ria.sso.service.UserAuthenticationFailedException;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.config.idcard.IDCardConfigurationProvider;
 import ee.ria.sso.config.idcard.TestIDCardConfiguration;
 import ee.ria.sso.oidc.TaraScope;
 import ee.ria.sso.service.AbstractAuthenticationServiceTest;
+import ee.ria.sso.service.ExternalServiceHasFailedException;
+import ee.ria.sso.service.UserAuthenticationFailedException;
 import ee.ria.sso.statistics.StatisticsOperation;
 import ee.ria.sso.test.SimpleTestAppender;
 import org.hamcrest.Matchers;
@@ -31,6 +31,8 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Map;
 
@@ -41,6 +43,8 @@ import java.util.Map;
 public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServiceTest {
 
     public static final String HTTP_MOCK_OCSP_URL = "http://mock.ocsp.url";
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss");
+
     @Autowired
     private IDCardConfigurationProvider configurationProvider;
 
@@ -244,8 +248,7 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
         AuthenticationType authenticationType = AuthenticationType.IDCard;
 
         SimpleTestAppender.verifyLogEventsExistInOrder(
-                Matchers.containsString(String.format(";openIdDemo;%s;%s;", authenticationType, StatisticsOperation.START_AUTH)),
-                Matchers.containsString(String.format(";openIdDemo;%s;%s;;%s", authenticationType, StatisticsOperation.SUCCESSFUL_AUTH, HTTP_MOCK_OCSP_URL))
+                Matchers.containsString(String.format("%s;openIdDemo;%s;%s;;%s", formatter.format(LocalDateTime.now()), authenticationType, StatisticsOperation.SUCCESSFUL_AUTH, HTTP_MOCK_OCSP_URL))
         );
     }
 
@@ -253,7 +256,6 @@ public class IDCardAuthenticationServiceTest extends AbstractAuthenticationServi
         AuthenticationType authenticationType = AuthenticationType.IDCard;
 
         SimpleTestAppender.verifyLogEventsExistInOrder(
-                Matchers.containsString(String.format(";openIdDemo;%s;%s;", authenticationType, StatisticsOperation.START_AUTH)),
                 Matchers.containsString(String.format(";openIdDemo;%s;%s;%s;%s", authenticationType, StatisticsOperation.ERROR, errorMessage, ocspUrl))
         );
     }
