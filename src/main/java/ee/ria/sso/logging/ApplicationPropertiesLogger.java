@@ -39,8 +39,13 @@ public class ApplicationPropertiesLogger {
                         (((CompositePropertySource) propertySource).getPropertySources())
                                 .forEach(propSource ->
                                 Arrays.stream(((EnumerablePropertySource) propSource).getPropertyNames())
-                                        .filter(propertyName -> !(propertyName.contains("pass") || propertyName.contains("key")))
-                                        .forEach(property -> log.info("{}: {}", property, StringEscapeUtils.escapeJava(environment.getProperty(property)))));
+                                        .forEach(property -> {
+                                            if (property.contains("pass") || property.contains("key")) {
+                                                log.info("{}: {}", property, "***");
+                                            } else {
+                                                log.info("{}: {}", property, StringEscapeUtils.escapeJava(environment.getProperty(property)));
+                                            }
+                                        }));
                     } catch (Exception e) {
                         log.error("{}", e.getMessage());
                     }
