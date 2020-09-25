@@ -26,7 +26,9 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 
 @ConditionalOnProperty("mobile-id.enabled")
 @Configuration
@@ -36,13 +38,10 @@ public class MobileIDConfiguration {
     @Autowired
     private MobileIDConfigurationProvider configurationProvider;
 
-    private final MidAuthenticationResponseValidator validator = new MidAuthenticationResponseValidator();
-
     @Bean
     public MobileIDAuthenticationClient constructAuthenticationClient(ManagerService managerService, ResourceLoader resourceLoader) throws IOException, CertificateException, KeyStoreException, NoSuchAlgorithmException {
         log.info("Initializing REST protocol based authentication client for Mobile-ID REST service");
-        addTrustedCACertificates(resourceLoader);
-        return new MobileIDRESTAuthClient(configurationProvider, midClient(), managerService, validator);
+        return new MobileIDRESTAuthClient(configurationProvider, midClient(), managerService, new MidAuthenticationResponseValidator(getTrustedCACertificates(resourceLoader)));
     }
 
     @Bean
@@ -58,7 +57,7 @@ public class MobileIDConfiguration {
                 .withRelyingPartyName(configurationProvider.getRelyingPartyName())
                 .withNetworkConnectionConfig(clientConfig())
                 .withLongPollingTimeoutSeconds(configurationProvider.getSessionStatusSocketOpenDuration())
-                .withSslContext(SSLContext.getDefault())
+                .withTrustSslContext(SSLContext.getDefault())
                 .build();
     }
 
@@ -70,11 +69,13 @@ public class MobileIDConfiguration {
         return clientConfig;
     }
 
-    private void addTrustedCACertificates(ResourceLoader resourceLoader) throws IOException, CertificateException, NoSuchAlgorithmException, KeyStoreException {
+    private List<X509Certificate> getTrustedCACertificates(ResourceLoader resourceLoader) throws IOException, CertificateException, NoSuchAlgorithmException, KeyStoreException {
         Resource resource = resourceLoader.getResource(configurationProvider.getTruststore());
         if (!resource.exists()) {
             throw new IllegalArgumentException("Could not find resource " + resource.getDescription());
         }
+
+        List<X509Certificate> trustedCertificates = new ArrayList<>();
 
         InputStream is = resource.getInputStream();
         KeyStore keyStore = KeyStore.getInstance(configurationProvider.getTruststoreType());
@@ -84,7 +85,9 @@ public class MobileIDConfiguration {
         while (keyStoreAliases.hasMoreElements()) {
             String keyStoreAlias = keyStoreAliases.nextElement();
             X509Certificate cert = (X509Certificate) keyStore.getCertificate(keyStoreAlias);
-            validator.addTrustedCACertificate(cert);
+            trustedCertificates.add(cert);
         }
+
+        return trustedCertificates;
     }
 }
