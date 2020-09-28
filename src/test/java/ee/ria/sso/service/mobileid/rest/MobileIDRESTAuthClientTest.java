@@ -60,9 +60,11 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -109,7 +111,7 @@ public class MobileIDRESTAuthClientTest {
 
     private MobileIDRESTAuthClient authClient;
 
-    private MidAuthenticationResponseValidator validator = new MidAuthenticationResponseValidator();
+    private MidAuthenticationResponseValidator validator;
 
     @Mock
     private ManagerService managerService;
@@ -121,14 +123,15 @@ public class MobileIDRESTAuthClientTest {
     private ArgumentCaptor<MidSessionStatusRequest> sessionStatusRequestCaptor;
 
     @Before
-    public void init() {
+    public void init() throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
         when(midClient.getMobileIdConnector()).thenReturn(midConnector);
+        validator = new MidAuthenticationResponseValidator(getTrustedCACertificates(resourceLoader));
         authClient = new MobileIDRESTAuthClient(confProvider, midClient, managerService, validator);
     }
 
     @After
-    public void resetValidator() {
-        validator = new MidAuthenticationResponseValidator();
+    public void resetValidator() throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
+        validator = new MidAuthenticationResponseValidator(getTrustedCACertificates(resourceLoader));
     }
 
     @Test
@@ -352,8 +355,7 @@ public class MobileIDRESTAuthClientTest {
     }
 
     @Test
-    public void getAuthenticationIdentity_successful() throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
-        addTrustedCACertificates(resourceLoader);
+    public void getAuthenticationIdentity_successful() {
 
         MidAuthenticationHashToSign authenticationHash = MidAuthenticationHashToSign.newBuilder()
                 .withHashInBase64("2VycgINMWA0mO9979MG9wpmu4d5rXMt3TXd0u3TYDSw=")
@@ -387,7 +389,7 @@ public class MobileIDRESTAuthClientTest {
 
     @Test
     public void getAuthenticationIdentity_signatureDoesNotMatch() {
-        expectedException.expectMessage("Authentication result validation failed with: [Signature verification failed, Signer's certificate is not trusted]");
+        expectedException.expectMessage("Authentication result validation failed with: [Signature verification failed]");
         expectedException.expect(AuthenticationValidationException.class);
 
         MidAuthenticationHashToSign authenticationHash = MidAuthenticationHashToSign.newBuilder()
@@ -419,7 +421,7 @@ public class MobileIDRESTAuthClientTest {
 
     @Test
     public void getAuthenticationIdentity_certificateNotTrusted() {
-        expectedException.expectMessage("Authentication result validation failed with: [Signature verification failed, Signer's certificate is not trusted]");
+        expectedException.expectMessage("Authentication result validation failed with: [Signature verification failed]");
         expectedException.expect(AuthenticationValidationException.class);
 
         MidAuthenticationHashToSign authenticationHash = MidAuthenticationHashToSign.newBuilder()
@@ -524,11 +526,13 @@ public class MobileIDRESTAuthClientTest {
         setRequestContextWithSessionMap(sessionMap);
     }
 
-    private void addTrustedCACertificates(ResourceLoader resourceLoader) throws IOException, CertificateException, NoSuchAlgorithmException, KeyStoreException {
+    private List<X509Certificate> getTrustedCACertificates(ResourceLoader resourceLoader) throws IOException, CertificateException, NoSuchAlgorithmException, KeyStoreException {
         Resource resource = resourceLoader.getResource(confProvider.getTruststore());
         if (!resource.exists()) {
             throw new IllegalArgumentException("Could not find resource " + resource.getDescription());
         }
+
+        List<X509Certificate> trustedCertificates = new ArrayList<>();
 
         InputStream is = resource.getInputStream();
         KeyStore keyStore = KeyStore.getInstance(confProvider.getTruststoreType());
@@ -538,7 +542,9 @@ public class MobileIDRESTAuthClientTest {
         while (keyStoreAliases.hasMoreElements()) {
             String keyStoreAlias = keyStoreAliases.nextElement();
             X509Certificate cert = (X509Certificate) keyStore.getCertificate(keyStoreAlias);
-            validator.addTrustedCACertificate(cert);
+            trustedCertificates.add(cert);
         }
+
+        return trustedCertificates;
     }
 }

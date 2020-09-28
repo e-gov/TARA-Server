@@ -138,7 +138,7 @@ public class IDCardControllerTest {
         Assert.assertEquals(false, response.getModel().get("ok"));
         SimpleTestAppender.verifyLogEventsExistInOrder(
                 containsString("ID-Card certificate stored in new user session"),
-                containsString("ID-Card controller error: Client-ID cannot be null!")
+                containsString("ID-Card controller error: Unable to log StatisticsRecord. Client-ID cannot be null!")
         );
     }
 }
