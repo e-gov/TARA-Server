@@ -394,7 +394,7 @@ Table 2.2.2 - Configuring Mobile-ID truststore
 
 | Property        | Mandatory | Description |
 | :---------------- | :---------- | :----------------|
-| `mobile-id.truststore` | Y | Path to the truststore that holds list of OCSP responder certificates and Mobile-ID issuer certificates. For example: `classpath:mobile-id-truststore.p12`, when the file is to be accessed from the classpath or `file:/etc/cas/mobile-id-truststore.p12` when the file is referenced in the local filesystem.  |
+| `mobile-id.truststore` | Y | Path to the truststore that holds Mobile-ID issuer certificates. Truststore must include `ESTEID-SK 2011` and `ESTEID-SK 2015` certificates. For example: `classpath:mobile-id-truststore.p12`, when the file is to be accessed from the classpath or `file:/etc/cas/mobile-id-truststore.p12` when the file is referenced in the local filesystem.  |
 | `mobile-id.truststore-type` | N | Truststore type. Defaults to `PKCS12` |
 | `mobile-id.truststore-pass` | Y | Truststore password |
 
