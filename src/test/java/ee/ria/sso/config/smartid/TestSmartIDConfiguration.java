@@ -1,6 +1,7 @@
 package ee.ria.sso.config.smartid;
 
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
+import ee.ria.sso.config.cas.CasConfigProperties;
 import ee.ria.sso.flow.ThymeleafSupport;
 import ee.ria.sso.flow.action.SmartIDCheckAuthenticationAction;
 import ee.ria.sso.flow.action.SmartIDCheckCancelAction;
@@ -38,5 +39,10 @@ public class TestSmartIDConfiguration {
     @Bean
     public ManagerService managerService() {
         return Mockito.mock(ManagerService.class);
+    }
+
+    @Bean
+    public CasConfigProperties casConfigurationProvider() {
+        return Mockito.mock(CasConfigProperties.class);
     }
 }

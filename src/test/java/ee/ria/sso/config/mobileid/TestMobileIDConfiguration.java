@@ -1,6 +1,7 @@
 package ee.ria.sso.config.mobileid;
 
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
+import ee.ria.sso.config.cas.CasConfigProperties;
 import ee.ria.sso.flow.ThymeleafSupport;
 import ee.ria.sso.flow.action.MobileIDCheckAuthenticationAction;
 import ee.ria.sso.flow.action.MobileIDCheckCancelAction;
@@ -37,5 +38,10 @@ public class TestMobileIDConfiguration {
     @Bean
     public ManagerService managerService() {
         return Mockito.mock(ManagerService.class);
+    }
+
+    @Bean
+    public CasConfigProperties casConfigurationProvider() {
+        return Mockito.mock(CasConfigProperties.class);
     }
 }

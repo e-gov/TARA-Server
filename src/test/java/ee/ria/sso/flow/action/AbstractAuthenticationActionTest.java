@@ -2,12 +2,13 @@ package ee.ria.sso.flow.action;
 
 import ee.ria.sso.AbstractTest;
 import ee.ria.sso.Constants;
-import ee.ria.sso.service.ExternalServiceHasFailedException;
-import ee.ria.sso.service.UserAuthenticationFailedException;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
+import ee.ria.sso.config.cas.CasConfigProperties;
 import ee.ria.sso.flow.AuthenticationFlowExecutionException;
 import ee.ria.sso.flow.ThymeleafSupport;
+import ee.ria.sso.service.ExternalServiceHasFailedException;
+import ee.ria.sso.service.UserAuthenticationFailedException;
 import org.apereo.cas.authentication.principal.AbstractWebApplicationService;
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
@@ -33,6 +34,9 @@ public abstract class AbstractAuthenticationActionTest {
     @Mock
     private TaraResourceBundleMessageSource messageSource;
 
+    @Mock
+    private CasConfigProperties casConfigProperties;
+
     @Rule
     public ExpectedException expectedEx = ExpectedException.none();
 
@@ -47,6 +51,7 @@ public abstract class AbstractAuthenticationActionTest {
         requestContext.getExternalContext().getSessionMap().put(Pac4jConstants.REQUESTED_URL, "https://localhost:8451/response");
         requestContext.getExternalContext().getSessionMap().put(Constants.TARA_OIDC_SESSION_AUTH_METHODS, Collections.singletonList(AuthenticationType.SmartID));
         Mockito.when(thymeleafSupport.isAuthMethodAllowed(Mockito.any())).thenReturn(true);
+        Mockito.when(casConfigProperties.getServerName()).thenReturn("cas.server");
     }
 
     @Test
@@ -77,7 +82,8 @@ public abstract class AbstractAuthenticationActionTest {
 
     @Test
     public void invalidOriginalUrlInService() throws Exception {
-        requestContext.getFlowScope().put(Constants.CAS_SERVICE_ATTRIBUTE_NAME, new AbstractWebApplicationService("id", null, "artifactId") {});
+        expectedEx.expect(AuthenticationFlowExecutionException.class);
+        requestContext.getFlowScope().put(Constants.CAS_SERVICE_ATTRIBUTE_NAME, new AbstractWebApplicationService("id", "", "artifactId") {});
         getAction().doExecute(requestContext);
     }
 
@@ -89,7 +95,7 @@ public abstract class AbstractAuthenticationActionTest {
         try {
 
             Mockito.when(messageSource.getMessage(Mockito.eq(Constants.MESSAGE_KEY_GENERAL_ERROR))).thenReturn("mock general error");
-            new AbstractAuthenticationAction(messageSource, thymeleafSupport) {
+            new AbstractAuthenticationAction(messageSource, thymeleafSupport, casConfigProperties) {
 
                 @Override
                 protected Event doAuthenticationExecute(RequestContext requestContext) {
@@ -115,7 +121,7 @@ public abstract class AbstractAuthenticationActionTest {
 
         try {
             Mockito.when(messageSource.getMessage(Mockito.eq("msg.key"))).thenReturn("mock translation");
-            new AbstractAuthenticationAction(messageSource, thymeleafSupport) {
+            new AbstractAuthenticationAction(messageSource, thymeleafSupport, casConfigProperties) {
 
                 @Override
                 protected Event doAuthenticationExecute(RequestContext requestContext) {
@@ -141,7 +147,7 @@ public abstract class AbstractAuthenticationActionTest {
 
         try {
             Mockito.when(messageSource.getMessage(Mockito.eq("msg.key"))).thenReturn("Mock translation");
-            new AbstractAuthenticationAction(messageSource, thymeleafSupport) {
+            new AbstractAuthenticationAction(messageSource, thymeleafSupport, casConfigProperties) {
 
                 @Override
                 protected Event doAuthenticationExecute(RequestContext requestContext) {
@@ -182,6 +188,16 @@ public abstract class AbstractAuthenticationActionTest {
         expectedEx.expect(new ExceptionCodeMatches(401, "Session expired"));
 
         requestContext.getExternalContext().getSessionMap().remove(Pac4jConstants.REQUESTED_URL);
+        getAction().doExecute(requestContext);
+    }
+
+    @Test
+    public void exceptionWhenClientNameIsInvalid() throws Exception {
+        Mockito.when(messageSource.getMessage(Constants.MESSAGE_KEY_GENERAL_ERROR)).thenReturn("Mock general error");
+
+        expectedEx.expect(AuthenticationFlowExecutionException.class);
+        expectedEx.expect(new ExceptionCodeMatches(401, "Mock general error"));
+        requestContext.getFlowScope().put(Constants.CAS_SERVICE_ATTRIBUTE_NAME, new AbstractWebApplicationService("id", "", "artifactId") {});
         getAction().doExecute(requestContext);
     }
 

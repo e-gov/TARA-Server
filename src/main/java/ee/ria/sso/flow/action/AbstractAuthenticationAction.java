@@ -3,6 +3,7 @@ package ee.ria.sso.flow.action;
 import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
+import ee.ria.sso.config.cas.CasConfigProperties;
 import ee.ria.sso.flow.AuthenticationFlowExecutionException;
 import ee.ria.sso.flow.ThymeleafSupport;
 import ee.ria.sso.service.ExternalServiceHasFailedException;
@@ -35,6 +36,9 @@ public abstract class AbstractAuthenticationAction extends AbstractAction {
 
     @Autowired
     private ThymeleafSupport thymeleafSupport;
+
+    @Autowired
+    private CasConfigProperties casConfigProperties;
 
     protected abstract Event doAuthenticationExecute(RequestContext requestContext) throws IOException, CertificateException;
 
@@ -70,14 +74,19 @@ public abstract class AbstractAuthenticationAction extends AbstractAction {
         if (service == null) {
             log.error("Callback failed! No service parameter found in flow of session! Possible causes: either the user session has expired, server has been restarted in the middle of user transaction or corrupt/invalid cookie value was sent from the browser");
             throw AuthenticationFlowExecutionException.ofUnauthorized(requestContext, this, messageSource.getMessage(Constants.MESSAGE_KEY_SESSION_EXPIRED));
-        } else if (isOauth2Client(service) && !requestContext.getExternalContext().getSessionMap().contains(Pac4jConstants.REQUESTED_URL)) {
-            log.error("Oauth callback url not found in session! Possible causes: either the user session has expired, server has been restarted in the middle of user transaction or corrupt/invalid cookie value was sent from the browser");
-            throw AuthenticationFlowExecutionException.ofUnauthorized(requestContext, this, messageSource.getMessage(Constants.MESSAGE_KEY_SESSION_EXPIRED));
         }
 
-        if (isOauth2Client(service) && !thymeleafSupport.isAuthMethodAllowed(getAuthenticationType())) {
-            log.error("This authentication method usage was not initially specified by the scope parameter when the authentication process was initialized!");
-            throw AuthenticationFlowExecutionException.ofUnauthorized(requestContext, this, messageSource.getMessage(Constants.MESSAGE_KEY_AUTH_METHOD_RESTRICTED_BY_SCOPE));
+        if (isOauth2Client(service)) {
+            if (!requestContext.getExternalContext().getSessionMap().contains(Pac4jConstants.REQUESTED_URL)) {
+                log.error("Oauth callback url not found in session! Possible causes: either the user session has expired, server has been restarted in the middle of user transaction or corrupt/invalid cookie value was sent from the browser");
+                throw AuthenticationFlowExecutionException.ofUnauthorized(requestContext, this, messageSource.getMessage(Constants.MESSAGE_KEY_SESSION_EXPIRED));
+            } else if (!thymeleafSupport.isAuthMethodAllowed(getAuthenticationType())) {
+                log.error("This authentication method usage was not initially specified by the scope parameter when the authentication process was initialized!");
+                throw AuthenticationFlowExecutionException.ofUnauthorized(requestContext, this, messageSource.getMessage(Constants.MESSAGE_KEY_AUTH_METHOD_RESTRICTED_BY_SCOPE));
+            }
+        } else if (!service.getOriginalUrl().contains(casConfigProperties.getServerName())) {
+            log.error("Invalid client_name! Possible cause: client_name parameter has been changed in URL");
+            throw AuthenticationFlowExecutionException.ofUnauthorized(requestContext, this, messageSource.getMessage(Constants.MESSAGE_KEY_GENERAL_ERROR));
         }
     }
 

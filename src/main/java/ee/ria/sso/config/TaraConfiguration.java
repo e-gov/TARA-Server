@@ -2,6 +2,7 @@ package ee.ria.sso.config;
 
 import ee.ria.sso.authentication.TaraAuthenticationHandler;
 import ee.ria.sso.authentication.principal.TaraPrincipalFactory;
+import ee.ria.sso.config.cas.CasConfigProperties;
 import ee.ria.sso.flow.TaraWebflowConfigurer;
 import ee.ria.sso.flow.ThymeleafSupport;
 import ee.ria.sso.i18n.TaraLocaleChangeInterceptor;
@@ -58,6 +59,11 @@ public class TaraConfiguration extends WebMvcConfigurerAdapter {
     @Bean
     public ThymeleafSupport thymeleafSupport(CasConfigurationProperties casProperties, TaraProperties taraProperties) {
         return new ThymeleafSupport(casProperties, taraProperties, getDefaultLocaleChangeParam());
+    }
+
+    @Bean
+    public CasConfigProperties casConfigurationProvider() {
+        return new CasConfigProperties();
     }
 
     @Bean
