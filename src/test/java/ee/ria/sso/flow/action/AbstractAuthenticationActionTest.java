@@ -80,6 +80,12 @@ public abstract class AbstractAuthenticationActionTest {
     }
 
     @Test
+    public void successWhenValidAbstractServicePresentButNoMatchingServiceURL() throws Exception {
+        requestContext.getFlowScope().put(Constants.CAS_SERVICE_ATTRIBUTE_NAME, new AbstractWebApplicationService("id", "https://not-cas.server.url/?client_name=CasOAuthClient", "artifactId") {});
+        getAction().doExecute(requestContext);
+    }
+
+    @Test
     public void exceptionWhenAuthenticationMethodNotInAllowedList() throws Exception {
         expectedEx.expect(AuthenticationFlowExecutionException.class);
         expectedEx.expect(new ExceptionCodeMatches(401, "Unauthorised authentication method!"));

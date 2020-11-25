@@ -1,5 +1,6 @@
 package ee.ria.sso.service.manager;
 
+import org.apereo.cas.services.AbstractRegisteredService;
 import org.apereo.cas.services.OidcRegisteredService;
 import org.apereo.cas.services.RegisteredService;
 import org.apereo.cas.services.RegisteredServiceProperty;
@@ -13,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -35,6 +37,7 @@ public class ManagerServiceImplTest {
     private static final String SERVICE_SHORT_NAME_VALUE = "openIdDemoShortName";
     private static final String SERVICE_SHORT_NAME_VALUE_EN = "openIdDemoShortNameEN";
     private static final String SERVICE_SHORT_NAME_VALUE_RU = "openIdDemoShortNameRU";
+    private static final String SERVICE_ID = "https://cas.server.url";
 
     @Test
     public void getServiceByID_managerReturnsValidService_shouldReturnNonEmptyOptional() {
@@ -196,6 +199,42 @@ public class ManagerServiceImplTest {
         Assert.assertEquals(Optional.of(new HashMap<String, RegisteredServiceProperty>()), managerService.getServiceNames(SERVICE_NAME));
     }
 
+    @Test
+    public void getAllAbstractRegisteredServices_managerReturnsValidServices_shouldReturnNonEmptyOptional() {
+        Collection<RegisteredService> registeredServices = new ArrayList<>();
+        AbstractRegisteredService abstractRegisteredService = Mockito.mock(AbstractRegisteredService.class);
+        registeredServices.add(abstractRegisteredService);
+
+        ServicesManager servicesManager = createValidServicesManagerWith(registeredServices);
+        ManagerService managerService = new ManagerServiceImpl(servicesManager);
+
+        Assert.assertTrue(managerService.getAllAbstractRegisteredServices().isPresent());
+    }
+
+    @Test
+    public void getAllAbstractRegisteredServices_managerReturnsNoProperties_shouldReturnEmptyList() {
+        Collection<RegisteredService> registeredServices = new ArrayList<>();
+        OidcRegisteredService oidcRegisteredService = new OidcRegisteredService();
+        oidcRegisteredService.setClientId(SERVICE_NAME);
+        registeredServices.add(oidcRegisteredService);
+        ServicesManager servicesManager = createValidServicesManagerWith(registeredServices);
+        ManagerService managerService = new ManagerServiceImpl(servicesManager);
+
+        Assert.assertEquals(Optional.of(new ArrayList<AbstractRegisteredService>()), managerService.getAllAbstractRegisteredServices());
+    }
+
+    @Test
+    public void getAllAbstractRegisteredServices_managerFiltersUnnecessaryServices_shouldReturnMultipleServices() {
+        Collection<RegisteredService> registeredServices = new ArrayList<>(mockGetAllAbstractRegisteredServices().get());
+        OidcRegisteredService oidcRegisteredService = new OidcRegisteredService();
+        oidcRegisteredService.setClientId(SERVICE_NAME);
+        registeredServices.add(oidcRegisteredService);
+        ServicesManager servicesManager = createValidServicesManagerWith(registeredServices);
+        ManagerService managerService = new ManagerServiceImpl(servicesManager);
+
+        Assert.assertEquals(2, managerService.getAllAbstractRegisteredServices().get().size());
+    }
+
     private Map<String, RegisteredServiceProperty> mockOidcRegisteredServiceProperties(String key, String value) {
         Map<String, RegisteredServiceProperty> serviceProperties = new HashMap<>();
         RegisteredServicePropertyValues rspv = new RegisteredServicePropertyValues();
@@ -205,6 +244,21 @@ public class ManagerServiceImplTest {
         serviceProperties.put(key, rspv);
 
         return serviceProperties;
+    }
+
+    private Optional<List<AbstractRegisteredService>> mockGetAllAbstractRegisteredServices() {
+        List<AbstractRegisteredService> abstractRegisteredServices = new ArrayList<>();
+        AbstractRegisteredService oneAbstractRegisteredService = Mockito.mock(AbstractRegisteredService.class);
+        AbstractRegisteredService twoAbstractRegisteredService = Mockito.mock(AbstractRegisteredService.class);
+        oneAbstractRegisteredService.setServiceId(SERVICE_ID);
+        oneAbstractRegisteredService.setName(SERVICE_NAME + "1");
+        twoAbstractRegisteredService.setServiceId(SERVICE_ID + ".secondurl");
+        twoAbstractRegisteredService.setName(SERVICE_NAME + "2");
+
+        abstractRegisteredServices.add(oneAbstractRegisteredService);
+        abstractRegisteredServices.add(twoAbstractRegisteredService);
+
+        return Optional.of(abstractRegisteredServices);
     }
 
     private static ServicesManager createValidServicesManagerWith(Collection<RegisteredService> services) {
