@@ -17,6 +17,6 @@ public interface ManagerService {
    Optional<OidcRegisteredService> getServiceByName(String serviceName);
    Optional<Map<String, RegisteredServiceProperty>> getServiceNames(String serviceName);
    Optional<String> getServiceShortName();
-   Optional<List<AbstractRegisteredService>> getAllAbstractRegisteredServices();
+   Optional<List<AbstractRegisteredService>> getAllRegisteredServicesExceptType(Class<?> type);
 
 }

@@ -7,7 +7,6 @@ import org.apereo.cas.services.OidcRegisteredService;
 import org.apereo.cas.services.RegisteredService;
 import org.apereo.cas.services.RegisteredServiceProperty;
 import org.apereo.cas.services.ServicesManager;
-import org.apereo.cas.support.oauth.services.OAuthRegisteredService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -66,9 +65,10 @@ public class ManagerServiceImpl implements ManagerService {
     }
 
 
-    public Optional<List<AbstractRegisteredService>> getAllAbstractRegisteredServices() {
+    @Override
+    public Optional<List<AbstractRegisteredService>> getAllRegisteredServicesExceptType(Class<?> type) {
         return Optional.of(this.servicesManager.getAllServices().stream()
-                .filter(r -> r instanceof AbstractRegisteredService && !(r instanceof OAuthRegisteredService))
+                .filter(r -> r instanceof AbstractRegisteredService && !(type.isInstance(r)))
                 .map(s -> (AbstractRegisteredService) s)
                 .collect(Collectors.toList()));
     }

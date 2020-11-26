@@ -1,7 +1,6 @@
 package ee.ria.sso.config;
 
 import com.github.benmanes.caffeine.cache.LoadingCache;
-import ee.ria.sso.config.cas.CasConfigProperties;
 import ee.ria.sso.flow.ThymeleafSupport;
 import org.apereo.cas.CentralAuthenticationService;
 import org.apereo.cas.audit.AuditTrailExecutionPlan;
@@ -87,11 +86,6 @@ public class TestTaraConfiguration {
     @Bean
     public TaraProperties taraProperties() {
         return Mockito.mock(TaraProperties.class);
-    }
-
-    @Bean
-    public CasConfigProperties casConfigurationProvider() {
-        return Mockito.mock(CasConfigProperties.class);
     }
 
     @Bean

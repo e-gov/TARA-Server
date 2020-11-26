@@ -4,7 +4,6 @@ import ee.ria.sso.AbstractTest;
 import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
-import ee.ria.sso.config.cas.CasConfigProperties;
 import ee.ria.sso.flow.AuthenticationFlowExecutionException;
 import ee.ria.sso.flow.ThymeleafSupport;
 import ee.ria.sso.service.ExternalServiceHasFailedException;
@@ -12,6 +11,7 @@ import ee.ria.sso.service.UserAuthenticationFailedException;
 import ee.ria.sso.service.manager.ManagerService;
 import org.apereo.cas.authentication.principal.AbstractWebApplicationService;
 import org.apereo.cas.services.AbstractRegisteredService;
+import org.apereo.cas.support.oauth.services.OAuthRegisteredService;
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
 import org.junit.Before;
@@ -40,9 +40,6 @@ public abstract class AbstractAuthenticationActionTest {
     private TaraResourceBundleMessageSource messageSource;
 
     @Mock
-    private CasConfigProperties casConfigProperties;
-
-    @Mock
     private ManagerService managerService;
 
     @Rule
@@ -59,9 +56,8 @@ public abstract class AbstractAuthenticationActionTest {
         requestContext.getExternalContext().getSessionMap().put(Pac4jConstants.REQUESTED_URL, "https://localhost:8451/response");
         requestContext.getExternalContext().getSessionMap().put(Constants.TARA_OIDC_SESSION_AUTH_METHODS, Collections.singletonList(AuthenticationType.SmartID));
         Mockito.when(thymeleafSupport.isAuthMethodAllowed(Mockito.any())).thenReturn(true);
-        Mockito.when(casConfigProperties.getServerName()).thenReturn("cas.server");
         Optional<List<AbstractRegisteredService>> mockedAbstractRegisteredServices = mockAbstractRegisteredServices();
-        Mockito.when(managerService.getAllAbstractRegisteredServices()).thenReturn(mockedAbstractRegisteredServices);
+        Mockito.when(managerService.getAllRegisteredServicesExceptType(OAuthRegisteredService.class)).thenReturn(mockedAbstractRegisteredServices);
     }
 
     @Test
@@ -111,7 +107,7 @@ public abstract class AbstractAuthenticationActionTest {
         try {
 
             Mockito.when(messageSource.getMessage(Mockito.eq(Constants.MESSAGE_KEY_GENERAL_ERROR))).thenReturn("mock general error");
-            new AbstractAuthenticationAction(messageSource, thymeleafSupport, casConfigProperties, managerService) {
+            new AbstractAuthenticationAction(messageSource, thymeleafSupport, managerService) {
 
                 @Override
                 protected Event doAuthenticationExecute(RequestContext requestContext) {
@@ -137,7 +133,7 @@ public abstract class AbstractAuthenticationActionTest {
 
         try {
             Mockito.when(messageSource.getMessage(Mockito.eq("msg.key"))).thenReturn("mock translation");
-            new AbstractAuthenticationAction(messageSource, thymeleafSupport, casConfigProperties, managerService) {
+            new AbstractAuthenticationAction(messageSource, thymeleafSupport, managerService) {
 
                 @Override
                 protected Event doAuthenticationExecute(RequestContext requestContext) {
@@ -163,7 +159,7 @@ public abstract class AbstractAuthenticationActionTest {
 
         try {
             Mockito.when(messageSource.getMessage(Mockito.eq("msg.key"))).thenReturn("Mock translation");
-            new AbstractAuthenticationAction(messageSource, thymeleafSupport, casConfigProperties, managerService) {
+            new AbstractAuthenticationAction(messageSource, thymeleafSupport, managerService) {
 
                 @Override
                 protected Event doAuthenticationExecute(RequestContext requestContext) {

@@ -3,7 +3,6 @@ package ee.ria.sso.flow.action;
 import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
-import ee.ria.sso.config.cas.CasConfigProperties;
 import ee.ria.sso.flow.AuthenticationFlowExecutionException;
 import ee.ria.sso.flow.ThymeleafSupport;
 import ee.ria.sso.service.ExternalServiceHasFailedException;
@@ -15,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apereo.cas.authentication.principal.WebApplicationService;
 import org.apereo.cas.services.AbstractRegisteredService;
 import org.apereo.cas.support.oauth.authenticator.Authenticators;
+import org.apereo.cas.support.oauth.services.OAuthRegisteredService;
 import org.apereo.cas.web.support.WebUtils;
 import org.pac4j.core.context.Pac4jConstants;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,9 +40,6 @@ public abstract class AbstractAuthenticationAction extends AbstractAction {
 
     @Autowired
     private ThymeleafSupport thymeleafSupport;
-
-    @Autowired
-    private CasConfigProperties casConfigProperties;
 
     @Autowired
     private ManagerService managerService;
@@ -85,13 +82,13 @@ public abstract class AbstractAuthenticationAction extends AbstractAction {
         }
 
         if (!isOauth2Client(service) && !isCASClient(service.getOriginalUrl())) {
-            log.error("Invalid client_name! Possible cause: client_name parameter has been changed in URL");
+            log.error("Invalid service value in detected in webflow. Either the client_name parameter is invalid or the service URL is not allowed");
             throw AuthenticationFlowExecutionException.ofUnauthorized(requestContext, this, messageSource.getMessage(Constants.MESSAGE_KEY_GENERAL_ERROR));
         }
     }
 
     private boolean isCASClient(String serviceUrl) {
-        Optional<List<AbstractRegisteredService>> abstractRegisteredServices = managerService.getAllAbstractRegisteredServices();
+        Optional<List<AbstractRegisteredService>> abstractRegisteredServices = managerService.getAllRegisteredServicesExceptType(OAuthRegisteredService.class);
         if (abstractRegisteredServices.isPresent()) {
             for (AbstractRegisteredService ars: abstractRegisteredServices.get()) {
                 if (serviceUrl.matches(ars.getServiceId())) {

@@ -5,6 +5,7 @@ import org.apereo.cas.services.OidcRegisteredService;
 import org.apereo.cas.services.RegisteredService;
 import org.apereo.cas.services.RegisteredServiceProperty;
 import org.apereo.cas.services.ServicesManager;
+import org.apereo.cas.support.oauth.services.OAuthRegisteredService;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -208,7 +209,7 @@ public class ManagerServiceImplTest {
         ServicesManager servicesManager = createValidServicesManagerWith(registeredServices);
         ManagerService managerService = new ManagerServiceImpl(servicesManager);
 
-        Assert.assertTrue(managerService.getAllAbstractRegisteredServices().isPresent());
+        Assert.assertTrue(managerService.getAllRegisteredServicesExceptType(OAuthRegisteredService.class).isPresent());
     }
 
     @Test
@@ -220,7 +221,7 @@ public class ManagerServiceImplTest {
         ServicesManager servicesManager = createValidServicesManagerWith(registeredServices);
         ManagerService managerService = new ManagerServiceImpl(servicesManager);
 
-        Assert.assertEquals(Optional.of(new ArrayList<AbstractRegisteredService>()), managerService.getAllAbstractRegisteredServices());
+        Assert.assertEquals(Optional.of(new ArrayList<AbstractRegisteredService>()), managerService.getAllRegisteredServicesExceptType(OAuthRegisteredService.class));
     }
 
     @Test
@@ -232,7 +233,7 @@ public class ManagerServiceImplTest {
         ServicesManager servicesManager = createValidServicesManagerWith(registeredServices);
         ManagerService managerService = new ManagerServiceImpl(servicesManager);
 
-        Assert.assertEquals(2, managerService.getAllAbstractRegisteredServices().get().size());
+        Assert.assertEquals(2, managerService.getAllRegisteredServicesExceptType(OAuthRegisteredService.class).get().size());
     }
 
     private Map<String, RegisteredServiceProperty> mockOidcRegisteredServiceProperties(String key, String value) {
