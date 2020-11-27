@@ -64,6 +64,15 @@ public class ManagerServiceImpl implements ManagerService {
         return service.map(AbstractRegisteredService::getProperties);
     }
 
+
+    @Override
+    public Optional<List<AbstractRegisteredService>> getAllRegisteredServicesExceptType(Class<?> type) {
+        return Optional.of(this.servicesManager.getAllServices().stream()
+                .filter(r -> r instanceof AbstractRegisteredService && !(type.isInstance(r)))
+                .map(s -> (AbstractRegisteredService) s)
+                .collect(Collectors.toList()));
+    }
+
     @Override
     public Optional<String> getServiceShortName() {
         String serviceName;
