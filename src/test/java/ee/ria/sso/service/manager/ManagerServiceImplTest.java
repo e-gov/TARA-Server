@@ -1,5 +1,7 @@
 package ee.ria.sso.service.manager;
 
+import org.apereo.cas.authentication.principal.Service;
+import org.apereo.cas.config.CasOAuthConfiguration;
 import org.apereo.cas.services.AbstractRegisteredService;
 import org.apereo.cas.services.OidcRegisteredService;
 import org.apereo.cas.services.RegisteredService;
@@ -40,6 +42,8 @@ public class ManagerServiceImplTest {
     private static final String SERVICE_SHORT_NAME_VALUE_RU = "openIdDemoShortNameRU";
     private static final String SERVICE_ID = "https://cas.server.url";
 
+    private final CasOAuthConfiguration casOAuthConfiguration = Mockito.mock(CasOAuthConfiguration.class);
+
     @Test
     public void getServiceByID_managerReturnsValidService_shouldReturnNonEmptyOptional() {
         Collection<RegisteredService> registeredServices = new ArrayList<>();
@@ -47,7 +51,7 @@ public class ManagerServiceImplTest {
         oidcRegisteredService.setClientId(SERVICE_NAME);
         registeredServices.add(oidcRegisteredService);
         ServicesManager servicesManager = createValidServicesManagerWith(registeredServices);
-        ManagerService managerService = new ManagerServiceImpl(servicesManager);
+        ManagerService managerService = new ManagerServiceImpl(servicesManager, casOAuthConfiguration);
 
         Assert.assertTrue(managerService.getServiceByName(SERVICE_NAME).isPresent());
     }
@@ -56,7 +60,7 @@ public class ManagerServiceImplTest {
     public void getServiceByID_managerReturnsNoService_shouldReturnEmptyOptional() {
         Collection<RegisteredService> registeredServices = new ArrayList<>();
         ServicesManager servicesManager = createValidServicesManagerWith(registeredServices);
-        ManagerService managerService = new ManagerServiceImpl(servicesManager);
+        ManagerService managerService = new ManagerServiceImpl(servicesManager, casOAuthConfiguration);
 
         Assert.assertFalse(managerService.getServiceByName(SERVICE_NAME).isPresent());
     }
@@ -72,7 +76,7 @@ public class ManagerServiceImplTest {
         registeredServices.add(duplicateOidcRegisteredService);
 
         ServicesManager servicesManager = createValidServicesManagerWith(registeredServices);
-        ManagerService managerService = new ManagerServiceImpl(servicesManager);
+        ManagerService managerService = new ManagerServiceImpl(servicesManager, casOAuthConfiguration);
 
         Assert.assertEquals(Optional.empty(), managerService.getServiceByName(SERVICE_NAME));
     }
@@ -81,7 +85,7 @@ public class ManagerServiceImplTest {
     public void getServiceByID_serviceManagerThrowsRuntimeException_shouldReturnEmptyOptional() {
         ServicesManager servicesManager = Mockito.mock(ServicesManager.class);
         when(servicesManager.findServiceBy(SERVICE_NAME)).thenThrow(RuntimeException.class);
-        ManagerService managerService = new ManagerServiceImpl(servicesManager);
+        ManagerService managerService = new ManagerServiceImpl(servicesManager, casOAuthConfiguration);
 
         Assert.assertFalse(managerService.getServiceByName(SERVICE_NAME).isPresent());
     }
@@ -95,7 +99,7 @@ public class ManagerServiceImplTest {
         registeredServices.add(oidcRegisteredService);
         LocaleContextHolder.setLocale(Locale.forLanguageTag("et"));
         ServicesManager servicesManager = createValidServicesManagerWith(registeredServices);
-        ManagerService managerService = new ManagerServiceImpl(servicesManager);
+        ManagerService managerService = new ManagerServiceImpl(servicesManager, casOAuthConfiguration);
 
         HashMap<String, RegisteredServiceProperty> serviceNames = new HashMap<>();
         serviceNames.put(SERVICE_NAME_KEY, oidcRegisteredService.getProperties().get(SERVICE_NAME_KEY));
@@ -112,7 +116,7 @@ public class ManagerServiceImplTest {
         registeredServices.add(oidcRegisteredService);
         LocaleContextHolder.setLocale(Locale.ENGLISH);
         ServicesManager servicesManager = createValidServicesManagerWith(registeredServices);
-        ManagerService managerService = new ManagerServiceImpl(servicesManager);
+        ManagerService managerService = new ManagerServiceImpl(servicesManager, casOAuthConfiguration);
 
         HashMap<String, RegisteredServiceProperty> serviceShortNames = new HashMap<>();
         serviceShortNames.put(SERVICE_SHORT_NAME_KEY_EN, oidcRegisteredService.getProperties().get(SERVICE_SHORT_NAME_KEY_EN));
@@ -129,7 +133,7 @@ public class ManagerServiceImplTest {
         registeredServices.add(oidcRegisteredService);
         LocaleContextHolder.setLocale(Locale.forLanguageTag("ru"));
         ServicesManager servicesManager = createValidServicesManagerWith(registeredServices);
-        ManagerService managerService = new ManagerServiceImpl(servicesManager);
+        ManagerService managerService = new ManagerServiceImpl(servicesManager, casOAuthConfiguration);
 
         HashMap<String, RegisteredServiceProperty> serviceShortNames = new HashMap<>();
         serviceShortNames.put(SERVICE_SHORT_NAME_KEY_RU, oidcRegisteredService.getProperties().get(SERVICE_SHORT_NAME_KEY_RU));
@@ -146,7 +150,7 @@ public class ManagerServiceImplTest {
         registeredServices.add(oidcRegisteredService);
         LocaleContextHolder.setLocale(Locale.forLanguageTag("et"));
         ServicesManager servicesManager = createValidServicesManagerWith(registeredServices);
-        ManagerService managerService = new ManagerServiceImpl(servicesManager);
+        ManagerService managerService = new ManagerServiceImpl(servicesManager, casOAuthConfiguration);
 
         HashMap<String, RegisteredServiceProperty> serviceShortNames = new HashMap<>();
         serviceShortNames.put(SERVICE_SHORT_NAME_KEY, oidcRegisteredService.getProperties().get(SERVICE_SHORT_NAME_KEY));
@@ -163,7 +167,7 @@ public class ManagerServiceImplTest {
         registeredServices.add(oidcRegisteredService);
         LocaleContextHolder.setLocale(Locale.ENGLISH);
         ServicesManager servicesManager = createValidServicesManagerWith(registeredServices);
-        ManagerService managerService = new ManagerServiceImpl(servicesManager);
+        ManagerService managerService = new ManagerServiceImpl(servicesManager, casOAuthConfiguration);
 
         HashMap<String, RegisteredServiceProperty> serviceNames = new HashMap<>();
         serviceNames.put(SERVICE_NAME_KEY_EN, oidcRegisteredService.getProperties().get(SERVICE_NAME_KEY_EN));
@@ -180,7 +184,7 @@ public class ManagerServiceImplTest {
         registeredServices.add(oidcRegisteredService);
         LocaleContextHolder.setLocale(Locale.forLanguageTag("ru"));
         ServicesManager servicesManager = createValidServicesManagerWith(registeredServices);
-        ManagerService managerService = new ManagerServiceImpl(servicesManager);
+        ManagerService managerService = new ManagerServiceImpl(servicesManager, casOAuthConfiguration);
 
         HashMap<String, RegisteredServiceProperty> serviceNames = new HashMap<>();
         serviceNames.put(SERVICE_NAME_KEY_RU, oidcRegisteredService.getProperties().get(SERVICE_NAME_KEY_RU));
@@ -195,7 +199,7 @@ public class ManagerServiceImplTest {
         oidcRegisteredService.setClientId(SERVICE_NAME);
         registeredServices.add(oidcRegisteredService);
         ServicesManager servicesManager = createValidServicesManagerWith(registeredServices);
-        ManagerService managerService = new ManagerServiceImpl(servicesManager);
+        ManagerService managerService = new ManagerServiceImpl(servicesManager, casOAuthConfiguration);
 
         Assert.assertEquals(Optional.of(new HashMap<String, RegisteredServiceProperty>()), managerService.getServiceNames(SERVICE_NAME));
     }
@@ -203,11 +207,14 @@ public class ManagerServiceImplTest {
     @Test
     public void getAllAbstractRegisteredServices_managerReturnsValidServices_shouldReturnNonEmptyOptional() {
         Collection<RegisteredService> registeredServices = new ArrayList<>();
+        Mockito.when(casOAuthConfiguration.oauthCallbackService()).thenReturn(mockService());
+        Mockito.when(casOAuthConfiguration.oauthCallbackService().getId()).thenReturn(SERVICE_ID);
         AbstractRegisteredService abstractRegisteredService = Mockito.mock(AbstractRegisteredService.class);
+        Mockito.when(abstractRegisteredService.getServiceId()).thenReturn(SERVICE_ID);
         registeredServices.add(abstractRegisteredService);
 
         ServicesManager servicesManager = createValidServicesManagerWith(registeredServices);
-        ManagerService managerService = new ManagerServiceImpl(servicesManager);
+        ManagerService managerService = new ManagerServiceImpl(servicesManager, casOAuthConfiguration);
 
         Assert.assertTrue(managerService.getAllRegisteredServicesExceptType(OAuthRegisteredService.class).isPresent());
     }
@@ -219,7 +226,7 @@ public class ManagerServiceImplTest {
         oidcRegisteredService.setClientId(SERVICE_NAME);
         registeredServices.add(oidcRegisteredService);
         ServicesManager servicesManager = createValidServicesManagerWith(registeredServices);
-        ManagerService managerService = new ManagerServiceImpl(servicesManager);
+        ManagerService managerService = new ManagerServiceImpl(servicesManager, casOAuthConfiguration);
 
         Assert.assertEquals(Optional.of(new ArrayList<AbstractRegisteredService>()), managerService.getAllRegisteredServicesExceptType(OAuthRegisteredService.class));
     }
@@ -227,13 +234,15 @@ public class ManagerServiceImplTest {
     @Test
     public void getAllAbstractRegisteredServices_managerFiltersUnnecessaryServices_shouldReturnMultipleServices() {
         Collection<RegisteredService> registeredServices = new ArrayList<>(mockGetAllAbstractRegisteredServices().get());
+        Mockito.when(casOAuthConfiguration.oauthCallbackService()).thenReturn(mockService());
+        Mockito.when(casOAuthConfiguration.oauthCallbackService().getId()).thenReturn(SERVICE_ID);
         OidcRegisteredService oidcRegisteredService = new OidcRegisteredService();
         oidcRegisteredService.setClientId(SERVICE_NAME);
         registeredServices.add(oidcRegisteredService);
         ServicesManager servicesManager = createValidServicesManagerWith(registeredServices);
-        ManagerService managerService = new ManagerServiceImpl(servicesManager);
+        ManagerService managerService = new ManagerServiceImpl(servicesManager, casOAuthConfiguration);
 
-        Assert.assertEquals(2, managerService.getAllRegisteredServicesExceptType(OAuthRegisteredService.class).get().size());
+        Assert.assertEquals(1, managerService.getAllRegisteredServicesExceptType(OAuthRegisteredService.class).get().size());
     }
 
     private Map<String, RegisteredServiceProperty> mockOidcRegisteredServiceProperties(String key, String value) {
@@ -251,10 +260,10 @@ public class ManagerServiceImplTest {
         List<AbstractRegisteredService> abstractRegisteredServices = new ArrayList<>();
         AbstractRegisteredService oneAbstractRegisteredService = Mockito.mock(AbstractRegisteredService.class);
         AbstractRegisteredService twoAbstractRegisteredService = Mockito.mock(AbstractRegisteredService.class);
-        oneAbstractRegisteredService.setServiceId(SERVICE_ID);
-        oneAbstractRegisteredService.setName(SERVICE_NAME + "1");
-        twoAbstractRegisteredService.setServiceId(SERVICE_ID + ".secondurl");
-        twoAbstractRegisteredService.setName(SERVICE_NAME + "2");
+        Mockito.when(oneAbstractRegisteredService.getServiceId()).thenReturn(SERVICE_ID);
+        Mockito.when(oneAbstractRegisteredService.getName()).thenReturn(SERVICE_NAME + "1");
+        Mockito.when(twoAbstractRegisteredService.getServiceId()).thenReturn(SERVICE_ID + ".secondUrl");
+        Mockito.when(twoAbstractRegisteredService.getName()).thenReturn(SERVICE_NAME + "2");
 
         abstractRegisteredServices.add(oneAbstractRegisteredService);
         abstractRegisteredServices.add(twoAbstractRegisteredService);
@@ -268,6 +277,10 @@ public class ManagerServiceImplTest {
                 .thenReturn(services);
 
         return servicesManager;
+    }
+
+    private static Service mockService() {
+        return Mockito.mock(Service.class);
     }
 
     static class RegisteredServicePropertyValues implements RegisteredServiceProperty {
