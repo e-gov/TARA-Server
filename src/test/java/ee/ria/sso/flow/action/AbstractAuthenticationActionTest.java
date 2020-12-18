@@ -2,13 +2,16 @@ package ee.ria.sso.flow.action;
 
 import ee.ria.sso.AbstractTest;
 import ee.ria.sso.Constants;
-import ee.ria.sso.service.ExternalServiceHasFailedException;
-import ee.ria.sso.service.UserAuthenticationFailedException;
 import ee.ria.sso.authentication.AuthenticationType;
 import ee.ria.sso.config.TaraResourceBundleMessageSource;
 import ee.ria.sso.flow.AuthenticationFlowExecutionException;
 import ee.ria.sso.flow.ThymeleafSupport;
+import ee.ria.sso.service.ExternalServiceHasFailedException;
+import ee.ria.sso.service.UserAuthenticationFailedException;
+import ee.ria.sso.service.manager.ManagerService;
 import org.apereo.cas.authentication.principal.AbstractWebApplicationService;
+import org.apereo.cas.services.AbstractRegisteredService;
+import org.apereo.cas.support.oauth.services.OAuthRegisteredService;
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
 import org.junit.Before;
@@ -21,7 +24,10 @@ import org.pac4j.core.context.Pac4jConstants;
 import org.springframework.webflow.execution.Event;
 import org.springframework.webflow.execution.RequestContext;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 import static org.junit.Assert.assertTrue;
 
@@ -32,6 +38,9 @@ public abstract class AbstractAuthenticationActionTest {
 
     @Mock
     private TaraResourceBundleMessageSource messageSource;
+
+    @Mock
+    private ManagerService managerService;
 
     @Rule
     public ExpectedException expectedEx = ExpectedException.none();
@@ -47,6 +56,8 @@ public abstract class AbstractAuthenticationActionTest {
         requestContext.getExternalContext().getSessionMap().put(Pac4jConstants.REQUESTED_URL, "https://localhost:8451/response");
         requestContext.getExternalContext().getSessionMap().put(Constants.TARA_OIDC_SESSION_AUTH_METHODS, Collections.singletonList(AuthenticationType.SmartID));
         Mockito.when(thymeleafSupport.isAuthMethodAllowed(Mockito.any())).thenReturn(true);
+        Optional<List<AbstractRegisteredService>> mockedAbstractRegisteredServices = mockAbstractRegisteredServices();
+        Mockito.when(managerService.getAllRegisteredServicesExceptType(OAuthRegisteredService.class)).thenReturn(mockedAbstractRegisteredServices);
     }
 
     @Test
@@ -65,6 +76,12 @@ public abstract class AbstractAuthenticationActionTest {
     }
 
     @Test
+    public void successWhenValidAbstractServicePresentButNoMatchingServiceURL() throws Exception {
+        requestContext.getFlowScope().put(Constants.CAS_SERVICE_ATTRIBUTE_NAME, new AbstractWebApplicationService("id", "https://not-cas.server.url/?client_name=CasOAuthClient", "artifactId") {});
+        getAction().doExecute(requestContext);
+    }
+
+    @Test
     public void exceptionWhenAuthenticationMethodNotInAllowedList() throws Exception {
         expectedEx.expect(AuthenticationFlowExecutionException.class);
         expectedEx.expect(new ExceptionCodeMatches(401, "Unauthorised authentication method!"));
@@ -77,7 +94,8 @@ public abstract class AbstractAuthenticationActionTest {
 
     @Test
     public void invalidOriginalUrlInService() throws Exception {
-        requestContext.getFlowScope().put(Constants.CAS_SERVICE_ATTRIBUTE_NAME, new AbstractWebApplicationService("id", null, "artifactId") {});
+        expectedEx.expect(AuthenticationFlowExecutionException.class);
+        requestContext.getFlowScope().put(Constants.CAS_SERVICE_ATTRIBUTE_NAME, new AbstractWebApplicationService("id", "", "artifactId") {});
         getAction().doExecute(requestContext);
     }
 
@@ -89,7 +107,7 @@ public abstract class AbstractAuthenticationActionTest {
         try {
 
             Mockito.when(messageSource.getMessage(Mockito.eq(Constants.MESSAGE_KEY_GENERAL_ERROR))).thenReturn("mock general error");
-            new AbstractAuthenticationAction(messageSource, thymeleafSupport) {
+            new AbstractAuthenticationAction(messageSource, thymeleafSupport, managerService) {
 
                 @Override
                 protected Event doAuthenticationExecute(RequestContext requestContext) {
@@ -115,7 +133,7 @@ public abstract class AbstractAuthenticationActionTest {
 
         try {
             Mockito.when(messageSource.getMessage(Mockito.eq("msg.key"))).thenReturn("mock translation");
-            new AbstractAuthenticationAction(messageSource, thymeleafSupport) {
+            new AbstractAuthenticationAction(messageSource, thymeleafSupport, managerService) {
 
                 @Override
                 protected Event doAuthenticationExecute(RequestContext requestContext) {
@@ -141,7 +159,7 @@ public abstract class AbstractAuthenticationActionTest {
 
         try {
             Mockito.when(messageSource.getMessage(Mockito.eq("msg.key"))).thenReturn("Mock translation");
-            new AbstractAuthenticationAction(messageSource, thymeleafSupport) {
+            new AbstractAuthenticationAction(messageSource, thymeleafSupport, managerService) {
 
                 @Override
                 protected Event doAuthenticationExecute(RequestContext requestContext) {
@@ -185,6 +203,16 @@ public abstract class AbstractAuthenticationActionTest {
         getAction().doExecute(requestContext);
     }
 
+    @Test
+    public void exceptionWhenClientNameIsInvalid() throws Exception {
+        Mockito.when(messageSource.getMessage(Constants.MESSAGE_KEY_GENERAL_ERROR)).thenReturn("Mock general error");
+
+        expectedEx.expect(AuthenticationFlowExecutionException.class);
+        expectedEx.expect(new ExceptionCodeMatches(401, "Mock general error"));
+        requestContext.getFlowScope().put(Constants.CAS_SERVICE_ATTRIBUTE_NAME, new AbstractWebApplicationService("id", "", "artifactId") {});
+        getAction().doExecute(requestContext);
+    }
+
 
     class ExceptionCodeMatches extends TypeSafeMatcher<AuthenticationFlowExecutionException> {
         private int code;
@@ -218,5 +246,14 @@ public abstract class AbstractAuthenticationActionTest {
 
     private void assertContextCleared(RequestContext requestContext) {
         assertTrue("flow context was not cleared!", requestContext.getFlowScope().isEmpty());
+    }
+
+    private Optional<List<AbstractRegisteredService>> mockAbstractRegisteredServices() {
+        List<AbstractRegisteredService> abstractRegisteredServices = new ArrayList<>();
+        AbstractRegisteredService abstractRegisteredService = Mockito.mock(AbstractRegisteredService.class);
+        Mockito.when(abstractRegisteredService.getServiceId()).thenReturn("^https://cas.server.url.*");
+
+        abstractRegisteredServices.add(abstractRegisteredService);
+        return Optional.of(abstractRegisteredServices);
     }
 }

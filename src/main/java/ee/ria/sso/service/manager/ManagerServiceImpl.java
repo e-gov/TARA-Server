@@ -2,6 +2,7 @@ package ee.ria.sso.service.manager;
 
 import ee.ria.sso.Constants;
 import ee.ria.sso.utils.SessionMapUtil;
+import org.apereo.cas.config.CasOAuthConfiguration;
 import org.apereo.cas.services.AbstractRegisteredService;
 import org.apereo.cas.services.OidcRegisteredService;
 import org.apereo.cas.services.RegisteredService;
@@ -28,9 +29,11 @@ public class ManagerServiceImpl implements ManagerService {
 
     private final Logger log = LoggerFactory.getLogger(ManagerServiceImpl.class);
     private final ServicesManager servicesManager;
+    private final CasOAuthConfiguration casOAuthConfiguration;
 
-    public ManagerServiceImpl(ServicesManager servicesManager) {
+    public ManagerServiceImpl(ServicesManager servicesManager, CasOAuthConfiguration casOAuthConfiguration) {
         this.servicesManager = servicesManager;
+        this.casOAuthConfiguration = casOAuthConfiguration;
     }
 
     @Override
@@ -64,6 +67,15 @@ public class ManagerServiceImpl implements ManagerService {
         return service.map(AbstractRegisteredService::getProperties);
     }
 
+
+    @Override
+    public Optional<List<AbstractRegisteredService>> getAllRegisteredServicesExceptType(Class<?> type) {
+        return Optional.of(this.servicesManager.getAllServices().stream()
+                .filter(r -> r instanceof AbstractRegisteredService && !(type.isInstance(r)) && !(r.getServiceId().equals(getRegistryServiceURL())))
+                .map(s -> (AbstractRegisteredService) s)
+                .collect(Collectors.toList()));
+    }
+
     @Override
     public Optional<String> getServiceShortName() {
         String serviceName;
@@ -85,5 +97,9 @@ public class ManagerServiceImpl implements ManagerService {
         }
 
         return Optional.empty();
+    }
+
+    private String getRegistryServiceURL() {
+        return casOAuthConfiguration.oauthCallbackService().getId();
     }
 }

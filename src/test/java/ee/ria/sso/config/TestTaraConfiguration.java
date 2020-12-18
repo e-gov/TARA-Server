@@ -7,9 +7,11 @@ import org.apereo.cas.audit.AuditTrailExecutionPlan;
 import org.apereo.cas.audit.AuditTrailRecordResolutionPlan;
 import org.apereo.cas.audit.AuditableExecution;
 import org.apereo.cas.audit.spi.DefaultAuditTrailRecordResolutionPlan;
+import org.apereo.cas.authentication.AuthenticationSystemSupport;
 import org.apereo.cas.authentication.principal.PrincipalFactory;
 import org.apereo.cas.authentication.principal.ServiceFactory;
 import org.apereo.cas.authentication.principal.WebApplicationService;
+import org.apereo.cas.config.CasOAuthConfiguration;
 import org.apereo.cas.oidc.token.OidcIdTokenSigningAndEncryptionService;
 import org.apereo.cas.oidc.util.OidcAuthorizationRequestSupport;
 import org.apereo.cas.services.OidcRegisteredService;
@@ -101,6 +103,18 @@ public class TestTaraConfiguration {
     @Bean
     public ServicesManager servicesManager() {
         return Mockito.mock(ServicesManager.class);
+    }
+
+    @Bean
+    @Qualifier("casOAuthConfiguration")
+    public CasOAuthConfiguration casOAuthConfiguration() {
+        return Mockito.mock(CasOAuthConfiguration.class);
+    }
+
+    @Bean
+    @Qualifier("defaultAuthenticationSystemSupport")
+    public AuthenticationSystemSupport authenticationSystemSupport() {
+        return Mockito.mock(AuthenticationSystemSupport.class);
     }
 
     @Bean

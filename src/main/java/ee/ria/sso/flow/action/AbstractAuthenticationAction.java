@@ -7,11 +7,14 @@ import ee.ria.sso.flow.AuthenticationFlowExecutionException;
 import ee.ria.sso.flow.ThymeleafSupport;
 import ee.ria.sso.service.ExternalServiceHasFailedException;
 import ee.ria.sso.service.UserAuthenticationFailedException;
+import ee.ria.sso.service.manager.ManagerService;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apereo.cas.authentication.principal.WebApplicationService;
+import org.apereo.cas.services.AbstractRegisteredService;
 import org.apereo.cas.support.oauth.authenticator.Authenticators;
+import org.apereo.cas.support.oauth.services.OAuthRegisteredService;
 import org.apereo.cas.web.support.WebUtils;
 import org.pac4j.core.context.Pac4jConstants;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +25,8 @@ import org.springframework.webflow.execution.RequestContext;
 
 import java.io.IOException;
 import java.security.cert.CertificateException;
+import java.util.List;
+import java.util.Optional;
 
 import static ee.ria.sso.Constants.CAS_SERVICE_ATTRIBUTE_NAME;
 
@@ -36,6 +41,9 @@ public abstract class AbstractAuthenticationAction extends AbstractAction {
     @Autowired
     private ThymeleafSupport thymeleafSupport;
 
+    @Autowired
+    private ManagerService managerService;
+
     protected abstract Event doAuthenticationExecute(RequestContext requestContext) throws IOException, CertificateException;
 
     protected abstract AuthenticationType getAuthenticationType();
@@ -43,7 +51,9 @@ public abstract class AbstractAuthenticationAction extends AbstractAction {
     @Override
     protected Event doExecute(RequestContext requestContext) throws Exception {
 
-        assertSessionNotExpiredAndAuthMethodAllowed(requestContext);
+        WebApplicationService service = getWebApplicationService(requestContext);
+        assertValidClient(requestContext, service);
+        assertSessionNotExpiredAndAuthMethodAllowed(requestContext, service);
 
         try {
             return this.doAuthenticationExecute(requestContext);
@@ -65,19 +75,39 @@ public abstract class AbstractAuthenticationAction extends AbstractAction {
         }
     }
 
-    private void assertSessionNotExpiredAndAuthMethodAllowed(RequestContext requestContext) {
-        WebApplicationService service = getWebApplicationService(requestContext);
+    private void assertValidClient(RequestContext requestContext, WebApplicationService service) {
         if (service == null) {
             log.error("Callback failed! No service parameter found in flow of session! Possible causes: either the user session has expired, server has been restarted in the middle of user transaction or corrupt/invalid cookie value was sent from the browser");
             throw AuthenticationFlowExecutionException.ofUnauthorized(requestContext, this, messageSource.getMessage(Constants.MESSAGE_KEY_SESSION_EXPIRED));
-        } else if (isOauth2Client(service) && !requestContext.getExternalContext().getSessionMap().contains(Pac4jConstants.REQUESTED_URL)) {
-            log.error("Oauth callback url not found in session! Possible causes: either the user session has expired, server has been restarted in the middle of user transaction or corrupt/invalid cookie value was sent from the browser");
-            throw AuthenticationFlowExecutionException.ofUnauthorized(requestContext, this, messageSource.getMessage(Constants.MESSAGE_KEY_SESSION_EXPIRED));
         }
 
-        if (isOauth2Client(service) && !thymeleafSupport.isAuthMethodAllowed(getAuthenticationType())) {
-            log.error("This authentication method usage was not initially specified by the scope parameter when the authentication process was initialized!");
-            throw AuthenticationFlowExecutionException.ofUnauthorized(requestContext, this, messageSource.getMessage(Constants.MESSAGE_KEY_AUTH_METHOD_RESTRICTED_BY_SCOPE));
+        if (!isOauth2Client(service) && !isCASClient(service.getOriginalUrl())) {
+            log.error("Invalid service value in detected in webflow. Either the client_name parameter is invalid or the service URL is not allowed");
+            throw AuthenticationFlowExecutionException.ofUnauthorized(requestContext, this, messageSource.getMessage(Constants.MESSAGE_KEY_GENERAL_ERROR));
+        }
+    }
+
+    private boolean isCASClient(String serviceUrl) {
+        Optional<List<AbstractRegisteredService>> abstractRegisteredServices = managerService.getAllRegisteredServicesExceptType(OAuthRegisteredService.class);
+        if (abstractRegisteredServices.isPresent()) {
+            for (AbstractRegisteredService ars: abstractRegisteredServices.get()) {
+                if (serviceUrl.matches(ars.getServiceId())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private void assertSessionNotExpiredAndAuthMethodAllowed(RequestContext requestContext, WebApplicationService service) {
+        if (isOauth2Client(service)) {
+            if (!requestContext.getExternalContext().getSessionMap().contains(Pac4jConstants.REQUESTED_URL)) {
+                log.error("Oauth callback url not found in session! Possible causes: either the user session has expired, server has been restarted in the middle of user transaction or corrupt/invalid cookie value was sent from the browser");
+                throw AuthenticationFlowExecutionException.ofUnauthorized(requestContext, this, messageSource.getMessage(Constants.MESSAGE_KEY_SESSION_EXPIRED));
+            } else if (!thymeleafSupport.isAuthMethodAllowed(getAuthenticationType())) {
+                log.error("This authentication method usage was not initially specified by the scope parameter when the authentication process was initialized!");
+                throw AuthenticationFlowExecutionException.ofUnauthorized(requestContext, this, messageSource.getMessage(Constants.MESSAGE_KEY_AUTH_METHOD_RESTRICTED_BY_SCOPE));
+            }
         }
     }
 
