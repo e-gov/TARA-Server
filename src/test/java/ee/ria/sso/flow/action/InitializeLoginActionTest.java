@@ -5,6 +5,7 @@ import ee.ria.sso.authentication.credential.PreAuthenticationCredential;
 import ee.ria.sso.oidc.TaraScope;
 import ee.ria.sso.oidc.TaraScopeValuedAttribute;
 import ee.ria.sso.oidc.TaraScopeValuedAttributeName;
+import org.apereo.cas.web.flow.CasWebflowConstants;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -46,7 +47,7 @@ public class InitializeLoginActionTest {
         MockHttpSession mockHttpSession = new MockHttpSession();
         mockHttpSession.setAttribute(Constants.TARA_OIDC_SESSION_SCOPES, Arrays.asList(TaraScope.OPENID, TaraScope.EIDASONLY));
         Event event = action.doExecute(mockRequestContext(mockHttpSession));
-        assertEquals("loginForm", event.getId());
+        assertEquals(CasWebflowConstants.TRANSITION_ID_SUCCESS, event.getId());
     }
 
     @Test
@@ -55,7 +56,7 @@ public class InitializeLoginActionTest {
         mockHttpSession.setAttribute(Constants.TARA_OIDC_SESSION_SCOPES, Arrays.asList(TaraScope.OPENID, TaraScope.EIDASONLY));
 
         Event event = action.doExecute(mockRequestContext(mockHttpSession));
-        assertEquals("loginForm", event.getId());
+        assertEquals(CasWebflowConstants.TRANSITION_ID_SUCCESS, event.getId());
     }
 
     @Test
@@ -70,14 +71,14 @@ public class InitializeLoginActionTest {
         mockHttpSession.setAttribute(Constants.TARA_OIDC_SESSION_SCOPE_EIDAS_COUNTRY, eidasCountryAttribute);
 
         Event event = action.doExecute(mockRequestContext(mockHttpSession));
-        assertEquals("loginForm", event.getId());
+        assertEquals(CasWebflowConstants.TRANSITION_ID_SUCCESS, event.getId());
     }
 
     @Test
     public void scopeElementMissing_thenShowLoginForm() {
         MockHttpSession mockHttpSession = new MockHttpSession();
         Event event = action.doExecute(mockRequestContext(mockHttpSession));
-        assertEquals("loginForm", event.getId());
+        assertEquals(CasWebflowConstants.TRANSITION_ID_SUCCESS, event.getId());
     }
 
     private RequestContext mockRequestContext(MockHttpSession mockHttpSession) {
