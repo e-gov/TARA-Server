@@ -68,11 +68,11 @@ public class ThymeleafSupportTest {
     }
 
     @Test
-    public void isAuthMethodAllowedWhenNoAttrSetInSession() {
+    public void isAuthMethodAllowedNotAllowedWhenNoAttrSetInSession() {
         Arrays.stream(AuthenticationType.values())
                 .forEach(method -> {
                     setRequestContextWithSessionMap(new HashMap<>());
-                    Assert.assertTrue("Method " + method + " should be allowed", this.thymeleafSupport.isAuthMethodAllowed(method));
+                    Assert.assertFalse("Method " + method + " should not be allowed", this.thymeleafSupport.isAuthMethodAllowed(method));
                 });
     }
 

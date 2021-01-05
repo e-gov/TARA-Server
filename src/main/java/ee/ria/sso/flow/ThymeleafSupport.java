@@ -45,7 +45,7 @@ public class ThymeleafSupport {
         if (clientSpecificAuthMethodList != null) {
             return clientSpecificAuthMethodList.contains(method);
         } else {
-            return true; // client specific auth method list is not supported (ie cas-management)
+            return taraProperties.isPropertyEnabled(method.getPropertyName() + ".enabled"); // Client specific auth method list is not supported (ie. CAS-Management)
         }
     }
 
