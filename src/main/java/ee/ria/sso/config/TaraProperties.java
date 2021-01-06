@@ -28,7 +28,7 @@ public class TaraProperties {
     @Value("${env.test.message:#{null}}")
     private String testEnvironmentWarningMessage;
 
-    @Value("${tara.cache-control-header:'public,max-age=43200'}") // Default: 12h
+    @Value("${tara.cache-control-header:public,max-age=43200}") // Default: 12h
     private String cacheControlHeader;
 
     private Map<AuthenticationType, LevelOfAssurance> authenticationMethodsLoaMap;
