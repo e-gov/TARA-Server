@@ -10,6 +10,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -28,6 +29,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.mockito.Mockito.when;
 
@@ -64,6 +66,23 @@ public class ThymeleafSupportTest {
                             Constants.TARA_OIDC_SESSION_AUTH_METHODS, Collections.singletonList(method)
                     ));
                     Assert.assertTrue(this.thymeleafSupport.isAuthMethodAllowed(method));
+                });
+    }
+
+    @Test
+    public void isAuthMethodAllowedNotAllowedWhenAttrSetInSessionAndMethodDisabled() {
+        setRequestContextWithSessionMap(Collections.singletonMap(
+                Constants.TARA_OIDC_SESSION_AUTH_METHODS, Arrays.stream(AuthenticationType.values())
+                        .filter(authType -> !authType.equals(AuthenticationType.BankLink))
+                        .collect(Collectors.toList())
+        ));
+        Arrays.stream(AuthenticationType.values())
+                .forEach(method -> {
+                    if (method.equals(AuthenticationType.BankLink)) {
+                        Assert.assertFalse("Method " + method + " should not be allowed", this.thymeleafSupport.isAuthMethodAllowed(method));
+                    } else {
+                        Assert.assertTrue("Method " + method + " should be allowed", this.thymeleafSupport.isAuthMethodAllowed(method));
+                    }
                 });
     }
 
