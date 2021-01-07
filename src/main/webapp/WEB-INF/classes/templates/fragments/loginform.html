@@ -53,7 +53,7 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text" th:text="#{label.mobile-id.personalCodePrefix}"></span>
                                     </div>
-                                    <input type="number" inputmode="decimal" maxlength="11" id="mid-personal-code" class="form-control" th:field="*{principalCode}">
+                                    <input type="number" inputmode="decimal" id="mid-personal-code" class="form-control" th:field="*{principalCode}">
                                 </div>
                                 <div class="invalid-feedback is-hidden" th:text="#{message.common.personalCode-missing}"></div>
                                 <div class="invalid-feedback is-hidden" th:text="#{message.common.personalCode-invalid}"></div>
@@ -113,7 +113,7 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text" th:text="#{label.smart-id.personalCodePrefix}"></span>
                                     </div>
-                                    <input type="number" inputmode="decimal" maxlength="11" id="sid-personal-code" class="form-control" th:field="*{principalCode}">
+                                    <input type="number" inputmode="decimal" id="sid-personal-code" class="form-control" th:field="*{principalCode}">
                                 </div>
                                 <div class="invalid-feedback is-hidden" th:text="#{message.common.personalCode-missing}"></div>
                                 <div class="invalid-feedback is-hidden" th:text="#{message.common.personalCode-invalid}"></div>
@@ -187,5 +187,5 @@
         </symbol>
     </defs>
 </svg>
-<script src="/scripts/maxlength.js" defer></script>
+
 <script src="/scripts/main.js" defer></script>

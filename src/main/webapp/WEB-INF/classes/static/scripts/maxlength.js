@@ -1,1 +1,0 @@
-function limitMaxLength(e){if(document.getElementById(e.currentTarget.id).value.length>=e.currentTarget.maxLength)return e.preventDefault(),!1}document.getElementById("mid-personal-code").addEventListener("keypress",function(e){limitMaxLength(e)}),document.getElementById("sid-personal-code").addEventListener("keypress",function(e){limitMaxLength(e)});
