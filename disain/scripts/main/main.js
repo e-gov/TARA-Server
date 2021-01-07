@@ -148,6 +148,15 @@ jQuery(function ($) {
 		xhttp.setRequestHeader('Content-type', 'application/json;charset=UTF-8');
 		xhttp.send();
 	});
+
+	// Mobile-ID limit max length
+	$('#mobileIdForm input#mid-personal-code.form-control').on('keypress change input', function(event) {
+		if ($(this).val().length >= 11) {
+			$(this).val($(this).val().substring(0, 11));
+			event.preventDefault();
+			return false;
+		}
+	});
 	
 	// Mobile-ID form submit
 	$('#mobileIdForm button.c-btn--primary').on('click', function(event){
@@ -186,6 +195,15 @@ jQuery(function ($) {
 		
 		$('#bankForm input[name="bank"]').val($(this).attr('id'));
 		$('#bankForm').submit();
+	});
+
+	// Smart-ID limit max length
+	$('#smartIdForm input#sid-personal-code.form-control').on('keypress change input', function(event) {
+		if ($(this).val().length >= 11) {
+			$(this).val($(this).val().substring(0, 11));
+			event.preventDefault();
+			return false;
+		}
 	});
 
 	// Smart-ID form submit
