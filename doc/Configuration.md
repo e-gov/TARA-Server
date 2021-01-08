@@ -24,6 +24,7 @@ _CAS tarkvaras tehtud kohanduste ja täienduste kirjeldus._
   * [2.13 Always force re-authentication](#oidc_force_reauthentication)
   * [2.14 Default authentication methods on login page](#default_auth_methods)
   * [2.15 Assigning eIDAS level of assurance to domestic authentication methods](#eidas_auth_methods_loa)
+  * [2.16 Cache Control and Etag](#tara_cache_control_etag)
 - [3. TARA truststore](#tara_truststore)
   * [3.1 Mobile-ID CA certs](#dds_ca_certs)
   * [3.2 Smart-ID CA certs](#smart-id_ca_certs)
@@ -824,6 +825,24 @@ tara.authentication-methods-loa-map.idcard=high
 tara.authentication-methods-loa-map.mobileid=high
 tara.authentication-methods-loa-map.banklink=low
 tara.authentication-methods-loa-map.smartid=substantial
+````
+
+<a name="tara_cache_control_etag"></a>
+### 2.16 Cache Control and Etag
+Specify how long static content should be cached in seconds. Default 12h.
+
+The Etag header is also set to static files. Etag is a SHA-1 string generated based on the contents of each static file.
+
+Table 2.16.1 - Parameters used to specify the cache time in seconds
+
+| Property        | Mandatory | Description |
+| :---------------- | :---------- | :----------------|
+| `tara.cache-control-header` | N | A string which contains the value of Cache-Control header. By default, the header is set to ````public```` and ````max-age```` to 43200 seconds (12h)
+
+Example:
+
+````
+tara.cache-control-header=public,max-age=43200
 ````
 
 <a name="tara_truststore"></a>
