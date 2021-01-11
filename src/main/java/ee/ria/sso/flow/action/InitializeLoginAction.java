@@ -4,6 +4,7 @@ import ee.ria.sso.Constants;
 import ee.ria.sso.authentication.credential.PreAuthenticationCredential;
 import ee.ria.sso.oidc.TaraScope;
 import ee.ria.sso.oidc.TaraScopeValuedAttribute;
+import org.apereo.cas.web.flow.CasWebflowConstants;
 import org.springframework.stereotype.Component;
 import org.springframework.webflow.action.AbstractAction;
 import org.springframework.webflow.execution.Event;
@@ -22,7 +23,7 @@ public class InitializeLoginAction extends AbstractAction {
         if (isEidasOnlyAuthenticationForSpecificCountry(request, context)) {
             return new Event(this, "directEidasLogin");
         }
-        return new Event(this, "loginForm");
+        return new Event(this, CasWebflowConstants.TRANSITION_ID_SUCCESS);
     }
     
     private boolean isEidasOnlyAuthenticationForSpecificCountry(HttpServletRequest request, RequestContext context) {
