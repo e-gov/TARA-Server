@@ -9,7 +9,7 @@
     <version>1.5.4</version>
 
     <properties>
-        <cas.version>5.3.15.1</cas.version>
+        <cas.version>5.3.16</cas.version>
         <banklink.version>2.1.15</banklink.version>
         <!-- app.server could be -jetty, -undertow, -tomcat, or blank if you plan to provide appserver -->
         <app.server>-tomcat</app.server>
@@ -42,7 +42,7 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>2.3.1.RELEASE</version>
+                <version>2.3.7.RELEASE</version>
                 <configuration>
                     <mainClass>org.springframework.boot.loader.WarLauncher</mainClass>
                     <addResources>true</addResources>
@@ -58,7 +58,7 @@
             <plugin>
                 <groupId>pl.project13.maven</groupId>
                 <artifactId>git-commit-id-plugin</artifactId>
-                <version>4.0.0</version>
+                <version>4.0.3</version>
                 <executions>
                     <execution>
                         <goals>
@@ -79,7 +79,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
-                <version>3.3.0</version>
+                <version>3.3.1</version>
                 <configuration>
                     <warName>cas</warName>
                     <failOnMissingWebXml>false</failOnMissingWebXml>
@@ -111,7 +111,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.5</version>
+                <version>0.8.6</version>
                 <executions>
                     <execution>
                         <id>jacoco-initialize</id>
@@ -138,14 +138,14 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
-                <version>2.9.10.5</version>
+                <version>2.9.10.8</version>
             </dependency>
 
             <!-- Override dependency needed for mid-rest-java-client -->
             <dependency>
                 <groupId>org.glassfish.jersey.inject</groupId>
                 <artifactId>jersey-hk2</artifactId>
-                <version>2.31</version>
+                <version>2.33</version>
             </dependency>
 
             <dependency>
@@ -299,7 +299,7 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.2.14</version>
+            <version>42.2.18</version>
         </dependency>
 
         <!-- cas cluster support -->
@@ -372,7 +372,7 @@
         <dependency>
             <groupId>com.github.tomakehurst</groupId>
             <artifactId>wiremock-standalone</artifactId>
-            <version>2.26.3</version>
+            <version>2.27.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
