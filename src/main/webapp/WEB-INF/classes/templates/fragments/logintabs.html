@@ -54,13 +54,7 @@
                     <h2 th:utext="${#messages.msg('label.' + tab_id + '.' + (title ?: 'title'))}"></h2>
                 </div>
 
-                <strong th:if="${#strings.equalsIgnoreCase(tab_id, 'bank-link')}">
-                    <p th:utext="${#messages.msg('label.' + 'bank-link' + '.' + (instruction ?: 'instruction'))}" ></p>
-                </strong>
-
-                <div th:if="${!#strings.equalsIgnoreCase(tab_id, 'bank-link')}">
-                    <p th:utext="${#strings.isEmpty(@thymeleafSupport.getServiceName()) ? #messages.msg('label.' + tab_id + '.' + (instruction ?: 'instruction')) : #messages.msg('label.' + tab_id + '.' + (instructionWithShortName ?: 'instructionWithShortName'), @thymeleafSupport.getServiceName())}" ></p>
-                </div>
+                <p th:utext="${#strings.isEmpty(@thymeleafSupport.getServiceName()) ? #messages.msg('label.' + tab_id + '.' + (instruction ?: 'instruction')) : #messages.msg('label.' + tab_id + '.' + (instructionWithShortName ?: 'instructionWithShortName'), @thymeleafSupport.getServiceName())}" ></p>
 
                 <form role="form" layout:fragment="login-form-content"></form>
             </div>
