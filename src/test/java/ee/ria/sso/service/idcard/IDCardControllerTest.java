@@ -129,16 +129,16 @@ public class IDCardControllerTest {
     }
 
     @Test
-    public void shouldFailWithNoExistingSession() throws Exception {
+    public void okWithNoExistingSession() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader(HEADER_SSL_CLIENT_CERT, X509_CERT);
         request.setSession(null);
 
         ModelAndView response = new IDCardController(statistics).handleRequest(request);
-        Assert.assertEquals(false, response.getModel().get("ok"));
+        Assert.assertEquals(true, response.getModel().get("ok"));
         SimpleTestAppender.verifyLogEventsExistInOrder(
                 containsString("ID-Card certificate stored in new user session"),
-                containsString("ID-Card controller error: Unable to log StatisticsRecord. Client-ID cannot be null!")
+                containsString(String.format("%s;%s;%s;%s;", formatter.format(LocalDateTime.now()), "N/A", AuthenticationType.IDCard, StatisticsOperation.START_AUTH))
         );
     }
 }
