@@ -79,7 +79,7 @@ public class IDCardController {
         this.statistics.collect(
                 StatisticsRecord.builder()
                         .time(LocalDateTime.now())
-                        .clientId(clientId)
+                        .clientId(clientId == null ? "N/A" : clientId)
                         .method(AuthenticationType.IDCard)
                         .operation(StatisticsOperation.START_AUTH)
                         .build()
