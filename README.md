@@ -1,6 +1,6 @@
 <img src='doc/img/ee_cef_0.png'></img>
 
-# TARA-Server
+# [DEPRECATED] TARA-Server
 
 TARA-Server on [Riigi autentimisteenuse (TARA)](https://e-gov.github.io/TARA-Doku/) peamine tarkvarakomponent.
 
